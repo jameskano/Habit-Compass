@@ -1,0 +1,35 @@
+-- Habit Compass seed notes
+-- ------------------------
+-- Do not create global default categories here.
+-- Categories are user-specific and should be created during onboarding
+-- or immediately after profile creation in authenticated app flows.
+--
+-- The statements below are intentionally commented out because they require
+-- a real auth.users id from a local Supabase project.
+
+-- Example profile insert after creating a local auth user:
+-- insert into public.profiles (
+--   id,
+--   display_name,
+--   language,
+--   theme_preference,
+--   first_day_of_week,
+--   timezone,
+--   onboarding_completed,
+--   feature_flags
+-- ) values (
+--   '00000000-0000-0000-0000-000000000000',
+--   'Demo User',
+--   'en',
+--   'system',
+--   1,
+--   'Europe/Madrid',
+--   false,
+--   '{"mood": true, "weeklyPlanning": true, "suggestions": true, "minimumStandardDeep": false, "categories": true, "reflections": false}'::jsonb
+-- );
+--
+-- Example starter categories for that user:
+-- insert into public.categories (user_id, name, type, color, icon, sort_order)
+-- values
+--   ('00000000-0000-0000-0000-000000000000', 'Health', 'role', '#16a34a', 'heart', 0),
+--   ('00000000-0000-0000-0000-000000000000', 'Learning', 'value', '#2563eb', 'book-open', 1);

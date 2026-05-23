@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --background: 42 33% 96%;
+  --foreground: 216 24% 16%;
+  --border: 36 18% 82%;
+  --muted: 38 24% 90%;
+  --muted-foreground: 216 12% 38%;
+  --card: 40 38% 98%;
+  --card-foreground: 216 24% 16%;
+  --primary: 171 63% 29%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 171 63% 29%;
+  --radius: 1rem;
+  font-family:
+    "Aptos",
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: 218 28% 9%;
+  --foreground: 40 30% 94%;
+  --border: 218 18% 24%;
+  --muted: 218 18% 18%;
+  --muted-foreground: 40 14% 72%;
+  --card: 218 24% 12%;
+  --card-foreground: 40 30% 94%;
+  --primary: 171 54% 46%;
+  --primary-foreground: 218 28% 9%;
+  --ring: 171 54% 46%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}

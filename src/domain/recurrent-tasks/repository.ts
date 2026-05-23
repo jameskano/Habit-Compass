@@ -1,0 +1,31 @@
+import type { EntityId, ISODateString, UserId } from '@/shared/types'
+import type { Result } from '@/shared/lib/result'
+
+import type { RecurrentTask, RecurrentTaskOccurrence, RecurrentTaskOccurrenceStatus } from './types'
+
+export type CreateRecurrentTaskInput = Omit<
+  RecurrentTask,
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'
+>
+export type UpdateRecurrentTaskInput = Partial<
+  Omit<RecurrentTask, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+> & {
+  id: EntityId
+}
+
+export interface RecurrentTasksRepository {
+  listForUser(input: { userId: UserId }): Promise<Result<RecurrentTask[]>>
+  listForToday(input: { userId: UserId; date: ISODateString }): Promise<Result<RecurrentTaskOccurrence[]>>
+  create(input: CreateRecurrentTaskInput): Promise<Result<RecurrentTask>>
+  update(input: UpdateRecurrentTaskInput): Promise<Result<RecurrentTask>>
+  archive(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
+  softDelete(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
+  restore(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
+  logCompletion(input: {
+    userId: UserId
+    recurrentTaskId: EntityId
+    occurrenceDate: ISODateString
+    status: RecurrentTaskOccurrenceStatus
+    note?: string | null
+  }): Promise<Result<RecurrentTaskOccurrence>>
+}
