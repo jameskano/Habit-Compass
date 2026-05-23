@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { unwrapResult } from '@/shared/lib/result'
+import { unwrapResult } from '@/shared/utils/result'
 import { habitsRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 

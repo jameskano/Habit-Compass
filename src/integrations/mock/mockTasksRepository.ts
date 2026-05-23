@@ -1,5 +1,5 @@
-import { err, ok, type Result } from '@/shared/lib/result'
-import { createNotFoundError } from '@/shared/lib/appError'
+import { err, ok, type Result } from '@/shared/utils/result'
+import { createNotFoundError } from '@/shared/utils/appError'
 import type { Task, TasksRepository } from '@/domain/tasks'
 
 import { getMockState } from './mockData'

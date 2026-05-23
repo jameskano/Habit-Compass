@@ -1,4 +1,4 @@
-import { ok } from '@/shared/lib/result'
+import { ok } from '@/shared/utils/result'
 import type { MoodLog, MoodRepository } from '@/domain/mood'
 
 import { getMockState } from './mockData'

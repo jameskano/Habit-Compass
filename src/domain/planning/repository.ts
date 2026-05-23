@@ -1,5 +1,5 @@
 import type { EntityId, ISODateString, UserId } from '@/shared/types'
-import type { Result } from '@/shared/lib/result'
+import type { Result } from '@/shared/utils/result'
 
 import type { WeeklyPlan } from './types'
 
@@ -15,7 +15,10 @@ export type UpdateWeeklyPlanInput = Partial<
 
 export interface PlanningRepository {
   listForUser(input: { userId: UserId }): Promise<Result<WeeklyPlan[]>>
-  getForWeek(input: { userId: UserId; weekStartDate: ISODateString }): Promise<Result<WeeklyPlan | null>>
+  getForWeek(input: {
+    userId: UserId
+    weekStartDate: ISODateString
+  }): Promise<Result<WeeklyPlan | null>>
   create(input: CreateWeeklyPlanInput): Promise<Result<WeeklyPlan>>
   update(input: UpdateWeeklyPlanInput): Promise<Result<WeeklyPlan>>
   archive(input: { userId: UserId; weeklyPlanId: EntityId }): Promise<Result<WeeklyPlan>>

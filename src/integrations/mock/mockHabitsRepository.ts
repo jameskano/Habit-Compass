@@ -1,5 +1,5 @@
-import { err, ok, type Result } from '@/shared/lib/result'
-import { createNotFoundError } from '@/shared/lib/appError'
+import { err, ok, type Result } from '@/shared/utils/result'
+import { createNotFoundError } from '@/shared/utils/appError'
 import type { Habit, HabitLog, HabitsRepository, LogHabitCompletionInput } from '@/domain/habits'
 
 import { getMockState } from './mockData'
@@ -28,7 +28,9 @@ function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): 
 
 export const mockHabitsRepository: HabitsRepository = {
   async listForUser({ userId }) {
-    const habits = getMockState().habits.filter((habit) => habit.userId === userId && isVisibleHabit(habit))
+    const habits = getMockState().habits.filter(
+      (habit) => habit.userId === userId && isVisibleHabit(habit),
+    )
     return ok(habits)
   },
 
@@ -40,7 +42,9 @@ export const mockHabitsRepository: HabitsRepository = {
   },
 
   async listLogsForDate({ userId, date }) {
-    const logs = getMockState().habitLogs.filter((log) => log.userId === userId && log.loggedForDate === date)
+    const logs = getMockState().habitLogs.filter(
+      (log) => log.userId === userId && log.loggedForDate === date,
+    )
     return ok(logs)
   },
 
@@ -105,7 +109,10 @@ export const mockHabitsRepository: HabitsRepository = {
     )
 
     const nextLog: HabitLog = {
-      id: existingIndex >= 0 ? state.habitLogs[existingIndex].id : `habit-log-${state.habitLogs.length + 1}`,
+      id:
+        existingIndex >= 0
+          ? state.habitLogs[existingIndex].id
+          : `habit-log-${state.habitLogs.length + 1}`,
       userId: input.userId,
       habitId: input.habitId,
       loggedForDate: input.logDate,
@@ -113,8 +120,8 @@ export const mockHabitsRepository: HabitsRepository = {
       status: 'completed',
       completionLevel: input.completionLevel ?? null,
       repetitions: null,
-      durationMinutes: input.unit === 'minutes' ? input.value ?? null : null,
-      quantity: input.unit === 'quantity' ? input.value ?? null : null,
+      durationMinutes: input.unit === 'minutes' ? (input.value ?? null) : null,
+      quantity: input.unit === 'quantity' ? (input.value ?? null) : null,
       quantityUnitLabel: input.unit === 'quantity' ? 'units' : null,
       notes: input.note ?? null,
       createdAt:

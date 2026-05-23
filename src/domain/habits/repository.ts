@@ -1,9 +1,12 @@
 import type { EntityId, ISODateString, UserId } from '@/shared/types'
-import type { Result } from '@/shared/lib/result'
+import type { Result } from '@/shared/utils/result'
 
 import type { Habit, HabitCompletionLevel, HabitLog } from './types'
 
-export type CreateHabitInput = Omit<Habit, 'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'>
+export type CreateHabitInput = Omit<
+  Habit,
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'
+>
 export type UpdateHabitInput = Partial<Omit<Habit, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
   id: EntityId
 }

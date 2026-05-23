@@ -1,5 +1,5 @@
 import type { EntityId, UserId } from '@/shared/types'
-import type { Result } from '@/shared/lib/result'
+import type { Result } from '@/shared/utils/result'
 
 import type { Category } from './types'
 

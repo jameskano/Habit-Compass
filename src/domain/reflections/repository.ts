@@ -1,5 +1,5 @@
 import type { EntityId, ISODateString, UserId } from '@/shared/types'
-import type { Result } from '@/shared/lib/result'
+import type { Result } from '@/shared/utils/result'
 
 import type { Reflection } from './types'
 

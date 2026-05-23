@@ -1,6 +1,6 @@
 import type { CategoriesRepository } from '@/domain/categories'
-import { err } from '@/shared/lib/result'
-import { createNotImplementedError } from '@/shared/lib/appError'
+import { err } from '@/shared/utils/result'
+import { createNotImplementedError } from '@/shared/utils/appError'
 
 const error = () => err(createNotImplementedError('Supabase categories repository'))
 

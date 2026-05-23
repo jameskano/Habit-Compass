@@ -1,5 +1,5 @@
 import type { EntityId, ISODateString, UserId } from '@/shared/types'
-import type { Result } from '@/shared/lib/result'
+import type { Result } from '@/shared/utils/result'
 
 import type { RecurrentTask, RecurrentTaskOccurrence, RecurrentTaskOccurrenceStatus } from './types'
 
@@ -15,7 +15,10 @@ export type UpdateRecurrentTaskInput = Partial<
 
 export interface RecurrentTasksRepository {
   listForUser(input: { userId: UserId }): Promise<Result<RecurrentTask[]>>
-  listForToday(input: { userId: UserId; date: ISODateString }): Promise<Result<RecurrentTaskOccurrence[]>>
+  listForToday(input: {
+    userId: UserId
+    date: ISODateString
+  }): Promise<Result<RecurrentTaskOccurrence[]>>
   create(input: CreateRecurrentTaskInput): Promise<Result<RecurrentTask>>
   update(input: UpdateRecurrentTaskInput): Promise<Result<RecurrentTask>>
   archive(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>

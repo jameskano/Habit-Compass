@@ -9,7 +9,7 @@ import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQue
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { mockData } from '@/integrations/mock/mockData'
-import { cn } from '@/shared/lib/cn'
+import { cn } from '@/shared/utils/cn'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
 import { PageHeader } from '@/shared/ui/PageHeader'
@@ -30,7 +30,7 @@ function getCardTitle(item: ManagedItem) {
 }
 
 function getCardMeta(item: ManagedItem) {
-  return 'name' in item ? item.description ?? '' : item.notes ?? ''
+  return 'name' in item ? (item.description ?? '') : (item.notes ?? '')
 }
 
 export function ItemsPage() {
@@ -60,7 +60,9 @@ export function ItemsPage() {
     }
 
     if (habitsQuery.isLoading || tasksQuery.isLoading || categoriesQuery.isLoading) {
-      return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+      return (
+        <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+      )
     }
 
     if (habitsQuery.isError || tasksQuery.isError || categoriesQuery.isError) {
@@ -79,13 +81,15 @@ export function ItemsPage() {
 
     const items: ManagedItem[] =
       activeTab === 'habits'
-        ? habitsQuery.data ?? []
+        ? (habitsQuery.data ?? [])
         : activeTab === 'tasks'
-          ? tasksQuery.data ?? []
-          : categoriesQuery.data ?? []
+          ? (tasksQuery.data ?? [])
+          : (categoriesQuery.data ?? [])
 
     if (items.length === 0) {
-      return <EmptyState titleId="page.items.empty.title" descriptionId="page.items.empty.description" />
+      return (
+        <EmptyState titleId="page.items.empty.title" descriptionId="page.items.empty.description" />
+      )
     }
 
     return (
