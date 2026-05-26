@@ -9,7 +9,7 @@ Guidelines:
 - App-level Zustand state lives in `src/app/state`.
 - Route components live under `src/features`.
 - Shared primitives live under `src/shared/ui`.
-- Shared utilities live under `src/shared/lib`.
+- Shared utilities live under `src/shared/utils`.
 - Forms use React Hook Form and Zod.
 - User-facing strings use `react-intl`.
 - Domain behavior is imported from `src/domain`, not embedded in components.
