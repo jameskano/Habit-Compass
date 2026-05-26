@@ -39,7 +39,7 @@ Users need a small settings surface for personal preferences and safety controls
   - `mood`
   - `weeklyPlanning`
   - `suggestions`
-  - `minimumStandardDeep`
+  - `habitCompletionLevels`
   - `categories`
   - `reflections`
 - Settings must store week start preference.

@@ -25,11 +25,11 @@
 --   1,
 --   'Europe/Madrid',
 --   false,
---   '{"mood": true, "weeklyPlanning": true, "suggestions": true, "minimumStandardDeep": false, "categories": true, "reflections": false}'::jsonb
+--   '{"mood": true, "weeklyPlanning": true, "suggestions": true, "habitCompletionLevels": false, "categories": true, "reflections": false}'::jsonb
 -- );
 --
 -- Example starter categories for that user:
--- insert into public.categories (user_id, name, type, color, icon, sort_order)
+-- insert into public.categories (user_id, name, color, icon, sort_order)
 -- values
---   ('00000000-0000-0000-0000-000000000000', 'Health', 'role', '#16a34a', 'heart', 0),
---   ('00000000-0000-0000-0000-000000000000', 'Learning', 'value', '#2563eb', 'book-open', 1);
+--   ('00000000-0000-0000-0000-000000000000', 'Health', '#16a34a', 'heart', 0),
+--   ('00000000-0000-0000-0000-000000000000', 'Learning', '#2563eb', 'book-open', 1);

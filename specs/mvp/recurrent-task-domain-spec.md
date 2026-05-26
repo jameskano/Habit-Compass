@@ -42,7 +42,11 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - MVP execution logic must only rely on the structured rules above.
 - `customFutureRule` may exist as a descriptive placeholder only.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
-- Parent recurrent tasks must support active, archived, and deleted lifecycle state.
+- Recurrent tasks have priority `low`, `medium`, or `high`, stored order, and carry-forward behavior.
+- The parent schedule is bounded by `startsOn` and optional `endsOn`.
+- Read logic derives overdue pending/missed presentation without writing automatic missed occurrences.
+- Parent recurrent tasks must support only active and archived lifecycle state.
+- Delete physically removes a parent recurrent task after explicit confirmation.
 
 ## Non-Functional Requirements
 
@@ -56,8 +60,12 @@ Users need repeatable tasks that regenerate over time without forcing them into 
   - `title`
   - `notes`
   - `categoryId`
+  - `priority`
+  - `carryForward`
+  - `order`
   - `lifecycleStatus`
   - `startsOn`
+  - `endsOn`
   - `recurrenceRule`
 - `RecurrentTaskOccurrence`
   - base entity fields
@@ -91,3 +99,4 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Schema tests for each recurrence rule.
 - Unit tests for invalid day-of-week and day-of-month payloads.
 - Schema tests for recurrent task occurrence statuses.
+- Unit tests for carry-forward occurrence derivation without read-side writes.

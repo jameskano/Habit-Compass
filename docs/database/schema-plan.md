@@ -6,7 +6,7 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
 
 - Keep the relational model readable and close to the current MVP specs.
 - Preserve `simple by default, deep by choice`.
-- Prefer soft-delete-friendly columns for user content that the app may archive or restore.
+- Use archive for reversible item removal and physical delete only after explicit confirmation.
 - Keep advanced variability in explicit JSONB config columns until the product proves which shapes should become normalized tables.
 
 ## Tables
@@ -16,18 +16,18 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
   - Stores app-level preferences: language, theme, week start, timezone, onboarding state, and feature flags.
 - `categories`
   - Optional grouping for habits, tasks, recurrent tasks, and weekly priorities.
-  - Supports `role`, `value`, `area`, `project`, and `custom` types.
+  - Stores customizable label name, icon, color, sort order, and starter-label marker without category types.
 - `habits`
-  - Stores habit definitions, tracking type, optional category, and the layered minimum/standard/deep configs.
-  - `frequency_config`, `goal_config`, and completion-level configs are JSONB to match the current domain model.
+  - Stores habit definitions, priority, ordering, schedule, tracking type, optional category, and optional minimum/standard configs.
+  - `schedule_config`, `goal_config`, and completion-level configs are JSONB to match the current domain model.
 - `habit_logs`
-  - Daily log records for habits.
+  - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
   - Unique per user, habit, and log date.
 - `tasks`
-  - One-off task records with optional due date and category.
-  - MVP database status is `pending`, `completed`, or `canceled`.
+  - One-off task records with optional due date, priority, carry-forward behavior, and category.
+  - MVP database status is `pending`, `completed`, `skipped`, or `missed`.
 - `recurrent_tasks`
-  - Parent recurring-task definitions.
+  - Parent recurring-task definitions with priority, ordering, start/end bounds, and carry-forward behavior.
   - `recurrence_config` is JSONB because the recurrence model is intentionally explicit but still evolving.
 - `recurrent_task_logs`
   - Per-occurrence status records for recurrent tasks.
@@ -58,20 +58,21 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
 
 ## JSONB Fields
 
-- `habits.frequency_config`
-  - Stores period-oriented schedule rules such as `day`, `week`, `month`, or `custom`.
+- `habits.schedule_config`
+  - Stores explicit expectation rules or `flexiblePeriod`; flexible schedules calculate progress without deriving missed individual dates.
 - `habits.goal_config`
   - Stores goal variants such as binary, times-per-period, repetitions, time, and quantity targets.
-- `habits.minimum_config`, `standard_config`, `deep_config`
+- `habits.minimum_config`, `standard_config`
   - Optional completion-level overrides. Null keeps the habit simple.
 - `recurrent_tasks.recurrence_config`
   - Stores supported recurrence contracts: `daily`, `specificDaysOfWeek`, `everyXDays`, `everyXWeeks`, `everyXMonths`, `firstWeekdayOfMonth`, and `customFutureRule`.
 
-## Soft Delete and Archive
+## Delete and Archive
 
 - `archived_at` is used where the product expects a reversible inactive state.
-- `deleted_at` is present on content that should usually be soft-deleted first.
-- The database still allows physical deletes through RLS-compliant ownership rules. The application layer should prefer soft-delete flows by default.
+- Items do not use `deleted_at`; confirmed deletion physically removes an item.
+- `deleted_at` remains available only for non-item authored content whose lifecycle is outside the Items pass, such as reflections.
+- Delete remains protected by RLS-compliant ownership rules.
 
 ## Default Data
 

@@ -1,10 +1,19 @@
-import type { BaseEntityFields, EntityId, ISODateString, ISODateTimeString, LifecycleStatus } from '@/shared/types'
+import type {
+  EntityId,
+  HabitPriority,
+  ISODateString,
+  ISODateTimeString,
+  ItemEntityFields,
+  LifecycleStatus,
+} from '@/shared/types'
 
 import type {
+  habitDayOfWeekValues,
   habitCompletionLevels,
   habitLogStatuses,
   habitPeriods,
   habitResetModes,
+  habitScheduleKinds,
   habitTrackingTypes,
 } from './constants'
 
@@ -13,6 +22,8 @@ export type HabitTrackingType = (typeof habitTrackingTypes)[number]
 export type HabitCompletionLevel = (typeof habitCompletionLevels)[number]
 export type HabitResetMode = (typeof habitResetModes)[number]
 export type HabitLogStatus = (typeof habitLogStatuses)[number]
+export type HabitScheduleKind = (typeof habitScheduleKinds)[number]
+export type HabitDayOfWeek = (typeof habitDayOfWeekValues)[number]
 
 export type HabitFrequencyConfig = {
   period: HabitPeriod
@@ -64,11 +75,60 @@ export type HabitGoalConfig =
   | QuantityPerSessionGoalConfig
   | TotalQuantityPerPeriodGoalConfig
 
-export type Habit = BaseEntityFields & {
+export type DailyHabitScheduleRule = {
+  kind: 'daily'
+}
+
+export type SpecificDaysHabitScheduleRule = {
+  kind: 'specificDaysOfWeek'
+  daysOfWeek: readonly HabitDayOfWeek[]
+}
+
+export type EveryXDaysHabitScheduleRule = {
+  kind: 'everyXDays'
+  intervalDays: number
+}
+
+export type EveryXWeeksHabitScheduleRule = {
+  kind: 'everyXWeeks'
+  intervalWeeks: number
+  daysOfWeek: readonly HabitDayOfWeek[]
+}
+
+export type EveryXMonthsHabitScheduleRule = {
+  kind: 'everyXMonths'
+  intervalMonths: number
+  dayOfMonth: number
+}
+
+export type FirstWeekdayOfMonthHabitScheduleRule = {
+  kind: 'firstWeekdayOfMonth'
+  weekday: HabitDayOfWeek
+}
+
+export type FlexiblePeriodHabitScheduleRule = {
+  kind: 'flexiblePeriod'
+}
+
+export type HabitScheduleRule =
+  | DailyHabitScheduleRule
+  | SpecificDaysHabitScheduleRule
+  | EveryXDaysHabitScheduleRule
+  | EveryXWeeksHabitScheduleRule
+  | EveryXMonthsHabitScheduleRule
+  | FirstWeekdayOfMonthHabitScheduleRule
+  | FlexiblePeriodHabitScheduleRule
+
+export type Habit = ItemEntityFields & {
   title: string
   notes?: string | null
   lifecycleStatus: LifecycleStatus
   categoryId?: EntityId | null
+  priority: HabitPriority
+  startsOn: ISODateString
+  endsOn?: ISODateString | null
+  order: number
+  scheduleRule: HabitScheduleRule
   trackingType: HabitTrackingType
   goalConfig: HabitGoalConfig
   usesCompletionLevels: boolean
@@ -77,7 +137,7 @@ export type Habit = BaseEntityFields & {
   resetMode: HabitResetMode
 }
 
-export type HabitLog = BaseEntityFields & {
+export type HabitLog = ItemEntityFields & {
   habitId: EntityId
   loggedForDate: ISODateString
   loggedAt: ISODateTimeString
@@ -89,5 +149,3 @@ export type HabitLog = BaseEntityFields & {
   quantityUnitLabel?: string | null
   notes?: string | null
 }
-
-// Advanced recurrence and habit templates belong in future specs after the MVP goal model is validated.

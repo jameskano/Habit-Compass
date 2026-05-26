@@ -2,7 +2,7 @@
 
 This document defines the domain models needed for the Items feature.
 
-These models are TypeScript-oriented and can be adapted to the current project architecture.
+These models use the current project conventions: item contracts belong under `src/domain`, user-visible item names use `title`, categories retain `name`, and lifecycle is expressed as `lifecycleStatus`.
 
 ## Design principle
 
@@ -11,7 +11,7 @@ Do not store derived habit stats as the main source of truth.
 The source of truth should be:
 
 ```txt
-Habit definition + frequency rule + completion logs
+Habit definition + scheduleRule + goalConfig + completion logs
 ```
 
 From those, calculate:
@@ -31,7 +31,7 @@ You can add cached snapshots later for performance, but the cache must not becom
 ## Shared primitive types
 
 ```ts
-export type ItemStatus = "active" | "archived";
+export type ItemLifecycleStatus = "active" | "archived";
 
 export type HabitPriority = "low" | "medium" | "high" | "essential";
 
@@ -44,7 +44,7 @@ export type ItemType = "habit" | "task" | "recurrent_task";
 
 ## Category
 
-Categories are customizable and can represent roles, values, areas of life, or any user-defined grouping.
+Categories are customizable labels for any user-defined grouping.
 
 Do not add a category `type` field.
 
@@ -59,6 +59,8 @@ export interface Category {
 
   order: number;
 
+  lifecycleStatus: ItemLifecycleStatus;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -66,105 +68,27 @@ export interface Category {
 
 ---
 
-## Frequency
+## Scheduling and goals
 
-The frequency model should be flexible enough for the MVP and future growth without using a full recurring-rule system immediately.
+Keep the existing codebase separation:
 
-```ts
-export type FrequencyPeriod = "day" | "week" | "month" | "year";
-
-export type FrequencyMode =
-  | "daily"
-  | "specific_days"
-  | "times_per_period"
-  | "interval"
-  | "monthly_pattern"
-  | "custom";
-
-export type HabitTargetKind = "binary" | "quantity" | "time";
-
-export type HabitTargetUnit =
-  | "minutes"
-  | "hours"
-  | "pages"
-  | "reps"
-  | "custom";
-
-export interface HabitTarget {
-  kind: HabitTargetKind;
-
-  minimumAmount?: number;
-  standardAmount?: number;
-
-  unit?: HabitTargetUnit;
-  customUnit?: string;
-}
-
-export interface FrequencyRule {
-  mode: FrequencyMode;
-
-  // Every 2 days, every 3 weeks, every 1 month, etc.
-  interval?: number;
-  intervalUnit?: "day" | "week" | "month";
-
-  // Monday, Wednesday, Friday, etc.
-  // Recommended convention: 0 = Sunday, 1 = Monday, ... 6 = Saturday.
-  daysOfWeek?: number[];
-
-  // 3 times per week, 10 times per month, etc.
-  times?: number;
-  period?: FrequencyPeriod;
-
-  // First Monday of the month, last Friday, etc.
-  monthlyPattern?: {
-    weekOfMonth: 1 | 2 | 3 | 4 | -1;
-    dayOfWeek: number;
-  };
-
-  target?: HabitTarget;
-}
-```
-
-### Supported examples
+- `scheduleRule` decides which dates are expected.
+- `goalConfig` decides what completing the habit means.
 
 ```ts
-const dailyHabit: FrequencyRule = {
-  mode: "daily",
-  target: { kind: "binary" },
-};
-
-const threeTimesPerWeek: FrequencyRule = {
-  mode: "times_per_period",
-  times: 3,
-  period: "week",
-  target: { kind: "binary" },
-};
-
-const mondayWednesdayFriday: FrequencyRule = {
-  mode: "specific_days",
-  daysOfWeek: [1, 3, 5],
-  target: { kind: "binary" },
-};
-
-const everyTwoDays: FrequencyRule = {
-  mode: "interval",
-  interval: 2,
-  intervalUnit: "day",
-  target: { kind: "binary" },
-};
-
-const englishThirtyMinutes: FrequencyRule = {
-  mode: "times_per_period",
-  times: 3,
-  period: "week",
-  target: {
-    kind: "time",
-    minimumAmount: 5,
-    standardAmount: 30,
-    unit: "minutes",
-  },
-};
+export type HabitScheduleRule =
+  | { kind: "daily" }
+  | { kind: "specificDaysOfWeek"; daysOfWeek: number[] }
+  | { kind: "everyXDays"; intervalDays: number }
+  | { kind: "everyXWeeks"; intervalWeeks: number; daysOfWeek: number[] }
+  | { kind: "everyXMonths"; intervalMonths: number; dayOfMonth: number }
+  | { kind: "firstWeekdayOfMonth"; weekday: number }
+  | { kind: "flexiblePeriod" };
 ```
+
+`flexiblePeriod` is only valid with an existing period-based `goalConfig`. It does not assign missed state to individual empty dates.
+
+Frequency-summary utilities should return translation-ready message descriptors; display strings are added with the Items UI.
 
 ---
 
@@ -175,19 +99,19 @@ export interface Habit {
   id: string;
   userId: string;
 
-  name: string;
-  description?: string;
+  title: string;
   notes?: string;
 
   categoryId?: string;
 
   priority: HabitPriority;
-  status: ItemStatus;
+  lifecycleStatus: ItemLifecycleStatus;
 
-  frequency: FrequencyRule;
+  scheduleRule: HabitScheduleRule;
+  goalConfig: HabitGoalConfig;
 
-  startDate: string; // YYYY-MM-DD
-  endDate?: string;  // YYYY-MM-DD
+  startsOn: string; // YYYY-MM-DD
+  endsOn?: string;  // YYYY-MM-DD
 
   order: number;
 
@@ -199,7 +123,7 @@ export interface Habit {
 
 ### Habit completion level
 
-Remove `deep` for MVP.
+Completion levels for MVP are limited to minimum and standard.
 
 ```ts
 export type HabitCompletionLevel = "minimum" | "standard";
@@ -365,14 +289,13 @@ export interface Task {
   id: string;
   userId: string;
 
-  name: string;
-  description?: string;
+  title: string;
   notes?: string;
 
   categoryId?: string;
 
   priority: TaskPriority;
-  status: ItemStatus;
+  lifecycleStatus: ItemLifecycleStatus;
 
   dueDate?: string; // YYYY-MM-DD
 
@@ -380,8 +303,6 @@ export interface Task {
   carryForward: boolean;
 
   completedAt?: string;
-
-  order: number;
 
   createdAt: string;
   updatedAt: string;
@@ -404,24 +325,20 @@ export interface RecurrentTask {
   id: string;
   userId: string;
 
-  name: string;
-  description?: string;
+  title: string;
   notes?: string;
 
   categoryId?: string;
 
   priority: TaskPriority;
-  status: ItemStatus;
+  lifecycleStatus: ItemLifecycleStatus;
 
-  frequency: FrequencyRule;
+  recurrenceRule: RecurrenceRule;
 
-  startDate: string; // YYYY-MM-DD
-  endDate?: string;  // YYYY-MM-DD
+  startsOn: string; // YYYY-MM-DD
+  endsOn?: string;  // YYYY-MM-DD
 
   carryForward: boolean;
-
-  nextDueDate?: string;
-  lastCompletedAt?: string;
 
   order: number;
 
@@ -447,7 +364,7 @@ export interface RecurrentTaskOccurrence {
   recurrentTaskId: string;
   userId: string;
 
-  scheduledDate: string; // YYYY-MM-DD
+  scheduledForDate: string; // YYYY-MM-DD
 
   status: RecurrentTaskOccurrenceStatus;
 

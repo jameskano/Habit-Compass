@@ -26,11 +26,6 @@ export const mockAppShellData = {
       { id: 'rec-1', titleId: 'mock.items.recurrent.review', metaId: 'mock.items.recurrent.reviewMeta' },
       { id: 'rec-2', titleId: 'mock.items.recurrent.plants', metaId: 'mock.items.recurrent.plantsMeta' },
     ],
-    categories: [
-      { id: 'cat-1', titleId: 'mock.items.category.health', metaId: 'mock.items.category.healthMeta' },
-      { id: 'cat-2', titleId: 'mock.items.category.work', metaId: 'mock.items.category.workMeta' },
-    ],
-    archived: [],
   },
   mood: {
     historyCount: 5,

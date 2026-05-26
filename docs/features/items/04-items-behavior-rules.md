@@ -44,7 +44,6 @@ Editable fields:
 - Priority
 - Frequency
 - Notes
-- Description
 - Start date
 - End date
 
@@ -78,7 +77,7 @@ Habits support:
 - Standard completion.
 - Skipped day.
 
-No deep completion in MVP.
+Only minimum and standard completion levels are supported in MVP.
 
 ## Habit missed days
 
@@ -239,6 +238,7 @@ At minimum, the app should be able to know:
 - Whether an occurrence is pending/completed/skipped/missed.
 
 Avoid building a complex scheduler in the first pass if the rest of the app is not ready. Keep pure utility functions testable.
+Reading recurrent occurrences must not persist automatic missed records; missed presentation can be derived until a deliberate write action exists.
 
 ## Carry forward true
 

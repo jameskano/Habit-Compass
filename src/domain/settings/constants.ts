@@ -4,7 +4,7 @@ export const featureToggleKeys = [
   'mood',
   'weeklyPlanning',
   'suggestions',
-  'minimumStandardDeep',
+  'habitCompletionLevels',
   'categories',
   'reflections',
 ] as const

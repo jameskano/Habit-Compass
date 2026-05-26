@@ -35,7 +35,7 @@ The initial RLS rules are implemented in [supabase/migrations/0001_initial_schem
 
 - Insert policies use `with check` so a user cannot create rows under another user id.
 - Update policies use both `using` and `with check` so a user cannot rewrite ownership during updates.
-- Delete policies remain owner-only even where the product prefers soft delete, because hard deletes may still be needed for admin-free user cleanup flows later.
+- Delete policies remain owner-only. Item deletes are physical only after explicit confirmation, while archive remains the reversible item action.
 
 ## Notes for Future Supabase Work
 

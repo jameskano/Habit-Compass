@@ -20,9 +20,10 @@ describe('habit completion harness', () => {
     const habit = createHabit({ trackingType: 'binary' })
     const result = evaluateHabitCompletion({
       habit,
-      logs: [createHabitLog({ status: 'missed' })],
+      logs: [],
       periodStart: '2026-05-21',
       periodEnd: '2026-05-21',
+      today: '2026-05-22',
     })
 
     expect(result.outcome).toBe('missed')

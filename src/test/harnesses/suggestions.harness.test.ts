@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createSuggestionContext, createSuggestionHabit, createMissedLogs, createMood } from '@/domain/suggestions/logic/suggestionFixtures'
+import { createSuggestionContext, createSuggestionHabit, createMood } from '@/domain/suggestions/logic/suggestionFixtures'
 import { generateSuggestions } from '@/domain/suggestions/logic/suggestionEngine'
 
 describe('suggestions harness', () => {
@@ -21,7 +21,8 @@ describe('suggestions harness', () => {
         habitEntries: [
           {
             habit: createSuggestionHabit(),
-            recentLogs: createMissedLogs(3),
+            recentLogs: [],
+            missedDayCount: 3,
           },
         ],
       }),

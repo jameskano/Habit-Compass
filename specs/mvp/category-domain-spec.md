@@ -2,78 +2,48 @@
 
 ## Problem
 
-Users need lightweight grouping for habits and tasks, while the product keeps its default orientation toward roles and values.
-
-## User Value
-
-- Categories help organize items without forcing users into a complex taxonomy.
-- Users who care about roles or values can express them, while simple users can keep categories minimal or ignore them.
+Users need lightweight optional labels for organizing habits, tasks, and recurrent tasks.
 
 ## Scope
 
 - Category definitions.
-- Category orientation.
-- Archive and delete behavior.
-- Optional category assignment from habits, tasks, and recurrent tasks.
+- Optional assignment from items.
+- Archive and confirmed physical delete behavior.
 
 ## Non-Goals
 
-- Deep collections as a primary product concept.
+- Role/value/type/orientation taxonomy.
 - Nested category trees.
-- Multi-category assignment in MVP.
-
-## User Stories
-
-- As a user, I can create a custom category.
-- As a user, I can use role-oriented or value-oriented categories.
-- As a user, I can leave an item uncategorized.
+- Multiple categories per item in MVP.
 
 ## Functional Requirements
 
-- Categories must support `role`, `value`, and `custom` orientation.
-- Categories must be fully customizable.
-- Items may reference zero or one category in MVP.
-- Categories must support active, archived, and deleted lifecycle state.
-- The model may mark a category as a default template or starter category.
-
-## Non-Functional Requirements
-
-- Category use must remain optional.
-- The domain model must not force roles or values for all users.
+- Categories are customizable labels with `name`, optional `iconName`, optional `colorToken`, and `order`.
+- Items may reference zero or one category.
+- Category lifecycle status is limited to `active` and `archived`.
+- Delete physically removes a category after explicit confirmation and does not delete linked items.
+- A category may remain marked as a starter/default label without imposing a category type.
 
 ## Data Model
 
 - `Category`
-  - base entity fields
+  - base item entity fields
   - `name`
   - `description`
-  - `colorToken`
   - `iconName`
-  - `orientation`
+  - `colorToken`
+  - `order`
   - `lifecycleStatus`
   - `isDefault`
 
-## UI States
-
-- No categories configured.
-- Active category state.
-- Archived category state.
-- Uncategorized item state.
-
-## Edge Cases
-
-- Deleting a category must not imply deleting linked items.
-- Role/value defaults must remain editable.
-- An empty name is invalid.
-
 ## Acceptance Criteria
 
-- Categories can be created in custom, role, or value orientation.
-- Items are allowed to remain uncategorized.
-- Archive and delete are supported separately from item lifecycle.
+- Categories can be created without role, value, type, or orientation metadata.
+- Items can remain uncategorized.
+- Archive is reversible and delete removes the category from storage.
+- Deleting a category leaves linked items intact with no category assignment.
 
 ## Test Plan
 
-- Schema tests for minimal and optional category payloads.
-- Unit tests for valid orientations.
-- Unit tests ensuring linked items can still exist without a category value.
+- Schema tests for customizable category labels and rejection of type/orientation fields.
+- Repository tests for archive and physical delete unlinking behavior.

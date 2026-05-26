@@ -55,7 +55,7 @@ Visual states:
 
 Constraints:
 
-- Do not add deep completion.
+- Keep completion levels limited to minimum and standard.
 - Do not store missed days as logs.
 - Do not implement full habit detail if that belongs to Phase 4.
 - Do not add unrelated stats page.

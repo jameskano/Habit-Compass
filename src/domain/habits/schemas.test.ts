@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { HabitGoalConfigSchema } from './schemas'
+import { createHabit } from './logic/habitFixtures'
+import { HabitCompletionLevelSchema, HabitGoalConfigSchema, HabitLogStatusSchema, HabitSchema } from './schemas'
 
 describe('HabitGoalConfigSchema', () => {
   it('parses a binary goal', () => {
@@ -20,5 +21,51 @@ describe('HabitGoalConfigSchema', () => {
     }
 
     expect(goal.customPeriodDays).toBe(10)
+  })
+})
+
+describe('habit persisted state enums', () => {
+  it('supports minimum and standard completion only', () => {
+    expect(HabitCompletionLevelSchema.safeParse('minimum').success).toBe(true)
+    expect(HabitCompletionLevelSchema.safeParse('standard').success).toBe(true)
+    expect(HabitCompletionLevelSchema.safeParse('deep').success).toBe(false)
+  })
+
+  it('does not persist missed habit logs', () => {
+    expect(HabitLogStatusSchema.safeParse('completed').success).toBe(true)
+    expect(HabitLogStatusSchema.safeParse('skipped').success).toBe(true)
+    expect(HabitLogStatusSchema.safeParse('missed').success).toBe(false)
+  })
+})
+
+describe('HabitSchema schedules', () => {
+  it('accepts persisted explicit and flexible schedules with priority and order', () => {
+    expect(HabitSchema.safeParse(createHabit({ trackingType: 'binary' })).success).toBe(true)
+    expect(
+      HabitSchema.safeParse(createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }))
+        .success,
+    ).toBe(true)
+    for (const scheduleRule of [
+      { kind: 'specificDaysOfWeek', daysOfWeek: [1, 3] },
+      { kind: 'everyXDays', intervalDays: 2 },
+      { kind: 'everyXWeeks', intervalWeeks: 2, daysOfWeek: [1] },
+      { kind: 'everyXMonths', intervalMonths: 1, dayOfMonth: 20 },
+      { kind: 'firstWeekdayOfMonth', weekday: 1 },
+    ] as const) {
+      expect(HabitSchema.safeParse(createHabit({ trackingType: 'binary' }, { scheduleRule })).success).toBe(true)
+    }
+  })
+
+  it('rejects ended-before-start and flexible non-period habits', () => {
+    expect(
+      HabitSchema.safeParse(
+        createHabit({ trackingType: 'binary' }, { endsOn: '2025-12-31' }),
+      ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse(
+        createHabit({ trackingType: 'binary' }, { scheduleRule: { kind: 'flexiblePeriod' } }),
+      ).success,
+    ).toBe(false)
   })
 })

@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { mockCategoriesRepository } from './mockCategoriesRepository'
 import { mockHabitsRepository } from './mockHabitsRepository'
-import { mockData, resetMockState } from './mockData'
+import { getMockState, mockData, resetMockState } from './mockData'
+import { mockRecurrentTasksRepository } from './mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mockTasksRepository'
 
 describe('mock repositories', () => {
@@ -55,5 +56,113 @@ describe('mock repositories', () => {
     if (listResult.ok) {
       expect(listResult.data.find((category) => category.id === 'category-health')).toBeDefined()
     }
+  })
+
+  it('physically deletes a habit and its completion logs', async () => {
+    const result = await mockHabitsRepository.delete({
+      userId: mockData.currentUserId,
+      habitId: 'habit-move',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')).toBeUndefined()
+    expect(getMockState().habitLogs.find((log) => log.habitId === 'habit-move')).toBeUndefined()
+  })
+
+  it('physically deletes a category without deleting linked items', async () => {
+    const result = await mockCategoriesRepository.delete({
+      userId: mockData.currentUserId,
+      categoryId: 'category-health',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(getMockState().categories.find((category) => category.id === 'category-health')).toBeUndefined()
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')?.categoryId).toBeNull()
+    expect(getMockState().tasks.find((task) => task.id === 'task-groceries')?.categoryId).toBeNull()
+    expect(getMockState().recurrentTasks.find((task) => task.id === 'recurrent-plants')?.categoryId).toBeNull()
+  })
+
+  it('stores completed and skipped habit logs, removes them, and resets only after confirmation', async () => {
+    const skipped = await mockHabitsRepository.upsertLog({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      logDate: mockData.today,
+      status: 'skipped',
+    })
+
+    expect(skipped.ok && skipped.data.status).toBe('skipped')
+
+    const listed = await mockHabitsRepository.listLogsForRange({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      from: mockData.today,
+      to: mockData.today,
+    })
+    expect(listed.ok && listed.data).toHaveLength(1)
+
+    await mockHabitsRepository.removeLog({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      logDate: mockData.today,
+    })
+    expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-water')).toBe(false)
+
+    await mockHabitsRepository.hardResetLogs({
+      userId: mockData.currentUserId,
+      habitId: 'habit-read',
+      confirmed: true,
+    })
+    expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
+  })
+
+  it('persists habit and recurrent-task order in memory', async () => {
+    const habits = await mockHabitsRepository.reorder({
+      userId: mockData.currentUserId,
+      orderedHabitIds: ['habit-water', 'habit-read', 'habit-move'],
+    })
+    const recurrent = await mockRecurrentTasksRepository.reorder({
+      userId: mockData.currentUserId,
+      orderedRecurrentTaskIds: ['recurrent-plants', 'recurrent-review'],
+    })
+
+    expect(habits.ok && habits.data.map((habit) => habit.id)).toEqual([
+      'habit-water',
+      'habit-read',
+      'habit-move',
+    ])
+    expect(recurrent.ok && recurrent.data.map((task) => task.id)).toEqual([
+      'recurrent-plants',
+      'recurrent-review',
+    ])
+  })
+
+  it('physically deletes a recurrent task and its stored occurrences', async () => {
+    const result = await mockRecurrentTasksRepository.delete({
+      userId: mockData.currentUserId,
+      recurrentTaskId: 'recurrent-plants',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(getMockState().recurrentTasks.some((task) => task.id === 'recurrent-plants')).toBe(false)
+    expect(
+      getMockState().recurrentTaskOccurrences.some(
+        (occurrence) => occurrence.recurrentTaskId === 'recurrent-plants',
+      ),
+    ).toBe(false)
+  })
+
+  it('archives and restores a recurrent parent independently from occurrences', async () => {
+    const archived = await mockRecurrentTasksRepository.archive({
+      userId: mockData.currentUserId,
+      recurrentTaskId: 'recurrent-plants',
+    })
+    expect(archived.ok && archived.data.lifecycleStatus).toBe('archived')
+
+    const restored = await mockRecurrentTasksRepository.restore({
+      userId: mockData.currentUserId,
+      recurrentTaskId: 'recurrent-plants',
+    })
+    expect(restored.ok && restored.data.lifecycleStatus).toBe('active')
+    expect(getMockState().recurrentTaskOccurrences).toHaveLength(1)
   })
 })

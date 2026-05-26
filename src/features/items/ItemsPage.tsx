@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
-import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import type { Category } from '@/domain/categories'
 import type { Habit } from '@/domain/habits'
 import type { Task } from '@/domain/tasks'
-import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { mockData } from '@/integrations/mock/mockData'
@@ -18,54 +15,32 @@ const itemTabs = [
   { key: 'habits', labelId: 'page.items.tab.habits' },
   { key: 'tasks', labelId: 'page.items.tab.tasks' },
   { key: 'recurrent', labelId: 'page.items.tab.recurrent' },
-  { key: 'categories', labelId: 'page.items.tab.categories' },
-  { key: 'archived', labelId: 'page.items.tab.archived' },
 ] as const
 
 type ItemTabKey = (typeof itemTabs)[number]['key']
-type ManagedItem = Habit | Task | Category
+type ManagedItem = Habit | Task
 
 function getCardTitle(item: ManagedItem) {
-  return 'name' in item ? item.name : item.title
+  return item.title
 }
 
 function getCardMeta(item: ManagedItem) {
-  return 'name' in item ? (item.description ?? '') : (item.notes ?? '')
+  return item.notes ?? ''
 }
 
 export function ItemsPage() {
   const [activeTab, setActiveTab] = useState<ItemTabKey>('habits')
-  const categoriesEnabled = useAppPreferencesStore((state) => state.featureToggles.categories)
   const habitsQuery = useHabitsQuery()
   const tasksQuery = useTasksQuery()
-  const categoriesQuery = useCategoriesQuery()
 
   const renderCards = () => {
-    if (activeTab === 'archived') {
-      return (
-        <EmptyState
-          titleId="page.items.archived.title"
-          descriptionId="page.items.archived.description"
-        />
-      )
-    }
-
-    if (activeTab === 'categories' && !categoriesEnabled) {
-      return (
-        <EmptyState
-          titleId="page.items.categoriesDisabled.title"
-          descriptionId="page.items.categoriesDisabled.description"
-        />
-      )
-    }
-
-    if (habitsQuery.isLoading || tasksQuery.isLoading || categoriesQuery.isLoading) {
+    if (habitsQuery.isLoading || tasksQuery.isLoading) {
       return (
         <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
       )
     }
 
-    if (habitsQuery.isError || tasksQuery.isError || categoriesQuery.isError) {
+    if (habitsQuery.isError || tasksQuery.isError) {
       return <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
     }
 
@@ -79,12 +54,7 @@ export function ItemsPage() {
       )
     }
 
-    const items: ManagedItem[] =
-      activeTab === 'habits'
-        ? (habitsQuery.data ?? [])
-        : activeTab === 'tasks'
-          ? (tasksQuery.data ?? [])
-          : (categoriesQuery.data ?? [])
+    const items: ManagedItem[] = activeTab === 'habits' ? (habitsQuery.data ?? []) : (tasksQuery.data ?? [])
 
     if (items.length === 0) {
       return (
@@ -104,9 +74,7 @@ export function ItemsPage() {
                 ? 'habit'
                 : activeTab === 'tasks'
                   ? 'task'
-                  : activeTab === 'categories'
-                    ? 'category'
-                    : 'neutral'
+                  : 'neutral'
             }
           />
         ))}

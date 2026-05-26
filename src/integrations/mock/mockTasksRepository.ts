@@ -4,10 +4,6 @@ import type { Task, TasksRepository } from '@/domain/tasks'
 
 import { getMockState } from './mockData'
 
-function isVisibleTask(task: Task) {
-  return task.lifecycleStatus !== 'deleted' && !task.deletedAt
-}
-
 function updateTaskInState(taskId: string, updater: (task: Task) => Task): Result<Task> {
   const state = getMockState()
   const index = state.tasks.findIndex((task) => task.id === taskId)
@@ -24,13 +20,13 @@ function updateTaskInState(taskId: string, updater: (task: Task) => Task): Resul
 
 export const mockTasksRepository: TasksRepository = {
   async listForUser({ userId }) {
-    return ok(getMockState().tasks.filter((task) => task.userId === userId && isVisibleTask(task)))
+    return ok(getMockState().tasks.filter((task) => task.userId === userId))
   },
 
   async listForToday({ userId, date }) {
     return ok(
       getMockState().tasks.filter(
-        (task) => task.userId === userId && isVisibleTask(task) && task.dueDate === date,
+        (task) => task.userId === userId && task.lifecycleStatus === 'active' && task.dueDate === date,
       ),
     )
   },
@@ -43,7 +39,6 @@ export const mockTasksRepository: TasksRepository = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
-      deletedAt: null,
     }
 
     state.tasks.push(task)
@@ -76,13 +71,16 @@ export const mockTasksRepository: TasksRepository = {
     }))
   },
 
-  async softDelete({ taskId }) {
-    return updateTaskInState(taskId, (task) => ({
-      ...task,
-      lifecycleStatus: 'deleted',
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+  async delete({ taskId }) {
+    const state = getMockState()
+    const index = state.tasks.findIndex((task) => task.id === taskId)
+
+    if (index === -1) {
+      return err(createNotFoundError('Task', taskId))
+    }
+
+    state.tasks.splice(index, 1)
+    return ok(null)
   },
 
   async restore({ taskId }) {
@@ -90,7 +88,6 @@ export const mockTasksRepository: TasksRepository = {
       ...task,
       lifecycleStatus: 'active',
       archivedAt: null,
-      deletedAt: null,
       updatedAt: new Date().toISOString(),
     }))
   },

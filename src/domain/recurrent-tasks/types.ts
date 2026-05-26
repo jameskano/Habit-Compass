@@ -1,4 +1,4 @@
-import type { BaseEntityFields, EntityId, ISODateString, ISODateTimeString, LifecycleStatus } from '@/shared/types'
+import type { EntityId, ISODateString, ISODateTimeString, ItemEntityFields, ItemPriority, LifecycleStatus } from '@/shared/types'
 
 import type { dayOfWeekValues, recurrenceKinds, recurrentTaskOccurrenceStatuses } from './constants'
 
@@ -51,16 +51,20 @@ export type RecurrenceRule =
   | FirstWeekdayOfMonthRecurrenceRule
   | CustomFutureRecurrenceRule
 
-export type RecurrentTask = BaseEntityFields & {
+export type RecurrentTask = ItemEntityFields & {
   title: string
   notes?: string | null
   categoryId?: EntityId | null
+  priority: ItemPriority
+  carryForward: boolean
+  order: number
   lifecycleStatus: LifecycleStatus
   startsOn: ISODateString
+  endsOn?: ISODateString | null
   recurrenceRule: RecurrenceRule
 }
 
-export type RecurrentTaskOccurrence = BaseEntityFields & {
+export type RecurrentTaskOccurrence = ItemEntityFields & {
   recurrentTaskId: EntityId
   scheduledForDate: ISODateString
   status: RecurrentTaskOccurrenceStatus

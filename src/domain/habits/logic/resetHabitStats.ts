@@ -9,12 +9,6 @@ export type HabitResetResult = {
   historyPreserved: boolean
 }
 
-export type HabitDeleteResult = {
-  habit: Habit
-  logs: HabitLog[]
-  shouldPurgeHistory: boolean
-}
-
 export function resetHabitStats(habit: Habit, logs: HabitLog[], resetAt: ISODateTimeString): HabitResetResult {
   return {
     habit: {
@@ -59,18 +53,5 @@ export function archiveHabit(habit: Habit, logs: HabitLog[], archivedAt: ISODate
       updatedAt: archivedAt,
     },
     logs,
-  }
-}
-
-export function deleteHabit(habit: Habit, logs: HabitLog[], deletedAt: ISODateTimeString, prepareHardDelete = false): HabitDeleteResult {
-  return {
-    habit: {
-      ...habit,
-      lifecycleStatus: 'deleted' as const,
-      deletedAt,
-      updatedAt: deletedAt,
-    },
-    logs,
-    shouldPurgeHistory: prepareHardDelete,
   }
 }

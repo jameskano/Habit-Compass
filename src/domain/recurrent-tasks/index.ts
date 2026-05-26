@@ -34,3 +34,11 @@ export type {
   RecurrentTasksRepository,
   UpdateRecurrentTaskInput,
 } from './repository'
+export {
+  deriveRecurrentOccurrences,
+  enumerateRecurrentTaskDates,
+  isRecurrentTaskScheduledOnDate,
+} from './logic/recurrentOccurrences'
+export type { DerivedRecurrentOccurrence } from './logic/recurrentOccurrences'
+export { getRecurrentFrequencySummary } from './logic/recurrentFrequencySummary'
+export type { RecurrentFrequencySummaryDescriptor } from './logic/recurrentFrequencySummary'

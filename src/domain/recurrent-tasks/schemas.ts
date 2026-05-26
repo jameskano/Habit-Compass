@@ -1,6 +1,13 @@
 import { z } from 'zod'
 
-import { BaseEntityFieldsSchema, EntityIdSchema, IsoDateStringSchema, IsoDateTimeStringSchema, LifecycleStatusSchema } from '@/shared/types'
+import {
+  EntityIdSchema,
+  IsoDateStringSchema,
+  IsoDateTimeStringSchema,
+  ItemEntityFieldsSchema,
+  ItemPrioritySchema,
+  LifecycleStatusSchema,
+} from '@/shared/types'
 
 import { dayOfWeekValues, recurrenceKinds, recurrentTaskOccurrenceStatuses } from './constants'
 
@@ -62,16 +69,23 @@ export const RecurrenceRuleSchema = z.discriminatedUnion('kind', [
   CustomFutureRecurrenceRuleSchema,
 ])
 
-export const RecurrentTaskSchema = BaseEntityFieldsSchema.extend({
+export const RecurrentTaskSchema = ItemEntityFieldsSchema.extend({
   title: z.string().min(1),
   notes: z.string().optional().nullable(),
   categoryId: EntityIdSchema.optional().nullable(),
+  priority: ItemPrioritySchema,
+  carryForward: z.boolean(),
+  order: z.number().int().nonnegative(),
   lifecycleStatus: LifecycleStatusSchema,
   startsOn: IsoDateStringSchema,
+  endsOn: IsoDateStringSchema.optional().nullable(),
   recurrenceRule: RecurrenceRuleSchema,
+}).refine((task) => !task.endsOn || task.endsOn >= task.startsOn, {
+  message: 'End date must not be before start date.',
+  path: ['endsOn'],
 })
 
-export const RecurrentTaskOccurrenceSchema = BaseEntityFieldsSchema.extend({
+export const RecurrentTaskOccurrenceSchema = ItemEntityFieldsSchema.extend({
   recurrentTaskId: EntityIdSchema,
   scheduledForDate: IsoDateStringSchema,
   status: RecurrentTaskOccurrenceStatusSchema,

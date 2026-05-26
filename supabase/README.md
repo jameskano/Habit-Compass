@@ -35,7 +35,7 @@ It does not include:
 ## Design Notes
 
 - User-owned tables reference `auth.users(id)` and are protected by RLS.
-- Soft-delete-oriented tables keep `archived_at` and `deleted_at` columns instead of relying on hard deletes in normal app flows.
+- Item tables keep `archived_at` for reversible removal; confirmed item deletion is physical. Non-item authored content may retain `deleted_at`.
 - Habit and recurrence variability is stored in JSONB config columns so the TypeScript domain contracts can evolve without forcing an early schema explosion.
 - Default categories are intentionally not seeded globally. They should be created during onboarding or profile bootstrap after a real user exists.
 

@@ -20,7 +20,10 @@ describe('frequency goals harness', () => {
   })
 
   it('covers X times per week and specific days of week', () => {
-    const habit = createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 })
+    const habit = createHabit(
+      { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+      { scheduleRule: habitSchedules.mondayWednesdayFriday },
+    )
     const logs = [
       createHabitLog({ loggedForDate: '2026-05-18' }),
       createHabitLog({ id: 'log-2', loggedForDate: '2026-05-20' }),
@@ -31,7 +34,6 @@ describe('frequency goals harness', () => {
       logs,
       periodStart: '2026-05-18',
       periodEnd: '2026-05-24',
-      schedule: habitSchedules.mondayWednesdayFriday,
     })
 
     expect(result.actual).toBe(2)
@@ -145,7 +147,7 @@ describe('frequency goals harness', () => {
     expect(result.unit).toBe('quantity')
   })
 
-  it('keeps a future placeholder for advanced recurrence', () => {
+  it('keeps flexible period goals out of per-day occurrence counting', () => {
     const habit = createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 })
 
     const result = evaluateHabitProgress({
@@ -153,9 +155,8 @@ describe('frequency goals harness', () => {
       logs: [],
       periodStart: '2026-05-18',
       periodEnd: '2026-05-24',
-      schedule: habitSchedules.futurePlaceholder,
     })
 
-    expect(result.recurrenceSupport).toBe('future-placeholder')
+    expect(result.scheduledOccurrenceCount).toBeNull()
   })
 })

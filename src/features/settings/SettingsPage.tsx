@@ -30,9 +30,9 @@ const toggleItems = [
     descriptionId: 'settings.toggle.suggestionsDescription',
   },
   {
-    key: 'minimumStandardDeep',
-    labelId: 'settings.toggle.minimumStandardDeep',
-    descriptionId: 'settings.toggle.minimumStandardDeepDescription',
+    key: 'habitCompletionLevels',
+    labelId: 'settings.toggle.habitCompletionLevels',
+    descriptionId: 'settings.toggle.habitCompletionLevelsDescription',
   },
   {
     key: 'reflections',

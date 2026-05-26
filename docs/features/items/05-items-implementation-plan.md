@@ -21,29 +21,29 @@ Then produce a short plan mapping the Items docs to actual project files.
 
 ## Phase 1 — Domain types, utilities, and mock data
 
-Create or update:
+Extend the existing domain and repository boundaries:
 
 - Item domain types.
-- Frequency types.
+- Habit `scheduleRule` types alongside the existing `goalConfig` model.
 - Habit log types.
 - Recurrent task occurrence types.
 - Mock/sample data for habits, tasks, recurrent tasks, categories.
 - Utility functions for:
-  - Frequency summary text.
+  - Translation-ready frequency summary descriptors.
   - Habit day state derivation.
   - Habit percentage calculation.
   - Streak calculation.
   - Sorting tasks.
   - Sorting recurrent tasks.
 
-Suggested files if no existing convention exists:
+Existing locations to update:
 
 ```txt
-src/features/items/types.ts
-src/features/items/mockData.ts
-src/features/items/utils/frequency.ts
-src/features/items/utils/habitStats.ts
-src/features/items/utils/sorting.ts
+src/domain/habits/
+src/domain/tasks/
+src/domain/recurrent-tasks/
+src/domain/categories/
+src/integrations/mock/
 ```
 
 Keep utilities pure and testable.
@@ -56,9 +56,9 @@ Create the Items section UI shell:
 - Tabs: Habits, Tasks, Recurrent Tasks.
 - Shared tab header with title/search/archive icon.
 - Basic empty states.
-- Basic local state or connection to existing store.
+- TanStack Query hooks connected through existing repository interfaces.
 
-Suggested files if no existing convention exists:
+Feature UI locations:
 
 ```txt
 src/features/items/ItemsPage.tsx
@@ -189,8 +189,8 @@ Codex must not:
 - Build mood/reflections.
 - Add full analytics beyond habit detail stats.
 - Convert all tasks/recurrent tasks into habits.
-- Add a deleted status.
-- Add deep completion.
+- Add any lifecycle state beyond active and archived.
+- Add completion levels beyond minimum and standard.
 - Add task checkboxes to Items list.
 
 ## Completion criteria

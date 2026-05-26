@@ -3,7 +3,7 @@
 - Habit: A repeatable behavior tracked over time.
 - Task: A one-off action with completion state.
 - Recurrent task: A task that regenerates according to a schedule.
-- Category: A customizable grouping, defaulting toward roles or values.
+- Category: A customizable optional label with a name, icon, color, and order.
 - Role: A life context such as health, family, work, or learning.
 - Value: A personally meaningful direction behind behavior.
 - Mood check-in: Optional user-provided emotional state for context.

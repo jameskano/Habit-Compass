@@ -28,12 +28,11 @@ create table if not exists public.categories (
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null check (char_length(trim(name)) > 0),
   description text,
-  type text not null check (type in ('role', 'value', 'area', 'project', 'custom')),
   color text,
   icon text,
   sort_order integer not null default 0,
+  is_default boolean not null default false,
   archived_at timestamptz,
-  deleted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -43,7 +42,11 @@ create table if not exists public.habits (
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
   title text not null check (char_length(trim(title)) > 0),
-  description text,
+  notes text,
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high', 'essential')),
+  starts_on date not null default current_date,
+  ends_on date,
+  sort_order integer not null default 0,
   tracking_type text not null check (
     tracking_type in (
       'binary',
@@ -55,17 +58,15 @@ create table if not exists public.habits (
       'totalQuantityPerPeriod'
     )
   ),
-  frequency_config jsonb not null default '{}'::jsonb,
+  schedule_config jsonb not null default '{"kind":"daily"}'::jsonb,
   goal_config jsonb not null default '{}'::jsonb,
   minimum_config jsonb,
   standard_config jsonb,
-  deep_config jsonb,
   reminders_config jsonb,
-  is_active boolean not null default true,
   archived_at timestamptz,
-  deleted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint habits_date_bounds check (ends_on is null or ends_on >= starts_on)
 );
 
 create table if not exists public.habit_logs (
@@ -73,8 +74,8 @@ create table if not exists public.habit_logs (
   user_id uuid not null references auth.users (id) on delete cascade,
   habit_id uuid not null references public.habits (id) on delete cascade,
   log_date date not null,
-  status text not null check (status in ('completed', 'missed', 'skipped')),
-  completion_level text check (completion_level in ('minimum', 'standard', 'deep')),
+  status text not null check (status in ('completed', 'skipped')),
+  completion_level text check (completion_level in ('minimum', 'standard')),
   value numeric,
   unit text,
   note text,
@@ -88,13 +89,13 @@ create table if not exists public.tasks (
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
   title text not null check (char_length(trim(title)) > 0),
-  description text,
-  due_at timestamptz,
-  status text not null default 'pending' check (status in ('pending', 'completed', 'canceled')),
-  priority text check (priority in ('low', 'medium', 'high')),
+  notes text,
+  due_date date,
+  status text not null default 'pending' check (status in ('pending', 'completed', 'skipped', 'missed')),
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
+  carry_forward boolean not null default true,
   completed_at timestamptz,
   archived_at timestamptz,
-  deleted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -104,14 +105,18 @@ create table if not exists public.recurrent_tasks (
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
   title text not null check (char_length(trim(title)) > 0),
-  description text,
+  notes text,
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
+  starts_on date not null default current_date,
+  ends_on date,
+  carry_forward boolean not null default true,
+  sort_order integer not null default 0,
   recurrence_config jsonb not null default '{}'::jsonb,
   reminders_config jsonb,
-  is_active boolean not null default true,
   archived_at timestamptz,
-  deleted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint recurrent_tasks_date_bounds check (ends_on is null or ends_on >= starts_on)
 );
 
 create table if not exists public.recurrent_task_logs (
@@ -119,7 +124,7 @@ create table if not exists public.recurrent_task_logs (
   user_id uuid not null references auth.users (id) on delete cascade,
   recurrent_task_id uuid not null references public.recurrent_tasks (id) on delete cascade,
   occurrence_date date not null,
-  status text not null check (status in ('completed', 'missed', 'skipped')),
+  status text not null check (status in ('pending', 'completed', 'missed', 'skipped')),
   note text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
@@ -210,33 +215,30 @@ create table if not exists public.suggestion_events (
   created_at timestamptz not null default timezone('utc', now())
 );
 
-comment on column public.habits.frequency_config is
-'JSONB contract for frequency windows. MVP uses period values like day, week, month, or custom, with optional customPeriodDays. Keep this aligned with src/domain/habits.';
+comment on column public.habits.schedule_config is
+'JSONB contract for persisted expectation rules. MVP supports daily, selected weekdays, bounded interval/month rules, first weekday of month, and flexiblePeriod.';
 
 comment on column public.habits.goal_config is
 'JSONB contract for habit target rules. MVP supports binary, timesPerPeriod, repetitionsPerPeriod, timePerSession, totalTimePerPeriod, quantityPerSession, and totalQuantityPerPeriod.';
 
 comment on column public.habits.minimum_config is
-'Optional JSONB override describing the smallest useful version of a habit. This is only used when minimum/standard/deep is enabled.';
+'Optional JSONB override describing the smallest useful version of a habit. This is only used when minimum/standard completion is enabled.';
 
 comment on column public.habits.standard_config is
 'Optional JSONB override describing the default expected version of a habit when layered completion levels are enabled.';
-
-comment on column public.habits.deep_config is
-'Optional JSONB override describing an intentionally deeper version of a habit. Keep optional so simple binary habits remain first-class.';
 
 comment on column public.recurrent_tasks.recurrence_config is
 'JSONB contract for supported recurrence rules: daily, specificDaysOfWeek, everyXDays, everyXWeeks, everyXMonths, firstWeekdayOfMonth, and customFutureRule as descriptive-only future placeholder.';
 
 create index if not exists profiles_language_idx on public.profiles (language);
 create index if not exists categories_user_sort_idx on public.categories (user_id, sort_order);
-create index if not exists categories_user_active_idx on public.categories (user_id, archived_at, deleted_at);
-create index if not exists habits_user_active_idx on public.habits (user_id, is_active, archived_at, deleted_at);
+create index if not exists categories_user_active_idx on public.categories (user_id, archived_at);
+create index if not exists habits_user_active_idx on public.habits (user_id, archived_at, sort_order);
 create index if not exists habits_user_category_idx on public.habits (user_id, category_id);
 create index if not exists habit_logs_user_date_idx on public.habit_logs (user_id, log_date desc);
 create index if not exists habit_logs_habit_date_idx on public.habit_logs (habit_id, log_date desc);
-create index if not exists tasks_user_status_due_idx on public.tasks (user_id, status, due_at);
-create index if not exists recurrent_tasks_user_active_idx on public.recurrent_tasks (user_id, is_active, archived_at, deleted_at);
+create index if not exists tasks_user_status_due_idx on public.tasks (user_id, status, due_date);
+create index if not exists recurrent_tasks_user_active_idx on public.recurrent_tasks (user_id, archived_at, sort_order);
 create index if not exists recurrent_task_logs_user_date_idx on public.recurrent_task_logs (user_id, occurrence_date desc);
 create index if not exists recurrent_task_logs_parent_date_idx on public.recurrent_task_logs (recurrent_task_id, occurrence_date desc);
 create index if not exists mood_logs_user_date_idx on public.mood_logs (user_id, log_date desc);

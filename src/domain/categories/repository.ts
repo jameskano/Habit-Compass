@@ -5,7 +5,7 @@ import type { Category } from './types'
 
 export type CreateCategoryInput = Omit<
   Category,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
 >
 export type UpdateCategoryInput = Partial<
   Omit<Category, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
@@ -18,6 +18,6 @@ export interface CategoriesRepository {
   create(input: CreateCategoryInput): Promise<Result<Category>>
   update(input: UpdateCategoryInput): Promise<Result<Category>>
   archive(input: { userId: UserId; categoryId: EntityId }): Promise<Result<Category>>
-  softDelete(input: { userId: UserId; categoryId: EntityId }): Promise<Result<Category>>
+  delete(input: { userId: UserId; categoryId: EntityId }): Promise<Result<null>>
   restore(input: { userId: UserId; categoryId: EntityId }): Promise<Result<Category>>
 }

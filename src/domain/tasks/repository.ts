@@ -5,7 +5,7 @@ import type { Task, TaskCompletionStatus } from './types'
 
 export type CreateTaskInput = Omit<
   Task,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
 >
 export type UpdateTaskInput = Partial<Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
   id: EntityId
@@ -22,6 +22,6 @@ export interface TasksRepository {
     status: TaskCompletionStatus
   }): Promise<Result<Task>>
   archive(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
-  softDelete(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
+  delete(input: { userId: UserId; taskId: EntityId }): Promise<Result<null>>
   restore(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
 }

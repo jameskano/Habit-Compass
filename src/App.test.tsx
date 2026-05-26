@@ -17,7 +17,7 @@ describe('app shell', () => {
         mood: true,
         weeklyPlanning: true,
         suggestions: true,
-        minimumStandardDeep: false,
+        habitCompletionLevels: false,
         categories: true,
         reflections: true,
       },
@@ -52,6 +52,20 @@ describe('app shell', () => {
 
     expect(screen.getByRole('dialog', { name: 'Choose what to create' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Habit/i })).toBeInTheDocument()
+  })
+
+  it('shows only the three item management tabs', async () => {
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    render(<App />)
+
+    expect(await screen.findByRole('button', { name: 'Habits' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tasks' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recurrent' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Categories' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Archived' })).not.toBeInTheDocument()
   })
 
   it('settings toggles render', () => {

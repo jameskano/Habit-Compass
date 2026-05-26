@@ -17,7 +17,7 @@ export const supabaseCategoriesRepository: CategoriesRepository = {
   async archive() {
     return error()
   },
-  async softDelete() {
+  async delete() {
     return error()
   },
   async restore() {

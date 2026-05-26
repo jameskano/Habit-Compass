@@ -2,14 +2,14 @@ import { calculatePeriodProgress, type PeriodProgress } from '@/domain/stats/log
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
-import type { HabitSchedule } from './habitFixtures'
+import { enumerateHabitScheduledDates, isHabitScheduledOnDate } from './habitSchedule'
 
 export type HabitProgressInput = {
   habit: Habit
   logs: HabitLog[]
   periodStart: ISODateString
   periodEnd: ISODateString
-  schedule?: HabitSchedule
+  today?: ISODateString
 }
 
 export type HabitProgressEvaluation = PeriodProgress & {
@@ -18,41 +18,21 @@ export type HabitProgressEvaluation = PeriodProgress & {
   completedLogCount: number
   relevantLogCount: number
   scheduledOccurrenceCount: number | null
-  recurrenceSupport: 'supported' | 'future-placeholder'
+  recurrenceSupport: 'supported'
 }
 
 function isDateWithinRange(date: ISODateString, start: ISODateString, end: ISODateString) {
   return date >= start && date <= end
 }
 
-function toUtcWeekday(date: ISODateString) {
-  return new Date(`${date}T00:00:00.000Z`).getUTCDay()
-}
-
-function countScheduledOccurrences(start: ISODateString, end: ISODateString, daysOfWeek: readonly number[]) {
-  const current = new Date(`${start}T00:00:00.000Z`)
-  const last = new Date(`${end}T00:00:00.000Z`)
-  let count = 0
-
-  while (current <= last) {
-    if (daysOfWeek.includes(current.getUTCDay())) {
-      count += 1
-    }
-
-    current.setUTCDate(current.getUTCDate() + 1)
-  }
-
-  return count
-}
-
-function getRelevantLogs(logs: HabitLog[], periodStart: ISODateString, periodEnd: ISODateString, schedule?: HabitSchedule) {
+function getRelevantLogs(habit: Habit, logs: HabitLog[], periodStart: ISODateString, periodEnd: ISODateString) {
   const logsInRange = logs.filter((log) => isDateWithinRange(log.loggedForDate, periodStart, periodEnd))
 
-  if (!schedule || schedule.kind === 'anyDay' || schedule.kind === 'advancedFutureRule') {
+  if (habit.scheduleRule.kind === 'flexiblePeriod') {
     return logsInRange
   }
 
-  return logsInRange.filter((log) => schedule.daysOfWeek.includes(toUtcWeekday(log.loggedForDate)))
+  return logsInRange.filter((log) => isHabitScheduledOnDate(habit, log.loggedForDate))
 }
 
 export function evaluateHabitProgress({
@@ -60,27 +40,14 @@ export function evaluateHabitProgress({
   logs,
   periodStart,
   periodEnd,
-  schedule = { kind: 'anyDay' },
 }: HabitProgressInput): HabitProgressEvaluation {
-  const relevantLogs = getRelevantLogs(logs, periodStart, periodEnd, schedule)
+  const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
 
-  if (schedule.kind === 'advancedFutureRule') {
-    return {
-      ...calculatePeriodProgress(0, 0),
-      trackingType: habit.trackingType,
-      unit: 'count',
-      completedLogCount: completedLogs.length,
-      relevantLogCount: relevantLogs.length,
-      scheduledOccurrenceCount: null,
-      recurrenceSupport: 'future-placeholder',
-    }
-  }
-
   const scheduledOccurrenceCount =
-    schedule.kind === 'specificDaysOfWeek'
-      ? countScheduledOccurrences(periodStart, periodEnd, schedule.daysOfWeek)
-      : null
+    habit.scheduleRule.kind === 'flexiblePeriod'
+      ? null
+      : enumerateHabitScheduledDates(habit, periodStart, periodEnd).length
 
   switch (habit.goalConfig.trackingType) {
     case 'binary': {

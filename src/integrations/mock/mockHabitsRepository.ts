@@ -1,15 +1,20 @@
 import { err, ok, type Result } from '@/shared/utils/result'
 import { createNotFoundError } from '@/shared/utils/appError'
-import type { Habit, HabitLog, HabitsRepository, LogHabitCompletionInput } from '@/domain/habits'
+import {
+  isHabitScheduledOnDate,
+  type Habit,
+  type HabitLog,
+  type HabitsRepository,
+  type UpsertHabitLogInput,
+} from '@/domain/habits'
 
 import { getMockState } from './mockData'
 
-function isVisibleHabit(habit: Habit) {
-  return habit.lifecycleStatus !== 'deleted' && !habit.deletedAt
-}
-
-function isTodayHabitDue(habit: Habit) {
-  return habit.lifecycleStatus === 'active'
+function isTodayHabitDue(habit: Habit, date: string) {
+  return (
+    habit.lifecycleStatus === 'active' &&
+    (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date))
+  )
 }
 
 function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): Result<Habit> {
@@ -29,14 +34,14 @@ function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): 
 export const mockHabitsRepository: HabitsRepository = {
   async listForUser({ userId }) {
     const habits = getMockState().habits.filter(
-      (habit) => habit.userId === userId && isVisibleHabit(habit),
+      (habit) => habit.userId === userId,
     )
     return ok(habits)
   },
 
-  async listForToday({ userId }) {
+  async listForToday({ userId, date }) {
     const habits = getMockState().habits.filter(
-      (habit) => habit.userId === userId && isVisibleHabit(habit) && isTodayHabitDue(habit),
+      (habit) => habit.userId === userId && isTodayHabitDue(habit, date),
     )
     return ok(habits)
   },
@@ -44,6 +49,17 @@ export const mockHabitsRepository: HabitsRepository = {
   async listLogsForDate({ userId, date }) {
     const logs = getMockState().habitLogs.filter(
       (log) => log.userId === userId && log.loggedForDate === date,
+    )
+    return ok(logs)
+  },
+
+  async listLogsForRange({ userId, habitId, from, to }) {
+    const logs = getMockState().habitLogs.filter(
+      (log) =>
+        log.userId === userId &&
+        (!habitId || log.habitId === habitId) &&
+        log.loggedForDate >= from &&
+        log.loggedForDate <= to,
     )
     return ok(logs)
   },
@@ -56,7 +72,6 @@ export const mockHabitsRepository: HabitsRepository = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
-      deletedAt: null,
     }
 
     state.habits.push(habit)
@@ -80,13 +95,18 @@ export const mockHabitsRepository: HabitsRepository = {
     }))
   },
 
-  async softDelete({ habitId }) {
-    return updateHabitInState(habitId, (habit) => ({
-      ...habit,
-      lifecycleStatus: 'deleted',
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+  async delete({ habitId }) {
+    const state = getMockState()
+    const index = state.habits.findIndex((habit) => habit.id === habitId)
+
+    if (index === -1) {
+      return err(createNotFoundError('Habit', habitId))
+    }
+
+    state.habits.splice(index, 1)
+    state.habitLogs = state.habitLogs.filter((log) => log.habitId !== habitId)
+
+    return ok(null)
   },
 
   async restore({ habitId }) {
@@ -94,12 +114,11 @@ export const mockHabitsRepository: HabitsRepository = {
       ...habit,
       lifecycleStatus: 'active',
       archivedAt: null,
-      deletedAt: null,
       updatedAt: new Date().toISOString(),
     }))
   },
 
-  async logCompletion(input: LogHabitCompletionInput) {
+  async upsertLog(input: UpsertHabitLogInput) {
     const state = getMockState()
     const existingIndex = state.habitLogs.findIndex(
       (log) =>
@@ -117,18 +136,17 @@ export const mockHabitsRepository: HabitsRepository = {
       habitId: input.habitId,
       loggedForDate: input.logDate,
       loggedAt: new Date().toISOString(),
-      status: 'completed',
-      completionLevel: input.completionLevel ?? null,
+      status: input.status,
+      completionLevel: input.status === 'completed' ? (input.completionLevel ?? null) : null,
       repetitions: null,
-      durationMinutes: input.unit === 'minutes' ? (input.value ?? null) : null,
-      quantity: input.unit === 'quantity' ? (input.value ?? null) : null,
-      quantityUnitLabel: input.unit === 'quantity' ? 'units' : null,
+      durationMinutes: input.status === 'completed' && input.unit === 'minutes' ? (input.value ?? null) : null,
+      quantity: input.status === 'completed' && input.unit === 'quantity' ? (input.value ?? null) : null,
+      quantityUnitLabel: input.status === 'completed' && input.unit === 'quantity' ? 'units' : null,
       notes: input.note ?? null,
       createdAt:
         existingIndex >= 0 ? state.habitLogs[existingIndex].createdAt : new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
-      deletedAt: null,
     }
 
     if (existingIndex >= 0) {
@@ -138,5 +156,39 @@ export const mockHabitsRepository: HabitsRepository = {
     }
 
     return ok(nextLog)
+  },
+
+  async removeLog({ userId, habitId, logDate }) {
+    const state = getMockState()
+    state.habitLogs = state.habitLogs.filter(
+      (log) => !(log.userId === userId && log.habitId === habitId && log.loggedForDate === logDate),
+    )
+    return ok(null)
+  },
+
+  async hardResetLogs({ userId, habitId, confirmed }) {
+    if (!confirmed) {
+      throw new Error('Hard reset requires explicit confirmation.')
+    }
+
+    const state = getMockState()
+    state.habitLogs = state.habitLogs.filter((log) => !(log.userId === userId && log.habitId === habitId))
+    return ok(null)
+  },
+
+  async reorder({ userId, orderedHabitIds }) {
+    const state = getMockState()
+    const habits = state.habits.filter((habit) => habit.userId === userId)
+
+    for (const [order, habitId] of orderedHabitIds.entries()) {
+      const habit = habits.find((entry) => entry.id === habitId)
+      if (!habit) {
+        return err(createNotFoundError('Habit', habitId))
+      }
+      habit.order = order
+      habit.updatedAt = new Date().toISOString()
+    }
+
+    return ok([...habits].sort((left, right) => left.order - right.order))
   },
 }

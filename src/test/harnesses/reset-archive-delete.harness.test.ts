@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { archiveHabit, deleteHabit, hardResetHabitStats, resetHabitStats } from '@/domain/habits/logic/resetHabitStats'
+import { archiveHabit, hardResetHabitStats, resetHabitStats } from '@/domain/habits/logic/resetHabitStats'
 import { createHabitLog, createResettableHabit } from '@/domain/habits/logic/habitFixtures'
 
 describe('reset archive delete harness', () => {
@@ -31,15 +31,5 @@ describe('reset archive delete harness', () => {
 
     expect(result.habit.lifecycleStatus).toBe('archived')
     expect(result.logs).toHaveLength(1)
-  })
-
-  it('delete marks deletedAt and can prepare future hard delete', () => {
-    const habit = createResettableHabit()
-    const logs = [createHabitLog()]
-
-    const result = deleteHabit(habit, logs, '2026-05-21T09:00:00.000Z', true)
-
-    expect(result.habit.deletedAt).toBe('2026-05-21T09:00:00.000Z')
-    expect(result.shouldPurgeHistory).toBe(true)
   })
 })

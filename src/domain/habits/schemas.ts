@@ -1,14 +1,37 @@
 import { z } from 'zod'
 
-import { BaseEntityFieldsSchema, EntityIdSchema, IsoDateStringSchema, IsoDateTimeStringSchema, LifecycleStatusSchema } from '@/shared/types'
+import {
+  EntityIdSchema,
+  HabitPrioritySchema,
+  IsoDateStringSchema,
+  IsoDateTimeStringSchema,
+  ItemEntityFieldsSchema,
+  LifecycleStatusSchema,
+} from '@/shared/types'
 
-import { habitCompletionLevels, habitLogStatuses, habitPeriods, habitResetModes, habitTrackingTypes } from './constants'
+import {
+  habitCompletionLevels,
+  habitDayOfWeekValues,
+  habitLogStatuses,
+  habitPeriods,
+  habitResetModes,
+  habitTrackingTypes,
+} from './constants'
 
 export const HabitPeriodSchema = z.enum(habitPeriods)
 export const HabitTrackingTypeSchema = z.enum(habitTrackingTypes)
 export const HabitCompletionLevelSchema = z.enum(habitCompletionLevels)
 export const HabitResetModeSchema = z.enum(habitResetModes)
 export const HabitLogStatusSchema = z.enum(habitLogStatuses)
+export const HabitDayOfWeekSchema = z.union(habitDayOfWeekValues.map((value) => z.literal(value)) as [
+  z.ZodLiteral<0>,
+  z.ZodLiteral<1>,
+  z.ZodLiteral<2>,
+  z.ZodLiteral<3>,
+  z.ZodLiteral<4>,
+  z.ZodLiteral<5>,
+  z.ZodLiteral<6>,
+])
 
 export const HabitFrequencyConfigSchema = z.object({
   period: HabitPeriodSchema,
@@ -61,20 +84,78 @@ export const HabitGoalConfigSchema = z.discriminatedUnion('trackingType', [
   TotalQuantityPerPeriodGoalConfigSchema,
 ])
 
-export const HabitSchema = BaseEntityFieldsSchema.extend({
+export const HabitScheduleRuleSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('daily') }),
+  z.object({
+    kind: z.literal('specificDaysOfWeek'),
+    daysOfWeek: z.array(HabitDayOfWeekSchema).min(1),
+  }),
+  z.object({
+    kind: z.literal('everyXDays'),
+    intervalDays: z.number().int().positive(),
+  }),
+  z.object({
+    kind: z.literal('everyXWeeks'),
+    intervalWeeks: z.number().int().positive(),
+    daysOfWeek: z.array(HabitDayOfWeekSchema).min(1),
+  }),
+  z.object({
+    kind: z.literal('everyXMonths'),
+    intervalMonths: z.number().int().positive(),
+    dayOfMonth: z.number().int().min(1).max(31),
+  }),
+  z.object({
+    kind: z.literal('firstWeekdayOfMonth'),
+    weekday: HabitDayOfWeekSchema,
+  }),
+  z.object({ kind: z.literal('flexiblePeriod') }),
+])
+
+const PeriodBasedHabitTypes = new Set([
+  'timesPerPeriod',
+  'repetitionsPerPeriod',
+  'totalTimePerPeriod',
+  'totalQuantityPerPeriod',
+])
+
+export const HabitSchema = ItemEntityFieldsSchema.extend({
   title: z.string().min(1),
   notes: z.string().optional().nullable(),
   lifecycleStatus: LifecycleStatusSchema,
   categoryId: EntityIdSchema.optional().nullable(),
+  priority: HabitPrioritySchema,
+  startsOn: IsoDateStringSchema,
+  endsOn: IsoDateStringSchema.optional().nullable(),
+  order: z.number().int().nonnegative(),
+  scheduleRule: HabitScheduleRuleSchema,
   trackingType: HabitTrackingTypeSchema,
   goalConfig: HabitGoalConfigSchema,
   usesCompletionLevels: z.boolean(),
   enabledCompletionLevels: z.array(HabitCompletionLevelSchema),
   defaultCompletionLevel: HabitCompletionLevelSchema.optional().nullable(),
   resetMode: HabitResetModeSchema,
+}).superRefine((habit, context) => {
+  if (habit.endsOn && habit.endsOn < habit.startsOn) {
+    context.addIssue({
+      code: 'custom',
+      path: ['endsOn'],
+      message: 'End date must not be before start date.',
+    })
+  }
+
+  if (
+    habit.scheduleRule.kind === 'flexiblePeriod' &&
+    !PeriodBasedHabitTypes.has(habit.goalConfig.trackingType)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['scheduleRule'],
+      message: 'Flexible-period schedules require a period-based goal.',
+    })
+  }
 })
 
-export const HabitLogSchema = BaseEntityFieldsSchema.extend({
+export const HabitLogSchema = ItemEntityFieldsSchema.extend({
   habitId: EntityIdSchema,
   loggedForDate: IsoDateStringSchema,
   loggedAt: IsoDateTimeStringSchema,

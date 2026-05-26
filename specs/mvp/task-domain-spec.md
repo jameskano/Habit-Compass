@@ -35,8 +35,11 @@ Users need one-off tasks that are fast to capture and complete without requiring
 - A task may include notes.
 - A task may include an optional due date.
 - A task may reference one category.
+- A task has priority `low`, `medium`, or `high`.
+- A task stores whether overdue incomplete work should carry forward.
 - A task must support `pending`, `completed`, `skipped`, and `missed` completion status.
-- A task must support active, archived, and deleted lifecycle state.
+- A task must support only active and archived lifecycle state.
+- Delete physically removes a task after explicit confirmation.
 
 ## Non-Functional Requirements
 
@@ -53,6 +56,8 @@ Users need one-off tasks that are fast to capture and complete without requiring
   - `dueDate`
   - `completedAt`
   - `categoryId`
+  - `priority`
+  - `carryForward`
   - `lifecycleStatus`
   - `completionStatus`
 
@@ -66,7 +71,7 @@ Users need one-off tasks that are fast to capture and complete without requiring
 
 ## Edge Cases
 
-- A deleted task must not remain visible in normal active views.
+- A physically deleted task no longer exists in storage.
 - A task can exist without a due date.
 - A task can exist without a category.
 
@@ -81,4 +86,5 @@ Users need one-off tasks that are fast to capture and complete without requiring
 
 - Schema tests for minimal and optional-field task payloads.
 - Unit tests for valid completion statuses.
-- Unit tests for archive/delete lifecycle transitions at the domain contract level.
+- Unit tests for date-first ordering, priority tie breaking, and carry-forward validation.
+- Unit tests for archive behavior and physical deletion repository behavior.

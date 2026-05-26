@@ -18,7 +18,7 @@ export const useAppPreferencesStore = create<AppPreferencesState>((set) => ({
     mood: true,
     weeklyPlanning: true,
     suggestions: true,
-    minimumStandardDeep: false,
+    habitCompletionLevels: false,
     categories: true,
     reflections: true,
   },

@@ -14,6 +14,8 @@ export type BaseEntityFields = {
   deletedAt?: string | null
 }
 
+export type ItemEntityFields = Omit<BaseEntityFields, 'deletedAt'>
+
 export const EntityIdSchema = z.string().min(1)
 export const UserIdSchema = z.string().min(1)
 
@@ -25,3 +27,5 @@ export const BaseEntityFieldsSchema = z.object({
   archivedAt: IsoDateTimeStringSchema.nullish(),
   deletedAt: IsoDateTimeStringSchema.nullish(),
 })
+
+export const ItemEntityFieldsSchema = BaseEntityFieldsSchema.omit({ deletedAt: true })

@@ -41,6 +41,6 @@ Important constraints:
 - Keep the implementation simple.
 - Do not build unrelated features.
 - Do not add a task checkbox in the Items list.
-- Do not add a deleted item status.
-- Do not add deep habit completion.
+- Keep item lifecycle limited to active and archived.
+- Keep habit completion levels limited to minimum and standard.
 - Do not add stats/calendar for tasks or recurrent tasks in MVP.

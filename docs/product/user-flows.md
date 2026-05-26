@@ -6,5 +6,5 @@ Initial flows:
 - Add a habit, task, or recurrent task.
 - Review and manages the week.
 - Optionally add mood or reflection.
-- Manage active, archived, and deleted items.
+- Manage active and archived items, with explicit confirmed deletion when needed.
 - Change theme in settings.
