@@ -55,17 +55,26 @@ describe('app shell', () => {
   })
 
   it('shows only the three item management tabs', async () => {
+    const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/items' })
     })
 
     render(<App />)
 
-    expect(await screen.findByRole('button', { name: 'Habits' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tasks' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Recurrent' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Categories' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Archived' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Habits' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Tasks' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Recurrent Tasks' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Categories' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Archived' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show archived Habits' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Recurrent Tasks' }))
+    expect(await screen.findByText('Weekly review')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Show archived Recurrent Tasks' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show archived Recurrent Tasks' }))
+    expect(await screen.findByText('No archived items')).toBeInTheDocument()
   })
 
   it('settings toggles render', () => {
