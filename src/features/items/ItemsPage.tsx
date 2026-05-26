@@ -13,6 +13,7 @@ import { ItemCard } from '@/shared/ui/ItemCard'
 import { PageHeader } from '@/shared/ui/PageHeader'
 
 import { ItemsTabHeader } from './components/ItemsTabHeader'
+import { HabitsTab } from './habits/HabitsTab'
 
 const itemTabs = [
   { key: 'habits', labelId: 'page.items.tab.habits', titleId: 'page.items.section.habits' },
@@ -25,7 +26,7 @@ const itemTabs = [
 ] as const
 
 type ItemTabKey = (typeof itemTabs)[number]['key']
-type ManagedItem = Habit | Task | RecurrentTask
+type ManagedItem = Task | RecurrentTask
 
 function getCardTitle(item: ManagedItem) {
   return item.title
@@ -45,17 +46,24 @@ export function ItemsPage() {
   const activeTabConfig = itemTabs.find((tab) => tab.key === activeTab) ?? itemTabs[0]
 
   const renderCards = () => {
-    if (habitsQuery.isLoading || tasksQuery.isLoading || recurrentTasksQuery.isLoading) {
+    const activeQuery =
+      activeTab === 'habits'
+        ? habitsQuery
+        : activeTab === 'tasks'
+          ? tasksQuery
+          : recurrentTasksQuery
+
+    if (activeQuery.isLoading) {
       return (
         <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
       )
     }
 
-    if (habitsQuery.isError || tasksQuery.isError || recurrentTasksQuery.isError) {
+    if (activeQuery.isError) {
       return <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
     }
 
-    const items: ManagedItem[] =
+    const items =
       activeTab === 'habits'
         ? (habitsQuery.data ?? [])
         : activeTab === 'tasks'
@@ -76,20 +84,18 @@ export function ItemsPage() {
       )
     }
 
+    if (activeTab === 'habits') {
+      return <HabitsTab habits={visibleItems as Habit[]} showingArchived={showingArchived} />
+    }
+
     return (
       <div className="grid gap-4 md:grid-cols-2">
-        {visibleItems.map((item) => (
+        {(visibleItems as ManagedItem[]).map((item) => (
           <ItemCard
             key={item.id}
             title={getCardTitle(item)}
             meta={getCardMeta(item)}
-            tone={
-              activeTab === 'habits'
-                ? 'habit'
-                : activeTab === 'tasks'
-                  ? 'task'
-                  : 'neutral'
-            }
+            tone={activeTab === 'tasks' ? 'task' : 'neutral'}
           />
         ))}
       </div>

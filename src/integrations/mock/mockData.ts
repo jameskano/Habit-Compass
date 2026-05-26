@@ -165,6 +165,32 @@ function createInitialMockData(): MockDataState {
       quantityUnitLabel: null,
       notes: 'Standard session complete.',
     },
+    {
+      ...buildBaseFields('habit-log-read-yesterday'),
+      habitId: 'habit-read',
+      loggedForDate: toIsoDate(yesterday),
+      loggedAt: toIsoDateTime(yesterday),
+      status: 'skipped',
+      completionLevel: null,
+      repetitions: null,
+      durationMinutes: null,
+      quantity: null,
+      quantityUnitLabel: null,
+      notes: 'Intentionally skipped.',
+    },
+    {
+      ...buildBaseFields('habit-log-read-two-days-ago'),
+      habitId: 'habit-read',
+      loggedForDate: toIsoDate(twoDaysAgo),
+      loggedAt: toIsoDateTime(twoDaysAgo),
+      status: 'completed',
+      completionLevel: null,
+      repetitions: null,
+      durationMinutes: 20,
+      quantity: null,
+      quantityUnitLabel: null,
+      notes: 'Standard session complete.',
+    },
   ]
 
   const tasks: Task[] = [

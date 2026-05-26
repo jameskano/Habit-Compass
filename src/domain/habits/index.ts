@@ -61,3 +61,9 @@ export { getHabitFrequencySummary } from './logic/habitFrequencySummary'
 export type { FrequencySummaryDescriptor } from './logic/habitFrequencySummary'
 export { calculateHabitStats, scoreHabitLog } from './logic/habitStats'
 export type { HabitStats } from './logic/habitStats'
+export { calculateHabitDetailStats, createHabitCompletionBars } from './logic/habitDetailStats'
+export type {
+  HabitChartPeriod,
+  HabitCompletionBar,
+  HabitDetailStats,
+} from './logic/habitDetailStats'

@@ -29,10 +29,6 @@ export function deriveHabitDayState({
     return 'future'
   }
 
-  if (!isHabitScheduledOnDate(habit, date)) {
-    return 'not_scheduled'
-  }
-
   const log = logs.find((entry) => entry.loggedForDate === date)
 
   if (log?.status === 'completed') {
@@ -41,6 +37,10 @@ export function deriveHabitDayState({
 
   if (log?.status === 'skipped') {
     return 'skipped'
+  }
+
+  if (!isHabitScheduledOnDate(habit, date)) {
+    return 'not_scheduled'
   }
 
   return date === today ? 'today_pending' : 'missed'

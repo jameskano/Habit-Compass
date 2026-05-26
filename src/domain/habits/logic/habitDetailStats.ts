@@ -1,0 +1,161 @@
+import type { ISODateString } from '@/shared/types'
+
+import type { Habit, HabitLog } from '../types'
+import { calculateHabitStats } from './habitStats'
+
+export type HabitChartPeriod = 'week' | 'month' | 'year'
+
+export type HabitDetailStats = {
+  completionPercentage: number
+  currentStreak: number | null
+  bestStreak: number | null
+  completionsThisWeek: number
+  completionsThisMonth: number
+  completionsThisYear: number
+  totalCompletions: number
+}
+
+export type HabitCompletionBar = {
+  from: ISODateString
+  to: ISODateString
+  completionEvents: number
+}
+
+function toUtcDate(date: ISODateString) {
+  return new Date(`${date}T00:00:00.000Z`)
+}
+
+function toISODate(date: Date) {
+  return date.toISOString().slice(0, 10) as ISODateString
+}
+
+function startOfWeek(date: ISODateString) {
+  const current = toUtcDate(date)
+  const offset = (current.getUTCDay() + 6) % 7
+  current.setUTCDate(current.getUTCDate() - offset)
+  return toISODate(current)
+}
+
+function startOfMonth(date: ISODateString) {
+  const current = toUtcDate(date)
+  current.setUTCDate(1)
+  return toISODate(current)
+}
+
+function startOfYear(date: ISODateString) {
+  const current = toUtcDate(date)
+  current.setUTCMonth(0, 1)
+  return toISODate(current)
+}
+
+function addDays(date: ISODateString, amount: number) {
+  const current = toUtcDate(date)
+  current.setUTCDate(current.getUTCDate() + amount)
+  return toISODate(current)
+}
+
+function addMonths(date: ISODateString, amount: number) {
+  const current = toUtcDate(date)
+  current.setUTCMonth(current.getUTCMonth() + amount, 1)
+  return toISODate(current)
+}
+
+function countCompletions(logs: HabitLog[], from: ISODateString, to: ISODateString) {
+  return logs.filter(
+    (log) =>
+      log.status === 'completed' &&
+      log.loggedForDate >= from &&
+      log.loggedForDate <= to,
+  ).length
+}
+
+function getFlexibleStatsStart(habit: Habit, today: ISODateString) {
+  const goal = habit.goalConfig
+  if (!('period' in goal)) {
+    return habit.startsOn
+  }
+
+  const startsOn =
+    goal.period === 'day'
+      ? today
+      : goal.period === 'week'
+        ? startOfWeek(today)
+        : goal.period === 'month'
+          ? startOfMonth(today)
+          : addDays(today, -Math.max((goal.customPeriodDays ?? 1) - 1, 0))
+
+  return startsOn < habit.startsOn ? habit.startsOn : startsOn
+}
+
+export function calculateHabitDetailStats(input: {
+  habit: Habit
+  logs: HabitLog[]
+  today: ISODateString
+}): HabitDetailStats {
+  const { habit, logs, today } = input
+  const from =
+    habit.scheduleRule.kind === 'flexiblePeriod'
+      ? getFlexibleStatsStart(habit, today)
+      : habit.startsOn
+  const stats = calculateHabitStats({ habit, logs, from, to: today, today })
+
+  return {
+    completionPercentage: stats.completionPercentage,
+    currentStreak: stats.currentStreak,
+    bestStreak: stats.bestStreak,
+    completionsThisWeek: countCompletions(logs, startOfWeek(today), today),
+    completionsThisMonth: countCompletions(logs, startOfMonth(today), today),
+    completionsThisYear: countCompletions(logs, startOfYear(today), today),
+    totalCompletions: logs.filter((log) => log.status === 'completed').length,
+  }
+}
+
+export function createHabitCompletionBars(input: {
+  logs: HabitLog[]
+  period: HabitChartPeriod
+  today: ISODateString
+}): HabitCompletionBar[] {
+  const { logs, period, today } = input
+
+  if (period === 'week') {
+    const from = startOfWeek(today)
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(from, index)
+      return {
+        from: date,
+        to: date,
+        completionEvents: countCompletions(logs, date, date),
+      }
+    })
+  }
+
+  if (period === 'month') {
+    const monthStart = startOfMonth(today)
+    const nextMonthStart = addMonths(monthStart, 1)
+    const bars: HabitCompletionBar[] = []
+
+    for (let from = monthStart; from < nextMonthStart; from = addDays(from, 7)) {
+      const tentativeEnd = addDays(from, 6)
+      const monthEnd = addDays(nextMonthStart, -1)
+      const to = tentativeEnd < monthEnd ? tentativeEnd : monthEnd
+      bars.push({
+        from,
+        to,
+        completionEvents: countCompletions(logs, from, to),
+      })
+    }
+
+    return bars
+  }
+
+  const yearStart = startOfYear(today)
+  return Array.from({ length: 12 }, (_, index) => {
+    const from = addMonths(yearStart, index)
+    const to = addDays(addMonths(from, 1), -1)
+    return {
+      from,
+      to,
+      completionEvents: countCompletions(logs, from, to),
+    }
+  })
+}

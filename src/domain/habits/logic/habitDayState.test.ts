@@ -63,4 +63,29 @@ describe('deriveHabitDayState', () => {
       }),
     ).toBe('future')
   })
+
+  it('shows recorded flexible-period completions without deriving missed empty dates', () => {
+    const flexibleHabit = createHabit({
+      trackingType: 'timesPerPeriod',
+      period: 'week',
+      targetCount: 3,
+    })
+
+    expect(
+      deriveHabitDayState({
+        habit: flexibleHabit,
+        date: '2026-05-21',
+        today: '2026-05-21',
+        logs: [createHabitLog({ completionLevel: 'minimum' })],
+      }),
+    ).toBe('completed_minimum')
+    expect(
+      deriveHabitDayState({
+        habit: flexibleHabit,
+        date: '2026-05-20',
+        today: '2026-05-21',
+        logs: [],
+      }),
+    ).toBe('not_scheduled')
+  })
 })
