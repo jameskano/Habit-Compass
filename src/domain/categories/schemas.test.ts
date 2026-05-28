@@ -26,4 +26,11 @@ describe('CategorySchema', () => {
     expect(CategorySchema.safeParse({ ...category, orientation: 'role' }).success).toBe(false)
     expect(CategorySchema.safeParse({ ...category, type: 'value' }).success).toBe(false)
   })
+
+  it('requires category icon and color metadata', () => {
+    expect(CategorySchema.safeParse({ ...category, iconName: null }).success).toBe(false)
+    expect(CategorySchema.safeParse({ ...category, colorToken: null }).success).toBe(false)
+    expect(CategorySchema.safeParse({ ...category, iconName: '' }).success).toBe(false)
+    expect(CategorySchema.safeParse({ ...category, colorToken: '' }).success).toBe(false)
+  })
 })

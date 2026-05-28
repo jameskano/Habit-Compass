@@ -73,11 +73,26 @@ It requires confirmation.
 
 Habits support:
 
-- Minimum completion.
 - Standard completion.
+- Optional minimum completion.
 - Skipped day.
 
 Only minimum and standard completion levels are supported in MVP.
+Minimum is only available when configured for that habit. If minimum is not configured, do not show it, accept it, score it, or derive `completed_minimum`.
+
+Binary habits use manual completion levels:
+
+- Standard-only binary habits allow complete and skip.
+- Binary habits with minimum configured allow complete as minimum, complete as standard, and skip.
+
+Quantity/time habits derive completion levels from logged values:
+
+- Below minimum is `progress_logged` and scores `0`.
+- Minimum reached is `completed_minimum` and scores `0.5`.
+- Standard reached is `completed_standard` and scores `1`.
+- Without a configured minimum, below standard is `progress_logged` and standard reached is `completed_standard`.
+
+Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 
 ## Habit missed days
 
@@ -88,7 +103,7 @@ They are derived:
 ```txt
 If date is scheduled
 and date is in the past
-and no completed/skipped log exists
+and no completed/skipped/progress log exists
 then day state = missed
 ```
 
@@ -130,7 +145,7 @@ Where expected score is scheduled days minus skipped scheduled days.
 For `times_per_period`:
 
 ```txt
-percentage = min(total completion score in period / expected times in period, 1)
+percentage = valid period completion score / expected period score
 ```
 
 A flexible times-per-period habit should not mark every non-completed day as missed.
@@ -309,9 +324,11 @@ Tasks:
 MVP search:
 
 - Filter by item name.
+- Opens from an inline expanding control in the shared row below the Items tabs.
 
 MVP category filter:
 
 - Filter by category.
+- Remains visible alongside search and archive access.
 
 Do not build advanced saved filters in this feature.

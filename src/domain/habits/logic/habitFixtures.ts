@@ -27,7 +27,7 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
     trackingType: goalConfig.trackingType,
     goalConfig,
     usesCompletionLevels: false,
-    enabledCompletionLevels: [],
+    enabledCompletionLevels: ['standard'],
     defaultCompletionLevel: null,
     resetMode: 'soft',
     ...overrides,

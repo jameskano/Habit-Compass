@@ -24,18 +24,21 @@ export function HabitStatsTab({ habit, logs, today }: HabitStatsTabProps) {
   const intl = useIntl()
   const [chartPeriod, setChartPeriod] = useState<HabitChartPeriod>('week')
   const summary = calculateHabitDetailStats({ habit, logs, today })
-  const bars = createHabitCompletionBars({ logs, period: chartPeriod, today })
+  const bars = createHabitCompletionBars({ logs, period: chartPeriod, today, startsOn: habit.startsOn })
   const maxValue = Math.max(...bars.map((bar) => bar.completionEvents), 1)
   const shortDate = new Intl.DateTimeFormat(intl.locale, {
     month: 'short',
     day: 'numeric',
   })
   const month = new Intl.DateTimeFormat(intl.locale, { month: 'short' })
+  const year = new Intl.DateTimeFormat(intl.locale, { year: 'numeric' })
 
   const labelForBar = (from: ISODateString) =>
-    chartPeriod === 'year'
-      ? month.format(parseISO(from))
-      : shortDate.format(parseISO(from))
+    chartPeriod === 'week'
+      ? shortDate.format(parseISO(from))
+      : chartPeriod === 'month'
+        ? month.format(parseISO(from))
+        : year.format(parseISO(from))
 
   const statTiles = [
     { id: 'page.items.habit.stats.thisWeek', value: summary.completionsThisWeek },

@@ -68,4 +68,20 @@ describe('HabitSchema schedules', () => {
       ).success,
     ).toBe(false)
   })
+
+  it('rejects invalid completion-level configuration', () => {
+    expect(
+      HabitSchema.safeParse(
+        createHabit({ trackingType: 'binary' }, { enabledCompletionLevels: ['minimum'] }),
+      ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          { trackingType: 'binary' },
+          { enabledCompletionLevels: ['standard'], defaultCompletionLevel: 'minimum' },
+        ),
+      ).success,
+    ).toBe(false)
+  })
 })

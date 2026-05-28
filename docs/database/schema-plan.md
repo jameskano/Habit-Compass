@@ -16,7 +16,7 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
   - Stores app-level preferences: language, theme, week start, timezone, onboarding state, and feature flags.
 - `categories`
   - Optional grouping for habits, tasks, recurrent tasks, and weekly priorities.
-  - Stores customizable label name, icon, color, sort order, and starter-label marker without category types.
+  - Stores customizable label name, required icon/color visual metadata, sort order, and starter-label marker without category types.
 - `habits`
   - Stores habit definitions, priority, ordering, schedule, tracking type, optional category, and optional minimum/standard configs.
   - `schedule_config`, `goal_config`, and completion-level configs are JSONB to match the current domain model.

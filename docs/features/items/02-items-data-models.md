@@ -54,8 +54,8 @@ export interface Category {
   userId: string;
 
   name: string;
-  icon?: string;
-  color?: string;
+  iconName: string;
+  colorToken: string;
 
   order: number;
 
@@ -124,6 +124,7 @@ export interface Habit {
 ### Habit completion level
 
 Completion levels for MVP are limited to minimum and standard.
+Standard completion always exists. Minimum completion is optional and is only valid when configured for that habit.
 
 ```ts
 export type HabitCompletionLevel = "minimum" | "standard";
@@ -153,16 +154,12 @@ export interface HabitCompletionLog {
   unit?: HabitTargetUnit;
   customUnit?: string;
 
-  // 0 to 1. Used for completion percentage.
-  score: number;
-
-  // Whether this log keeps the streak alive.
-  countsForStreak: boolean;
-
   createdAt: string;
   updatedAt: string;
 }
 ```
+
+Persist raw user-entered facts only. Do not persist missed logs, derived minimum/standard period results, or stats snapshots as the source of truth.
 
 ### Habit day state
 
@@ -172,6 +169,7 @@ Habit day states are derived for the calendar and last-7-days UI.
 export type HabitDayState =
   | "completed_minimum"
   | "completed_standard"
+  | "progress_logged"
   | "today_pending"
   | "missed"
   | "skipped"
@@ -183,6 +181,7 @@ Meanings:
 
 - `completed_minimum`: user did enough to keep the habit alive.
 - `completed_standard`: user reached the normal target.
+- `progress_logged`: user logged quantity/time progress, but not enough to count as a valid completion.
 - `today_pending`: scheduled for today and not completed yet.
 - `missed`: scheduled in the past and not completed.
 - `skipped`: manually skipped and should not punish stats.
@@ -204,19 +203,28 @@ missed = 0
 skipped = excluded from denominator
 ```
 
-For time/quantity habits:
+For session-based time/quantity habits:
 
 ```txt
-score = min(amount / standardAmount, 1)
+if minimum exists:
+  amount < minimum = progress_logged, score 0
+  minimum <= amount < standard = completed_minimum, score 0.5
+  amount >= standard = completed_standard, score 1
+
+if minimum does not exist:
+  amount < standard = progress_logged, score 0
+  amount >= standard = completed_standard, score 1
 ```
 
-A time/quantity log counts for streak when:
+For period-based time/quantity habits:
 
 ```txt
-amount >= minimumAmount
+score once per period using the period total.
+Logged days in that period use progress_logged, completed_minimum, or completed_standard according to the period result.
+Days without logged progress do not become completed just because the period target was reached.
 ```
 
-If no minimum target exists, use the standard target as the threshold for streak.
+If no minimum target exists, never produce `completed_minimum`.
 
 ### Completion percentage
 
@@ -232,20 +240,20 @@ Where:
 - Skipped scheduled day = excluded from denominator.
 - Missed scheduled day = 0 points.
 
-For flexible `times_per_period` schedules:
+For flexible period schedules:
 
 ```txt
-completion percentage for period = min(total score in period / expected times in period, 1)
+completion percentage for period = valid period score / 1
 ```
 
 Example:
 
 ```txt
-Habit: 3 times per week.
-Completed standard twice and minimum once.
-Score = 1 + 1 + 0.5 = 2.5
-Expected = 3
-Percentage = 83.3%
+Habit: 100 reps per week.
+Minimum = 50.
+Logged 30 = raw progress 30, valid score 0, progress_logged.
+Logged 50 = raw progress 50, valid score 0.5, completed_minimum on logged days.
+Logged 100 = raw progress 100, valid score 1, completed_standard on logged days.
 ```
 
 ### Total completions
@@ -254,8 +262,8 @@ Use two separate ideas:
 
 ```ts
 export interface HabitStats {
-  completionEvents: number; // number of completed logs
-  completionScore: number;  // sum of scores
+  completionEvents: number; // number of valid completions
+  completionScore: number;  // sum of valid completion scores
   expectedScore: number;    // denominator after skipped exclusions
   completionPercentage: number;
   currentStreak: number;

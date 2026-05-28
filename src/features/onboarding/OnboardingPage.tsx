@@ -6,7 +6,6 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { FeatureToggle } from '@/shared/ui/FeatureToggle'
-import { PageHeader } from '@/shared/ui/PageHeader'
 
 const onboardingStyles = [
   { value: 'simple', labelId: 'onboarding.style.simple', descriptionId: 'onboarding.style.simpleDescription' },
@@ -39,12 +38,6 @@ export function OnboardingPage() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <PageHeader
-        eyebrowId="page.onboarding.eyebrow"
-        titleId="page.onboarding.title"
-        descriptionId="page.onboarding.description"
-      />
-
       <ol className="grid gap-2 md:grid-cols-3" aria-label={intl.formatMessage({ id: 'onboarding.steps.aria' })}>
         {Array.from({ length: stepCount }, (_, index) => (
           <li

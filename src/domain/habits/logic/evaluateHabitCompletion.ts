@@ -31,6 +31,10 @@ function hasCompletionLevel(habit: Habit, level: HabitCompletionLevel) {
 }
 
 function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, completedLogs: HabitLog[]) {
+  if (progress.derivedCompletionLevel) {
+    return progress.derivedCompletionLevel
+  }
+
   if (!habit.usesCompletionLevels || habit.enabledCompletionLevels.length === 0 || progress.actual <= 0) {
     return null
   }

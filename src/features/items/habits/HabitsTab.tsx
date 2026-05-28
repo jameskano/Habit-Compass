@@ -9,6 +9,7 @@ import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRang
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
+import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { HabitCard } from './HabitCard'
 import { HabitDetail, type HabitDetailTab } from './HabitDetail'
 import type { HabitDangerAction } from './HabitConfirmationDialog'
@@ -17,6 +18,7 @@ import { HabitOptionsSheet } from './HabitOptionsSheet'
 type HabitsTabProps = {
   habits: Habit[]
   showingArchived: boolean
+  onToggleArchive: () => void
 }
 
 type Announcement = {
@@ -34,7 +36,7 @@ function asISODate(value: Date) {
   return formatISO(value, { representation: 'date' }) as ISODateString
 }
 
-export function HabitsTab({ habits, showingArchived }: HabitsTabProps) {
+export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTabProps) {
   const intl = useIntl()
   const today = asISODate(new Date())
   const dates = useMemo(
@@ -50,21 +52,30 @@ export function HabitsTab({ habits, showingArchived }: HabitsTabProps) {
   const archiveMutation = useArchiveHabitMutation()
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null)
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
+  const [searchText, setSearchText] = useState('')
+  const [categoryId, setCategoryId] = useState('')
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
   const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? null
   const detailHabit =
     habits.find((habit) => habit.id === detailSelection?.habitId) ?? null
 
-  if (logsQuery.isLoading) {
+  if (categoriesQuery.isLoading || logsQuery.isLoading) {
     return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
   }
 
-  if (logsQuery.isError) {
+  if (categoriesQuery.isError || logsQuery.isError) {
     return <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
   }
 
   const categoriesById = new Map((categoriesQuery.data ?? []).map((category) => [category.id, category]))
   const orderedHabits = [...habits].sort((left, right) => left.order - right.order)
+  const normalizedSearch = searchText.trim().toLowerCase()
+  const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
+  const visibleHabits = orderedHabits.filter(
+    (habit) =>
+      habit.title.toLowerCase().includes(normalizedSearch) &&
+      (!categoryId || habit.categoryId === categoryId),
+  )
 
   const openDetail = (
     habit: Habit,
@@ -87,6 +98,20 @@ export function HabitsTab({ habits, showingArchived }: HabitsTabProps) {
 
   return (
     <>
+      <ItemsFilterRow
+        categories={categoriesQuery.data ?? []}
+        categoryId={categoryId}
+        categoryLabelId="page.items.habit.filter.category"
+        allCategoriesLabelId="page.items.habit.filter.allCategories"
+        searchLabelId="page.items.habit.filter.search"
+        searchPlaceholderId="page.items.habit.filter.searchPlaceholder"
+        tabLabelId="page.items.tab.habits"
+        searchText={searchText}
+        showingArchived={showingArchived}
+        onCategoryChange={setCategoryId}
+        onSearchChange={setSearchText}
+        onToggleArchive={onToggleArchive}
+      />
       {announcement ? (
         <p
           role="status"
@@ -95,24 +120,43 @@ export function HabitsTab({ habits, showingArchived }: HabitsTabProps) {
           {intl.formatMessage({ id: announcement.id }, { habit: announcement.title })}
         </p>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {orderedHabits.map((habit) => (
-          <HabitCard
-            key={habit.id}
-            habit={habit}
-            category={habit.categoryId ? categoriesById.get(habit.categoryId) : undefined}
-            logs={(logsQuery.data ?? []).filter((log) => log.habitId === habit.id)}
-            dates={dates}
-            from={from}
-            today={today}
-            archived={showingArchived}
-            onOpenOptions={() => setSelectedHabitId(habit.id)}
-            onOpenCalendar={() => openDetail(habit, 'calendar')}
-            onSwipeEdit={() => openDetail(habit, 'edit')}
-            onSwipeArchive={() => archiveHabit(habit)}
-          />
-        ))}
-      </div>
+      {visibleHabits.length === 0 ? (
+        <EmptyState
+          titleId={
+            hasFilters
+              ? 'page.items.habit.empty.filteredTitle'
+              : showingArchived
+                ? 'page.items.habit.empty.archivedTitle'
+                : 'page.items.habit.empty.activeTitle'
+          }
+          descriptionId={
+            hasFilters
+              ? 'page.items.habit.empty.filteredDescription'
+              : showingArchived
+                ? 'page.items.habit.empty.archivedDescription'
+                : 'page.items.habit.empty.activeDescription'
+          }
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {visibleHabits.map((habit) => (
+            <HabitCard
+              key={habit.id}
+              habit={habit}
+              category={habit.categoryId ? categoriesById.get(habit.categoryId) : undefined}
+              logs={(logsQuery.data ?? []).filter((log) => log.habitId === habit.id)}
+              dates={dates}
+              from={from}
+              today={today}
+              archived={showingArchived}
+              onOpenOptions={() => setSelectedHabitId(habit.id)}
+              onOpenCalendar={() => openDetail(habit, 'calendar')}
+              onSwipeEdit={() => openDetail(habit, 'edit')}
+              onSwipeArchive={() => archiveHabit(habit)}
+            />
+          ))}
+        </div>
+      )}
       <HabitOptionsSheet
         habit={selectedHabit}
         archived={showingArchived}

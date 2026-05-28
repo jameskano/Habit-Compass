@@ -54,7 +54,7 @@ Create the Items section UI shell:
 
 - Items page/screen.
 - Tabs: Habits, Tasks, Recurrent Tasks.
-- Shared tab header with title/search/archive icon.
+- Shared inline filter row below tabs with category, expanding search, and archive controls.
 - Basic empty states.
 - TanStack Query hooks connected through existing repository interfaces.
 
@@ -62,7 +62,7 @@ Feature UI locations:
 
 ```txt
 src/features/items/ItemsPage.tsx
-src/features/items/components/ItemsTabHeader.tsx
+src/features/items/components/ItemsFilterRow.tsx
 src/features/items/components/EmptyItemsState.tsx
 ```
 
@@ -75,9 +75,9 @@ Implement:
 - Habit list.
 - Habit card.
 - Last 7 days strip.
-- Category/priority visual.
+- Icon-only category token and color-coded priority dot.
 - Frequency summary.
-- Completion percentage and streak display.
+- Compact numeric completion percentage and streak display.
 - Calendar icon action placeholder.
 - Options menu.
 - Swipe left edit.
@@ -100,7 +100,7 @@ Implement:
 - Habit detail screen/modal/route according to existing navigation.
 - Tabs: Calendar, Stats, Edit.
 - Calendar tab.
-- Simple stats tab.
+- Simple stats tab with current-week daily bars, current-year monthly bars, and start-year-through-current-year annual bars.
 - Edit form.
 - Archive/delete/reset actions with confirmation.
 
@@ -119,7 +119,7 @@ src/features/items/habits/HabitForm.tsx
 Implement:
 
 - Tasks list sorted by date.
-- Task row/card with title, due date, small priority text.
+- Task row/card with title, due date, icon-only category token, and color-coded priority dot.
 - No checkbox.
 - Tap edit.
 - Swipe left edit.
@@ -191,6 +191,7 @@ Codex must not:
 - Convert all tasks/recurrent tasks into habits.
 - Add any lifecycle state beyond active and archived.
 - Add completion levels beyond minimum and standard.
+- Add deep completion or any deep-related target fields.
 - Add task checkboxes to Items list.
 
 ## Completion criteria

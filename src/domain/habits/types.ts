@@ -37,32 +37,38 @@ export type BinaryHabitGoalConfig = {
 export type TimesPerPeriodGoalConfig = HabitFrequencyConfig & {
   trackingType: 'timesPerPeriod'
   targetCount: number
+  minimumCount?: number
 }
 
 export type RepetitionsPerPeriodGoalConfig = HabitFrequencyConfig & {
   trackingType: 'repetitionsPerPeriod'
   targetRepetitions: number
+  minimumRepetitions?: number
 }
 
 export type TimePerSessionGoalConfig = {
   trackingType: 'timePerSession'
   targetMinutes: number
+  minimumMinutes?: number
 }
 
 export type TotalTimePerPeriodGoalConfig = HabitFrequencyConfig & {
   trackingType: 'totalTimePerPeriod'
   targetMinutes: number
+  minimumMinutes?: number
 }
 
 export type QuantityPerSessionGoalConfig = {
   trackingType: 'quantityPerSession'
   targetQuantity: number
+  minimumQuantity?: number
   unitLabel: string
 }
 
 export type TotalQuantityPerPeriodGoalConfig = HabitFrequencyConfig & {
   trackingType: 'totalQuantityPerPeriod'
   targetQuantity: number
+  minimumQuantity?: number
   unitLabel: string
 }
 

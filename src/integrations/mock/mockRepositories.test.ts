@@ -55,6 +55,9 @@ describe('mock repositories', () => {
 
     if (listResult.ok) {
       expect(listResult.data.find((category) => category.id === 'category-health')).toBeDefined()
+      expect(
+        listResult.data.every((category) => category.iconName.length > 0 && category.colorToken.length > 0),
+      ).toBe(true)
     }
   })
 
@@ -164,5 +167,20 @@ describe('mock repositories', () => {
     })
     expect(restored.ok && restored.data.lifecycleStatus).toBe('active')
     expect(getMockState().recurrentTaskOccurrences).toHaveLength(1)
+  })
+
+  it('stores a recurrent occurrence completion without changing the parent lifecycle', async () => {
+    const completed = await mockRecurrentTasksRepository.logCompletion({
+      userId: mockData.currentUserId,
+      recurrentTaskId: 'recurrent-review',
+      occurrenceDate: mockData.today,
+      status: 'completed',
+    })
+
+    expect(completed.ok && completed.data.status).toBe('completed')
+    expect(completed.ok && completed.data.completedAt).not.toBeNull()
+    expect(
+      getMockState().recurrentTasks.find((task) => task.id === 'recurrent-review')?.lifecycleStatus,
+    ).toBe('active')
   })
 })

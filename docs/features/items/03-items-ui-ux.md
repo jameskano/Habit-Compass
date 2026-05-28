@@ -14,11 +14,13 @@ The Items page contains three tabs:
 Habits | Tasks | Recurrent Tasks
 ```
 
-Each tab has:
+The app shell header displays a compass icon beside `Habits` for the Habits tab and `Tasks` for the other two tabs, without separate app branding copy.
 
-- Title on the left.
-- Search icon on the right.
-- Archive icon on the right.
+Each tab has one control row directly below the tabs:
+
+- Category dropdown.
+- Search icon that expands a search field inline without hiding category or archive access.
+- Archive icon, using the primary green treatment while the archived view is active.
 - List content below.
 
 If the app already has a global floating add button, use it. Do not create a second competing add pattern.
@@ -37,10 +39,11 @@ Each habit card should show:
 
 [Last 7 days, ending today]
 
-[Completion %] [Streak]              [Calendar icon] [Options icon]
+[Compact percentage] [Compact streak number] [Calendar icon] [Options icon]
 ```
 
 The last day in the 7-day strip is today.
+Day cells are capped at 40px and centered when wider cards provide extra room.
 
 The frequency summary should be short and human-readable:
 
@@ -57,8 +60,8 @@ Avoid two large icons fighting for attention.
 
 Preferred MVP pattern:
 
-- Use a category icon/color as the main visual.
-- Show priority with a small badge, dot, border, or label.
+- Use an icon-only category color token as the main visual.
+- Show priority with a small color-coded dot, with an accessible label.
 
 Priority visual should be subtle.
 
@@ -70,6 +73,7 @@ Use semantic visual states:
 |---|---|
 | completed_standard | stronger green |
 | completed_minimum | lighter green |
+| progress_logged | soft blue |
 | today_pending | neutral gray/outline |
 | missed | soft amber/yellow |
 | skipped | muted gray/slate |
@@ -98,6 +102,8 @@ Bottom options menu order:
 5. Reset progress
 6. Delete
 
+Place a thin divider between Edit and Archive. The sheet opens with a short upward motion and fade, while honoring reduced-motion preferences.
+
 Destructive actions require confirmation.
 
 Reset progress should preserve the habit but clear logs/history after confirmation, unless the project has a soft reset policy already defined.
@@ -110,6 +116,8 @@ Habit detail has three tabs:
 Calendar | Stats | Edit
 ```
 
+Its header displays only the habit name, without an additional detail eyebrow.
+
 ### Calendar tab
 
 Show a calendar for the habit.
@@ -118,6 +126,7 @@ Each day should use `HabitDayState`:
 
 - completed minimum
 - completed standard
+- progress logged
 - today pending
 - missed
 - skipped
@@ -125,6 +134,7 @@ Each day should use `HabitDayState`:
 - future
 
 MVP calendar can be simple. It does not need advanced filters.
+Calendar cells use the same 40px maximum as the card strip. The visible legend includes completion, progress logged, missed, and skipped states; pending-today, future, and not-scheduled states remain rendered in the calendar without legend items.
 
 ### Stats tab
 
@@ -137,6 +147,9 @@ Stats should be simple:
    - Completions this year.
    - Total completions.
 3. Bar chart by week/month/year.
+   - Week: daily bars for the current week.
+   - Month: twelve monthly bars for the current year.
+   - Year: yearly bars from the habit start year through the current year, including empty years.
    - Each bar represents number of completions.
    - Tiny number above each bar.
 
@@ -196,7 +209,7 @@ Task row/card:
 
 ```txt
 [Task title]
-[Due date / Today / Overdue] [small priority text]
+[Due date / Today / Overdue] [priority dot] [category icon token]
 ```
 
 No checkbox in the Items list.
@@ -273,7 +286,7 @@ Each recurrent task row/card:
 
 ```txt
 [Recurrent task title]
-[Frequency summary] [small priority text]
+[Frequency summary] [priority dot] [category icon token]
 ```
 
 Optionally show next due date if it helps:
@@ -311,6 +324,8 @@ Danger/archive section:
 
 - Archive
 - Delete
+
+Task and recurrent-task edit overlays display only the item title in their visible header.
 
 ## Calendar/stats for recurrent tasks
 

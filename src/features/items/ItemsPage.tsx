@@ -9,32 +9,19 @@ import { useRecurrentTasksQuery } from '@/features/recurrent-tasks/hooks/useRecu
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { cn } from '@/shared/utils/cn'
 import { EmptyState } from '@/shared/ui/EmptyState'
-import { ItemCard } from '@/shared/ui/ItemCard'
-import { PageHeader } from '@/shared/ui/PageHeader'
+import { useShellTitle } from '@/shared/ui/useShellTitle'
 
-import { ItemsTabHeader } from './components/ItemsTabHeader'
 import { HabitsTab } from './habits/HabitsTab'
+import { RecurrentTasksTab } from './recurrent-tasks/RecurrentTasksTab'
+import { TasksTab } from './tasks/TasksTab'
 
 const itemTabs = [
-  { key: 'habits', labelId: 'page.items.tab.habits', titleId: 'page.items.section.habits' },
-  { key: 'tasks', labelId: 'page.items.tab.tasks', titleId: 'page.items.section.tasks' },
-  {
-    key: 'recurrent',
-    labelId: 'page.items.tab.recurrent',
-    titleId: 'page.items.section.recurrent',
-  },
+  { key: 'habits', labelId: 'page.items.tab.habits' },
+  { key: 'tasks', labelId: 'page.items.tab.tasks' },
+  { key: 'recurrent', labelId: 'page.items.tab.recurrent' },
 ] as const
 
 type ItemTabKey = (typeof itemTabs)[number]['key']
-type ManagedItem = Task | RecurrentTask
-
-function getCardTitle(item: ManagedItem) {
-  return item.title
-}
-
-function getCardMeta(item: ManagedItem) {
-  return item.notes ?? ''
-}
 
 export function ItemsPage() {
   const intl = useIntl()
@@ -44,6 +31,7 @@ export function ItemsPage() {
   const tasksQuery = useTasksQuery()
   const recurrentTasksQuery = useRecurrentTasksQuery()
   const activeTabConfig = itemTabs.find((tab) => tab.key === activeTab) ?? itemTabs[0]
+  useShellTitle(activeTab === 'habits' ? 'page.items.section.habits' : 'page.items.section.tasks')
 
   const renderCards = () => {
     const activeQuery =
@@ -73,41 +61,39 @@ export function ItemsPage() {
       (item) => item.lifecycleStatus === (showingArchived ? 'archived' : 'active'),
     )
 
-    if (visibleItems.length === 0) {
+    if (activeTab === 'habits') {
       return (
-        <EmptyState
-          titleId={showingArchived ? 'page.items.empty.archivedTitle' : 'page.items.empty.title'}
-          descriptionId={
-            showingArchived ? 'page.items.empty.archivedDescription' : 'page.items.empty.description'
-          }
+        <HabitsTab
+          habits={visibleItems as Habit[]}
+          showingArchived={showingArchived}
+          onToggleArchive={() => setShowingArchived((current) => !current)}
         />
       )
     }
 
-    if (activeTab === 'habits') {
-      return <HabitsTab habits={visibleItems as Habit[]} showingArchived={showingArchived} />
+    if (activeTab === 'tasks') {
+      return (
+        <TasksTab
+          tasks={visibleItems as Task[]}
+          showingArchived={showingArchived}
+          onToggleArchive={() => setShowingArchived((current) => !current)}
+        />
+      )
     }
 
     return (
-      <div className="grid gap-4 md:grid-cols-2">
-        {(visibleItems as ManagedItem[]).map((item) => (
-          <ItemCard
-            key={item.id}
-            title={getCardTitle(item)}
-            meta={getCardMeta(item)}
-            tone={activeTab === 'tasks' ? 'task' : 'neutral'}
-          />
-        ))}
-      </div>
+      <RecurrentTasksTab
+        tasks={visibleItems as RecurrentTask[]}
+        showingArchived={showingArchived}
+        onToggleArchive={() => setShowingArchived((current) => !current)}
+      />
     )
   }
 
   return (
-    <section className="space-y-6">
-      <PageHeader titleId="page.items.title" descriptionId="page.items.description" />
-
+    <section>
       <div
-        className="flex flex-wrap gap-2"
+        className="flex gap-2 overflow-x-auto pb-4 border-b border-border/60"
         role="tablist"
         aria-label={intl.formatMessage({ id: 'page.items.tabs.aria' })}
       >
@@ -124,7 +110,7 @@ export function ItemsPage() {
               setShowingArchived(false)
             }}
             className={cn(
-              'rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted',
+              'shrink-0 rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted',
               activeTab === tab.key && 'bg-primary text-primary-foreground',
             )}
           >
@@ -135,15 +121,9 @@ export function ItemsPage() {
 
       <section
         id={`items-panel-${activeTabConfig.key}`}
-        className="space-y-4"
         role="tabpanel"
         aria-labelledby={`items-tab-${activeTabConfig.key}`}
       >
-        <ItemsTabHeader
-          titleId={activeTabConfig.titleId}
-          showingArchived={showingArchived}
-          onToggleArchive={() => setShowingArchived((current) => !current)}
-        />
         {renderCards()}
       </section>
     </section>

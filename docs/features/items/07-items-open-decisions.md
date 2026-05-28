@@ -79,12 +79,13 @@ MVP recommendation:
 
 Options:
 
-- Tap toggles between incomplete/minimum/standard.
+- Tap toggles between incomplete/standard, with minimum only when configured.
 - Tap opens a small completion menu.
 - Tap opens the habit calendar date editor.
 
 MVP recommendation:
 
 - If binary habit: simple toggle to standard completion.
-- If minimum/standard target exists: small menu with Minimum, Standard, Skip.
+- If binary minimum is configured: small menu with Minimum, Standard, Skip.
+- If quantity/time habit: collect a numeric value and derive progress/minimum/standard.
 - If this is too much for the first pass, make day tap open the habit calendar/detail.

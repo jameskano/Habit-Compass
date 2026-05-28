@@ -114,8 +114,9 @@ export function createHabitCompletionBars(input: {
   logs: HabitLog[]
   period: HabitChartPeriod
   today: ISODateString
+  startsOn: ISODateString
 }): HabitCompletionBar[] {
-  const { logs, period, today } = input
+  const { logs, period, today, startsOn } = input
 
   if (period === 'week') {
     const from = startOfWeek(today)
@@ -130,28 +131,24 @@ export function createHabitCompletionBars(input: {
   }
 
   if (period === 'month') {
-    const monthStart = startOfMonth(today)
-    const nextMonthStart = addMonths(monthStart, 1)
-    const bars: HabitCompletionBar[] = []
-
-    for (let from = monthStart; from < nextMonthStart; from = addDays(from, 7)) {
-      const tentativeEnd = addDays(from, 6)
-      const monthEnd = addDays(nextMonthStart, -1)
-      const to = tentativeEnd < monthEnd ? tentativeEnd : monthEnd
-      bars.push({
+    const yearStart = startOfYear(today)
+    return Array.from({ length: 12 }, (_, index) => {
+      const from = addMonths(yearStart, index)
+      const to = addDays(addMonths(from, 1), -1)
+      return {
         from,
         to,
         completionEvents: countCompletions(logs, from, to),
-      })
-    }
-
-    return bars
+      }
+    })
   }
 
-  const yearStart = startOfYear(today)
-  return Array.from({ length: 12 }, (_, index) => {
-    const from = addMonths(yearStart, index)
-    const to = addDays(addMonths(from, 1), -1)
+  const currentYear = toUtcDate(today).getUTCFullYear()
+  const firstYear = Math.min(toUtcDate(startsOn).getUTCFullYear(), currentYear)
+  return Array.from({ length: currentYear - firstYear + 1 }, (_, index) => {
+    const year = firstYear + index
+    const from = `${year}-01-01` as ISODateString
+    const to = `${year}-12-31` as ISODateString
     return {
       from,
       to,

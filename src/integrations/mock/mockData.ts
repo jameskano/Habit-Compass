@@ -12,6 +12,8 @@ export const MOCK_USER_ID = 'mock-user-1'
 const today = new Date()
 const yesterday = new Date(today)
 yesterday.setDate(today.getDate() - 1)
+const tomorrow = new Date(today)
+tomorrow.setDate(today.getDate() + 1)
 const twoDaysAgo = new Date(today)
 twoDaysAgo.setDate(today.getDate() - 2)
 const threeDaysAgo = new Date(today)
@@ -89,6 +91,7 @@ function createInitialMockData(): MockDataState {
         trackingType: 'timesPerPeriod',
         period: 'week',
         targetCount: 3,
+        minimumCount: 1,
       },
       usesCompletionLevels: true,
       enabledCompletionLevels: ['minimum', 'standard'],
@@ -112,7 +115,7 @@ function createInitialMockData(): MockDataState {
         targetMinutes: 20,
       },
       usesCompletionLevels: false,
-      enabledCompletionLevels: [],
+      enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
     },
@@ -132,7 +135,7 @@ function createInitialMockData(): MockDataState {
         trackingType: 'binary',
       },
       usesCompletionLevels: false,
-      enabledCompletionLevels: [],
+      enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
     },
@@ -210,7 +213,7 @@ function createInitialMockData(): MockDataState {
       ...buildBaseFields('task-clinic'),
       title: 'Call the clinic',
       notes: 'Simple task card, no project hierarchy attached.',
-      dueDate: toIsoDate(today),
+      dueDate: toIsoDate(yesterday),
       completedAt: null,
       categoryId: null,
       priority: 'medium',
@@ -234,7 +237,7 @@ function createInitialMockData(): MockDataState {
       ...buildBaseFields('task-laundry'),
       title: 'Start laundry',
       notes: 'A practical household task still shown without projects.',
-      dueDate: toIsoDate(today),
+      dueDate: toIsoDate(tomorrow),
       completedAt: null,
       categoryId: null,
       priority: 'low',
@@ -334,18 +337,6 @@ function cloneMockData<T>(value: T): T {
 export const mockData = {
   today: toIsoDate(today),
   currentUserId: MOCK_USER_ID,
-  recurrentPreviewItems: [
-    {
-      id: 'rec-1',
-      title: 'Weekly review',
-      meta: 'Recurring every Friday, still shown as a lightweight placeholder.',
-    },
-    {
-      id: 'rec-2',
-      title: 'Water the plants',
-      meta: 'Recurring home task with simple cadence.',
-    },
-  ],
 }
 
 let mockState = createInitialMockData()

@@ -42,9 +42,13 @@ Users need a habit model that works for the simplest possible case, while still 
   - `quantityPerSession`
   - `totalQuantityPerPeriod`
 - Period-based goals must support `day`, `week`, `month`, and `custom`.
-- A habit may enable minimum/standard completion levels, but this is optional.
+- A habit always supports standard completion; minimum completion exists only when configured for that habit.
+- Binary habits use manual minimum/standard completion, with minimum offered only when enabled.
+- Quantity/time habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
-- Missed habit days are derived when a scheduled past date has no completed or skipped log.
+- Below-minimum quantity/time logs are visible as progress but score `0` for completion stats.
+- Period-based quantity/time habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
+- Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
 - Habits persist an order value and a schedule rule bounded by a start date and optional end date.
 - Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.
@@ -95,7 +99,7 @@ Users need a habit model that works for the simplest possible case, while still 
 
 - Empty state when no habits exist.
 - Create/edit state.
-- Completed, skipped, and derived missed display states.
+- Completed, progress logged, skipped, and derived missed display states.
 - Archived habit state.
 - Soft reset confirmation state.
 - Hard reset confirmation state.
@@ -111,7 +115,7 @@ Users need a habit model that works for the simplest possible case, while still 
 
 - A binary habit can be created without advanced settings.
 - A period-based habit can express target plus period.
-- Minimum/standard can be enabled or ignored.
+- Minimum can be enabled or ignored; if minimum is not configured, `completed_minimum` is never derived.
 - Habit logs represent only completed and skipped outcomes; missed state is derived.
 - Soft reset is modeled separately from hard reset.
 - Archive and delete are both available in the domain contract.
@@ -123,4 +127,4 @@ Users need a habit model that works for the simplest possible case, while still 
 - Unit tests for invalid zero or negative targets.
 - Unit tests ensuring custom period rules require a valid custom day count.
 - Unit tests for deriving a missed day from schedule, date, and absent logs.
-- Unit tests for schedule evaluation, scored percentages, skipped exclusions, and explicit-schedule streaks.
+- Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped exclusions, and explicit-schedule streaks.

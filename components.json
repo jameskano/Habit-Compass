@@ -9,6 +9,7 @@
     "baseColor": "neutral",
     "cssVariables": true
   },
+  "iconLibrary": "lucide",
   "aliases": {
     "components": "src/shared/ui",
     "utils": "src/shared/lib/utils",
@@ -16,5 +17,7 @@
     "lib": "src/shared/lib",
     "hooks": "src/shared/hooks"
   },
-  "iconLibrary": "lucide"
+  "registries": {
+    "@supabase": "https://supabase.com/ui/r/{name}.json"
+  }
 }

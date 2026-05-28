@@ -60,6 +60,15 @@ export { enumerateHabitScheduledDates, isHabitScheduledOnDate } from './logic/ha
 export { getHabitFrequencySummary } from './logic/habitFrequencySummary'
 export type { FrequencySummaryDescriptor } from './logic/habitFrequencySummary'
 export { calculateHabitStats, scoreHabitLog } from './logic/habitStats'
+export {
+  evaluateHabitCompletionForLogs,
+  getHabitMinimumTargetValue,
+  getHabitPeriodBounds,
+  getHabitStandardTargetValue,
+  getHabitTargetScope,
+  hasHabitProgressOnDate,
+} from './logic/habitCompletionRules'
+export type { HabitCompletionRuleEvaluation, HabitTargetScope } from './logic/habitCompletionRules'
 export type { HabitStats } from './logic/habitStats'
 export { calculateHabitDetailStats, createHabitCompletionBars } from './logic/habitDetailStats'
 export type {

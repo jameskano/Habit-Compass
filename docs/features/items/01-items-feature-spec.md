@@ -106,17 +106,17 @@ Recurrent tasks do not need stats or full calendar views in the MVP. Their data 
 
 The Items page should contain:
 
-- A top-level title or section header.
+- A shell-level dynamic title with the compass icon: `Habits` for the Habits tab and `Tasks` for both task tabs.
 - Three tabs: `Habits`, `Tasks`, `Recurrent Tasks`.
 - A floating add button should be provided by the app-level layout if already designed. If not, this feature can expose add actions locally but should not create competing add patterns.
 
 ## Search and archive access
 
-Each tab should use a similar header pattern:
+Each tab should use the same compact filter row immediately below the tabs:
 
-- Title on the left.
-- Search icon on the right.
-- Archive icon on the right.
+- Category dropdown.
+- Search icon that expands an inline search field.
+- Archive icon.
 
 For MVP, search can be simple local filtering by item name. Archive view can be a toggle, route, sheet, or filtered state depending on the existing app architecture.
 
@@ -125,6 +125,8 @@ For MVP, search can be simple local filtering by item name. Archive view can be 
 Categories are customizable. They are inspired by roles/values, but technically they are just categories.
 
 Do not include a category `type` such as `role`, `value`, or `custom`.
+
+Each stored category requires its selected icon and color so item cards can render the category as a compact icon token.
 
 Suggested default category examples:
 
@@ -153,6 +155,8 @@ type TaskPriority = "low" | "medium" | "high";
 ```
 
 Default priority is `medium`.
+
+Item cards render priority as a small color-coded dot rather than visible priority text.
 
 `essential` should only apply to habits because it represents long-term importance, identity, and values. Tasks are more practical and do not need that level.
 
@@ -186,3 +190,5 @@ If users want to keep an item and its history, they should archive it. If they d
 - Today pending should be neutral gray.
 - Minimum completion should be light green.
 - Standard completion should be stronger green.
+- The archive filter uses the primary active treatment while archived content is shown.
+- Habit calendar legends omit future, not-scheduled, and pending-today entries while cells still display those states.

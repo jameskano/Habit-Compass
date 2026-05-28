@@ -18,6 +18,7 @@ import type { Category } from '@/domain/categories'
 import { habitPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
+import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
 import type { HabitDangerAction } from './HabitConfirmationDialog'
 
@@ -138,6 +139,7 @@ export function HabitEditTab({
   const scheduleKind = form.watch('scheduleKind')
   const usesCompletionLevels = form.watch('usesCompletionLevels')
   const selectedDays = form.watch('daysOfWeek')
+  const selectedPriority = form.watch('priority')
   const supportsFlexible = periodBasedTrackingTypes.has(habit.goalConfig.trackingType)
 
   useEffect(() => {
@@ -169,7 +171,7 @@ export function HabitEditTab({
       startsOn: values.startsOn,
       endsOn: values.endsOn || null,
       usesCompletionLevels: values.usesCompletionLevels,
-      enabledCompletionLevels: values.usesCompletionLevels ? ['minimum', 'standard'] : [],
+      enabledCompletionLevels: values.usesCompletionLevels ? ['minimum', 'standard'] : ['standard'],
       defaultCompletionLevel,
     })
   })
@@ -289,7 +291,10 @@ export function HabitEditTab({
             </label>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
-              <select {...form.register('priority')} className={inputClass}>
+              <select
+                {...form.register('priority')}
+                className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+              >
                 {habitPriorities.map((priority) => (
                   <option key={priority} value={priority}>
                     {intl.formatMessage({ id: `page.items.priority.${priority}` })}

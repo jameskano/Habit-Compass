@@ -100,12 +100,7 @@ export function HabitDetail({
       >
         <header className="border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6">
           <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                {intl.formatMessage({ id: 'page.items.habit.detail.eyebrow' })}
-              </p>
-              <h2 className="text-xl font-semibold tracking-tight">{habit.title}</h2>
-            </div>
+            <h2 className="text-xl font-semibold tracking-tight">{habit.title}</h2>
             <Button
               variant="ghost"
               className="h-10 w-10 rounded-full border border-border/70 p-0"

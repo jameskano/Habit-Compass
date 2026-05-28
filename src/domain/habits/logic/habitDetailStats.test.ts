@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { createHabit, createHabitLog } from './habitFixtures'
+import { createCompletionLevelHabit, createHabit, createHabitLog } from './habitFixtures'
 import { calculateHabitDetailStats, createHabitCompletionBars } from './habitDetailStats'
 
 describe('habit detail stats', () => {
   it('summarizes explicit-schedule completion counts and percentage', () => {
-    const habit = createHabit(
+    const habit = createCompletionLevelHabit(
       { trackingType: 'binary' },
+      ['minimum', 'standard'],
       { startsOn: '2026-05-18', scheduleRule: { kind: 'daily' } },
     )
     const result = calculateHabitDetailStats({
@@ -38,7 +39,7 @@ describe('habit detail stats', () => {
       ],
     })
 
-    expect(result.completionPercentage).toBe(33)
+    expect(result.completionPercentage).toBe(0)
     expect(result.totalCompletions).toBe(2)
     expect(result.currentStreak).toBeNull()
   })
@@ -50,14 +51,30 @@ describe('habit detail stats', () => {
       createHabitLog({ id: 'three', loggedForDate: '2026-05-21', status: 'skipped' }),
     ]
 
-    const weeklyBars = createHabitCompletionBars({ logs, period: 'week', today: '2026-05-21' })
-    const monthlyBars = createHabitCompletionBars({ logs, period: 'month', today: '2026-05-21' })
-    const yearlyBars = createHabitCompletionBars({ logs, period: 'year', today: '2026-05-21' })
+    const weeklyBars = createHabitCompletionBars({
+      logs,
+      period: 'week',
+      today: '2026-05-21',
+      startsOn: '2024-03-01',
+    })
+    const monthlyBars = createHabitCompletionBars({
+      logs,
+      period: 'month',
+      today: '2026-05-21',
+      startsOn: '2024-03-01',
+    })
+    const yearlyBars = createHabitCompletionBars({
+      logs,
+      period: 'year',
+      today: '2026-05-21',
+      startsOn: '2024-03-01',
+    })
 
     expect(weeklyBars[0].completionEvents).toBe(2)
-    expect(monthlyBars).toHaveLength(5)
-    expect(monthlyBars.reduce((total, bar) => total + bar.completionEvents, 0)).toBe(2)
-    expect(yearlyBars).toHaveLength(12)
-    expect(yearlyBars[4].completionEvents).toBe(2)
+    expect(monthlyBars).toHaveLength(12)
+    expect(monthlyBars[4].completionEvents).toBe(2)
+    expect(yearlyBars).toHaveLength(3)
+    expect(yearlyBars[0].completionEvents).toBe(0)
+    expect(yearlyBars[2].completionEvents).toBe(2)
   })
 })

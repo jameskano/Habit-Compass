@@ -18,7 +18,7 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 
 ## Functional Requirements
 
-- Categories are customizable labels with `name`, optional `iconName`, optional `colorToken`, and `order`.
+- Categories are customizable labels with `name`, required `iconName`, required `colorToken`, and `order`.
 - Items may reference zero or one category.
 - Category lifecycle status is limited to `active` and `archived`.
 - Delete physically removes a category after explicit confirmation and does not delete linked items.
@@ -39,11 +39,12 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 ## Acceptance Criteria
 
 - Categories can be created without role, value, type, or orientation metadata.
+- Categories require icon and color metadata for their visual token.
 - Items can remain uncategorized.
 - Archive is reversible and delete removes the category from storage.
 - Deleting a category leaves linked items intact with no category assignment.
 
 ## Test Plan
 
-- Schema tests for customizable category labels and rejection of type/orientation fields.
+- Schema tests for required icon/color customizable labels and rejection of type/orientation fields.
 - Repository tests for archive and physical delete unlinking behavior.

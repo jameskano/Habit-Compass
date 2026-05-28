@@ -4,7 +4,7 @@ import { createCompletionLevelHabit, createHabit, createHabitLog } from '@/domai
 import { evaluateHabitCompletion } from '@/domain/habits/logic/evaluateHabitCompletion'
 
 describe('minimum standard harness', () => {
-  it('returns no completion level when levels are disabled', () => {
+  it('uses standard completion when minimum is not configured', () => {
     const habit = createHabit({ trackingType: 'binary' })
     const result = evaluateHabitCompletion({
       habit,
@@ -13,7 +13,7 @@ describe('minimum standard harness', () => {
       periodEnd: '2026-05-21',
     })
 
-    expect(result.achievedLevel).toBeNull()
+    expect(result.achievedLevel).toBe('standard')
     expect(result.suggestedLevel).toBeNull()
   })
 
@@ -31,7 +31,7 @@ describe('minimum standard harness', () => {
 
   it('supports enabled levels for a time habit', () => {
     const habit = createCompletionLevelHabit(
-      { trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 90 },
+      { trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 90, minimumMinutes: 30 },
       ['minimum', 'standard'],
     )
     const result = evaluateHabitCompletion({

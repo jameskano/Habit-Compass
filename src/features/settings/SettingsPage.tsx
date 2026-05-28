@@ -4,7 +4,6 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { FeatureToggle } from '@/shared/ui/FeatureToggle'
-import { PageHeader } from '@/shared/ui/PageHeader'
 
 const themeOptions = [
   { value: 'light', labelId: 'settings.theme.light' },
@@ -57,8 +56,6 @@ export function SettingsPage() {
 
   return (
     <section className="space-y-6">
-      <PageHeader titleId="page.settings.title" descriptionId="page.settings.description" />
-
       <Card className="space-y-4 rounded-2xl p-5">
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">

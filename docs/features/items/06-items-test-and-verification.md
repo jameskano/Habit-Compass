@@ -40,6 +40,7 @@ Test:
 
 - Completed standard log → `completed_standard`
 - Completed minimum log → `completed_minimum`
+- Quantity/time progress below valid completion → `progress_logged`
 - Skipped log → `skipped`
 - Scheduled past date without log → `missed`
 - Scheduled today without log → `today_pending`
@@ -73,9 +74,11 @@ percentage = 66.6%
 Test time/quantity:
 
 ```txt
+minimum target = 10 minutes
 standard target = 30 minutes
-amount = 15 minutes
-score = 0.5
+amount = 5 minutes
+state = progress_logged
+score = 0
 ```
 
 Test cap:
@@ -137,12 +140,13 @@ manual skip sets status skipped
 
 - Three tabs are visible.
 - Switching tabs works.
-- Header title/search/archive layout is consistent.
+- Header title with compass icon and search/archive layout is consistent.
+- Archive button receives its primary active styling in archive mode.
 - Empty states are understandable.
 
 ## Habits
 
-- Habit card shows name, frequency, category/priority, last 7 days, percentage, streak.
+- Habit card shows name, frequency, icon-only category token, accessible priority dot, last 7 days, percentage, streak.
 - Last 7 days ends with today on the right.
 - Tapping card opens options menu.
 - Tapping options icon opens options menu.
@@ -157,11 +161,13 @@ manual skip sets status skipped
 - Minimum completion and standard completion appear as different greens.
 - Missed appears amber/yellow, not red.
 - Today pending appears neutral gray.
+- Calendar cells render pending today without listing it in the legend.
+- Stats month view has all twelve current-year months and year view begins at the habit start year.
 
 ## Tasks
 
 - No checkbox appears in Items task list.
-- Task shows title, date, and small priority text.
+- Task shows title, date, icon-only category token, and accessible priority dot.
 - Tap opens edit.
 - Swipe left edits.
 - Swipe right completes.
@@ -172,7 +178,7 @@ manual skip sets status skipped
 ## Recurrent tasks
 
 - Recurrent task shows title and frequency.
-- Priority is visible but subtle.
+- Priority is rendered as an accessible colored dot.
 - Tap opens edit.
 - Swipe left edits.
 - Swipe right only completes due/overdue occurrence.

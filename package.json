@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@capacitor/core": "^7.4.3",
+    "@dnd-kit/react": "^0.4.0",
     "@hookform/resolvers": "^5.2.2",
     "@sentry/react": "^10.17.0",
     "@supabase/supabase-js": "^2.75.0",

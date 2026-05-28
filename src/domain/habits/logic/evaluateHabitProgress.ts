@@ -2,6 +2,11 @@ import { calculatePeriodProgress, type PeriodProgress } from '@/domain/stats/log
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import {
+  evaluateHabitCompletionForLogs,
+  getHabitStandardTargetValue,
+  getHabitTargetScope,
+} from './habitCompletionRules'
 import { enumerateHabitScheduledDates, isHabitScheduledOnDate } from './habitSchedule'
 
 export type HabitProgressInput = {
@@ -19,6 +24,17 @@ export type HabitProgressEvaluation = PeriodProgress & {
   relevantLogCount: number
   scheduledOccurrenceCount: number | null
   recurrenceSupport: 'supported'
+  rawProgressValue: number
+  standardTargetValue: number
+  minimumTargetValue: number | null
+  validCompletionScore: number
+  derivedCompletionLevel: 'minimum' | 'standard' | null
+  isBelowMinimum: boolean
+  isMinimumReached: boolean
+  isStandardReached: boolean
+  targetScope: 'binary' | 'session' | 'period'
+  periodStart: ISODateString
+  periodEnd: ISODateString
 }
 
 function isDateWithinRange(date: ISODateString, start: ISODateString, end: ISODateString) {
@@ -43,6 +59,25 @@ export function evaluateHabitProgress({
 }: HabitProgressInput): HabitProgressEvaluation {
   const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
+  const targetScope = getHabitTargetScope(habit)
+  const completion = evaluateHabitCompletionForLogs({
+    habit,
+    logs: relevantLogs,
+    date: periodStart,
+  })
+  const completionFields = {
+    rawProgressValue: completion.rawProgressValue,
+    standardTargetValue: completion.standardTargetValue,
+    minimumTargetValue: completion.minimumTargetValue,
+    validCompletionScore: completion.validCompletionScore,
+    derivedCompletionLevel: completion.derivedCompletionLevel,
+    isBelowMinimum: completion.isBelowMinimum,
+    isMinimumReached: completion.isMinimumReached,
+    isStandardReached: completion.isStandardReached,
+    targetScope,
+    periodStart,
+    periodEnd,
+  }
 
   const scheduledOccurrenceCount =
     habit.scheduleRule.kind === 'flexiblePeriod'
@@ -52,24 +87,26 @@ export function evaluateHabitProgress({
   switch (habit.goalConfig.trackingType) {
     case 'binary': {
       return {
-        ...calculatePeriodProgress(completedLogs.length > 0 ? 1 : 0, 1),
+        ...calculatePeriodProgress(completion.validCompletionScore, 1),
         trackingType: 'binary',
         unit: 'count',
         completedLogCount: completedLogs.length,
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'timesPerPeriod': {
       return {
-        ...calculatePeriodProgress(completedLogs.length, habit.goalConfig.targetCount),
+        ...calculatePeriodProgress(completion.rawProgressValue, getHabitStandardTargetValue(habit)),
         trackingType: 'timesPerPeriod',
         unit: 'count',
         completedLogCount: completedLogs.length,
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'repetitionsPerPeriod': {
@@ -83,6 +120,7 @@ export function evaluateHabitProgress({
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'timePerSession': {
@@ -96,6 +134,7 @@ export function evaluateHabitProgress({
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'totalTimePerPeriod': {
@@ -109,6 +148,7 @@ export function evaluateHabitProgress({
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'quantityPerSession': {
@@ -122,6 +162,7 @@ export function evaluateHabitProgress({
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
     case 'totalQuantityPerPeriod': {
@@ -135,6 +176,7 @@ export function evaluateHabitProgress({
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
+        ...completionFields,
       }
     }
   }

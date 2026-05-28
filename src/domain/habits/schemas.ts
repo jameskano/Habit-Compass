@@ -45,32 +45,38 @@ export const BinaryHabitGoalConfigSchema = z.object({
 export const TimesPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
   trackingType: z.literal('timesPerPeriod'),
   targetCount: z.number().positive(),
+  minimumCount: z.number().positive().optional(),
 })
 
 export const RepetitionsPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
   trackingType: z.literal('repetitionsPerPeriod'),
   targetRepetitions: z.number().positive(),
+  minimumRepetitions: z.number().positive().optional(),
 })
 
 export const TimePerSessionGoalConfigSchema = z.object({
   trackingType: z.literal('timePerSession'),
   targetMinutes: z.number().positive(),
+  minimumMinutes: z.number().positive().optional(),
 })
 
 export const TotalTimePerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
   trackingType: z.literal('totalTimePerPeriod'),
   targetMinutes: z.number().positive(),
+  minimumMinutes: z.number().positive().optional(),
 })
 
 export const QuantityPerSessionGoalConfigSchema = z.object({
   trackingType: z.literal('quantityPerSession'),
   targetQuantity: z.number().positive(),
+  minimumQuantity: z.number().positive().optional(),
   unitLabel: z.string().min(1),
 })
 
 export const TotalQuantityPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
   trackingType: z.literal('totalQuantityPerPeriod'),
   targetQuantity: z.number().positive(),
+  minimumQuantity: z.number().positive().optional(),
   unitLabel: z.string().min(1),
 })
 
@@ -151,6 +157,34 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
       code: 'custom',
       path: ['scheduleRule'],
       message: 'Flexible-period schedules require a period-based goal.',
+    })
+  }
+
+  if (new Set(habit.enabledCompletionLevels).size !== habit.enabledCompletionLevels.length) {
+    context.addIssue({
+      code: 'custom',
+      path: ['enabledCompletionLevels'],
+      message: 'Completion levels must not contain duplicates.',
+    })
+  }
+
+  if (habit.enabledCompletionLevels.includes('minimum') && !habit.enabledCompletionLevels.includes('standard')) {
+    context.addIssue({
+      code: 'custom',
+      path: ['enabledCompletionLevels'],
+      message: 'Minimum completion requires standard completion.',
+    })
+  }
+
+  if (
+    habit.defaultCompletionLevel &&
+    habit.enabledCompletionLevels.length > 0 &&
+    !habit.enabledCompletionLevels.includes(habit.defaultCompletionLevel)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['defaultCompletionLevel'],
+      message: 'Default completion level must be enabled for the habit.',
     })
   }
 })
