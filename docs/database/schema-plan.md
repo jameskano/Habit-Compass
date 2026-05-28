@@ -24,7 +24,7 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
   - Unique per user, habit, and log date.
 - `tasks`
-  - One-off task records with optional due date, priority, carry-forward behavior, and category.
+  - One-off task records with optional due date, priority, drag ordering, carry-forward behavior, and category.
   - MVP database status is `pending`, `completed`, `skipped`, or `missed`.
 - `recurrent_tasks`
   - Parent recurring-task definitions with priority, ordering, start/end bounds, and carry-forward behavior.

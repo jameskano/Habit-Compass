@@ -303,6 +303,7 @@ export interface Task {
   categoryId?: string;
 
   priority: TaskPriority;
+  order: number;
   lifecycleStatus: ItemLifecycleStatus;
 
   dueDate?: string; // YYYY-MM-DD

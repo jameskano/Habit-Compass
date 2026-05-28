@@ -118,10 +118,11 @@ src/features/items/habits/HabitForm.tsx
 
 Implement:
 
-- Tasks list sorted by date.
+- Tasks list with drag reorder and date/priority fallback sorting.
 - Task row/card with title, due date, icon-only category token, and color-coded priority dot.
 - No checkbox.
 - Tap edit.
+- Drag reorder.
 - Swipe left edit.
 - Swipe right complete.
 - Task edit form.

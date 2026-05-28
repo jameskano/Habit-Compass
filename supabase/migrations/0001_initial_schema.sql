@@ -94,6 +94,7 @@ create table if not exists public.tasks (
   status text not null default 'pending' check (status in ('pending', 'completed', 'skipped', 'missed')),
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   carry_forward boolean not null default true,
+  sort_order integer not null default 0,
   completed_at timestamptz,
   archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
@@ -237,7 +238,7 @@ create index if not exists habits_user_active_idx on public.habits (user_id, arc
 create index if not exists habits_user_category_idx on public.habits (user_id, category_id);
 create index if not exists habit_logs_user_date_idx on public.habit_logs (user_id, log_date desc);
 create index if not exists habit_logs_habit_date_idx on public.habit_logs (habit_id, log_date desc);
-create index if not exists tasks_user_status_due_idx on public.tasks (user_id, status, due_date);
+create index if not exists tasks_user_status_due_idx on public.tasks (user_id, status, due_date, sort_order);
 create index if not exists recurrent_tasks_user_active_idx on public.recurrent_tasks (user_id, archived_at, sort_order);
 create index if not exists recurrent_task_logs_user_date_idx on public.recurrent_task_logs (user_id, occurrence_date desc);
 create index if not exists recurrent_task_logs_parent_date_idx on public.recurrent_task_logs (recurrent_task_id, occurrence_date desc);

@@ -44,3 +44,15 @@ export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
     },
   })
 }
+
+export function useReorderHabitsMutation(userId = MOCK_USER_ID) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (orderedHabitIds: EntityId[]) =>
+      unwrapResult(await habitsRepository.reorder({ userId, orderedHabitIds })),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['habits', userId] })
+    },
+  })
+}

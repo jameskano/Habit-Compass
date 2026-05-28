@@ -62,3 +62,13 @@ export function useDeleteTaskMutation(userId = MOCK_USER_ID) {
     onSuccess: invalidateTasks,
   })
 }
+
+export function useReorderTasksMutation(userId = MOCK_USER_ID) {
+  const invalidateTasks = useInvalidateTasks(userId)
+
+  return useMutation({
+    mutationFn: async (orderedTaskIds: EntityId[]) =>
+      unwrapResult(await tasksRepository.reorder({ userId, orderedTaskIds })),
+    onSuccess: invalidateTasks,
+  })
+}

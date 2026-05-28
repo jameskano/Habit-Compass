@@ -21,6 +21,7 @@ export const TaskSchema = ItemEntityFieldsSchema.extend({
   categoryId: EntityIdSchema.optional().nullable(),
   priority: ItemPrioritySchema,
   carryForward: z.boolean(),
+  order: z.number().int().nonnegative(),
   lifecycleStatus: LifecycleStatusSchema,
   completionStatus: TaskCompletionStatusSchema,
 })

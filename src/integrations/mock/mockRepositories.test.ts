@@ -118,10 +118,14 @@ describe('mock repositories', () => {
     expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
   })
 
-  it('persists habit and recurrent-task order in memory', async () => {
+  it('persists habit, task, and recurrent-task order in memory', async () => {
     const habits = await mockHabitsRepository.reorder({
       userId: mockData.currentUserId,
       orderedHabitIds: ['habit-water', 'habit-read', 'habit-move'],
+    })
+    const tasks = await mockTasksRepository.reorder({
+      userId: mockData.currentUserId,
+      orderedTaskIds: ['task-laundry', 'task-clinic', 'task-rent', 'task-groceries'],
     })
     const recurrent = await mockRecurrentTasksRepository.reorder({
       userId: mockData.currentUserId,
@@ -132,6 +136,12 @@ describe('mock repositories', () => {
       'habit-water',
       'habit-read',
       'habit-move',
+    ])
+    expect(tasks.ok && tasks.data.map((task) => task.id)).toEqual([
+      'task-laundry',
+      'task-clinic',
+      'task-rent',
+      'task-groceries',
     ])
     expect(recurrent.ok && recurrent.data.map((task) => task.id)).toEqual([
       'recurrent-plants',

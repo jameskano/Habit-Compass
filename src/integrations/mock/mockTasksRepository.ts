@@ -91,4 +91,21 @@ export const mockTasksRepository: TasksRepository = {
       updatedAt: new Date().toISOString(),
     }))
   },
+
+  async reorder({ userId, orderedTaskIds }) {
+    const state = getMockState()
+    const tasks = state.tasks.filter(
+      (task) => task.userId === userId && orderedTaskIds.includes(task.id),
+    )
+
+    for (const [order, taskId] of orderedTaskIds.entries()) {
+      const task = tasks.find((entry) => entry.id === taskId)
+      if (task) {
+        task.order = order
+        task.updatedAt = new Date().toISOString()
+      }
+    }
+
+    return ok([...tasks].sort((left, right) => left.order - right.order))
+  },
 }

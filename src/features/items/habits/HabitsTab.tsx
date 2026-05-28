@@ -5,11 +5,13 @@ import { useIntl } from 'react-intl'
 import type { Habit } from '@/domain/habits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useArchiveHabitMutation } from '@/features/habits/hooks/useArchiveHabitMutation'
+import { useReorderHabitsMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
+import { SortableItemsList } from '../components/SortableItemsList'
 import { HabitCard } from './HabitCard'
 import { HabitDetail, type HabitDetailTab } from './HabitDetail'
 import type { HabitDangerAction } from './HabitConfirmationDialog'
@@ -50,6 +52,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
   const categoriesQuery = useCategoriesQuery()
   const logsQuery = useHabitLogsRangeQuery({ from, to: today })
   const archiveMutation = useArchiveHabitMutation()
+  const reorderMutation = useReorderHabitsMutation()
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null)
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
   const [searchText, setSearchText] = useState('')
@@ -76,6 +79,16 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
       habit.title.toLowerCase().includes(normalizedSearch) &&
       (!categoryId || habit.categoryId === categoryId),
   )
+
+  const reorderHabits = (visibleHabitIds: string[]) => {
+    const visibleIds = new Set(visibleHabitIds)
+    let visibleIndex = 0
+    const orderedHabitIds = orderedHabits.map((habit) =>
+      visibleIds.has(habit.id) ? visibleHabitIds[visibleIndex++] : habit.id,
+    )
+
+    reorderMutation.mutate(orderedHabitIds)
+  }
 
   const openDetail = (
     habit: Habit,
@@ -138,10 +151,14 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
           }
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {visibleHabits.map((habit) => (
+        <SortableItemsList
+          items={visibleHabits}
+          group="habits"
+          reorderLabelId="page.items.habit.action.reorder"
+          onReorder={reorderHabits}
+        >
+          {(habit) => (
             <HabitCard
-              key={habit.id}
               habit={habit}
               category={habit.categoryId ? categoriesById.get(habit.categoryId) : undefined}
               logs={(logsQuery.data ?? []).filter((log) => log.habitId === habit.id)}
@@ -154,8 +171,8 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
               onSwipeEdit={() => openDetail(habit, 'edit')}
               onSwipeArchive={() => archiveHabit(habit)}
             />
-          ))}
-        </div>
+          )}
+        </SortableItemsList>
       )}
       <HabitOptionsSheet
         habit={selectedHabit}

@@ -12,6 +12,7 @@ export type Task = ItemEntityFields & {
   categoryId?: EntityId | null
   priority: ItemPriority
   carryForward: boolean
+  order: number
   lifecycleStatus: LifecycleStatus
   completionStatus: TaskCompletionStatus
 }

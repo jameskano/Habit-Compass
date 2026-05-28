@@ -314,8 +314,9 @@ Recurrent tasks:
 
 Tasks:
 
-- Default sort by date.
-- Drag reorder is not required for MVP.
+- User can drag to reorder.
+- Persist `order`.
+- Date and priority rules remain fallback ordering when manual order matches.
 
 ---
 

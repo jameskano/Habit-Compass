@@ -8,12 +8,16 @@ import {
   type RecurrentTask,
 } from '@/domain/recurrent-tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
-import { useCompleteRecurrentOccurrenceMutation } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
+import {
+  useCompleteRecurrentOccurrenceMutation,
+  useReorderRecurrentTasksMutation,
+} from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { useRecurrentTaskOccurrencesQuery } from '@/features/recurrent-tasks/hooks/useRecurrentTaskOccurrencesQuery'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
+import { SortableItemsList } from '../components/SortableItemsList'
 import { RecurrentTaskCard } from './RecurrentTaskCard'
 import { RecurrentTaskEdit } from './RecurrentTaskEdit'
 
@@ -53,6 +57,7 @@ export function RecurrentTasksTab({
   const categoriesQuery = useCategoriesQuery()
   const occurrencesQuery = useRecurrentTaskOccurrencesQuery({ from, to: today })
   const completionMutation = useCompleteRecurrentOccurrenceMutation()
+  const reorderMutation = useReorderRecurrentTasksMutation()
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -61,9 +66,25 @@ export function RecurrentTasksTab({
   const normalizedSearch = searchText.trim().toLowerCase()
   const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
 
+  const orderedTasks = useMemo(
+    () =>
+      [...tasks].sort((left, right) => {
+        const order = left.order - right.order
+        if (order !== 0) {
+          return order
+        }
+        const priority = priorityRank[right.priority] - priorityRank[left.priority]
+        if (priority !== 0) {
+          return priority
+        }
+        return left.startsOn.localeCompare(right.startsOn)
+      }),
+    [tasks],
+  )
+
   const displayTasks = useMemo(() => {
     const stored = occurrencesQuery.data ?? []
-    return tasks
+    return orderedTasks
       .filter(
         (task) =>
           task.title.toLowerCase().includes(normalizedSearch) &&
@@ -77,22 +98,9 @@ export function RecurrentTasksTab({
           to: today,
           today,
         })
-        return { task, occurrence: currentOccurrence(derived) }
+        return { id: task.id, title: task.title, task, occurrence: currentOccurrence(derived) }
       })
-      .sort((left, right) => {
-        const order = left.task.order - right.task.order
-        if (order !== 0) {
-          return order
-        }
-        const priority = priorityRank[right.task.priority] - priorityRank[left.task.priority]
-        if (priority !== 0) {
-          return priority
-        }
-        return (left.occurrence?.scheduledForDate ?? '').localeCompare(
-          right.occurrence?.scheduledForDate ?? '',
-        )
-      })
-  }, [categoryId, normalizedSearch, occurrencesQuery.data, tasks, today])
+  }, [categoryId, normalizedSearch, occurrencesQuery.data, orderedTasks, today])
 
   if (categoriesQuery.isLoading || occurrencesQuery.isLoading) {
     return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
@@ -119,6 +127,16 @@ export function RecurrentTasksTab({
           setAnnouncement({ id: 'page.items.recurrent.completed', title: task.title }),
       },
     )
+  }
+
+  const reorderRecurrentTasks = (visibleTaskIds: string[]) => {
+    const visibleIds = new Set(visibleTaskIds)
+    let visibleIndex = 0
+    const orderedRecurrentTaskIds = orderedTasks.map((task) =>
+      visibleIds.has(task.id) ? visibleTaskIds[visibleIndex++] : task.id,
+    )
+
+    reorderMutation.mutate(orderedRecurrentTaskIds)
   }
 
   return (
@@ -160,10 +178,14 @@ export function RecurrentTasksTab({
           }
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {displayTasks.map(({ task, occurrence }) => (
+        <SortableItemsList
+          items={displayTasks}
+          group="recurrent-tasks"
+          reorderLabelId="page.items.recurrent.action.reorder"
+          onReorder={reorderRecurrentTasks}
+        >
+          {({ task, occurrence }) => (
             <RecurrentTaskCard
-              key={task.id}
               task={task}
               category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
               occurrence={occurrence}
@@ -172,8 +194,8 @@ export function RecurrentTasksTab({
               onEdit={() => setSelectedTaskId(task.id)}
               onComplete={() => completeOccurrence(task, occurrence)}
             />
-          ))}
-        </div>
+          )}
+        </SortableItemsList>
       )}
       {selectedTask ? (
         <RecurrentTaskEdit

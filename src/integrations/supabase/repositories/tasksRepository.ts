@@ -29,4 +29,7 @@ export const supabaseTasksRepository: TasksRepository = {
   async restore() {
     return error()
   },
+  async reorder() {
+    return error()
+  },
 }

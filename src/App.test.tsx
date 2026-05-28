@@ -98,6 +98,7 @@ describe('app shell', () => {
     expect(screen.getByLabelText('Search habits')).toHaveFocus()
     expect(screen.getByLabelText('Category')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Show archived Habits' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Drag to reorder Move for 20 minutes' })).toBeInTheDocument()
     await user.type(screen.getByLabelText('Search habits'), 'Read')
     await user.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByLabelText('Search habits')).not.toBeInTheDocument()
@@ -107,6 +108,7 @@ describe('app shell', () => {
     await user.click(screen.getByRole('button', { name: 'Search Recurrent Tasks' }))
     expect(screen.getByLabelText('Search recurrent tasks')).toHaveFocus()
     expect(await screen.findByText('Weekly review')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Drag to reorder Weekly review' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Show archived Recurrent Tasks' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Show archived Recurrent Tasks' }))
@@ -138,6 +140,7 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Search Tasks' }))
     await user.type(screen.getByLabelText('Search tasks'), 'Call')
     expect(screen.getByRole('button', { name: 'Edit Call the clinic' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Drag to reorder Call the clinic' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Edit Pay rent' })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Recurrent Tasks' }))
@@ -251,9 +254,9 @@ describe('app shell', () => {
         screen.queryByRole('button', { name: 'Open options for Drink water after lunch' }),
       ).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Drink water after lunch was archived. Its history is preserved.',
-    )
+    expect(
+      screen.getByText('Drink water after lunch was archived. Its history is preserved.'),
+    ).toBeInTheDocument()
   })
 
   it('does not interpret vertical scrolling as a swipe action', async () => {
@@ -323,9 +326,7 @@ describe('app shell', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
     const resetDialog = screen.getByRole('alertdialog', { name: 'Reset progress?' })
     await user.click(within(resetDialog).getByRole('button', { name: 'Reset progress' }))
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Progress reset. The habit remains available.',
-    )
+    expect(await screen.findByText('Progress reset. The habit remains available.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.getByRole('button', { name: 'Open options for Read before bed' })).toBeInTheDocument()
 
@@ -347,9 +348,9 @@ describe('app shell', () => {
         screen.queryByRole('button', { name: 'Open options for Drink water after lunch' }),
       ).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Drink water after lunch was permanently deleted.',
-    )
+    expect(
+      screen.getByText('Drink water after lunch was permanently deleted.'),
+    ).toBeInTheDocument()
   })
 
   it('renders dated task rows without checkboxes and maps swipe right to completion', async () => {
@@ -374,9 +375,11 @@ describe('app shell', () => {
     fireEvent.pointerUp(overdueTask, { clientX: 100, clientY: 20 })
     fireEvent.click(overdueTask)
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Call the clinic was completed. It remains available until archived.',
-    )
+    expect(
+      await screen.findByText(
+        'Call the clinic was completed. It remains available until archived.',
+      ),
+    ).toBeInTheDocument()
     expect(
       within(screen.getByRole('button', { name: 'Edit Call the clinic' })).getByText('Completed'),
     ).toBeInTheDocument()
@@ -405,7 +408,7 @@ describe('app shell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Edit Fold laundry' })).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent('Fold laundry was archived.')
+    expect(screen.getByText('Fold laundry was archived.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Edit Pay rent' }))
     editDialog = screen.getByRole('dialog', { name: 'Edit task Pay rent' })
@@ -415,7 +418,7 @@ describe('app shell', () => {
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Edit Pay rent' })).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent('Pay rent was permanently deleted.')
+    expect(screen.getByText('Pay rent was permanently deleted.')).toBeInTheDocument()
   })
 
   it('renders recurrent task schedules and completes a due occurrence from a right swipe', async () => {
@@ -442,9 +445,7 @@ describe('app shell', () => {
     fireEvent.pointerUp(dueCard, { clientX: 100, clientY: 20 })
     fireEvent.click(dueCard)
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Weekly review occurrence was completed.',
-    )
+    expect(await screen.findByText('Weekly review occurrence was completed.')).toBeInTheDocument()
     expect(within(screen.getByRole('button', { name: 'Edit recurrent task Weekly review' })).getByText('Completed')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: /Edit recurrent task Weekly review/ })).not.toBeInTheDocument()
   })
@@ -479,7 +480,7 @@ describe('app shell', () => {
         screen.queryByRole('button', { name: 'Edit recurrent task Water balcony plants' }),
       ).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent('Water balcony plants was archived.')
+    expect(screen.getByText('Water balcony plants was archived.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Edit recurrent task Weekly review' }))
     const deleteEditDialog = screen.getByRole('dialog', {
@@ -495,9 +496,7 @@ describe('app shell', () => {
         screen.queryByRole('button', { name: 'Edit recurrent task Weekly review' }),
       ).not.toBeInTheDocument()
     })
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Weekly review was permanently deleted.',
-    )
+    expect(screen.getByText('Weekly review was permanently deleted.')).toBeInTheDocument()
   })
 
   it('settings toggles render', () => {

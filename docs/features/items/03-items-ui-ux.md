@@ -196,9 +196,9 @@ Default values:
 
 ## Task list design
 
-Tasks are a simple dated list.
+Tasks are a simple list that supports drag reorder.
 
-Default sorting:
+Fallback sorting when manual order matches:
 
 1. Overdue active tasks.
 2. Today.
@@ -217,6 +217,7 @@ No checkbox in the Items list.
 ## Task actions
 
 - Tap task: edit.
+- Drag: reorder.
 - Swipe left: edit.
 - Swipe right: complete.
 - Delete only inside edit/options with confirmation.

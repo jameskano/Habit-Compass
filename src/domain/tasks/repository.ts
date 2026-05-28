@@ -24,4 +24,5 @@ export interface TasksRepository {
   archive(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
   delete(input: { userId: UserId; taskId: EntityId }): Promise<Result<null>>
   restore(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
+  reorder(input: { userId: UserId; orderedTaskIds: EntityId[] }): Promise<Result<Task[]>>
 }

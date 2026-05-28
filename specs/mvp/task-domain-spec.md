@@ -37,6 +37,7 @@ Users need one-off tasks that are fast to capture and complete without requiring
 - A task may reference one category.
 - A task has priority `low`, `medium`, or `high`.
 - A task stores whether overdue incomplete work should carry forward.
+- A task persists an `order` value so the Items task list can be reordered by drag and drop.
 - A task must support `pending`, `completed`, `skipped`, and `missed` completion status.
 - A task must support only active and archived lifecycle state.
 - Delete physically removes a task after explicit confirmation.
@@ -58,6 +59,7 @@ Users need one-off tasks that are fast to capture and complete without requiring
   - `categoryId`
   - `priority`
   - `carryForward`
+  - `order`
   - `lifecycleStatus`
   - `completionStatus`
 
@@ -86,5 +88,5 @@ Users need one-off tasks that are fast to capture and complete without requiring
 
 - Schema tests for minimal and optional-field task payloads.
 - Unit tests for valid completion statuses.
-- Unit tests for date-first ordering, priority tie breaking, and carry-forward validation.
+- Unit tests for manual ordering, date/priority fallback ordering, and carry-forward validation.
 - Unit tests for archive behavior and physical deletion repository behavior.

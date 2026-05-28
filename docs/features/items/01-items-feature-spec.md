@@ -180,7 +180,7 @@ If users want to keep an item and its history, they should archive it. If they d
 - Recurrent tasks do not have stats/calendar in MVP.
 - Habits can be reordered by drag.
 - Recurrent tasks can be reordered by drag.
-- Tasks are ordered by date by default.
+- Tasks can be reordered by drag, with date and priority rules used as fallback ordering.
 - Tasks have no checkbox in the Items list.
 - Swipe right on a task means complete.
 - Swipe left or tap on a task means edit.

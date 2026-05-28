@@ -70,3 +70,15 @@ export function useDeleteRecurrentTaskMutation(userId = MOCK_USER_ID) {
     onSuccess: invalidate,
   })
 }
+
+export function useReorderRecurrentTasksMutation(userId = MOCK_USER_ID) {
+  const invalidate = useInvalidateRecurrentTasks(userId)
+
+  return useMutation({
+    mutationFn: async (orderedRecurrentTaskIds: EntityId[]) =>
+      unwrapResult(
+        await recurrentTasksRepository.reorder({ userId, orderedRecurrentTaskIds }),
+      ),
+    onSuccess: invalidate,
+  })
+}

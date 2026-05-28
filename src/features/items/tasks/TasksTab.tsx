@@ -4,11 +4,15 @@ import { useIntl } from 'react-intl'
 
 import { sortTasks, type Task } from '@/domain/tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
-import { useCompleteTaskMutation } from '@/features/tasks/hooks/useTaskMutations'
+import {
+  useCompleteTaskMutation,
+  useReorderTasksMutation,
+} from '@/features/tasks/hooks/useTaskMutations'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
+import { SortableItemsList } from '../components/SortableItemsList'
 import { TaskCard } from './TaskCard'
 import { TaskEdit } from './TaskEdit'
 
@@ -32,6 +36,7 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
   const today = todayAsISODate()
   const categoriesQuery = useCategoriesQuery()
   const completeMutation = useCompleteTaskMutation()
+  const reorderMutation = useReorderTasksMutation()
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -41,16 +46,15 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
     (categoriesQuery.data ?? []).map((category) => [category.id, category]),
   )
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
+  const orderedTasks = useMemo(() => sortTasks(tasks), [tasks])
   const visibleTasks = useMemo(
     () =>
-      sortTasks(
-        tasks.filter(
-          (task) =>
-            task.title.toLowerCase().includes(searchText.trim().toLowerCase()) &&
-            (!categoryId || task.categoryId === categoryId),
-        ),
+      orderedTasks.filter(
+        (task) =>
+          task.title.toLowerCase().includes(searchText.trim().toLowerCase()) &&
+          (!categoryId || task.categoryId === categoryId),
       ),
-    [categoryId, searchText, tasks],
+    [categoryId, orderedTasks, searchText],
   )
 
   if (categoriesQuery.isLoading) {
@@ -66,6 +70,16 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
       onSuccess: () =>
         setAnnouncement({ id: 'page.items.task.completed', title: task.title }),
     })
+  }
+
+  const reorderTasks = (visibleTaskIds: string[]) => {
+    const visibleIds = new Set(visibleTaskIds)
+    let visibleIndex = 0
+    const orderedTaskIds = orderedTasks.map((task) =>
+      visibleIds.has(task.id) ? visibleTaskIds[visibleIndex++] : task.id,
+    )
+
+    reorderMutation.mutate(orderedTaskIds)
   }
 
   return (
@@ -107,10 +121,14 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
           }
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {visibleTasks.map((task) => (
+        <SortableItemsList
+          items={visibleTasks}
+          group="tasks"
+          reorderLabelId="page.items.task.action.reorder"
+          onReorder={reorderTasks}
+        >
+          {(task) => (
             <TaskCard
-              key={task.id}
               task={task}
               category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
               today={today}
@@ -118,8 +136,8 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
               onEdit={() => setSelectedTaskId(task.id)}
               onComplete={() => completeTask(task)}
             />
-          ))}
-        </div>
+          )}
+        </SortableItemsList>
       )}
       {selectedTask ? (
         <TaskEdit
