@@ -78,7 +78,8 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('habit-move'),
       title: 'Move for 20 minutes',
-      notes: 'Three times per week, kept intentionally lightweight.',
+      description: 'Three lightweight movement sessions each week.',
+      notes: 'Kept intentionally lightweight.',
       lifecycleStatus: 'active',
       categoryId: 'category-health',
       priority: 'medium',
@@ -101,6 +102,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('habit-read'),
       title: 'Read before bed',
+      description: 'Read before sleeping to close the day calmly.',
       notes: 'A quiet session target with optional completion levels.',
       lifecycleStatus: 'active',
       categoryId: 'category-learning',
@@ -122,7 +124,8 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('habit-water'),
       title: 'Drink water after lunch',
-      notes: 'Simple binary support for a stable midday routine.',
+      description: 'A stable midday hydration cue.',
+      notes: 'Simple binary support.',
       lifecycleStatus: 'active',
       categoryId: 'category-health',
       priority: 'high',
@@ -200,6 +203,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('task-rent'),
       title: 'Pay rent',
+      description: 'Monthly payment task.',
       notes: 'One-off task with a due date placeholder.',
       dueDate: toIsoDate(today),
       completedAt: toIsoDateTime(today),
@@ -213,6 +217,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('task-clinic'),
       title: 'Call the clinic',
+      description: 'Follow up on the appointment.',
       notes: 'Simple task card, no project hierarchy attached.',
       dueDate: toIsoDate(yesterday),
       completedAt: null,
@@ -226,6 +231,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('task-groceries'),
       title: 'Buy groceries',
+      description: 'Restock household basics.',
       notes: 'A regular one-off task that still belongs on Today.',
       dueDate: toIsoDate(today),
       completedAt: toIsoDateTime(today),
@@ -239,6 +245,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('task-laundry'),
       title: 'Start laundry',
+      description: 'Start a wash cycle.',
       notes: 'A practical household task still shown without projects.',
       dueDate: toIsoDate(tomorrow),
       completedAt: null,
@@ -255,6 +262,7 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('recurrent-review'),
       title: 'Weekly review',
+      description: 'Review the week and adjust next actions.',
       notes: 'A recurring check-in with a fixed weekday.',
       categoryId: 'category-learning',
       priority: 'medium',
@@ -268,10 +276,11 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('recurrent-plants'),
       title: 'Water the plants',
+      description: 'Keep balcony plants watered.',
       notes: 'A responsibility that stays actionable when overdue.',
       categoryId: 'category-health',
       priority: 'low',
-      carryForward: true,
+      carryForward: false,
       order: 1,
       lifecycleStatus: 'active',
       startsOn: toIsoDate(fourDaysAgo),

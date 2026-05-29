@@ -43,7 +43,7 @@ Users need a habit model that works for the simplest possible case, while still 
   - `totalQuantityPerPeriod`
 - Period-based goals must support `day`, `week`, `month`, and `custom`.
 - A habit always supports standard completion; minimum completion exists only when configured for that habit.
-- Binary habits use manual minimum/standard completion, with minimum offered only when enabled.
+- Binary habits use manual minimum/standard completion, with minimum offered only when a non-empty minimum description is configured.
 - Quantity/time habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
 - Below-minimum quantity/time logs are visible as progress but score `0` for completion stats.
@@ -51,6 +51,8 @@ Users need a habit model that works for the simplest possible case, while still 
 - Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
 - Habits persist an order value and a schedule rule bounded by a start date and optional end date.
+- Habits may include a description for item clarification and separate notes for extra user information.
+- Saving an end date before today archives the habit after confirmation in the edit flow.
 - Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.
 - Reset is soft by default.
 - Hard reset requires explicit confirmation.
@@ -60,6 +62,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## Non-Functional Requirements
 
 - The model must remain understandable for a simple binary habit.
+- Binary minimum descriptions are optional text on the binary goal configuration, not a separate habit description field.
 - Goal configuration must be representable with pure TypeScript and Zod.
 - Core rules must remain decoupled from React.
 
@@ -68,6 +71,7 @@ Users need a habit model that works for the simplest possible case, while still 
 - `Habit`
   - base entity fields
   - `title`
+  - `description`
   - `notes`
   - `lifecycleStatus`
   - `categoryId`

@@ -6,6 +6,7 @@ export type TaskCompletionStatus = (typeof taskCompletionStatuses)[number]
 
 export type Task = ItemEntityFields & {
   title: string
+  description?: string | null
   notes?: string | null
   dueDate?: ISODateString | null
   completedAt?: ISODateTimeString | null

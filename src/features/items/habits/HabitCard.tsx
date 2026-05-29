@@ -182,11 +182,11 @@ export function HabitCard({
       <div className="absolute inset-y-0 left-0 w-1 bg-primary/55" aria-hidden="true" />
       <div className="ml-1">
         <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <h3 className="truncate text-base font-semibold tracking-tight">{habit.title}</h3>
             <p className="text-xs text-muted-foreground">{formatFrequency(intl, habit)}</p>
           </div>
-          <div className="flex max-w-[46%] flex-wrap justify-end items-center gap-1.5">
+          <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
             {category && CategoryIcon ? (
               <span
                 aria-label={category.name}

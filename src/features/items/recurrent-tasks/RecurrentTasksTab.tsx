@@ -124,7 +124,7 @@ export function RecurrentTasksTab({
       { recurrentTaskId: task.id, occurrenceDate: occurrence.scheduledForDate },
       {
         onSuccess: () =>
-          setAnnouncement({ id: 'page.items.recurrent.completed', title: task.title }),
+          setAnnouncement({ id: 'page.items.recurrent.completedFeedback', title: task.title }),
       },
     )
   }
@@ -189,7 +189,6 @@ export function RecurrentTasksTab({
               task={task}
               category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
               occurrence={occurrence}
-              today={today}
               archived={showingArchived}
               onEdit={() => setSelectedTaskId(task.id)}
               onComplete={() => completeOccurrence(task, occurrence)}
@@ -201,6 +200,7 @@ export function RecurrentTasksTab({
         <RecurrentTaskEdit
           task={selectedTask}
           categories={categoriesQuery.data ?? []}
+          today={today}
           onClose={() => setSelectedTaskId(null)}
           onArchived={(task) => {
             setSelectedTaskId(null)

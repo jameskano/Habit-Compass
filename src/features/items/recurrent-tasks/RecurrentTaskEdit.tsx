@@ -35,11 +35,13 @@ import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
+import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
 import { RecurrentTaskConfirmationDialog } from './RecurrentTaskConfirmationDialog'
 
 type RecurrentTaskEditProps = {
   task: RecurrentTask
   categories: Category[]
+  today: string
   onClose: () => void
   onArchived: (task: RecurrentTask) => void
   onDeleted: (task: RecurrentTask) => void
@@ -59,6 +61,7 @@ const RecurrentEditValuesSchema = z
     categoryId: z.string(),
     priority: z.enum(itemPriorities),
     carryForward: z.boolean(),
+    description: z.string(),
     notes: z.string(),
     startsOn: z.string().min(1),
     endsOn: z.string(),
@@ -100,6 +103,7 @@ function valuesForTask(task: RecurrentTask): RecurrentEditValues {
     categoryId: task.categoryId ?? '',
     priority: task.priority,
     carryForward: task.carryForward,
+    description: task.description ?? '',
     notes: task.notes ?? '',
     startsOn: task.startsOn,
     endsOn: task.endsOn ?? '',
@@ -136,6 +140,7 @@ function buildRule(values: RecurrentEditValues): RecurrenceRule {
 export function RecurrentTaskEdit({
   task,
   categories,
+  today,
   onClose,
   onArchived,
   onDeleted,
@@ -178,12 +183,21 @@ export function RecurrentTaskEdit({
       categoryId: values.categoryId || null,
       priority: values.priority,
       carryForward: values.carryForward,
+      description: values.description.trim() || null,
       notes: values.notes.trim() || null,
       startsOn: values.startsOn,
       endsOn: values.endsOn || null,
     }
 
-    updateMutation.mutate(input, { onSuccess: () => setSaved(true) })
+    updateMutation.mutate(input, {
+      onSuccess: () => {
+        if (values.endsOn && values.endsOn < today) {
+          archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
+          return
+        }
+        setSaved(true)
+      },
+    })
   })
 
   const inputClass = 'mt-1.5 rounded-xl border-border/75'
@@ -426,19 +440,28 @@ export function RecurrentTaskEdit({
                     </SelectContent>
                   </Select>
                 </label>
-                <label className="block text-sm font-medium">
-                  {intl.formatMessage({ id: 'page.items.recurrent.edit.startsOn' })}
-                  <Input type="date" {...form.register('startsOn')} className={inputClass} />
-                </label>
-                <label className="block text-sm font-medium">
-                  {intl.formatMessage({ id: 'page.items.recurrent.edit.endsOn' })}
-                  <Input type="date" {...form.register('endsOn')} className={inputClass} />
-                  {form.formState.errors.endsOn ? (
-                    <span className="mt-1 block text-xs text-amber-700">
-                      {intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })}
-                    </span>
-                  ) : null}
-                </label>
+              </div>
+              <label className="block text-sm font-medium">
+                {intl.formatMessage({ id: 'page.items.recurrent.edit.description' })}
+                <Textarea {...form.register('description')} rows={3} className={inputClass} />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ReadOnlyStartDateField
+                  labelId="page.items.recurrent.edit.startsOn"
+                  value={form.watch('startsOn')}
+                  registration={form.register('startsOn')}
+                />
+                <GuardedEndDateField
+                  labelId="page.items.recurrent.edit.endsOn"
+                  registration={form.register('endsOn')}
+                  error={
+                    form.formState.errors.endsOn
+                      ? intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })
+                      : undefined
+                  }
+                  warningTitleId="page.items.recurrent.edit.endDateWarning.title"
+                  warningDescriptionId="page.items.recurrent.edit.endDateWarning.description"
+                />
               </div>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.recurrent.edit.carryForward' })}</span>

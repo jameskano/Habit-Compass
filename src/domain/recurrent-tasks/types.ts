@@ -53,6 +53,7 @@ export type RecurrenceRule =
 
 export type RecurrentTask = ItemEntityFields & {
   title: string
+  description?: string | null
   notes?: string | null
   categoryId?: EntityId | null
   priority: ItemPriority

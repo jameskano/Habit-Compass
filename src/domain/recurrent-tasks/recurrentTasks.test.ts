@@ -14,6 +14,7 @@ function task(overrides: Partial<RecurrentTask> = {}): RecurrentTask {
     updatedAt: '2026-05-01T00:00:00.000Z',
     archivedAt: null,
     title: 'Recurring',
+    description: null,
     notes: null,
     categoryId: null,
     priority: 'medium',
@@ -30,6 +31,7 @@ function task(overrides: Partial<RecurrentTask> = {}): RecurrentTask {
 describe('recurrent tasks domain', () => {
   it('validates priority, ordering, and bounded dates', () => {
     expect(RecurrentTaskSchema.safeParse(task()).success).toBe(true)
+    expect(RecurrentTaskSchema.safeParse(task({ description: 'Clarifies the recurrence.' })).success).toBe(true)
     expect(RecurrentTaskSchema.safeParse(task({ endsOn: '2026-04-30' })).success).toBe(false)
   })
 

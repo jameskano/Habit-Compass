@@ -13,6 +13,7 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
     updatedAt: baseTimestamp,
     archivedAt: null,
     title: 'Habit fixture',
+    description: null,
     notes: null,
     lifecycleStatus: 'active',
     categoryId: null,

@@ -1,18 +1,14 @@
-import { formatISO } from 'date-fns'
+import { formatISO, parseISO } from 'date-fns'
 import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { sortTasks, type Task } from '@/domain/tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
-import {
-  useCompleteTaskMutation,
-  useReorderTasksMutation,
-} from '@/features/tasks/hooks/useTaskMutations'
+import { useCompleteTaskMutation } from '@/features/tasks/hooks/useTaskMutations'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
-import { SortableItemsList } from '../components/SortableItemsList'
 import { TaskCard } from './TaskCard'
 import { TaskEdit } from './TaskEdit'
 
@@ -27,8 +23,75 @@ type Announcement = {
   title: string
 }
 
+type TaskDateGroup = {
+  key: string
+  label: string
+  tasks: Task[]
+}
+
 function todayAsISODate() {
   return formatISO(new Date(), { representation: 'date' }) as ISODateString
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date)
+  nextDate.setDate(date.getDate() + days)
+  return nextDate
+}
+
+function formatDateHeader(intl: ReturnType<typeof useIntl>, date: ISODateString, today: ISODateString) {
+  const tomorrow = formatISO(addDays(new Date(`${today}T00:00:00`), 1), {
+    representation: 'date',
+  })
+  const formattedDate = intl.formatDate(parseISO(date), {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZone: 'UTC',
+  })
+
+  if (date < today) {
+    return intl.formatMessage({ id: 'page.items.task.group.overdue' }, { date: formattedDate })
+  }
+  if (date === today) {
+    return intl.formatMessage({ id: 'page.items.task.group.today' })
+  }
+  if (date === tomorrow) {
+    return intl.formatMessage({ id: 'page.items.task.group.tomorrow' })
+  }
+  return formattedDate
+}
+
+function groupTasksByDate(
+  tasks: readonly Task[],
+  intl: ReturnType<typeof useIntl>,
+  today: ISODateString,
+): TaskDateGroup[] {
+  const grouped = new Map<string, Task[]>()
+
+  for (const task of tasks) {
+    const key = task.dueDate ?? 'undated'
+    grouped.set(key, [...(grouped.get(key) ?? []), task])
+  }
+
+  return [...grouped.entries()]
+    .sort(([left], [right]) => {
+      if (left === 'undated') {
+        return 1
+      }
+      if (right === 'undated') {
+        return -1
+      }
+      return left.localeCompare(right)
+    })
+    .map(([key, groupTasks]) => ({
+      key,
+      label:
+        key === 'undated'
+          ? intl.formatMessage({ id: 'page.items.task.group.undated' })
+          : formatDateHeader(intl, key as ISODateString, today),
+      tasks: sortTasks(groupTasks),
+    }))
 }
 
 export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabProps) {
@@ -36,7 +99,6 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
   const today = todayAsISODate()
   const categoriesQuery = useCategoriesQuery()
   const completeMutation = useCompleteTaskMutation()
-  const reorderMutation = useReorderTasksMutation()
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -56,6 +118,10 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
       ),
     [categoryId, orderedTasks, searchText],
   )
+  const taskGroups = useMemo(
+    () => groupTasksByDate(visibleTasks, intl, today),
+    [intl, today, visibleTasks],
+  )
 
   if (categoriesQuery.isLoading) {
     return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
@@ -67,19 +133,8 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
 
   const completeTask = (task: Task) => {
     completeMutation.mutate({ taskId: task.id }, {
-      onSuccess: () =>
-        setAnnouncement({ id: 'page.items.task.completed', title: task.title }),
+      onSuccess: () => setAnnouncement(null),
     })
-  }
-
-  const reorderTasks = (visibleTaskIds: string[]) => {
-    const visibleIds = new Set(visibleTaskIds)
-    let visibleIndex = 0
-    const orderedTaskIds = orderedTasks.map((task) =>
-      visibleIds.has(task.id) ? visibleTaskIds[visibleIndex++] : task.id,
-    )
-
-    reorderMutation.mutate(orderedTaskIds)
   }
 
   return (
@@ -121,23 +176,27 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
           }
         />
       ) : (
-        <SortableItemsList
-          items={visibleTasks}
-          group="tasks"
-          reorderLabelId="page.items.task.action.reorder"
-          onReorder={reorderTasks}
-        >
-          {(task) => (
-            <TaskCard
-              task={task}
-              category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
-              today={today}
-              archived={showingArchived}
-              onEdit={() => setSelectedTaskId(task.id)}
-              onComplete={() => completeTask(task)}
-            />
-          )}
-        </SortableItemsList>
+        <div className="space-y-5">
+          {taskGroups.map((group) => (
+            <section key={group.key} className="space-y-3" aria-label={group.label}>
+              <h3 className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                {group.label}
+              </h3>
+              <div className="grid gap-4 lg:grid-cols-2">
+                {group.tasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
+                    archived={showingArchived}
+                    onEdit={() => setSelectedTaskId(task.id)}
+                    onComplete={() => completeTask(task)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       )}
       {selectedTask ? (
         <TaskEdit

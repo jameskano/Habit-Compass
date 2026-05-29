@@ -15,6 +15,7 @@ export const TaskCompletionStatusSchema = z.enum(taskCompletionStatuses)
 
 export const TaskSchema = ItemEntityFieldsSchema.extend({
   title: z.string().min(1),
+  description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   dueDate: IsoDateStringSchema.optional().nullable(),
   completedAt: IsoDateTimeStringSchema.optional().nullable(),

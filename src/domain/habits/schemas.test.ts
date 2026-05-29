@@ -8,6 +8,19 @@ describe('HabitGoalConfigSchema', () => {
     expect(HabitGoalConfigSchema.parse({ trackingType: 'binary' }).trackingType).toBe('binary')
   })
 
+  it('accepts optional binary minimum description', () => {
+    const goal = HabitGoalConfigSchema.parse({
+      trackingType: 'binary',
+      minimumDescription: 'Read one page',
+    })
+
+    if (goal.trackingType !== 'binary') {
+      throw new Error('Expected a binary goal')
+    }
+
+    expect(goal.minimumDescription).toBe('Read one page')
+  })
+
   it('parses a frequency goal with a custom period', () => {
     const goal = HabitGoalConfigSchema.parse({
       trackingType: 'timesPerPeriod',
@@ -21,6 +34,24 @@ describe('HabitGoalConfigSchema', () => {
     }
 
     expect(goal.customPeriodDays).toBe(10)
+  })
+
+  it('rejects zero and negative numeric minimum targets', () => {
+    expect(
+      HabitGoalConfigSchema.safeParse({
+        trackingType: 'timePerSession',
+        targetMinutes: 20,
+        minimumMinutes: 0,
+      }).success,
+    ).toBe(false)
+    expect(
+      HabitGoalConfigSchema.safeParse({
+        trackingType: 'quantityPerSession',
+        targetQuantity: 20,
+        minimumQuantity: -1,
+        unitLabel: 'pages',
+      }).success,
+    ).toBe(false)
   })
 })
 
@@ -41,6 +72,11 @@ describe('habit persisted state enums', () => {
 describe('HabitSchema schedules', () => {
   it('accepts persisted explicit and flexible schedules with priority and order', () => {
     expect(HabitSchema.safeParse(createHabit({ trackingType: 'binary' })).success).toBe(true)
+    expect(
+      HabitSchema.safeParse(
+        createHabit({ trackingType: 'binary' }, { description: 'Clarifies the habit.', notes: 'Private note.' }),
+      ).success,
+    ).toBe(true)
     expect(
       HabitSchema.safeParse(createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }))
         .success,

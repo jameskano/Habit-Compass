@@ -71,6 +71,7 @@ export const RecurrenceRuleSchema = z.discriminatedUnion('kind', [
 
 export const RecurrentTaskSchema = ItemEntityFieldsSchema.extend({
   title: z.string().min(1),
+  description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   categoryId: EntityIdSchema.optional().nullable(),
   priority: ItemPrioritySchema,

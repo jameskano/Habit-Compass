@@ -40,6 +40,7 @@ export const HabitFrequencyConfigSchema = z.object({
 
 export const BinaryHabitGoalConfigSchema = z.object({
   trackingType: z.literal('binary'),
+  minimumDescription: z.string().trim().min(1).optional(),
 })
 
 export const TimesPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
@@ -126,6 +127,7 @@ const PeriodBasedHabitTypes = new Set([
 
 export const HabitSchema = ItemEntityFieldsSchema.extend({
   title: z.string().min(1),
+  description: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   lifecycleStatus: LifecycleStatusSchema,
   categoryId: EntityIdSchema.optional().nullable(),

@@ -83,6 +83,7 @@ export const mockRecurrentTasksRepository: RecurrentTasksRepository = {
     const state = getMockState()
     const task: RecurrentTask = {
       ...input,
+      carryForward: input.carryForward ?? false,
       id: `recurrent-task-${state.recurrentTasks.length + 1}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

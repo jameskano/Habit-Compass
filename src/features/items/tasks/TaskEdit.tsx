@@ -44,6 +44,7 @@ const TaskEditValuesSchema = z.object({
   categoryId: z.string(),
   priority: z.enum(itemPriorities),
   carryForward: z.boolean(),
+  description: z.string(),
   notes: z.string(),
 })
 
@@ -57,6 +58,7 @@ function valuesForTask(task: Task): TaskEditValues {
     categoryId: task.categoryId ?? '',
     priority: task.priority,
     carryForward: task.carryForward,
+    description: task.description ?? '',
     notes: task.notes ?? '',
   }
 }
@@ -94,6 +96,7 @@ export function TaskEdit({
       categoryId: values.categoryId || null,
       priority: values.priority,
       carryForward: values.carryForward,
+      description: values.description.trim() || null,
       notes: values.notes.trim() || null,
     }
 
@@ -225,6 +228,10 @@ export function TaskEdit({
                   </Select>
                 </label>
               </div>
+              <label className="block text-sm font-medium">
+                {intl.formatMessage({ id: 'page.items.task.edit.description' })}
+                <Textarea {...form.register('description')} rows={3} className={inputClass} />
+              </label>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.task.edit.carryForward' })}</span>
                 <Checkbox

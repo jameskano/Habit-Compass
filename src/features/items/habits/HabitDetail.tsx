@@ -152,11 +152,20 @@ export function HabitDetail({
                 <HabitEditTab
                   habit={habit}
                   categories={categories}
+                  today={today}
                   archived={habit.lifecycleStatus === 'archived'}
                   pending={pending}
-                  onSave={(input) =>
+                  onSave={(input, options) =>
                     updateMutation.mutate(input, {
-                      onSuccess: () => setNoticeId('page.items.habit.detail.saved'),
+                      onSuccess: () => {
+                        if (options?.archiveAfterSave) {
+                          archiveMutation.mutate(habit.id, {
+                            onSuccess: () => onArchived(habit),
+                          })
+                          return
+                        }
+                        setNoticeId('page.items.habit.detail.saved')
+                      },
                     })
                   }
                   onArchive={() =>

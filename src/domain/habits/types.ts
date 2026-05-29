@@ -32,6 +32,7 @@ export type HabitFrequencyConfig = {
 
 export type BinaryHabitGoalConfig = {
   trackingType: 'binary'
+  minimumDescription?: string
 }
 
 export type TimesPerPeriodGoalConfig = HabitFrequencyConfig & {
@@ -127,6 +128,7 @@ export type HabitScheduleRule =
 
 export type Habit = ItemEntityFields & {
   title: string
+  description?: string | null
   notes?: string | null
   lifecycleStatus: LifecycleStatus
   categoryId?: EntityId | null

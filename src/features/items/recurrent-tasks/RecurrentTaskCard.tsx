@@ -1,5 +1,3 @@
-import { parseISO } from 'date-fns'
-import { Check } from 'lucide-react'
 import { type KeyboardEvent, type PointerEvent, useRef } from 'react'
 import { type IntlShape, useIntl } from 'react-intl'
 
@@ -10,7 +8,6 @@ import {
   type DerivedRecurrentOccurrence,
   type RecurrentTask,
 } from '@/domain/recurrent-tasks'
-import type { ISODateString } from '@/shared/types'
 import { Card } from '@/shared/ui/card'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -23,7 +20,6 @@ type RecurrentTaskCardProps = {
   task: RecurrentTask
   category?: Category
   occurrence?: DerivedRecurrentOccurrence
-  today: ISODateString
   archived: boolean
   onEdit: () => void
   onComplete: () => void
@@ -61,35 +57,10 @@ function formatFrequency(intl: IntlShape, task: RecurrentTask) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-function occurrenceMessageId(
-  occurrence: DerivedRecurrentOccurrence | undefined,
-  today: ISODateString,
-) {
-  if (!occurrence) {
-    return 'page.items.recurrent.occurrence.none'
-  }
-  if (occurrence.status === 'completed') {
-    return 'page.items.recurrent.occurrence.completed'
-  }
-  if (occurrence.status === 'skipped') {
-    return 'page.items.recurrent.occurrence.skipped'
-  }
-  if (occurrence.status === 'missed') {
-    return 'page.items.recurrent.occurrence.missed'
-  }
-  if (occurrence.isOverdue) {
-    return 'page.items.recurrent.occurrence.overdue'
-  }
-  return occurrence.scheduledForDate === today
-    ? 'page.items.recurrent.occurrence.today'
-    : 'page.items.recurrent.occurrence.next'
-}
-
 export function RecurrentTaskCard({
   task,
   category,
   occurrence,
-  today,
   archived,
   onEdit,
   onComplete,
@@ -99,13 +70,6 @@ export function RecurrentTaskCard({
   const swiped = useRef(false)
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${task.priority}` })}`
-  const occurrenceDate = occurrence
-    ? intl.formatDate(parseISO(occurrence.scheduledForDate), {
-        month: 'short',
-        day: 'numeric',
-        timeZone: 'UTC',
-      })
-    : ''
   const isCompleted = occurrence?.status === 'completed'
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -190,11 +154,14 @@ export function RecurrentTaskCard({
       />
       <div className="ml-1 space-y-3">
         <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <h3 className="truncate text-base font-semibold tracking-tight">{task.title}</h3>
             <p className="text-sm text-muted-foreground">{formatFrequency(intl, task)}</p>
+            {task.description ? (
+              <p className="line-clamp-2 text-sm text-muted-foreground">{task.description}</p>
+            ) : null}
           </div>
-          <div className="flex max-w-[48%] flex-wrap justify-end items-center gap-1.5">
+          <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
             {category && CategoryIcon ? (
               <span
                 aria-label={category.name}
@@ -218,33 +185,6 @@ export function RecurrentTaskCard({
             />
           </div>
         </header>
-        <footer className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-          <span
-            className={cn(
-              'rounded-full px-2.5 py-1 text-xs font-semibold',
-              occurrence?.isOverdue || occurrence?.status === 'missed'
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200'
-                : isCompleted
-                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
-                  : 'bg-muted text-muted-foreground',
-            )}
-          >
-            {intl.formatMessage(
-              { id: occurrenceMessageId(occurrence, today) },
-              { date: occurrenceDate },
-            )}
-          </span>
-          {isCompleted ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              <Check aria-hidden="true" size={13} />
-              {intl.formatMessage({ id: 'page.items.recurrent.status.completed' })}
-            </span>
-          ) : occurrence?.actionable ? (
-            <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              {intl.formatMessage({ id: 'page.items.recurrent.action.swipeToComplete' })}
-            </span>
-          ) : null}
-        </footer>
       </div>
     </Card>
   )

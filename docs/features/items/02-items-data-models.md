@@ -100,6 +100,7 @@ export interface Habit {
   userId: string;
 
   title: string;
+  description?: string;
   notes?: string;
 
   categoryId?: string;
@@ -125,6 +126,8 @@ export interface Habit {
 
 Completion levels for MVP are limited to minimum and standard.
 Standard completion always exists. Minimum completion is optional and is only valid when configured for that habit.
+For binary habits, the configured minimum is an optional text definition on the binary goal config.
+For numeric habits, the configured minimum is the relevant numeric minimum target and must be lower than the standard target.
 
 ```ts
 export type HabitCompletionLevel = "minimum" | "standard";
@@ -298,12 +301,13 @@ export interface Task {
   userId: string;
 
   title: string;
+  description?: string;
   notes?: string;
 
   categoryId?: string;
 
   priority: TaskPriority;
-  order: number;
+  order: number; // retained for storage compatibility; Items task UI groups by date.
   lifecycleStatus: ItemLifecycleStatus;
 
   dueDate?: string; // YYYY-MM-DD
@@ -335,6 +339,7 @@ export interface RecurrentTask {
   userId: string;
 
   title: string;
+  description?: string;
   notes?: string;
 
   categoryId?: string;

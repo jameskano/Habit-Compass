@@ -83,7 +83,7 @@ Minimum is only available when configured for that habit. If minimum is not conf
 Binary habits use manual completion levels:
 
 - Standard-only binary habits allow complete and skip.
-- Binary habits with minimum configured allow complete as minimum, complete as standard, and skip.
+- Binary habits with a non-empty minimum text configured allow complete as minimum, complete as standard, and skip.
 
 Quantity/time habits derive completion levels from logged values:
 
@@ -91,6 +91,7 @@ Quantity/time habits derive completion levels from logged values:
 - Minimum reached is `completed_minimum` and scores `0.5`.
 - Standard reached is `completed_standard` and scores `1`.
 - Without a configured minimum, below standard is `progress_logged` and standard reached is `completed_standard`.
+- In edit forms, numeric minimum `0` disables minimum; negative values and values equal to or above the standard target are invalid.
 
 Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 

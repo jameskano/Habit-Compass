@@ -18,16 +18,17 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
   - Optional grouping for habits, tasks, recurrent tasks, and weekly priorities.
   - Stores customizable label name, required icon/color visual metadata, sort order, and starter-label marker without category types.
 - `habits`
-  - Stores habit definitions, priority, ordering, schedule, tracking type, optional category, and optional minimum/standard configs.
+  - Stores habit definitions, description, notes, priority, ordering, schedule, tracking type, optional category, and optional minimum/standard configs.
   - `schedule_config`, `goal_config`, and completion-level configs are JSONB to match the current domain model.
 - `habit_logs`
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
   - Unique per user, habit, and log date.
 - `tasks`
-  - One-off task records with optional due date, priority, drag ordering, carry-forward behavior, and category.
+  - One-off task records with optional due date, description, notes, priority, carry-forward behavior, and category.
+  - Items UI groups tasks by date; stored order remains only for compatibility/fallbacks.
   - MVP database status is `pending`, `completed`, `skipped`, or `missed`.
 - `recurrent_tasks`
-  - Parent recurring-task definitions with priority, ordering, start/end bounds, and carry-forward behavior.
+  - Parent recurring-task definitions with description, notes, priority, ordering, start/end bounds, and carry-forward behavior.
   - `recurrence_config` is JSONB because the recurrence model is intentionally explicit but still evolving.
 - `recurrent_task_logs`
   - Per-occurrence status records for recurrent tasks.

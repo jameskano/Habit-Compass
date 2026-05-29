@@ -35,6 +35,7 @@ export const mockTasksRepository: TasksRepository = {
     const state = getMockState()
     const task: Task = {
       ...input,
+      carryForward: input.carryForward ?? true,
       id: `task-${state.tasks.length + 1}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

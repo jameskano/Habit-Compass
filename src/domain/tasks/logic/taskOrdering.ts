@@ -11,11 +11,6 @@ function statusRank(task: Task) {
 }
 
 export function compareTasks(left: Task, right: Task) {
-  const orderDifference = left.order - right.order
-  if (orderDifference !== 0) {
-    return orderDifference
-  }
-
   const statusDifference = statusRank(left) - statusRank(right)
   if (statusDifference !== 0) {
     return statusDifference

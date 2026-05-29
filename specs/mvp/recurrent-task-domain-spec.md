@@ -43,7 +43,9 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - `customFutureRule` may exist as a descriptive placeholder only.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
 - Recurrent tasks have priority `low`, `medium`, or `high`, stored order, and carry-forward behavior.
+- Recurrent tasks may include a description for item clarification and separate notes for extra user information.
 - The parent schedule is bounded by `startsOn` and optional `endsOn`.
+- Saving an end date before today archives the parent recurrent task after confirmation in the edit flow.
 - Read logic derives overdue pending/missed presentation without writing automatic missed occurrences.
 - Parent recurrent tasks must support only active and archived lifecycle state.
 - Delete physically removes a parent recurrent task after explicit confirmation.
@@ -58,6 +60,7 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - `RecurrentTask`
   - base entity fields
   - `title`
+  - `description`
   - `notes`
   - `categoryId`
   - `priority`
