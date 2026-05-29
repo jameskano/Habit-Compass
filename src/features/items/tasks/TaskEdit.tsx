@@ -14,6 +14,17 @@ import {
 } from '@/features/tasks/hooks/useTaskMutations'
 import { itemPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
@@ -37,6 +48,7 @@ const TaskEditValuesSchema = z.object({
 })
 
 type TaskEditValues = z.infer<typeof TaskEditValuesSchema>
+const noCategoryValue = '__none__'
 
 function valuesForTask(task: Task): TaskEditValues {
   return {
@@ -74,17 +86,6 @@ export function TaskEdit({
     form.reset(valuesForTask(task))
   }, [form, task])
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !confirmingDelete) {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [confirmingDelete, onClose])
-
   const submit = form.handleSubmit((values) => {
     const input: UpdateTaskInput = {
       id: task.id,
@@ -99,23 +100,27 @@ export function TaskEdit({
     updateMutation.mutate(input, { onSuccess: () => setSaved(true) })
   })
 
-  const inputClass =
-    'mt-1.5 w-full rounded-xl border border-border/75 bg-background px-3 py-2.5 text-sm text-foreground'
+  const inputClass = 'mt-1.5 rounded-xl border-border/75'
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex bg-foreground/30 backdrop-blur-sm md:items-center md:justify-center md:p-6"
-      onClick={onClose}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !confirmingDelete) {
+          onClose()
+        }
+      }}
     >
-      <section
-        role="dialog"
-        aria-modal="true"
+      <DialogContent
         aria-label={intl.formatMessage({ id: 'page.items.task.edit.title' }, { task: task.title })}
-        className="relative flex h-full w-full flex-col overflow-hidden bg-background shadow-2xl md:max-h-[min(92vh,46rem)] md:max-w-xl md:rounded-[1.7rem] md:border md:border-border/75"
-        onClick={(event) => event.stopPropagation()}
+        aria-describedby={undefined}
+        className="fixed inset-0 left-0 top-0 z-50 flex h-full w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 bg-background p-0 shadow-2xl md:left-1/2 md:top-1/2 md:max-h-[min(92vh,46rem)] md:max-w-xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[1.7rem] md:border md:border-border/75"
       >
-        <header className="border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6">
+        <DialogHeader>
           <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="sr-only">
+              {intl.formatMessage({ id: 'page.items.task.edit.title' }, { task: task.title })}
+            </DialogTitle>
             <h2 className="text-xl font-semibold tracking-tight">{task.title}</h2>
             <Button
               variant="ghost"
@@ -126,7 +131,7 @@ export function TaskEdit({
               <X aria-hidden="true" size={18} />
             </Button>
           </div>
-        </header>
+        </DialogHeader>
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {saved ? (
             <p role="status" className="mb-4 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
@@ -144,7 +149,7 @@ export function TaskEdit({
               </p>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.task.edit.name' })}
-                <input {...form.register('title')} className={inputClass} />
+                <Input {...form.register('title')} className={inputClass} />
                 {form.formState.errors.title ? (
                   <span className="mt-1 block text-xs text-amber-700">
                     {intl.formatMessage({ id: 'page.items.task.edit.error.name' })}
@@ -153,7 +158,7 @@ export function TaskEdit({
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.task.edit.dueDate' })}
-                <input type="date" {...form.register('dueDate')} className={inputClass} />
+                <Input type="date" {...form.register('dueDate')} className={inputClass} />
               </label>
             </section>
             <section className="space-y-4 rounded-[1.4rem] border border-border/70 bg-card/90 p-4">
@@ -163,44 +168,72 @@ export function TaskEdit({
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.task.edit.category' })}
-                  <select {...form.register('categoryId')} className={inputClass}>
-                    <option value="">
-                      {intl.formatMessage({ id: 'page.items.task.category.none' })}
-                    </option>
+                  <Select
+                    value={form.watch('categoryId') || noCategoryValue}
+                    onValueChange={(value) =>
+                      form.setValue(
+                        'categoryId',
+                        value === noCategoryValue ? '' : value,
+                        { shouldDirty: true, shouldValidate: true },
+                      )
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={intl.formatMessage({ id: 'page.items.task.edit.category' })}
+                      className={inputClass}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={noCategoryValue}>
+                        {intl.formatMessage({ id: 'page.items.task.category.none' })}
+                      </SelectItem>
                     {categories
                       .filter((category) => category.lifecycleStatus === 'active')
                       .map((category) => (
-                        <option key={category.id} value={category.id}>
+                        <SelectItem key={category.id} value={category.id}>
                           {category.name}
-                        </option>
+                        </SelectItem>
                       ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.task.edit.priority' })}
-                  <select
-                    {...form.register('priority')}
-                    className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+                  <Select
+                    value={selectedPriority}
+                    onValueChange={(value) =>
+                      form.setValue('priority', value as TaskEditValues['priority'], {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
                   >
+                    <SelectTrigger
+                      aria-label={intl.formatMessage({ id: 'page.items.task.edit.priority' })}
+                      className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
                     {itemPriorities.map((priority) => (
-                      <option key={priority} value={priority}>
+                      <SelectItem key={priority} value={priority}>
                         {intl.formatMessage({ id: `page.items.priority.${priority}` })}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                 </label>
               </div>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.task.edit.carryForward' })}</span>
-                <input
-                  type="checkbox"
+                <Checkbox
                   {...form.register('carryForward')}
-                  className="h-4 w-4 accent-[hsl(var(--primary))]"
                 />
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.task.edit.notes' })}
-                <textarea {...form.register('notes')} rows={4} className={inputClass} />
+                <Textarea {...form.register('notes')} rows={4} className={inputClass} />
               </label>
             </section>
             <Button type="submit" className="w-full rounded-xl" disabled={pending}>
@@ -243,7 +276,7 @@ export function TaskEdit({
             deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
           }
         />
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

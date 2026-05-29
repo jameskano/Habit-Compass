@@ -4,6 +4,8 @@ import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { cn } from '@/shared/utils/cn'
 
 type ItemsFilterRowProps = {
@@ -20,6 +22,8 @@ type ItemsFilterRowProps = {
   onSearchChange: (searchText: string) => void
   onToggleArchive: () => void
 }
+
+const allCategoriesValue = '__all__'
 
 export function ItemsFilterRow({
   categories,
@@ -56,21 +60,29 @@ export function ItemsFilterRow({
       className="flex mb-3 mt-4 items-center gap-2 rounded-[1.35rem] border border-border/70 bg-card/65 p-2.5"
       aria-label={intl.formatMessage({ id: 'page.items.filters.aria' })}
     >
-      <select
-        value={categoryId}
-        onChange={(event) => onCategoryChange(event.target.value)}
-        aria-label={intl.formatMessage({ id: categoryLabelId })}
-        className="min-w-0 flex-1 rounded-xl border border-border/75 bg-background px-3 py-2.5 text-sm text-foreground sm:max-w-52"
+      <Select
+        value={categoryId || allCategoriesValue}
+        onValueChange={(value) => onCategoryChange(value === allCategoriesValue ? '' : value)}
       >
-        <option value="">{intl.formatMessage({ id: allCategoriesLabelId })}</option>
-        {categories
-          .filter((category) => category.lifecycleStatus === 'active')
-          .map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-      </select>
+        <SelectTrigger
+          aria-label={intl.formatMessage({ id: categoryLabelId })}
+          className="min-w-0 flex-1 rounded-xl border-border/75 sm:max-w-52"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={allCategoriesValue}>
+            {intl.formatMessage({ id: allCategoriesLabelId })}
+          </SelectItem>
+          {categories
+            .filter((category) => category.lifecycleStatus === 'active')
+            .map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
 
       <div
         className={cn(
@@ -85,22 +97,23 @@ export function ItemsFilterRow({
               size={16}
               className="absolute left-3 text-muted-foreground"
             />
-            <input
+            <Input
               ref={inputRef}
               value={searchText}
               onChange={(event) => onSearchChange(event.target.value)}
               aria-label={intl.formatMessage({ id: searchLabelId })}
               placeholder={intl.formatMessage({ id: searchPlaceholderId })}
-              className="h-full min-w-0 flex-1 rounded-full bg-transparent py-2 pl-9 pr-9 text-sm text-foreground outline-none"
+              className="h-full min-w-0 flex-1 rounded-full border-0 bg-transparent py-2 pl-9 pr-9 shadow-none"
             />
-            <button
+            <Button
+              variant="ghost"
               type="button"
               onClick={closeSearch}
               aria-label={intl.formatMessage({ id: 'action.close' })}
-              className="absolute right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="absolute right-1.5 h-7 min-h-7 w-7 rounded-full p-0 text-muted-foreground"
             >
               <X aria-hidden="true" size={15} />
-            </button>
+            </Button>
           </div>
         ) : (
           <Button

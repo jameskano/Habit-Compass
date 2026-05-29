@@ -1,9 +1,10 @@
 import { Archive, BarChart3, CalendarDays, PencilLine, RotateCcw, Trash2, X } from 'lucide-react'
-import { Fragment, type ComponentType, useEffect } from 'react'
+import { Fragment, type ComponentType } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
 import { Button } from '@/shared/ui/button'
+import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
 
 import type { HabitDangerAction } from './HabitConfirmationDialog'
 import type { HabitDetailTab } from './HabitDetail'
@@ -41,21 +42,6 @@ export function HabitOptionsSheet({
 }: HabitOptionsSheetProps) {
   const intl = useIntl()
 
-  useEffect(() => {
-    if (!habit) {
-      return
-    }
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [habit, onClose])
-
   if (!habit) {
     return null
   }
@@ -73,21 +59,29 @@ export function HabitOptionsSheet({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end bg-foreground/35 backdrop-blur-sm"
-      onClick={onClose}
+    <Sheet
+      open={Boolean(habit)}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose()
+        }
+      }}
     >
-      <section
-        role="dialog"
-        aria-modal="true"
+      <SheetContent
         aria-label={intl.formatMessage(
           { id: 'page.items.habit.menu.title' },
           { habit: habit.title },
         )}
+        aria-describedby={undefined}
         className="animate-[habit-sheet-in_300ms_ease-out] w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl motion-reduce:animate-none md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
+          <SheetTitle className="sr-only">
+            {intl.formatMessage(
+              { id: 'page.items.habit.menu.title' },
+              { habit: habit.title },
+            )}
+          </SheetTitle>
           <h2 className="text-xl font-semibold">{habit.title}</h2>
           <Button
             variant="ghost"
@@ -127,7 +121,7 @@ export function HabitOptionsSheet({
             )
           })}
         </div>
-      </section>
-    </div>
+      </SheetContent>
+    </Sheet>
   )
 }

@@ -2,6 +2,7 @@ import { useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
 import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 
 export type HabitDangerAction = 'reset' | 'delete'
 
@@ -27,23 +28,21 @@ export function HabitConfirmationDialog({
   }
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[1.7rem] bg-foreground/35 p-5 backdrop-blur-sm">
-      <section
+    <Dialog open={Boolean(action)} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="habit-confirm-title"
-        aria-describedby="habit-confirm-description"
-        className="w-full max-w-sm rounded-2xl border border-border/70 bg-background p-5 shadow-2xl"
+        className="w-full max-w-sm rounded-2xl p-5"
       >
-        <h3 id="habit-confirm-title" className="text-lg font-semibold">
+        <DialogTitle className="text-lg">
           {intl.formatMessage({ id: `page.items.habit.confirm.${action}.title` })}
-        </h3>
-        <p id="habit-confirm-description" className="mt-2 text-sm leading-6 text-muted-foreground">
+        </DialogTitle>
+        <DialogDescription className="mt-2">
           {intl.formatMessage(
             { id: `page.items.habit.confirm.${action}.description` },
             { habit: habit.title },
           )}
-        </p>
+        </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" disabled={pending} onClick={onCancel}>
             {intl.formatMessage({ id: 'action.cancel' })}
@@ -57,7 +56,7 @@ export function HabitConfirmationDialog({
             {intl.formatMessage({ id: `page.items.habit.confirm.${action}.action` })}
           </Button>
         </div>
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

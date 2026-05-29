@@ -11,6 +11,7 @@ import {
 } from '@/domain/habits'
 import type { Category } from '@/domain/categories'
 import type { ISODateString } from '@/shared/types'
+import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { cn } from '@/shared/utils/cn'
 import {
@@ -231,8 +232,9 @@ export function HabitCard({
             </p>
           </div>
           <div className="flex gap-4">
-            <button
+            <Button
               data-no-card-action
+              variant="ghost"
               type="button"
               onPointerDown={(event) => event.stopPropagation()}
               onPointerUp={(event) => event.stopPropagation()}
@@ -244,12 +246,13 @@ export function HabitCard({
                 { id: 'page.items.habit.action.calendar' },
                 { habit: habit.title },
               )}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
             >
               <CalendarDays aria-hidden="true" size={18} />
-            </button>
-            <button
+            </Button>
+            <Button
               data-no-card-action
+              variant="ghost"
               type="button"
               onPointerDown={(event) => event.stopPropagation()}
               onPointerUp={(event) => event.stopPropagation()}
@@ -261,10 +264,10 @@ export function HabitCard({
                 { id: 'page.items.habit.action.options' },
                 { habit: habit.title },
               )}
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
             >
               <MoreHorizontal aria-hidden="true" size={18} />
-            </button>
+            </Button>
           </div>
         </footer>
       </div>

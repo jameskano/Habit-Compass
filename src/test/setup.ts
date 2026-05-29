@@ -45,3 +45,31 @@ Object.defineProperty(window, 'scrollTo', {
   writable: true,
   value: () => undefined,
 })
+
+if (!HTMLElement.prototype.hasPointerCapture) {
+  Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+    writable: true,
+    value: () => false,
+  })
+}
+
+if (!HTMLElement.prototype.setPointerCapture) {
+  Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+    writable: true,
+    value: () => undefined,
+  })
+}
+
+if (!HTMLElement.prototype.releasePointerCapture) {
+  Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+    writable: true,
+    value: () => undefined,
+  })
+}
+
+if (!Element.prototype.scrollIntoView) {
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    writable: true,
+    value: () => undefined,
+  })
+}

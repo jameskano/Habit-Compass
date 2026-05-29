@@ -9,6 +9,7 @@ import { useRecurrentTasksQuery } from '@/features/recurrent-tasks/hooks/useRecu
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { cn } from '@/shared/utils/cn'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 
 import { HabitsTab } from './habits/HabitsTab'
@@ -92,40 +93,39 @@ export function ItemsPage() {
 
   return (
     <section>
-      <div
-        className="flex gap-2 overflow-x-auto pb-4 border-b border-border/60"
-        role="tablist"
-        aria-label={intl.formatMessage({ id: 'page.items.tabs.aria' })}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value as ItemTabKey)
+          setShowingArchived(false)
+        }}
       >
-        {itemTabs.map((tab) => (
-          <button
-            key={tab.key}
-            id={`items-tab-${tab.key}`}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.key}
-            aria-controls={`items-panel-${tab.key}`}
-            onClick={() => {
-              setActiveTab(tab.key)
-              setShowingArchived(false)
-            }}
-            className={cn(
-              'shrink-0 rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted',
-              activeTab === tab.key && 'bg-primary text-primary-foreground',
-            )}
-          >
-            <FormattedMessage id={tab.labelId} />
-          </button>
-        ))}
-      </div>
+        <TabsList
+          className="flex gap-2 overflow-x-auto pb-4 border-b border-border/60"
+          aria-label={intl.formatMessage({ id: 'page.items.tabs.aria' })}
+        >
+          {itemTabs.map((tab) => (
+            <TabsTrigger
+              key={tab.key}
+              id={`items-tab-${tab.key}`}
+              value={tab.key}
+              className={cn(
+                'shrink-0 rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground',
+              )}
+            >
+              <FormattedMessage id={tab.labelId} />
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <section
-        id={`items-panel-${activeTabConfig.key}`}
-        role="tabpanel"
-        aria-labelledby={`items-tab-${activeTabConfig.key}`}
-      >
-        {renderCards()}
-      </section>
+        <TabsContent
+          id={`items-panel-${activeTabConfig.key}`}
+          value={activeTabConfig.key}
+          aria-labelledby={`items-tab-${activeTabConfig.key}`}
+        >
+          {renderCards()}
+        </TabsContent>
+      </Tabs>
     </section>
   )
 }

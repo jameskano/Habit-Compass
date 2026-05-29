@@ -9,6 +9,15 @@ import { useAppPreferencesStore } from './app/state/appPreferencesStore'
 import { resetMockState } from './integrations/mock/mockData'
 import { renderWithAppProviders } from './test/utils/renderWithAppProviders'
 
+async function chooseSelectOption(
+  user: ReturnType<typeof userEvent.setup>,
+  trigger: HTMLElement,
+  optionName: string | RegExp,
+) {
+  await user.click(trigger)
+  await user.click(await screen.findByRole('option', { name: optionName }))
+}
+
 describe('app shell', () => {
   beforeEach(async () => {
     resetMockState()
@@ -133,7 +142,11 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Search Habits' }))
     const habitSearch = screen.getByLabelText('Search habits')
     await user.type(habitSearch, 'Read')
-    await user.selectOptions(screen.getByLabelText('Category'), 'category-health')
+    await chooseSelectOption(
+      user,
+      screen.getByRole('combobox', { name: 'Category' }),
+      'Health',
+    )
     expect(await screen.findByText('No matching habits')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Tasks' }))
@@ -147,7 +160,11 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Search Recurrent Tasks' }))
     const recurrentSearch = screen.getByLabelText('Search recurrent tasks')
     await user.type(recurrentSearch, 'Weekly')
-    await user.selectOptions(screen.getByLabelText('Category'), 'category-health')
+    await chooseSelectOption(
+      user,
+      screen.getByRole('combobox', { name: 'Category' }),
+      'Health',
+    )
     expect(await screen.findByText('No matching recurrent tasks')).toBeInTheDocument()
   })
 
@@ -305,8 +322,14 @@ describe('app shell', () => {
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
     const detail = screen.getByRole('dialog', { name: 'Habit detail for Read before bed' })
 
-    await user.selectOptions(within(detail).getByLabelText('Priority'), 'high')
-    expect(within(detail).getByLabelText('Priority')).toHaveClass('bg-orange-400')
+    await chooseSelectOption(
+      user,
+      within(detail).getByRole('combobox', { name: 'Priority' }),
+      'High',
+    )
+    expect(within(detail).getByRole('combobox', { name: 'Priority' })).toHaveClass(
+      'bg-orange-400',
+    )
     await user.clear(within(detail).getByLabelText('Name'))
     await user.type(within(detail).getByLabelText('Name'), 'Read for ten minutes')
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
@@ -335,7 +358,8 @@ describe('app shell', () => {
     const deleteDialog = screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })
     await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
     expect(screen.getByRole('button', { name: 'Open options for Drink water after lunch' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Options for Drink water after lunch' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }))
     await user.click(
       within(screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })).getByRole(
         'button',
@@ -397,8 +421,14 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit Start laundry' }))
     let editDialog = screen.getByRole('dialog', { name: 'Edit task Start laundry' })
     expect(within(editDialog).queryByText('Task details')).not.toBeInTheDocument()
-    await user.selectOptions(within(editDialog).getByLabelText('Priority'), 'high')
-    expect(within(editDialog).getByLabelText('Priority')).toHaveClass('bg-orange-400')
+    await chooseSelectOption(
+      user,
+      within(editDialog).getByRole('combobox', { name: 'Priority' }),
+      'High',
+    )
+    expect(within(editDialog).getByRole('combobox', { name: 'Priority' })).toHaveClass(
+      'bg-orange-400',
+    )
     await user.clear(within(editDialog).getByLabelText('Name'))
     await user.type(within(editDialog).getByLabelText('Name'), 'Fold laundry')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
@@ -465,8 +495,14 @@ describe('app shell', () => {
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
     const editDialog = screen.getByRole('dialog', { name: 'Edit recurrent task Water the plants' })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
-    await user.selectOptions(within(editDialog).getByLabelText('Priority'), 'high')
-    expect(within(editDialog).getByLabelText('Priority')).toHaveClass('bg-orange-400')
+    await chooseSelectOption(
+      user,
+      within(editDialog).getByRole('combobox', { name: 'Priority' }),
+      'High',
+    )
+    expect(within(editDialog).getByRole('combobox', { name: 'Priority' })).toHaveClass(
+      'bg-orange-400',
+    )
     await user.clear(within(editDialog).getByLabelText('Name'))
     await user.type(within(editDialog).getByLabelText('Name'), 'Water balcony plants')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))

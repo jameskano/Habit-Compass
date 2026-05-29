@@ -21,6 +21,17 @@ import {
 } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { itemPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
@@ -69,6 +80,7 @@ const RecurrentEditValuesSchema = z
   })
 
 type RecurrentEditValues = z.infer<typeof RecurrentEditValuesSchema>
+const noCategoryValue = '__none__'
 
 function valuesForTask(task: RecurrentTask): RecurrentEditValues {
   const rule = task.recurrenceRule
@@ -148,16 +160,6 @@ export function RecurrentTaskEdit({
     form.reset(valuesForTask(task))
   }, [form, task])
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !confirmingDelete) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [confirmingDelete, onClose])
-
   const toggleDay = (day: DayOfWeek) => {
     form.setValue(
       'daysOfWeek',
@@ -184,26 +186,33 @@ export function RecurrentTaskEdit({
     updateMutation.mutate(input, { onSuccess: () => setSaved(true) })
   })
 
-  const inputClass =
-    'mt-1.5 w-full rounded-xl border border-border/75 bg-background px-3 py-2.5 text-sm text-foreground'
+  const inputClass = 'mt-1.5 rounded-xl border-border/75'
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex bg-foreground/30 backdrop-blur-sm md:items-center md:justify-center md:p-6"
-      onClick={onClose}
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !confirmingDelete) {
+          onClose()
+        }
+      }}
     >
-      <section
-        role="dialog"
-        aria-modal="true"
+      <DialogContent
         aria-label={intl.formatMessage(
           { id: 'page.items.recurrent.edit.title' },
           { task: task.title },
         )}
-        className="relative flex h-full w-full flex-col overflow-hidden bg-background shadow-2xl md:max-h-[min(92vh,52rem)] md:max-w-xl md:rounded-[1.7rem] md:border md:border-border/75"
-        onClick={(event) => event.stopPropagation()}
+        aria-describedby={undefined}
+        className="fixed inset-0 left-0 top-0 z-50 flex h-full w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 bg-background p-0 shadow-2xl md:left-1/2 md:top-1/2 md:max-h-[min(92vh,52rem)] md:max-w-xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[1.7rem] md:border md:border-border/75"
       >
-        <header className="border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6">
+        <DialogHeader>
           <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="sr-only">
+              {intl.formatMessage(
+                { id: 'page.items.recurrent.edit.title' },
+                { task: task.title },
+              )}
+            </DialogTitle>
             <h2 className="text-xl font-semibold tracking-tight">{task.title}</h2>
             <Button
               variant="ghost"
@@ -214,7 +223,7 @@ export function RecurrentTaskEdit({
               <X aria-hidden="true" size={18} />
             </Button>
           </div>
-        </header>
+        </DialogHeader>
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {saved ? (
             <p role="status" className="mb-4 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
@@ -232,7 +241,7 @@ export function RecurrentTaskEdit({
               </p>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.recurrent.edit.name' })}
-                <input {...form.register('title')} className={inputClass} />
+                <Input {...form.register('title')} className={inputClass} />
                 {form.formState.errors.title ? (
                   <span className="mt-1 block text-xs text-amber-700">
                     {intl.formatMessage({ id: 'page.items.recurrent.edit.error.name' })}
@@ -241,13 +250,29 @@ export function RecurrentTaskEdit({
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.recurrent.edit.frequency' })}
-                <select {...form.register('recurrenceKind')} className={inputClass}>
+                <Select
+                  value={recurrenceKind}
+                  onValueChange={(value) =>
+                    form.setValue('recurrenceKind', value as RecurrentEditValues['recurrenceKind'], {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  <SelectTrigger
+                    aria-label={intl.formatMessage({ id: 'page.items.recurrent.edit.frequency' })}
+                    className={inputClass}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
                   {recurrenceKinds.map((kind) => (
-                    <option key={kind} value={kind}>
+                    <SelectItem key={kind} value={kind}>
                       {intl.formatMessage({ id: `page.items.recurrent.edit.schedule.${kind}` })}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
+                  </SelectContent>
+                </Select>
               </label>
               {recurrenceKind === 'specificDaysOfWeek' || recurrenceKind === 'everyXWeeks' ? (
                 <fieldset className="space-y-2">
@@ -256,7 +281,8 @@ export function RecurrentTaskEdit({
                   </legend>
                   <div className="flex flex-wrap gap-2">
                     {dayOfWeekValues.map((day) => (
-                      <button
+                      <Button
+                        variant="ghost"
                         key={day}
                         type="button"
                         aria-pressed={selectedDays.includes(day)}
@@ -268,7 +294,7 @@ export function RecurrentTaskEdit({
                         )}
                       >
                         {intl.formatMessage({ id: `page.items.weekday.short.${day}` })}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   {form.formState.errors.daysOfWeek ? (
@@ -281,43 +307,59 @@ export function RecurrentTaskEdit({
               {recurrenceKind === 'everyXDays' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalDays' })}
-                  <input type="number" min={1} {...form.register('intervalDays', { valueAsNumber: true })} className={inputClass} />
+                  <Input type="number" min={1} {...form.register('intervalDays', { valueAsNumber: true })} className={inputClass} />
                 </label>
               ) : null}
               {recurrenceKind === 'everyXWeeks' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalWeeks' })}
-                  <input type="number" min={1} {...form.register('intervalWeeks', { valueAsNumber: true })} className={inputClass} />
+                  <Input type="number" min={1} {...form.register('intervalWeeks', { valueAsNumber: true })} className={inputClass} />
                 </label>
               ) : null}
               {recurrenceKind === 'everyXMonths' ? (
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-sm font-medium">
                     {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalMonths' })}
-                    <input type="number" min={1} {...form.register('intervalMonths', { valueAsNumber: true })} className={inputClass} />
+                    <Input type="number" min={1} {...form.register('intervalMonths', { valueAsNumber: true })} className={inputClass} />
                   </label>
                   <label className="block text-sm font-medium">
                     {intl.formatMessage({ id: 'page.items.recurrent.edit.dayOfMonth' })}
-                    <input type="number" min={1} max={31} {...form.register('dayOfMonth', { valueAsNumber: true })} className={inputClass} />
+                    <Input type="number" min={1} max={31} {...form.register('dayOfMonth', { valueAsNumber: true })} className={inputClass} />
                   </label>
                 </div>
               ) : null}
               {recurrenceKind === 'firstWeekdayOfMonth' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.weekday' })}
-                  <select {...form.register('weekday', { valueAsNumber: true })} className={inputClass}>
+                  <Select
+                    value={String(form.watch('weekday'))}
+                    onValueChange={(value) =>
+                      form.setValue('weekday', Number(value) as RecurrentEditValues['weekday'], {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={intl.formatMessage({ id: 'page.items.recurrent.edit.weekday' })}
+                      className={inputClass}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
                     {dayOfWeekValues.map((day) => (
-                      <option key={day} value={day}>
+                      <SelectItem key={day} value={String(day)}>
                         {intl.formatMessage({ id: `page.items.weekday.long.${day}` })}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                 </label>
               ) : null}
               {recurrenceKind === 'customFutureRule' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.customDescription' })}
-                  <input {...form.register('customDescription')} className={inputClass} />
+                  <Input {...form.register('customDescription')} className={inputClass} />
                 </label>
               ) : null}
             </section>
@@ -328,39 +370,69 @@ export function RecurrentTaskEdit({
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.category' })}
-                  <select {...form.register('categoryId')} className={inputClass}>
-                    <option value="">
-                      {intl.formatMessage({ id: 'page.items.recurrent.category.none' })}
-                    </option>
+                  <Select
+                    value={form.watch('categoryId') || noCategoryValue}
+                    onValueChange={(value) =>
+                      form.setValue(
+                        'categoryId',
+                        value === noCategoryValue ? '' : value,
+                        { shouldDirty: true, shouldValidate: true },
+                      )
+                    }
+                  >
+                    <SelectTrigger
+                      aria-label={intl.formatMessage({ id: 'page.items.recurrent.edit.category' })}
+                      className={inputClass}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={noCategoryValue}>
+                        {intl.formatMessage({ id: 'page.items.recurrent.category.none' })}
+                      </SelectItem>
                     {categories
                       .filter((category) => category.lifecycleStatus === 'active')
                       .map((category) => (
-                        <option key={category.id} value={category.id}>
+                        <SelectItem key={category.id} value={category.id}>
                           {category.name}
-                        </option>
+                        </SelectItem>
                       ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}
-                  <select
-                    {...form.register('priority')}
-                    className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+                  <Select
+                    value={selectedPriority}
+                    onValueChange={(value) =>
+                      form.setValue('priority', value as RecurrentEditValues['priority'], {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
                   >
+                    <SelectTrigger
+                      aria-label={intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}
+                      className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
                     {itemPriorities.map((priority) => (
-                      <option key={priority} value={priority}>
+                      <SelectItem key={priority} value={priority}>
                         {intl.formatMessage({ id: `page.items.priority.${priority}` })}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                    </SelectContent>
+                  </Select>
                 </label>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.startsOn' })}
-                  <input type="date" {...form.register('startsOn')} className={inputClass} />
+                  <Input type="date" {...form.register('startsOn')} className={inputClass} />
                 </label>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.endsOn' })}
-                  <input type="date" {...form.register('endsOn')} className={inputClass} />
+                  <Input type="date" {...form.register('endsOn')} className={inputClass} />
                   {form.formState.errors.endsOn ? (
                     <span className="mt-1 block text-xs text-amber-700">
                       {intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })}
@@ -370,15 +442,13 @@ export function RecurrentTaskEdit({
               </div>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.recurrent.edit.carryForward' })}</span>
-                <input
-                  type="checkbox"
+                <Checkbox
                   {...form.register('carryForward')}
-                  className="h-4 w-4 accent-[hsl(var(--primary))]"
                 />
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.recurrent.edit.notes' })}
-                <textarea {...form.register('notes')} rows={3} className={inputClass} />
+                <Textarea {...form.register('notes')} rows={3} className={inputClass} />
               </label>
             </section>
             <Button type="submit" className="w-full rounded-xl" disabled={pending}>
@@ -420,7 +490,7 @@ export function RecurrentTaskEdit({
             deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
           }
         />
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

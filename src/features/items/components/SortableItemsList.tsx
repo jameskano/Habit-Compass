@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { EntityId } from '@/shared/types'
+import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
 
 type SortableItemsListProps<T extends { id: EntityId; title: string }> = {
@@ -52,17 +53,17 @@ function SortableItemShell({ id, index, group, label, children }: SortableItemSh
         isDropTarget && 'shadow-[0_0_0_2px_hsl(var(--primary)/0.45)]',
       )}
     >
-      <button
+      <Button
+        data-no-card-action
         ref={handleRef}
+        variant="ghost"
         type="button"
         aria-label={label}
-        onPointerDown={(event) => event.stopPropagation()}
-        onPointerUp={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
-        className="absolute -right-3 -top-3 z-20 inline-flex h-9 w-9 touch-none items-center justify-center rounded-full border border-border/70 bg-background/95 text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
+        className="absolute -right-3 -top-3 z-20 h-9 min-h-9 w-9 touch-none rounded-full border border-border/70 bg-background/95 p-0 text-muted-foreground shadow-sm active:cursor-grabbing"
       >
         <GripVertical aria-hidden="true" size={17} />
-      </button>
+      </Button>
       {children}
     </div>
   )

@@ -17,6 +17,16 @@ import {
 import type { Category } from '@/domain/categories'
 import { habitPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
@@ -70,6 +80,7 @@ const HabitEditValuesSchema = z
   })
 
 type HabitEditValues = z.infer<typeof HabitEditValuesSchema>
+const noCategoryValue = '__none__'
 
 function defaultValuesForHabit(habit: Habit): HabitEditValues {
   const schedule = habit.scheduleRule
@@ -176,8 +187,7 @@ export function HabitEditTab({
     })
   })
 
-  const inputClass =
-    'mt-1.5 w-full rounded-xl border border-border/75 bg-background px-3 py-2.5 text-sm text-foreground'
+  const inputClass = 'mt-1.5 rounded-xl border-border/75'
 
   return (
     <div className="space-y-6">
@@ -188,7 +198,7 @@ export function HabitEditTab({
           </p>
           <label className="block text-sm font-medium">
             {intl.formatMessage({ id: 'page.items.habit.edit.name' })}
-            <input {...form.register('title')} className={inputClass} />
+            <Input {...form.register('title')} className={inputClass} />
             {form.formState.errors.title ? (
               <span className="mt-1 block text-xs text-amber-700">
                 {intl.formatMessage({ id: 'page.items.habit.edit.error.name' })}
@@ -197,17 +207,33 @@ export function HabitEditTab({
           </label>
           <label className="block text-sm font-medium">
             {intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
-            <select {...form.register('scheduleKind')} className={inputClass}>
+            <Select
+              value={scheduleKind}
+              onValueChange={(value) =>
+                form.setValue('scheduleKind', value as HabitEditValues['scheduleKind'], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger
+                aria-label={intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
+                className={inputClass}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
               {habitScheduleKinds.map((kind) => (
-                <option
+                <SelectItem
                   key={kind}
                   value={kind}
                   disabled={kind === 'flexiblePeriod' && !supportsFlexible}
                 >
                   {intl.formatMessage({ id: `page.items.habit.edit.schedule.${kind}` })}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+              </SelectContent>
+            </Select>
           </label>
 
           {(scheduleKind === 'specificDaysOfWeek' || scheduleKind === 'everyXWeeks') ? (
@@ -215,7 +241,8 @@ export function HabitEditTab({
               <legend className="text-sm font-medium">{intl.formatMessage({ id: 'page.items.habit.edit.days' })}</legend>
               <div className="flex flex-wrap gap-2">
                 {habitDayOfWeekValues.map((day) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     key={day}
                     type="button"
                     aria-pressed={selectedDays.includes(day)}
@@ -226,7 +253,7 @@ export function HabitEditTab({
                     )}
                   >
                     {intl.formatMessage({ id: `page.items.weekday.short.${day}` })}
-                  </button>
+                  </Button>
                 ))}
               </div>
               {form.formState.errors.daysOfWeek ? (
@@ -238,37 +265,53 @@ export function HabitEditTab({
           {scheduleKind === 'everyXDays' ? (
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.intervalDays' })}
-              <input type="number" min={1} {...form.register('intervalDays', { valueAsNumber: true })} className={inputClass} />
+              <Input type="number" min={1} {...form.register('intervalDays', { valueAsNumber: true })} className={inputClass} />
             </label>
           ) : null}
           {scheduleKind === 'everyXWeeks' ? (
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.intervalWeeks' })}
-              <input type="number" min={1} {...form.register('intervalWeeks', { valueAsNumber: true })} className={inputClass} />
+              <Input type="number" min={1} {...form.register('intervalWeeks', { valueAsNumber: true })} className={inputClass} />
             </label>
           ) : null}
           {scheduleKind === 'everyXMonths' ? (
             <div className="grid grid-cols-2 gap-3">
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.habit.edit.intervalMonths' })}
-                <input type="number" min={1} {...form.register('intervalMonths', { valueAsNumber: true })} className={inputClass} />
+                <Input type="number" min={1} {...form.register('intervalMonths', { valueAsNumber: true })} className={inputClass} />
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.habit.edit.dayOfMonth' })}
-                <input type="number" min={1} max={31} {...form.register('dayOfMonth', { valueAsNumber: true })} className={inputClass} />
+                <Input type="number" min={1} max={31} {...form.register('dayOfMonth', { valueAsNumber: true })} className={inputClass} />
               </label>
             </div>
           ) : null}
           {scheduleKind === 'firstWeekdayOfMonth' ? (
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.weekday' })}
-              <select {...form.register('weekday', { valueAsNumber: true })} className={inputClass}>
+              <Select
+                value={String(form.watch('weekday'))}
+                onValueChange={(value) =>
+                  form.setValue('weekday', Number(value) as HabitEditValues['weekday'], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger
+                  aria-label={intl.formatMessage({ id: 'page.items.habit.edit.weekday' })}
+                  className={inputClass}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                 {habitDayOfWeekValues.map((day) => (
-                  <option key={day} value={day}>
+                  <SelectItem key={day} value={String(day)}>
                     {intl.formatMessage({ id: `page.items.weekday.long.${day}` })}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+                </SelectContent>
+              </Select>
             </label>
           ) : null}
         </section>
@@ -280,35 +323,67 @@ export function HabitEditTab({
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.category' })}
-              <select {...form.register('categoryId')} className={inputClass}>
-                <option value="">{intl.formatMessage({ id: 'page.items.habit.category.none' })}</option>
+              <Select
+                value={form.watch('categoryId') || noCategoryValue}
+                onValueChange={(value) =>
+                  form.setValue(
+                    'categoryId',
+                    value === noCategoryValue ? '' : value,
+                    { shouldDirty: true, shouldValidate: true },
+                  )
+                }
+              >
+                <SelectTrigger
+                  aria-label={intl.formatMessage({ id: 'page.items.habit.edit.category' })}
+                  className={inputClass}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                <SelectItem value={noCategoryValue}>
+                  {intl.formatMessage({ id: 'page.items.habit.category.none' })}
+                </SelectItem>
                 {categories
                   .filter((category) => category.lifecycleStatus === 'active')
                   .map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
+                    <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
                   ))}
-              </select>
+                </SelectContent>
+              </Select>
             </label>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
-              <select
-                {...form.register('priority')}
-                className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+              <Select
+                value={selectedPriority}
+                onValueChange={(value) =>
+                  form.setValue('priority', value as HabitEditValues['priority'], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
               >
+                <SelectTrigger
+                  aria-label={intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
+                  className={cn(inputClass, priorityVisualClasses[selectedPriority])}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                 {habitPriorities.map((priority) => (
-                  <option key={priority} value={priority}>
+                  <SelectItem key={priority} value={priority}>
                     {intl.formatMessage({ id: `page.items.priority.${priority}` })}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
+                </SelectContent>
+              </Select>
             </label>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.startsOn' })}
-              <input type="date" {...form.register('startsOn')} className={inputClass} />
+              <Input type="date" {...form.register('startsOn')} className={inputClass} />
             </label>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.endsOn' })}
-              <input type="date" {...form.register('endsOn')} className={inputClass} />
+              <Input type="date" {...form.register('endsOn')} className={inputClass} />
               {form.formState.errors.endsOn ? (
                 <span className="mt-1 block text-xs text-amber-700">
                   {intl.formatMessage({ id: 'page.items.habit.edit.error.endDate' })}
@@ -318,19 +393,36 @@ export function HabitEditTab({
           </div>
           <label className="block text-sm font-medium">
             {intl.formatMessage({ id: 'page.items.habit.edit.notes' })}
-            <textarea {...form.register('notes')} rows={3} className={inputClass} />
+            <Textarea {...form.register('notes')} rows={3} className={inputClass} />
           </label>
           <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
             <span>{intl.formatMessage({ id: 'page.items.habit.edit.completionLevels' })}</span>
-            <input type="checkbox" {...form.register('usesCompletionLevels')} className="h-4 w-4 accent-[hsl(var(--primary))]" />
+            <Checkbox {...form.register('usesCompletionLevels')} />
           </label>
           {usesCompletionLevels ? (
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.defaultLevel' })}
-              <select {...form.register('defaultCompletionLevel')} className={inputClass}>
-                <option value="minimum">{intl.formatMessage({ id: 'page.items.habit.dayState.completed_minimum' })}</option>
-                <option value="standard">{intl.formatMessage({ id: 'page.items.habit.dayState.completed_standard' })}</option>
-              </select>
+              <Select
+                value={form.watch('defaultCompletionLevel')}
+                onValueChange={(value) =>
+                  form.setValue(
+                    'defaultCompletionLevel',
+                    value as HabitEditValues['defaultCompletionLevel'],
+                    { shouldDirty: true, shouldValidate: true },
+                  )
+                }
+              >
+                <SelectTrigger
+                  aria-label={intl.formatMessage({ id: 'page.items.habit.edit.defaultLevel' })}
+                  className={inputClass}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minimum">{intl.formatMessage({ id: 'page.items.habit.dayState.completed_minimum' })}</SelectItem>
+                  <SelectItem value="standard">{intl.formatMessage({ id: 'page.items.habit.dayState.completed_standard' })}</SelectItem>
+                </SelectContent>
+              </Select>
             </label>
           ) : null}
         </section>

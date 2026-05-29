@@ -10,7 +10,7 @@ import {
   type HabitLog,
 } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
-import { cn } from '@/shared/utils/cn'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 type HabitStatsTabProps = {
   habit: Habit
@@ -80,23 +80,19 @@ export function HabitStatsTab({ habit, logs, today }: HabitStatsTabProps) {
       <section className="space-y-4 rounded-[1.4rem] border border-border/70 bg-card/90 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-base font-semibold">{intl.formatMessage({ id: 'page.items.habit.stats.chartTitle' })}</h3>
-          <div className="flex rounded-full border border-border/70 bg-muted/35 p-1" role="tablist" aria-label={intl.formatMessage({ id: 'page.items.habit.stats.periods' })}>
+          <Tabs value={chartPeriod} onValueChange={(value) => setChartPeriod(value as HabitChartPeriod)}>
+          <TabsList className="flex rounded-full border border-border/70 bg-muted/35 p-1" aria-label={intl.formatMessage({ id: 'page.items.habit.stats.periods' })}>
             {periods.map((period) => (
-              <button
+              <TabsTrigger
                 key={period}
-                type="button"
-                role="tab"
-                aria-selected={chartPeriod === period}
-                onClick={() => setChartPeriod(period)}
-                className={cn(
-                  'rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground',
-                  chartPeriod === period && 'bg-card text-foreground shadow-sm',
-                )}
+                value={period}
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
               >
                 {intl.formatMessage({ id: `page.items.habit.stats.period.${period}` })}
-              </button>
+              </TabsTrigger>
             ))}
-          </div>
+          </TabsList>
+          </Tabs>
         </div>
         <div className="flex min-h-44 items-end gap-2 overflow-x-auto pb-1" aria-label={intl.formatMessage({ id: 'page.items.habit.stats.chartAria' })}>
           {bars.map((bar) => (
