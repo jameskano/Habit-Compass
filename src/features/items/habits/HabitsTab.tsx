@@ -12,6 +12,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
+import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { HabitCard } from './HabitCard'
 import { HabitDetail, type HabitDetailTab } from './HabitDetail'
 import type { HabitDangerAction } from './HabitConfirmationDialog'
@@ -58,6 +59,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const revealCards = useItemWaterfallReveal(!categoriesQuery.isLoading && !logsQuery.isLoading)
   const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? null
   const detailHabit =
     habits.find((habit) => habit.id === detailSelection?.habitId) ?? null
@@ -156,6 +158,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
           group="habits"
           reorderLabelId="page.items.habit.action.reorder"
           onReorder={reorderHabits}
+          revealCards={revealCards}
         >
           {(habit) => (
             <HabitCard

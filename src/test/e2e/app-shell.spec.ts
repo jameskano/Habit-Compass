@@ -35,17 +35,31 @@ test('items header search focuses each active tab filter', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Search tasks' })).toBeFocused()
 
   await page.getByRole('tab', { name: 'Recurrent Tasks' }).click()
-  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Recurrent Tasks' })).toBeVisible()
   await page.getByRole('button', { name: 'Search Recurrent Tasks' }).click()
   await expect(page.getByRole('textbox', { name: 'Search recurrent tasks' })).toBeFocused()
+})
+
+test('item swipe tracks the pointer and the header title uses calm motion', async ({ page }) => {
+  await page.goto('/items')
+
+  const habitCard = page.getByRole('button', { name: 'Open options for Read before bed' })
+  await habitCard.dispatchEvent('pointerdown', { clientX: 100, clientY: 20 })
+  await habitCard.dispatchEvent('pointermove', { clientX: 60, clientY: 20 })
+  await expect(habitCard).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -40, 0)')
+  await habitCard.dispatchEvent('pointerup', { clientX: 60, clientY: 20 })
+  await expect(habitCard).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+
+  await page.getByRole('tab', { name: 'Recurrent Tasks' }).click()
+  await expect(page.getByRole('heading', { name: 'Recurrent Tasks' }).locator('span')).toHaveClass(
+    /shell-title-enter/,
+  )
 })
 
 test('habit overlay, legend, and stats periods use the revised presentation', async ({ page }) => {
   await page.goto('/items')
 
-  await page
-    .getByRole('button', { name: 'Options for Move for 20 minutes', exact: true })
-    .click()
+  await page.getByRole('button', { name: 'Options for Move for 20 minutes', exact: true }).click()
   const menu = page.getByRole('dialog', { name: 'Options for Move for 20 minutes' })
   await expect(menu.getByText('Habit actions')).toHaveCount(0)
   await expect(menu).toHaveClass(/animate-\[habit-sheet-in_300ms_ease-out\]/)

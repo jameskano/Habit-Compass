@@ -18,6 +18,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
+import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { RecurrentTaskCard } from './RecurrentTaskCard'
 import { RecurrentTaskEdit } from './RecurrentTaskEdit'
 
@@ -62,6 +63,9 @@ export function RecurrentTasksTab({
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const revealCards = useItemWaterfallReveal(
+    !categoriesQuery.isLoading && !occurrencesQuery.isLoading,
+  )
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
   const normalizedSearch = searchText.trim().toLowerCase()
   const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
@@ -183,6 +187,7 @@ export function RecurrentTasksTab({
           group="recurrent-tasks"
           reorderLabelId="page.items.recurrent.action.reorder"
           onReorder={reorderRecurrentTasks}
+          revealCards={revealCards}
         >
           {({ task, occurrence }) => (
             <RecurrentTaskCard

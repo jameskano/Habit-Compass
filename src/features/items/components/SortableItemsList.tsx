@@ -8,11 +8,14 @@ import type { EntityId } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
 
+import { ItemWaterfallReveal } from './ItemWaterfallReveal'
+
 type SortableItemsListProps<T extends { id: EntityId; title: string }> = {
   items: readonly T[]
   group: string
   reorderLabelId: string
   onReorder: (orderedIds: EntityId[]) => void
+  revealCards: boolean
   children: (item: T) => ReactNode
 }
 
@@ -74,6 +77,7 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
   group,
   reorderLabelId,
   onReorder,
+  revealCards,
   children,
 }: SortableItemsListProps<T>) {
   const intl = useIntl()
@@ -104,15 +108,16 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
     <DragDropProvider onDragEnd={handleDragEnd}>
       <div className="grid gap-4 lg:grid-cols-2">
         {items.map((item, index) => (
-          <SortableItemShell
-            key={item.id}
-            id={item.id}
-            index={index}
-            group={group}
-            label={intl.formatMessage({ id: reorderLabelId }, { item: item.title })}
-          >
-            {children(item)}
-          </SortableItemShell>
+          <ItemWaterfallReveal key={item.id} index={index} revealing={revealCards}>
+            <SortableItemShell
+              id={item.id}
+              index={index}
+              group={group}
+              label={intl.formatMessage({ id: reorderLabelId }, { item: item.title })}
+            >
+              {children(item)}
+            </SortableItemShell>
+          </ItemWaterfallReveal>
         ))}
       </div>
     </DragDropProvider>

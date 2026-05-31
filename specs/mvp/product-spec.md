@@ -28,6 +28,14 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Archived items are reached through each item tab rather than a separate top-level tab.
 - Categories are optional labels, not a top-level Items tab.
 
+## Interaction Motion
+
+- Motion is optional visual polish and must not block or delay item actions.
+- Item management cards reveal in a short staggered sequence when their section is displayed.
+- Filtering, completion, archive updates, and reordering must not restart the reveal sequence.
+- Swipe-enabled item cards follow horizontal pointer movement and return smoothly after release.
+- Reduced-motion preferences disable decorative reveal and title animations and remove animated swipe return.
+
 ## Later
 
 - Bulk actions.

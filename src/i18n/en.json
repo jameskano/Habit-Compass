@@ -67,6 +67,7 @@
   "page.items.filters.aria": "Item filters",
   "page.items.section.habits": "Habits",
   "page.items.section.tasks": "Tasks",
+  "page.items.section.recurrent": "Recurrent Tasks",
   "page.items.action.search": "Search {tab}",
   "page.items.action.showArchived": "Show archived {tab}",
   "page.items.action.showActive": "Show active {tab}",

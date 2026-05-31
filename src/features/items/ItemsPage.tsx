@@ -32,7 +32,7 @@ export function ItemsPage() {
   const tasksQuery = useTasksQuery()
   const recurrentTasksQuery = useRecurrentTasksQuery()
   const activeTabConfig = itemTabs.find((tab) => tab.key === activeTab) ?? itemTabs[0]
-  useShellTitle(activeTab === 'habits' ? 'page.items.section.habits' : 'page.items.section.tasks')
+  useShellTitle(`page.items.section.${activeTab}`)
 
   const renderCards = () => {
     const activeQuery =

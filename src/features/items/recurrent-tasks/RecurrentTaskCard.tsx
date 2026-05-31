@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type PointerEvent, useRef } from 'react'
+import { type KeyboardEvent } from 'react'
 import { type IntlShape, useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
@@ -15,6 +15,8 @@ import {
   getCategoryVisualClasses,
   priorityVisualClasses,
 } from '@/styles/itemVisualTokens'
+
+import { useSwipeCardMotion } from '../components/useSwipeCardMotion'
 
 type RecurrentTaskCardProps = {
   task: RecurrentTask
@@ -66,8 +68,6 @@ export function RecurrentTaskCard({
   onComplete,
 }: RecurrentTaskCardProps) {
   const intl = useIntl()
-  const pointerStart = useRef<{ x: number; y: number } | null>(null)
-  const swiped = useRef(false)
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${task.priority}` })}`
   const isCompleted = occurrence?.status === 'completed'
@@ -79,48 +79,17 @@ export function RecurrentTaskCard({
     }
   }
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    swiped.current = false
-    pointerStart.current = { x: event.clientX, y: event.clientY }
-  }
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current
-    if (!start) {
-      return
-    }
-
-    const horizontal = Math.abs(event.clientX - start.x)
-    const vertical = Math.abs(event.clientY - start.y)
-    if (vertical > 12 && vertical > horizontal) {
-      pointerStart.current = null
-    }
-  }
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current
-    pointerStart.current = null
-    if (!start) {
-      return
-    }
-
-    const horizontal = event.clientX - start.x
-    const vertical = Math.abs(event.clientY - start.y)
-    if (Math.abs(horizontal) < 56 || Math.abs(horizontal) <= vertical) {
-      return
-    }
-
-    swiped.current = true
-    if (horizontal < 0) {
-      onEdit()
-    } else if (!archived && occurrence?.actionable) {
-      onComplete()
-    }
-  }
+  const swipeMotion = useSwipeCardMotion({
+    onSwipeLeft: onEdit,
+    onSwipeRight: () => {
+      if (!archived && occurrence?.actionable) {
+        onComplete()
+      }
+    },
+  })
 
   const handleClick = () => {
-    if (swiped.current) {
-      swiped.current = false
+    if (swipeMotion.consumeClickSuppression()) {
       return
     }
     onEdit()
@@ -136,10 +105,15 @@ export function RecurrentTaskCard({
       )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      className="relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-shadow hover:shadow-md"
+      onPointerDown={swipeMotion.handlePointerDown}
+      onPointerMove={swipeMotion.handlePointerMove}
+      onPointerUp={swipeMotion.handlePointerUp}
+      onPointerCancel={swipeMotion.handlePointerCancel}
+      style={swipeMotion.style}
+      className={cn(
+        'relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
+        swipeMotion.isDragging && 'transition-none',
+      )}
     >
       <div
         className={cn(

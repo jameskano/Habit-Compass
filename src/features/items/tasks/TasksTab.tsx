@@ -9,6 +9,8 @@ import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
+import { ItemWaterfallReveal } from '../components/ItemWaterfallReveal'
+import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { TaskCard } from './TaskCard'
 import { TaskEdit } from './TaskEdit'
 
@@ -103,6 +105,7 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [announcement, setAnnouncement] = useState<Announcement | null>(null)
+  const revealCards = useItemWaterfallReveal(!categoriesQuery.isLoading)
   const hasFilters = searchText.trim().length > 0 || categoryId.length > 0
   const categoriesById = new Map(
     (categoriesQuery.data ?? []).map((category) => [category.id, category]),
@@ -136,6 +139,7 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
       onSuccess: () => setAnnouncement(null),
     })
   }
+  let waterfallIndex = 0
 
   return (
     <>
@@ -184,14 +188,19 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
               </h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 {group.tasks.map((task) => (
-                  <TaskCard
+                  <ItemWaterfallReveal
                     key={task.id}
-                    task={task}
-                    category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
-                    archived={showingArchived}
-                    onEdit={() => setSelectedTaskId(task.id)}
-                    onComplete={() => completeTask(task)}
-                  />
+                    index={waterfallIndex++}
+                    revealing={revealCards}
+                  >
+                    <TaskCard
+                      task={task}
+                      category={task.categoryId ? categoriesById.get(task.categoryId) : undefined}
+                      archived={showingArchived}
+                      onEdit={() => setSelectedTaskId(task.id)}
+                      onComplete={() => completeTask(task)}
+                    />
+                  </ItemWaterfallReveal>
                 ))}
               </div>
             </section>

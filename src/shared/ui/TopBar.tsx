@@ -21,7 +21,9 @@ export function TopBar({ titleId, hideSettings = false }: TopBarProps) {
             <Compass aria-hidden="true" size={21} />
           </span>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
-            {intl.formatMessage({ id: titleId })}
+            <span key={titleId} className="shell-title-enter inline-block">
+              {intl.formatMessage({ id: titleId })}
+            </span>
           </h1>
         </div>
 

@@ -1,5 +1,5 @@
 import { CalendarDays, MoreHorizontal } from 'lucide-react'
-import { type PointerEvent, type KeyboardEvent, useRef } from 'react'
+import { type KeyboardEvent } from 'react'
 import { type IntlShape, useIntl } from 'react-intl'
 
 import {
@@ -21,6 +21,7 @@ import {
 } from '@/styles/itemVisualTokens'
 
 import { HabitDayStrip } from './HabitDayStrip'
+import { useSwipeCardMotion } from '../components/useSwipeCardMotion'
 
 type HabitCardProps = {
   habit: Habit
@@ -103,8 +104,6 @@ export function HabitCard({
   onSwipeArchive,
 }: HabitCardProps) {
   const intl = useIntl()
-  const pointerStart = useRef<{ x: number; y: number } | null>(null)
-  const swiped = useRef(false)
   const stats = calculateHabitStats({ habit, logs, from, to: today, today })
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${habit.priority}` })}`
@@ -116,48 +115,17 @@ export function HabitCard({
     }
   }
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    swiped.current = false
-    pointerStart.current = { x: event.clientX, y: event.clientY }
-  }
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current
-    if (!start) {
-      return
-    }
-
-    const horizontal = Math.abs(event.clientX - start.x)
-    const vertical = Math.abs(event.clientY - start.y)
-    if (vertical > 12 && vertical > horizontal) {
-      pointerStart.current = null
-    }
-  }
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current
-    pointerStart.current = null
-    if (!start) {
-      return
-    }
-
-    const horizontal = event.clientX - start.x
-    const vertical = Math.abs(event.clientY - start.y)
-    if (Math.abs(horizontal) < 56 || Math.abs(horizontal) <= vertical) {
-      return
-    }
-
-    swiped.current = true
-    if (horizontal < 0) {
-      onSwipeEdit()
-    } else if (!archived) {
-      onSwipeArchive()
-    }
-  }
+  const swipeMotion = useSwipeCardMotion({
+    onSwipeLeft: onSwipeEdit,
+    onSwipeRight: () => {
+      if (!archived) {
+        onSwipeArchive()
+      }
+    },
+  })
 
   const handleCardClick = () => {
-    if (swiped.current) {
-      swiped.current = false
+    if (swipeMotion.consumeClickSuppression()) {
       return
     }
 
@@ -174,10 +142,15 @@ export function HabitCard({
       )}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      className="group relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-shadow hover:shadow-md"
+      onPointerDown={swipeMotion.handlePointerDown}
+      onPointerMove={swipeMotion.handlePointerMove}
+      onPointerUp={swipeMotion.handlePointerUp}
+      onPointerCancel={swipeMotion.handlePointerCancel}
+      style={swipeMotion.style}
+      className={cn(
+        'group relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
+        swipeMotion.isDragging && 'transition-none',
+      )}
     >
       <div className="absolute inset-y-0 left-0 w-1 bg-primary/55" aria-hidden="true" />
       <div className="ml-1">

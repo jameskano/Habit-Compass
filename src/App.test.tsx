@@ -113,7 +113,7 @@ describe('app shell', () => {
     expect(screen.queryByLabelText('Search habits')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Recurrent Tasks' }))
-    expect(await screen.findByRole('heading', { name: 'Tasks', level: 1 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Recurrent Tasks', level: 1 })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Search Recurrent Tasks' }))
     expect(screen.getByLabelText('Search recurrent tasks')).toHaveFocus()
     expect(await screen.findByText('Weekly review')).toBeInTheDocument()
@@ -309,6 +309,71 @@ describe('app shell', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Edit recurrent task Water the plants' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('reveals item cards in sequence when each items section is displayed', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    render(<App />)
+
+    const habitCards = await screen.findAllByRole('button', { name: /Open options for/ })
+    expect(habitCards[0].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '0ms',
+    })
+    expect(habitCards[1].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '45ms',
+    })
+
+    await user.click(screen.getByRole('tab', { name: 'Tasks' }))
+    const taskCards = await screen.findAllByRole('button', { name: /^Edit / })
+    expect(taskCards[0].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '0ms',
+    })
+    expect(taskCards[1].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '45ms',
+    })
+
+    await user.click(screen.getByRole('tab', { name: 'Recurrent Tasks' }))
+    expect(
+      await screen.findByRole('heading', { name: 'Recurrent Tasks', level: 1 }),
+    ).toBeInTheDocument()
+    const recurrentCards = await screen.findAllByRole('button', { name: /^Edit recurrent task / })
+    expect(recurrentCards[0].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '0ms',
+    })
+    expect(recurrentCards[1].closest('[data-item-waterfall-index]')).toHaveStyle({
+      animationDelay: '45ms',
+    })
+  })
+
+  it('tracks a swipe visually and snaps back without opening after a short drag', async () => {
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    render(<App />)
+
+    const habitCard = await screen.findByRole('button', {
+      name: 'Open options for Read before bed',
+    })
+    fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
+    fireEvent.pointerMove(habitCard, { clientX: 60, clientY: 20 })
+    expect(habitCard).toHaveStyle({ transform: 'translate3d(-40px, 0, 0)' })
+    fireEvent.pointerUp(habitCard, { clientX: 60, clientY: 20 })
+    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
+    fireEvent.click(habitCard)
+    expect(
+      screen.queryByRole('dialog', { name: /Options for Read before bed/ }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
+    fireEvent.pointerMove(habitCard, { clientX: 80, clientY: 20 })
+    expect(habitCard).toHaveStyle({ transform: 'translate3d(-20px, 0, 0)' })
+    fireEvent.pointerCancel(habitCard)
+    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
   })
 
   it('updates a habit through the simple edit form', async () => {
