@@ -2,6 +2,7 @@ import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
 import { calculateHabitStats } from './habitStats'
+import { filterEligibleHabitLogs } from './habitInactivity'
 
 export type HabitChartPeriod = 'week' | 'month' | 'year'
 
@@ -93,30 +94,33 @@ export function calculateHabitDetailStats(input: {
   today: ISODateString
 }): HabitDetailStats {
   const { habit, logs, today } = input
+  const eligibleLogs = filterEligibleHabitLogs(habit, logs)
   const from =
     habit.scheduleRule.kind === 'flexiblePeriod'
       ? getFlexibleStatsStart(habit, today)
       : habit.startsOn
-  const stats = calculateHabitStats({ habit, logs, from, to: today, today })
+  const stats = calculateHabitStats({ habit, logs: eligibleLogs, from, to: today, today })
 
   return {
     completionPercentage: stats.completionPercentage,
     currentStreak: stats.currentStreak,
     bestStreak: stats.bestStreak,
-    completionsThisWeek: countCompletions(logs, startOfWeek(today), today),
-    completionsThisMonth: countCompletions(logs, startOfMonth(today), today),
-    completionsThisYear: countCompletions(logs, startOfYear(today), today),
-    totalCompletions: logs.filter((log) => log.status === 'completed').length,
+    completionsThisWeek: countCompletions(eligibleLogs, startOfWeek(today), today),
+    completionsThisMonth: countCompletions(eligibleLogs, startOfMonth(today), today),
+    completionsThisYear: countCompletions(eligibleLogs, startOfYear(today), today),
+    totalCompletions: eligibleLogs.filter((log) => log.status === 'completed').length,
   }
 }
 
 export function createHabitCompletionBars(input: {
+  habit: Habit
   logs: HabitLog[]
   period: HabitChartPeriod
   today: ISODateString
   startsOn: ISODateString
 }): HabitCompletionBar[] {
-  const { logs, period, today, startsOn } = input
+  const { habit, period, today, startsOn } = input
+  const logs = filterEligibleHabitLogs(habit, input.logs)
 
   if (period === 'week') {
     const from = startOfWeek(today)

@@ -1,4 +1,4 @@
-import { Archive, BarChart3, CalendarDays, PencilLine, RotateCcw, Trash2, X } from 'lucide-react'
+import { Archive, ArchiveRestore, BarChart3, CalendarDays, PencilLine, RotateCcw, Trash2, X } from 'lucide-react'
 import { Fragment, type ComponentType } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -15,12 +15,13 @@ type HabitOptionsSheetProps = {
   onClose: () => void
   onOpenDetail: (habit: Habit, tab: HabitDetailTab, dangerAction?: HabitDangerAction) => void
   onArchive: (habit: Habit) => void
+  onReactivate: (habit: Habit) => void
 }
 
 type MenuItem = {
   id: string
   icon: ComponentType<{ 'aria-hidden'?: boolean; size?: number }>
-  action: 'calendar' | 'stats' | 'edit' | 'archive' | 'reset' | 'delete'
+  action: 'calendar' | 'stats' | 'edit' | 'archive' | 'reactivate' | 'reset' | 'delete'
   destructive?: boolean
 }
 
@@ -33,12 +34,20 @@ const menuItems: MenuItem[] = [
   { id: 'page.items.habit.menu.delete', icon: Trash2, action: 'delete', destructive: true },
 ]
 
+const archivedMenuItems: MenuItem[] = [
+  { id: 'page.items.habit.menu.calendar', icon: CalendarDays, action: 'calendar' },
+  { id: 'page.items.habit.menu.stats', icon: BarChart3, action: 'stats' },
+  { id: 'page.items.habit.menu.reactivate', icon: ArchiveRestore, action: 'reactivate' },
+  { id: 'page.items.habit.menu.delete', icon: Trash2, action: 'delete', destructive: true },
+]
+
 export function HabitOptionsSheet({
   habit,
   archived,
   onClose,
   onOpenDetail,
   onArchive,
+  onReactivate,
 }: HabitOptionsSheetProps) {
   const intl = useIntl()
 
@@ -53,8 +62,10 @@ export function HabitOptionsSheet({
       onOpenDetail(habit, action)
     } else if (action === 'archive' && !archived) {
       onArchive(habit)
+    } else if (action === 'reactivate' && archived) {
+      onReactivate(habit)
     } else if (action === 'reset' || action === 'delete') {
-      onOpenDetail(habit, 'edit', action)
+      onOpenDetail(habit, archived ? 'calendar' : 'edit', action)
     }
   }
 
@@ -93,15 +104,13 @@ export function HabitOptionsSheet({
           </Button>
         </div>
         <div role="menu" className="space-y-2">
-          {menuItems.map(({ id, icon: Icon, action, destructive }, index) => {
-            const disabled = action === 'archive' && archived
+          {(archived ? archivedMenuItems : menuItems).map(({ id, icon: Icon, action, destructive }, index) => {
             return (
               <Fragment key={id}>
-                {index === 3 ? <hr className="my-3 border-border/70" aria-hidden="true" /> : null}
+                {index === (archived ? 2 : 3) ? <hr className="my-3 border-border/70" aria-hidden="true" /> : null}
                 <Button
                   role="menuitem"
                   variant="ghost"
-                  disabled={disabled}
                   onClick={() => handleItem(action)}
                   className={`w-full justify-between rounded-xl border border-transparent px-3 ${
                     destructive ? 'text-amber-800 dark:text-amber-200' : ''
@@ -111,11 +120,6 @@ export function HabitOptionsSheet({
                     <Icon aria-hidden={true} size={17} />
                     {intl.formatMessage({ id })}
                   </span>
-                  {disabled ? (
-                    <span className="text-[0.65rem] uppercase tracking-[0.12em] text-muted-foreground">
-                      {intl.formatMessage({ id: 'page.items.habit.menu.archived' })}
-                    </span>
-                  ) : null}
                 </Button>
               </Fragment>
             )

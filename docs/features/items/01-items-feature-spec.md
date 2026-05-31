@@ -172,6 +172,8 @@ Deletion is real deletion, not a status.
 
 If users want to keep an item and its history, they should archive it. If they delete it, remove it from storage after confirmation.
 
+Archived habits can be reactivated from the archive view. Their archived dates stay excluded from stats.
+
 ## MVP decisions locked
 
 - Items section has three tabs.

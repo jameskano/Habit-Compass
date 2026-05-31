@@ -23,6 +23,10 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
 - `habit_logs`
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
   - Unique per user, habit, and log date.
+- `habit_inactivity_periods`
+  - Dated half-open `[starts_on, resumes_on)` inactive intervals for habits.
+  - Stores `archived` now and reserves `paused` for the future pause feature.
+  - Allows at most one open interval per habit and cascades on physical habit deletion.
 - `tasks`
   - One-off task records with optional due date, description, notes, priority, carry-forward behavior, and category.
   - Items UI groups tasks by date; stored order remains only for compatibility/fallbacks.
@@ -71,6 +75,8 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
 ## Delete and Archive
 
 - `archived_at` is used where the product expects a reversible inactive state.
+- Habits additionally keep normalized inactivity periods so repeated archive/reactivation cycles can be excluded from stats.
+- The additive backfill preserves currently archived habits only. Earlier intervals lost before migration `0002` cannot be reconstructed.
 - Items do not use `deleted_at`; confirmed deletion physically removes an item.
 - `deleted_at` remains available only for non-item authored content whose lifecycle is outside the Items pass, such as reflections.
 - Delete remains protected by RLS-compliant ownership rules.

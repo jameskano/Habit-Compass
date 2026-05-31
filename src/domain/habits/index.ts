@@ -13,6 +13,8 @@ export {
   HabitDayOfWeekSchema,
   HabitFrequencyConfigSchema,
   HabitGoalConfigSchema,
+  HabitInactivityPeriodSchema,
+  HabitInactivityReasonSchema,
   HabitLogSchema,
   HabitLogStatusSchema,
   HabitPeriodSchema,
@@ -34,6 +36,8 @@ export type {
   HabitDayOfWeek,
   HabitFrequencyConfig,
   HabitGoalConfig,
+  HabitInactivityPeriod,
+  HabitInactivityReason,
   HabitLog,
   HabitLogStatus,
   HabitPeriod,
@@ -56,6 +60,12 @@ export type {
 } from './repository'
 export { deriveHabitDayState } from './logic/habitDayState'
 export type { HabitDayState } from './logic/habitDayState'
+export {
+  doesHabitInactivityOverlapRange,
+  filterEligibleHabitLogs,
+  isDateWithinHabitInactivityPeriod,
+  isHabitInactiveOnDate,
+} from './logic/habitInactivity'
 export { enumerateHabitScheduledDates, isHabitScheduledOnDate } from './logic/habitSchedule'
 export { getHabitFrequencySummary } from './logic/habitFrequencySummary'
 export type { FrequencySummaryDescriptor } from './logic/habitFrequencySummary'

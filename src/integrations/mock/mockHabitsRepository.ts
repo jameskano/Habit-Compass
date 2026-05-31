@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '@/shared/utils/result'
-import { createNotFoundError } from '@/shared/utils/appError'
+import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import {
   isHabitScheduledOnDate,
   type Habit,
@@ -29,6 +29,17 @@ function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): 
   state.habits[index] = nextHabit
 
   return ok(nextHabit)
+}
+
+function requireActiveHabit(habitId: string): Result<Habit> {
+  const habit = getMockState().habits.find((entry) => entry.id === habitId)
+  if (!habit) {
+    return err(createNotFoundError('Habit', habitId))
+  }
+  if (habit.lifecycleStatus !== 'active') {
+    return err(createAppError('validation', 'Archived habits cannot be modified.'))
+  }
+  return ok(habit)
 }
 
 export const mockHabitsRepository: HabitsRepository = {
@@ -72,6 +83,7 @@ export const mockHabitsRepository: HabitsRepository = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
+      inactivityPeriods: [],
     }
 
     state.habits.push(habit)
@@ -79,6 +91,10 @@ export const mockHabitsRepository: HabitsRepository = {
   },
 
   async update(input) {
+    const activeHabit = requireActiveHabit(input.id)
+    if (!activeHabit.ok) {
+      return activeHabit
+    }
     return updateHabitInState(input.id, (habit) => ({
       ...habit,
       ...input,
@@ -86,12 +102,20 @@ export const mockHabitsRepository: HabitsRepository = {
     }))
   },
 
-  async archive({ habitId }) {
+  async archive({ habitId, date }) {
+    const activeHabit = requireActiveHabit(habitId)
+    if (!activeHabit.ok) {
+      return activeHabit
+    }
     return updateHabitInState(habitId, (habit) => ({
       ...habit,
       lifecycleStatus: 'archived',
       archivedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      inactivityPeriods: [
+        ...habit.inactivityPeriods,
+        { reason: 'archived', startsOn: date },
+      ],
     }))
   },
 
@@ -109,16 +133,30 @@ export const mockHabitsRepository: HabitsRepository = {
     return ok(null)
   },
 
-  async restore({ habitId }) {
+  async restore({ habitId, date }) {
+    const habit = getMockState().habits.find((entry) => entry.id === habitId)
+    if (!habit) {
+      return err(createNotFoundError('Habit', habitId))
+    }
+    if (habit.lifecycleStatus !== 'archived') {
+      return err(createAppError('validation', 'Only archived habits can be reactivated.'))
+    }
     return updateHabitInState(habitId, (habit) => ({
       ...habit,
       lifecycleStatus: 'active',
       archivedAt: null,
       updatedAt: new Date().toISOString(),
+      inactivityPeriods: habit.inactivityPeriods.map((period) =>
+        !period.resumesOn ? { ...period, resumesOn: date } : period,
+      ),
     }))
   },
 
   async upsertLog(input: UpsertHabitLogInput) {
+    const activeHabit = requireActiveHabit(input.habitId)
+    if (!activeHabit.ok) {
+      return activeHabit
+    }
     const state = getMockState()
     const existingIndex = state.habitLogs.findIndex(
       (log) =>
@@ -159,6 +197,10 @@ export const mockHabitsRepository: HabitsRepository = {
   },
 
   async removeLog({ userId, habitId, logDate }) {
+    const activeHabit = requireActiveHabit(habitId)
+    if (!activeHabit.ok) {
+      return activeHabit
+    }
     const state = getMockState()
     state.habitLogs = state.habitLogs.filter(
       (log) => !(log.userId === userId && log.habitId === habitId && log.loggedForDate === logDate),
@@ -169,6 +211,11 @@ export const mockHabitsRepository: HabitsRepository = {
   async hardResetLogs({ userId, habitId, confirmed }) {
     if (!confirmed) {
       throw new Error('Hard reset requires explicit confirmation.')
+    }
+
+    const activeHabit = requireActiveHabit(habitId)
+    if (!activeHabit.ok) {
+      return activeHabit
     }
 
     const state = getMockState()
@@ -184,6 +231,9 @@ export const mockHabitsRepository: HabitsRepository = {
       const habit = habits.find((entry) => entry.id === habitId)
       if (!habit) {
         return err(createNotFoundError('Habit', habitId))
+      }
+      if (habit.lifecycleStatus !== 'active') {
+        return err(createAppError('validation', 'Archived habits cannot be reordered.'))
       }
       habit.order = order
       habit.updatedAt = new Date().toISOString()

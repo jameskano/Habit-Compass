@@ -12,3 +12,4 @@
 - Soft reset: A reversible reset of progress or history.
 - Hard reset: A destructive reset requiring explicit confirmation.
 - Archive: Hide an item from active use without deleting its data.
+- Pause: A future habit-only inactive state with gentler emotional framing than archive. It will exclude paused dates from stats using the same inactivity-period model as archive.

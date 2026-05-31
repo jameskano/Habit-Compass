@@ -5,6 +5,7 @@ This folder contains the first database migration for Habit Compass and a small 
 ## Files
 
 - `migrations/0001_initial_schema.sql`: initial MVP schema, indexes, triggers, and RLS policies.
+- `migrations/0002_habit_inactivity_periods.sql`: durable habit archive/pause-compatible intervals with RLS and current-archive backfill.
 - `seed.sql`: commented example seed statements for a local authenticated user.
 
 ## Scope
@@ -36,6 +37,7 @@ It does not include:
 
 - User-owned tables reference `auth.users(id)` and are protected by RLS.
 - Item tables keep `archived_at` for reversible removal; confirmed item deletion is physical. Non-item authored content may retain `deleted_at`.
+- Habit inactivity periods preserve repeated archive/reactivation history for stats. The migration can backfill the current archived state only; archive cycles lost before the migration cannot be reconstructed.
 - Habit and recurrence variability is stored in JSONB config columns so the TypeScript domain contracts can evolve without forcing an early schema explosion.
 - Default categories are intentionally not seeded globally. They should be created during onboarding or profile bootstrap after a real user exists.
 

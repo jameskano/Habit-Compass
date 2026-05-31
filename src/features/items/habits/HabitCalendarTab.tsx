@@ -31,6 +31,7 @@ const legendStates: HabitDayState[] = [
   'progress_logged',
   'missed',
   'skipped',
+  'inactive',
 ]
 
 function toISODate(value: Date) {

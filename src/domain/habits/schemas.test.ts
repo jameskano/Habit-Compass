@@ -120,4 +120,36 @@ describe('HabitSchema schedules', () => {
       ).success,
     ).toBe(false)
   })
+
+  it('validates inactivity periods while keeping paused as a future-compatible reason', () => {
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          { trackingType: 'binary' },
+          { inactivityPeriods: [{ reason: 'paused', startsOn: '2026-05-20', resumesOn: '2026-05-20' }] },
+        ),
+      ).success,
+    ).toBe(true)
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          { trackingType: 'binary' },
+          { inactivityPeriods: [{ reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-19' }] },
+        ),
+      ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          { trackingType: 'binary' },
+          {
+            inactivityPeriods: [
+              { reason: 'archived', startsOn: '2026-05-19' },
+              { reason: 'paused', startsOn: '2026-05-20' },
+            ],
+          },
+        ),
+      ).success,
+    ).toBe(false)
+  })
 })

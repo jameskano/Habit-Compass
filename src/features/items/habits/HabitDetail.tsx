@@ -35,7 +35,7 @@ type HabitDetailProps = {
   onDeleted: (habit: Habit) => void
 }
 
-const detailTabs: HabitDetailTab[] = ['calendar', 'stats', 'edit']
+const activeDetailTabs: HabitDetailTab[] = ['calendar', 'stats', 'edit']
 
 export function HabitDetail({
   habit,
@@ -64,6 +64,8 @@ export function HabitDetail({
     archiveMutation.isPending ||
     resetMutation.isPending ||
     deleteMutation.isPending
+  const detailTabs =
+    habit.lifecycleStatus === 'archived' ? activeDetailTabs.filter((tab) => tab !== 'edit') : activeDetailTabs
 
   const confirmAction = () => {
     if (confirmation === 'reset') {
@@ -159,7 +161,7 @@ export function HabitDetail({
                     updateMutation.mutate(input, {
                       onSuccess: () => {
                         if (options?.archiveAfterSave) {
-                          archiveMutation.mutate(habit.id, {
+                          archiveMutation.mutate({ habitId: habit.id, date: today }, {
                             onSuccess: () => onArchived(habit),
                           })
                           return
@@ -169,7 +171,7 @@ export function HabitDetail({
                     })
                   }
                   onArchive={() =>
-                    archiveMutation.mutate(habit.id, {
+                    archiveMutation.mutate({ habitId: habit.id, date: today }, {
                       onSuccess: () => onArchived(habit),
                     })
                   }

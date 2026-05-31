@@ -32,6 +32,15 @@ export const HabitDayOfWeekSchema = z.union(habitDayOfWeekValues.map((value) => 
   z.ZodLiteral<5>,
   z.ZodLiteral<6>,
 ])
+export const HabitInactivityReasonSchema = z.enum(['archived', 'paused'])
+export const HabitInactivityPeriodSchema = z.object({
+  reason: HabitInactivityReasonSchema,
+  startsOn: IsoDateStringSchema,
+  resumesOn: IsoDateStringSchema.optional().nullable(),
+}).refine((period) => !period.resumesOn || period.resumesOn >= period.startsOn, {
+  message: 'Resume date must not be before inactive start date.',
+  path: ['resumesOn'],
+})
 
 export const HabitFrequencyConfigSchema = z.object({
   period: HabitPeriodSchema,
@@ -142,6 +151,7 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
   enabledCompletionLevels: z.array(HabitCompletionLevelSchema),
   defaultCompletionLevel: HabitCompletionLevelSchema.optional().nullable(),
   resetMode: HabitResetModeSchema,
+  inactivityPeriods: z.array(HabitInactivityPeriodSchema),
 }).superRefine((habit, context) => {
   if (habit.endsOn && habit.endsOn < habit.startsOn) {
     context.addIssue({
@@ -187,6 +197,14 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
       code: 'custom',
       path: ['defaultCompletionLevel'],
       message: 'Default completion level must be enabled for the habit.',
+    })
+  }
+
+  if (habit.inactivityPeriods.filter((period) => !period.resumesOn).length > 1) {
+    context.addIssue({
+      code: 'custom',
+      path: ['inactivityPeriods'],
+      message: 'A habit must not have more than one open inactivity period.',
     })
   }
 })

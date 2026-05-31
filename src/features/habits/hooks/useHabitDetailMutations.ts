@@ -3,17 +3,29 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { UpdateHabitInput } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
-import type { EntityId } from '@/shared/types'
+import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useUpdateHabitMutation(userId = MOCK_USER_ID) {
+export function useUpdateHabitMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (input: UpdateHabitInput) =>
       unwrapResult(await habitsRepository.update(input)),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['habits', userId] })
+      await queryClient.invalidateQueries({ queryKey: ['habits'] })
+    },
+  })
+}
+
+export function useRestoreHabitMutation(userId = MOCK_USER_ID) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ habitId, date }: { habitId: EntityId; date: ISODateString }) =>
+      unwrapResult(await habitsRepository.restore({ userId, habitId, date })),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['habits'] })
     },
   })
 }
@@ -38,7 +50,7 @@ export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
       unwrapResult(await habitsRepository.delete({ userId, habitId })),
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['habits', userId] }),
+        queryClient.invalidateQueries({ queryKey: ['habits'] }),
         queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] }),
       ])
     },

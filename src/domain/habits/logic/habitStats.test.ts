@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createCompletionLevelHabit, createHabitLog } from './habitFixtures'
+import { createCompletionLevelHabit, createHabit, createHabitLog } from './habitFixtures'
 import { calculateHabitStats } from './habitStats'
 
 describe('calculateHabitStats', () => {
@@ -119,5 +119,61 @@ describe('calculateHabitStats', () => {
         today: '2026-05-22',
       }).completionScore,
     ).toBe(1)
+  })
+
+  it('excludes inactive scheduled dates and malformed inactive logs without breaking streaks', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        startsOn: '2026-05-18',
+        scheduleRule: { kind: 'daily' },
+        inactivityPeriods: [
+          { reason: 'archived', startsOn: '2026-05-19', resumesOn: '2026-05-21' },
+        ],
+      },
+    )
+
+    const result = calculateHabitStats({
+      habit,
+      logs: [
+        createHabitLog({ id: 'before', loggedForDate: '2026-05-18' }),
+        createHabitLog({ id: 'invalid', loggedForDate: '2026-05-20' }),
+        createHabitLog({ id: 'after', loggedForDate: '2026-05-21' }),
+      ],
+      from: '2026-05-18',
+      to: '2026-05-21',
+      today: '2026-05-21',
+    })
+
+    expect(result.completionEvents).toBe(2)
+    expect(result.expectedScore).toBe(2)
+    expect(result.completionPercentage).toBe(100)
+    expect(result.currentStreak).toBe(2)
+    expect(result.bestStreak).toBe(2)
+  })
+
+  it('omits flexible scoring periods that overlap inactive days', () => {
+    const result = calculateHabitStats({
+      habit: createHabit(
+        { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+        {
+          startsOn: '2026-05-18',
+          inactivityPeriods: [
+            { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-21' },
+          ],
+        },
+      ),
+      logs: [
+        createHabitLog({ id: 'before', loggedForDate: '2026-05-18' }),
+        createHabitLog({ id: 'after', loggedForDate: '2026-05-22' }),
+      ],
+      from: '2026-05-18',
+      to: '2026-05-24',
+      today: '2026-05-22',
+    })
+
+    expect(result.completionEvents).toBe(0)
+    expect(result.expectedScore).toBe(0)
+    expect(result.completionPercentage).toBe(0)
   })
 })

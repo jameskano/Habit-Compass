@@ -98,6 +98,7 @@ function createInitialMockData(): MockDataState {
       enabledCompletionLevels: ['minimum', 'standard'],
       defaultCompletionLevel: 'standard',
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
     {
       ...buildBaseFields('habit-read'),
@@ -120,6 +121,7 @@ function createInitialMockData(): MockDataState {
       enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
     {
       ...buildBaseFields('habit-water'),
@@ -141,6 +143,7 @@ function createInitialMockData(): MockDataState {
       enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
   ]
 

@@ -116,7 +116,11 @@ export function HabitCard({
   }
 
   const swipeMotion = useSwipeCardMotion({
-    onSwipeLeft: onSwipeEdit,
+    onSwipeLeft: () => {
+      if (!archived) {
+        onSwipeEdit()
+      }
+    },
     onSwipeRight: () => {
       if (!archived) {
         onSwipeArchive()

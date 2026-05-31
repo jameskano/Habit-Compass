@@ -162,6 +162,9 @@ manual skip sets status skipped
 - Missed appears amber/yellow, not red.
 - Today pending appears neutral gray.
 - Calendar cells render pending today without listing it in the legend.
+- Archived calendar dates render as neutral inactive dates and remain excluded after reactivation.
+- Archived habit options expose Calendar, Stats, Reactivate, and Delete only.
+- Reactivating a habit returns it to the active list without counting archived dates.
 - Stats month view has all twelve current-year months and year view begins at the habit start year.
 
 ## Tasks

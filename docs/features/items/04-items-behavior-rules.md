@@ -57,6 +57,12 @@ Danger/archive fields:
 
 Archiving hides the habit from the active list but preserves its logs/history.
 
+- The archive day becomes inactive immediately.
+- Reactivating closes the interval and makes the reactivation day active again.
+- Inactive dates do not count as missed, do not affect stats, and do not break streaks.
+- Archived habits remain readable for calendar/stats review. Only Reactivate and confirmed Delete remain available as mutations.
+- A future Pause feature will reuse the same interval behavior with gentler user-facing framing.
+
 ## Delete habit
 
 Deleting is permanent and should remove the habit from storage after confirmation.
@@ -141,6 +147,8 @@ percentage = total completion score / expected score
 
 Where expected score is scheduled days minus skipped scheduled days.
 
+Inactive scheduled days are also excluded. Ignore malformed logs recorded inside inactive dates.
+
 ## Flexible times-per-period stats
 
 For `times_per_period`:
@@ -150,6 +158,8 @@ percentage = valid period completion score / expected period score
 ```
 
 A flexible times-per-period habit should not mark every non-completed day as missed.
+
+If an inactive interval overlaps a flexible scoring period, omit that whole period from scoring.
 
 Example:
 

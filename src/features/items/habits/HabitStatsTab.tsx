@@ -24,7 +24,7 @@ export function HabitStatsTab({ habit, logs, today }: HabitStatsTabProps) {
   const intl = useIntl()
   const [chartPeriod, setChartPeriod] = useState<HabitChartPeriod>('week')
   const summary = calculateHabitDetailStats({ habit, logs, today })
-  const bars = createHabitCompletionBars({ logs, period: chartPeriod, today, startsOn: habit.startsOn })
+  const bars = createHabitCompletionBars({ habit, logs, period: chartPeriod, today, startsOn: habit.startsOn })
   const maxValue = Math.max(...bars.map((bar) => bar.completionEvents), 1)
   const shortDate = new Intl.DateTimeFormat(intl.locale, {
     month: 'short',

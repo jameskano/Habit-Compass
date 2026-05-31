@@ -31,6 +31,7 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
     enabledCompletionLevels: ['standard'],
     defaultCompletionLevel: null,
     resetMode: 'soft',
+    inactivityPeriods: [],
     ...overrides,
   }
 }

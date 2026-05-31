@@ -7,6 +7,7 @@ import {
   hasHabitProgressOnDate,
 } from './habitCompletionRules'
 import { isHabitScheduledOnDate } from './habitSchedule'
+import { filterEligibleHabitLogs, isHabitInactiveOnDate } from './habitInactivity'
 
 export type HabitDayState =
   | 'completed_minimum'
@@ -16,6 +17,7 @@ export type HabitDayState =
   | 'missed'
   | 'skipped'
   | 'not_scheduled'
+  | 'inactive'
   | 'future'
 
 type DeriveHabitDayStateInput = {
@@ -35,14 +37,19 @@ export function deriveHabitDayState({
     return 'future'
   }
 
-  const log = logs.find((entry) => entry.loggedForDate === date)
+  if (isHabitInactiveOnDate(habit, date)) {
+    return 'inactive'
+  }
+
+  const eligibleLogs = filterEligibleHabitLogs(habit, logs)
+  const log = eligibleLogs.find((entry) => entry.loggedForDate === date)
 
   if (log?.status === 'skipped') {
     return 'skipped'
   }
 
-  if (logs.some((entry) => entry.loggedForDate === date && getHabitLogProgressValue(habit, entry) > 0)) {
-    const completion = evaluateHabitCompletionForLogs({ habit, logs, date })
+  if (eligibleLogs.some((entry) => entry.loggedForDate === date && getHabitLogProgressValue(habit, entry) > 0)) {
+    const completion = evaluateHabitCompletionForLogs({ habit, logs: eligibleLogs, date })
     if (completion.derivedCompletionLevel === 'standard') {
       return 'completed_standard'
     }
@@ -56,7 +63,7 @@ export function deriveHabitDayState({
     return 'not_scheduled'
   }
 
-  if (hasHabitProgressOnDate(habit, logs, date)) {
+  if (hasHabitProgressOnDate(habit, eligibleLogs, date)) {
     return 'progress_logged'
   }
 

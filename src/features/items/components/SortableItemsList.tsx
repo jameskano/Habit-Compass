@@ -16,6 +16,7 @@ type SortableItemsListProps<T extends { id: EntityId; title: string }> = {
   reorderLabelId: string
   onReorder: (orderedIds: EntityId[]) => void
   revealCards: boolean
+  disabled?: boolean
   children: (item: T) => ReactNode
 }
 
@@ -78,6 +79,7 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
   reorderLabelId,
   onReorder,
   revealCards,
+  disabled = false,
   children,
 }: SortableItemsListProps<T>) {
   const intl = useIntl()
@@ -104,11 +106,13 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
     onReorder(moveItem(items, sourceIndex, targetIndex).map((item) => item.id))
   }
 
-  return (
-    <DragDropProvider onDragEnd={handleDragEnd}>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {items.map((item, index) => (
-          <ItemWaterfallReveal key={item.id} index={index} revealing={revealCards}>
+  const cards = (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {items.map((item, index) => (
+        <ItemWaterfallReveal key={item.id} index={index} revealing={revealCards}>
+          {disabled ? (
+            children(item)
+          ) : (
             <SortableItemShell
               id={item.id}
               index={index}
@@ -117,9 +121,15 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
             >
               {children(item)}
             </SortableItemShell>
-          </ItemWaterfallReveal>
-        ))}
-      </div>
+          )}
+        </ItemWaterfallReveal>
+      ))}
+    </div>
+  )
+
+  return disabled ? cards : (
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      {cards}
     </DragDropProvider>
   )
 }

@@ -36,6 +36,7 @@ Habit Compass harness coverage currently focuses on deterministic non-UI logic t
   - soft reset
   - hard reset confirmation
   - archive
+  - repeated archive/reactivation intervals and inactive-day stat exclusions
   - confirmed physical item deletion through repository behavior
 
 ## Intent

@@ -58,6 +58,9 @@ Users need a habit model that works for the simplest possible case, while still 
 - Hard reset requires explicit confirmation.
 - Habits can be archived or physically deleted after explicit confirmation in MVP.
 - Habit lifecycle status is limited to `active` and `archived`.
+- Archiving opens a dated inactivity period and reactivating closes it. Inactivity periods use half-open `[startsOn, resumesOn)` bounds so the archive day is excluded and the reactivation day is active again.
+- Archived habits remain readable for calendar and stats review. While archived, only reactivation and confirmed physical deletion may mutate them.
+- Pausing is a future feature with different emotional framing from archive. It will reuse inactivity periods with reason `paused` without adding a paused MVP lifecycle status.
 
 ## Non-Functional Requirements
 
@@ -98,6 +101,10 @@ Users need a habit model that works for the simplest possible case, while still 
   - `quantity`
   - `quantityUnitLabel`
   - `notes`
+- `HabitInactivityPeriod`
+  - `reason`: `archived` or future-compatible `paused`
+  - `startsOn`
+  - `resumesOn`
 
 ## UI States
 
@@ -123,6 +130,7 @@ Users need a habit model that works for the simplest possible case, while still 
 - Habit logs represent only completed and skipped outcomes; missed state is derived.
 - Soft reset is modeled separately from hard reset.
 - Archive and delete are both available in the domain contract.
+- Archived dates remain excluded from derived stats across any number of archive/reactivation cycles.
 
 ## Test Plan
 
@@ -132,3 +140,4 @@ Users need a habit model that works for the simplest possible case, while still 
 - Unit tests ensuring custom period rules require a valid custom day count.
 - Unit tests for deriving a missed day from schedule, date, and absent logs.
 - Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped exclusions, and explicit-schedule streaks.
+- Unit tests for archive/reactivation boundaries, repeated inactivity periods, archived mutation guards, and future-compatible paused periods.

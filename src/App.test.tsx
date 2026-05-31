@@ -274,6 +274,35 @@ describe('app shell', () => {
     expect(
       screen.getByText('Drink water after lunch was archived. Its history is preserved.'),
     ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show archived Habits' }))
+    const archivedCard = await screen.findByRole('button', {
+      name: 'Open options for Drink water after lunch',
+    })
+    expect(
+      screen.queryByRole('button', { name: 'Drag to reorder Drink water after lunch' }),
+    ).not.toBeInTheDocument()
+    fireEvent.pointerDown(archivedCard, { clientX: 110, clientY: 20 })
+    fireEvent.pointerUp(archivedCard, { clientX: 20, clientY: 20 })
+    expect(screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Options for Drink water after lunch' }))
+    const archivedMenu = screen.getByRole('menu')
+    expect(within(archivedMenu).getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Calendar',
+      'Stats',
+      'Reactivate',
+      'Delete',
+    ])
+    await user.click(within(archivedMenu).getByRole('menuitem', { name: 'Reactivate' }))
+    expect(
+      await screen.findByText('Drink water after lunch was reactivated. Archived days stay excluded from stats.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open options for Drink water after lunch' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show active Habits' }))
+    expect(
+      await screen.findByRole('button', { name: 'Open options for Drink water after lunch' }),
+    ).toBeInTheDocument()
   })
 
   it('does not interpret vertical scrolling as a swipe action', async () => {
@@ -309,6 +338,32 @@ describe('app shell', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Edit recurrent task Water the plants' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('refreshes Today habit totals after archiving a habit', async () => {
+    render(<App />)
+
+    expect(await screen.findByText('2/3')).toBeInTheDocument()
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    const archiveCard = await screen.findByRole('button', {
+      name: 'Open options for Drink water after lunch',
+    })
+    fireEvent.pointerDown(archiveCard, { clientX: 10, clientY: 20 })
+    fireEvent.pointerUp(archiveCard, { clientX: 100, clientY: 20 })
+    fireEvent.click(archiveCard)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Open options for Drink water after lunch' }),
+      ).not.toBeInTheDocument()
+    })
+
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+    expect(await screen.findByText('2/2')).toBeInTheDocument()
   })
 
   it('reveals item cards in sequence when each items section is displayed', async () => {

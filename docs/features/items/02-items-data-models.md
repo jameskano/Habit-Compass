@@ -119,8 +119,19 @@ export interface Habit {
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;
+  inactivityPeriods: HabitInactivityPeriod[];
 }
 ```
+
+```ts
+export interface HabitInactivityPeriod {
+  reason: "archived" | "paused";
+  startsOn: string;  // YYYY-MM-DD, inclusive
+  resumesOn?: string; // YYYY-MM-DD, exclusive
+}
+```
+
+Archive uses `reason = "archived"` in MVP. `paused` is reserved for a future habit pause feature with gentler emotional framing. A same-day archive/reactivation interval is empty.
 
 ### Habit completion level
 
@@ -177,6 +188,7 @@ export type HabitDayState =
   | "missed"
   | "skipped"
   | "not_scheduled"
+  | "inactive"
   | "future";
 ```
 
@@ -189,6 +201,7 @@ Meanings:
 - `missed`: scheduled in the past and not completed.
 - `skipped`: manually skipped and should not punish stats.
 - `not_scheduled`: the habit was not expected on that day.
+- `inactive`: the habit was archived, or future-paused, on that day and the date is excluded from stats.
 - `future`: the date has not happened yet.
 
 ---
@@ -242,12 +255,15 @@ Where:
 - Expected scheduled day = 1 expected point.
 - Skipped scheduled day = excluded from denominator.
 - Missed scheduled day = 0 points.
+- Inactive scheduled day = excluded from the denominator and streak evaluation.
 
 For flexible period schedules:
 
 ```txt
 completion percentage for period = valid period score / 1
 ```
+
+If any inactive date overlaps a flexible weekly, monthly, or custom period, omit that period from scoring rather than prorating its target.
 
 Example:
 

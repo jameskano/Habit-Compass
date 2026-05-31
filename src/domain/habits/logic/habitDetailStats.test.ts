@@ -45,6 +45,7 @@ describe('habit detail stats', () => {
   })
 
   it('groups completion events into chart bars without storing derived state', () => {
+    const habit = createHabit({ trackingType: 'binary' }, { startsOn: '2024-03-01' })
     const logs = [
       createHabitLog({ id: 'one', loggedForDate: '2026-05-18' }),
       createHabitLog({ id: 'two', loggedForDate: '2026-05-18' }),
@@ -52,18 +53,21 @@ describe('habit detail stats', () => {
     ]
 
     const weeklyBars = createHabitCompletionBars({
+      habit,
       logs,
       period: 'week',
       today: '2026-05-21',
       startsOn: '2024-03-01',
     })
     const monthlyBars = createHabitCompletionBars({
+      habit,
       logs,
       period: 'month',
       today: '2026-05-21',
       startsOn: '2024-03-01',
     })
     const yearlyBars = createHabitCompletionBars({
+      habit,
       logs,
       period: 'year',
       today: '2026-05-21',
@@ -76,5 +80,32 @@ describe('habit detail stats', () => {
     expect(yearlyBars).toHaveLength(3)
     expect(yearlyBars[0].completionEvents).toBe(0)
     expect(yearlyBars[2].completionEvents).toBe(2)
+  })
+
+  it('excludes completion logs recorded while inactive from tiles and chart bars', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        startsOn: '2026-05-18',
+        inactivityPeriods: [
+          { reason: 'archived', startsOn: '2026-05-19', resumesOn: '2026-05-21' },
+        ],
+      },
+    )
+    const logs = [
+      createHabitLog({ id: 'active', loggedForDate: '2026-05-18' }),
+      createHabitLog({ id: 'inactive', loggedForDate: '2026-05-20' }),
+    ]
+
+    expect(calculateHabitDetailStats({ habit, logs, today: '2026-05-21' }).totalCompletions).toBe(1)
+    expect(
+      createHabitCompletionBars({
+        habit,
+        logs,
+        period: 'week',
+        today: '2026-05-21',
+        startsOn: habit.startsOn,
+      }).reduce((total, bar) => total + bar.completionEvents, 0),
+    ).toBe(1)
   })
 })

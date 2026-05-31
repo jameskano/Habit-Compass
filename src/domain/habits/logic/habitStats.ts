@@ -4,6 +4,11 @@ import type { Habit, HabitLog } from '../types'
 import { evaluateHabitCompletionForLogs, getHabitPeriodBounds, getHabitTargetScope } from './habitCompletionRules'
 import { deriveHabitDayState, type HabitDayState } from './habitDayState'
 import { enumerateHabitScheduledDates } from './habitSchedule'
+import {
+  doesHabitInactivityOverlapRange,
+  filterEligibleHabitLogs,
+  isHabitInactiveOnDate,
+} from './habitInactivity'
 
 export type HabitStats = {
   completionEvents: number
@@ -59,7 +64,9 @@ export function calculateHabitStats(input: {
   today: ISODateString
 }): HabitStats {
   const { habit, from, to, today } = input
-  const logs = input.logs.filter((log) => isWithinRange(log.loggedForDate, from, to))
+  const logs = filterEligibleHabitLogs(habit, input.logs).filter((log) =>
+    isWithinRange(log.loggedForDate, from, to),
+  )
   if (getHabitTargetScope(habit) === 'period') {
     const periodStarts = new Set<ISODateString>()
     for (const log of logs) {
@@ -69,10 +76,13 @@ export function calculateHabitStats(input: {
       periodStarts.add(getHabitPeriodBounds(habit, today).periodStart)
     }
 
-    const periodScores = [...periodStarts].map((periodStart) => {
+    const periodScores = [...periodStarts].flatMap((periodStart) => {
       const { periodEnd } = getHabitPeriodBounds(habit, periodStart)
+      if (doesHabitInactivityOverlapRange(habit, periodStart, periodEnd)) {
+        return []
+      }
       const evaluationDate = periodStart <= today ? periodStart : periodEnd
-      return evaluateHabitCompletionForLogs({ habit, logs, date: evaluationDate }).validCompletionScore
+      return [evaluateHabitCompletionForLogs({ habit, logs, date: evaluationDate }).validCompletionScore]
     })
     const completionScore = periodScores.reduce((total, score) => total + score, 0)
     const expectedScore = periodScores.length
@@ -87,7 +97,9 @@ export function calculateHabitStats(input: {
     }
   }
 
-  const scheduledDates = enumerateHabitScheduledDates(habit, from, to).filter((date) => date <= today)
+  const scheduledDates = enumerateHabitScheduledDates(habit, from, to).filter(
+    (date) => date <= today && !isHabitInactiveOnDate(habit, date),
+  )
   const scheduledLogs = logs.filter((log) => scheduledDates.includes(log.loggedForDate))
   const states = scheduledDates.map((date) =>
     deriveHabitDayState({

@@ -37,6 +37,9 @@ Users need useful progress context, but the app should not turn into a heavy ana
 
 - Stats must avoid analytics overload.
 - Stats must remain derivable from logs and item state rather than duplicating product logic.
+- Habit stats exclude archived inactivity dates. Any malformed or imported logs inside inactive dates are ignored.
+- Explicit-schedule streaks treat inactive dates as neutral: they neither increment nor break a streak.
+- Flexible weekly, monthly, or custom scoring periods are omitted when any inactive date overlaps the period.
 
 ## Data Model
 
@@ -61,6 +64,7 @@ Users need useful progress context, but the app should not turn into a heavy ana
 
 - Zero total items must not produce invalid completion rates.
 - Stats should tolerate missing optional domains such as mood or reflections.
+- Reactivated habits may contain multiple historical inactivity periods.
 
 ## Acceptance Criteria
 

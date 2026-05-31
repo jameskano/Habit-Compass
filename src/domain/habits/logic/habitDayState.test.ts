@@ -45,6 +45,24 @@ describe('deriveHabitDayState', () => {
     ).toBe('missed')
   })
 
+  it('shows inactive dates neutrally even if malformed logs exist for them', () => {
+    expect(
+      deriveHabitDayState({
+        habit: createHabit(
+          { trackingType: 'binary' },
+          {
+            inactivityPeriods: [
+              { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-21' },
+            ],
+          },
+        ),
+        date: '2026-05-20',
+        today: '2026-05-21',
+        logs: [createHabitLog({ loggedForDate: '2026-05-20' })],
+      }),
+    ).toBe('inactive')
+  })
+
   it('distinguishes pending, unscheduled, and future dates', () => {
     expect(
       deriveHabitDayState({

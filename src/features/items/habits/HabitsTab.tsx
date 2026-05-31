@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl'
 import type { Habit } from '@/domain/habits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useArchiveHabitMutation } from '@/features/habits/hooks/useArchiveHabitMutation'
-import { useReorderHabitsMutation } from '@/features/habits/hooks/useHabitDetailMutations'
+import { useReorderHabitsMutation, useRestoreHabitMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -54,6 +54,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
   const logsQuery = useHabitLogsRangeQuery({ from, to: today })
   const archiveMutation = useArchiveHabitMutation()
   const reorderMutation = useReorderHabitsMutation()
+  const restoreMutation = useRestoreHabitMutation()
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null)
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
   const [searchText, setSearchText] = useState('')
@@ -102,13 +103,29 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
   }
 
   const archiveHabit = (habit: Habit) => {
-    archiveMutation.mutate(habit.id, {
+    archiveMutation.mutate({ habitId: habit.id, date: today }, {
       onSuccess: () => {
         setSelectedHabitId(null)
         setDetailSelection(null)
         setAnnouncement({ id: 'page.items.habit.archived', title: habit.title })
       },
     })
+  }
+
+  const reactivateHabit = (habit: Habit) => {
+    restoreMutation.mutate({ habitId: habit.id, date: today }, {
+      onSuccess: () => {
+        setSelectedHabitId(null)
+        setDetailSelection(null)
+        setAnnouncement({ id: 'page.items.habit.reactivated', title: habit.title })
+      },
+    })
+  }
+
+  const handleArchived = (habit: Habit) => {
+    setSelectedHabitId(null)
+    setDetailSelection(null)
+    setAnnouncement({ id: 'page.items.habit.archived', title: habit.title })
   }
 
   return (
@@ -159,6 +176,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
           reorderLabelId="page.items.habit.action.reorder"
           onReorder={reorderHabits}
           revealCards={revealCards}
+          disabled={showingArchived}
         >
           {(habit) => (
             <HabitCard
@@ -183,6 +201,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
         onClose={() => setSelectedHabitId(null)}
         onOpenDetail={openDetail}
         onArchive={archiveHabit}
+        onReactivate={reactivateHabit}
       />
       {detailHabit && detailSelection ? (
         <HabitDetail
@@ -193,7 +212,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
           initialDangerAction={detailSelection.dangerAction}
           today={today}
           onClose={() => setDetailSelection(null)}
-          onArchived={archiveHabit}
+          onArchived={handleArchived}
           onDeleted={(habit) => {
             setDetailSelection(null)
             setAnnouncement({ id: 'page.items.habit.deleted', title: habit.title })

@@ -5,9 +5,12 @@ import type { Habit, HabitCompletionLevel, HabitLog, HabitLogStatus } from './ty
 
 export type CreateHabitInput = Omit<
   Habit,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'inactivityPeriods'
 >
-export type UpdateHabitInput = Partial<Omit<Habit, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
+export type UpdateHabitInput = Partial<Omit<
+  Habit,
+  'id' | 'userId' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'lifecycleStatus' | 'inactivityPeriods'
+>> & {
   id: EntityId
 }
 export type UpsertHabitLogInput = {
@@ -33,9 +36,9 @@ export interface HabitsRepository {
   }): Promise<Result<HabitLog[]>>
   create(input: CreateHabitInput): Promise<Result<Habit>>
   update(input: UpdateHabitInput): Promise<Result<Habit>>
-  archive(input: { userId: UserId; habitId: EntityId }): Promise<Result<Habit>>
+  archive(input: { userId: UserId; habitId: EntityId; date: ISODateString }): Promise<Result<Habit>>
   delete(input: { userId: UserId; habitId: EntityId }): Promise<Result<null>>
-  restore(input: { userId: UserId; habitId: EntityId }): Promise<Result<Habit>>
+  restore(input: { userId: UserId; habitId: EntityId; date: ISODateString }): Promise<Result<Habit>>
   upsertLog(input: UpsertHabitLogInput): Promise<Result<HabitLog>>
   removeLog(input: { userId: UserId; habitId: EntityId; logDate: ISODateString }): Promise<Result<null>>
   hardResetLogs(input: {

@@ -118,6 +118,96 @@ describe('mock repositories', () => {
     expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
   })
 
+  it('records archive intervals, restores them, and blocks archived habit mutations', async () => {
+    const archived = await mockHabitsRepository.archive({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      date: '2026-05-20',
+    })
+    expect(archived.ok && archived.data.inactivityPeriods).toEqual([
+      { reason: 'archived', startsOn: '2026-05-20' },
+    ])
+
+    expect(
+      (
+        await mockHabitsRepository.upsertLog({
+          userId: mockData.currentUserId,
+          habitId: 'habit-water',
+          logDate: '2026-05-20',
+          status: 'completed',
+        })
+      ).ok,
+    ).toBe(false)
+    expect(
+      (
+        await mockHabitsRepository.update({
+          id: 'habit-water',
+          title: 'Blocked update',
+        })
+      ).ok,
+    ).toBe(false)
+    expect(
+      (
+        await mockHabitsRepository.removeLog({
+          userId: mockData.currentUserId,
+          habitId: 'habit-water',
+          logDate: '2026-05-20',
+        })
+      ).ok,
+    ).toBe(false)
+    expect(
+      (
+        await mockHabitsRepository.hardResetLogs({
+          userId: mockData.currentUserId,
+          habitId: 'habit-water',
+          confirmed: true,
+        })
+      ).ok,
+    ).toBe(false)
+    expect(
+      (
+        await mockHabitsRepository.archive({
+          userId: mockData.currentUserId,
+          habitId: 'habit-water',
+          date: '2026-05-21',
+        })
+      ).ok,
+    ).toBe(false)
+    expect(
+      (
+        await mockHabitsRepository.reorder({
+          userId: mockData.currentUserId,
+          orderedHabitIds: ['habit-water', 'habit-read', 'habit-move'],
+        })
+      ).ok,
+    ).toBe(false)
+
+    const restored = await mockHabitsRepository.restore({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      date: '2026-05-22',
+    })
+    expect(restored.ok && restored.data.lifecycleStatus).toBe('active')
+    expect(restored.ok && restored.data.inactivityPeriods).toEqual([
+      { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-22' },
+    ])
+
+    await mockHabitsRepository.archive({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      date: '2026-05-25',
+    })
+    const restoredAgain = await mockHabitsRepository.restore({
+      userId: mockData.currentUserId,
+      habitId: 'habit-water',
+      date: '2026-05-25',
+    })
+    expect(restoredAgain.ok && restoredAgain.data.inactivityPeriods).toEqual([
+      { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-22' },
+      { reason: 'archived', startsOn: '2026-05-25', resumesOn: '2026-05-25' },
+    ])
+  })
+
   it('persists habit, task, and recurrent-task order in memory', async () => {
     const habits = await mockHabitsRepository.reorder({
       userId: mockData.currentUserId,

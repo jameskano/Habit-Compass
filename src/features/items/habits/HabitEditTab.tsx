@@ -627,7 +627,7 @@ export function HabitEditTab({
           </div>
         </section>
 
-        <Button type="submit" className="w-full rounded-xl" disabled={pending}>
+        <Button type="submit" className="w-full rounded-xl" disabled={archived || pending}>
           {intl.formatMessage({ id: 'page.items.habit.edit.save' })}
         </Button>
       </form>
@@ -648,7 +648,7 @@ export function HabitEditTab({
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 border border-border/60 bg-card/75"
-          disabled={pending}
+          disabled={archived || pending}
           onClick={() => onRequestDangerAction('reset')}
         >
           <RotateCcw aria-hidden="true" size={17} />

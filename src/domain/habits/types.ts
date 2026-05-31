@@ -24,6 +24,13 @@ export type HabitResetMode = (typeof habitResetModes)[number]
 export type HabitLogStatus = (typeof habitLogStatuses)[number]
 export type HabitScheduleKind = (typeof habitScheduleKinds)[number]
 export type HabitDayOfWeek = (typeof habitDayOfWeekValues)[number]
+export type HabitInactivityReason = 'archived' | 'paused'
+
+export type HabitInactivityPeriod = {
+  reason: HabitInactivityReason
+  startsOn: ISODateString
+  resumesOn?: ISODateString | null
+}
 
 export type HabitFrequencyConfig = {
   period: HabitPeriod
@@ -143,6 +150,7 @@ export type Habit = ItemEntityFields & {
   enabledCompletionLevels: HabitCompletionLevel[]
   defaultCompletionLevel?: HabitCompletionLevel | null
   resetMode: HabitResetMode
+  inactivityPeriods: HabitInactivityPeriod[]
 }
 
 export type HabitLog = ItemEntityFields & {
