@@ -5,7 +5,8 @@ Habit Compass uses a global toast system for brief feedback after user actions.
 ## Presentation
 
 - Use one global toaster mounted in the app provider tree.
-- Position toasts at the top center so they do not compete with mobile bottom navigation.
+- Keep toasts fixed at the top center of the viewport so scrolling content never moves them.
+- Keep mobile toasts centered with viewport-safe margins, including during entry transitions.
 - Default duration is `4000ms`. Callers may override the duration per toast.
 - Show a close button and allow Sonner's standard dismissal behavior.
 - Use typed visual variants: message, success, error, info, warning, and loading.

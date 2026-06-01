@@ -59,6 +59,7 @@ describe('useAppToast', () => {
         duration: 4000,
         closeButton: true,
         richColors: true,
+        className: 'app-toaster',
       }),
       undefined,
     )
