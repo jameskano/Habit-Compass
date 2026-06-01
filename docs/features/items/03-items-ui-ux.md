@@ -6,7 +6,7 @@ Keep the feature clean, calm, and practical.
 
 Avoid visual overload. The Items section should feel like a management area, not a complex analytics dashboard.
 
-Brief confirmations for completion, save, archive, reactivate, delete, and reset actions use the global top-center toast system. Keep form validation and persistent loading/error states inline.
+Brief confirmations for save, archive, reactivate, delete, and reset actions use the global top-center toast system. Habit day log changes use the updated day color/state as their only success feedback. Keep form validation and persistent loading/error states inline, and keep the generic localized error toast when a habit day mutation fails.
 
 ## Items page
 
@@ -89,7 +89,8 @@ Avoid red for missed habits. Amber communicates attention without feeling punish
 Actions:
 
 - Tap card, except day strip/buttons: open options menu.
-- Tap a day: toggle or edit that day completion, depending on implementation simplicity.
+- Tap a habit day: perform the fast default action for that tracking type.
+- Long press a habit day: open the explicit completion action sheet.
 - Swipe left: edit.
 - Swipe right: archive.
 - Calendar icon: open habit detail calendar tab.
@@ -109,6 +110,29 @@ Place a thin divider between Edit and Archive. The sheet opens with a short upwa
 Destructive actions require confirmation.
 
 Reset progress should preserve the habit but clear logs/history after confirmation, unless the project has a soft reset policy already defined.
+
+### Habit day interactions
+
+Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are muted and disabled. Active `flexiblePeriod` days remain actionable even when their empty display state is `not_scheduled`.
+
+Binary habits:
+
+- Tap empty, missed, or pending scheduled days to store standard completion.
+- Tap completed or skipped days to clear the log.
+- Long press opens Complete, Skip day, and Mark as undone actions.
+- When minimum is configured, the long-press sheet replaces Complete with Complete standard and adds Complete minimum.
+
+`timesPerPeriod` habits:
+
+- Tap toggles one completion event for the selected day.
+- Long press opens Complete, Skip day, and Clear log actions.
+
+Repetition, time, and quantity habits:
+
+- Tap opens an amount-entry sheet, prefilled with the selected day's existing value when present.
+- Long press opens Input quantity/time, Skip day, and Clear log actions.
+- Amount entry accepts raw values above the standard target, rejects negative values inline, and treats `0` as clear log.
+- The amount-entry sheet displays repetitions, minutes, or the configured quantity unit. Domain logic derives progress, minimum, and standard day states.
 
 ## Habit detail screen
 

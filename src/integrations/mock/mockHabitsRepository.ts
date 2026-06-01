@@ -44,9 +44,7 @@ function requireActiveHabit(habitId: string): Result<Habit> {
 
 export const mockHabitsRepository: HabitsRepository = {
   async listForUser({ userId }) {
-    const habits = getMockState().habits.filter(
-      (habit) => habit.userId === userId,
-    )
+    const habits = getMockState().habits.filter((habit) => habit.userId === userId)
     return ok(habits)
   },
 
@@ -112,10 +110,7 @@ export const mockHabitsRepository: HabitsRepository = {
       lifecycleStatus: 'archived',
       archivedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      inactivityPeriods: [
-        ...habit.inactivityPeriods,
-        { reason: 'archived', startsOn: date },
-      ],
+      inactivityPeriods: [...habit.inactivityPeriods, { reason: 'archived', startsOn: date }],
     }))
   },
 
@@ -157,6 +152,9 @@ export const mockHabitsRepository: HabitsRepository = {
     if (!activeHabit.ok) {
       return activeHabit
     }
+    if (input.value !== null && input.value !== undefined && input.value < 0) {
+      return err(createAppError('validation', 'Habit log values cannot be negative.'))
+    }
     const state = getMockState()
     const existingIndex = state.habitLogs.findIndex(
       (log) =>
@@ -176,10 +174,19 @@ export const mockHabitsRepository: HabitsRepository = {
       loggedAt: new Date().toISOString(),
       status: input.status,
       completionLevel: input.status === 'completed' ? (input.completionLevel ?? null) : null,
-      repetitions: null,
-      durationMinutes: input.status === 'completed' && input.unit === 'minutes' ? (input.value ?? null) : null,
-      quantity: input.status === 'completed' && input.unit === 'quantity' ? (input.value ?? null) : null,
-      quantityUnitLabel: input.status === 'completed' && input.unit === 'quantity' ? 'units' : null,
+      repetitions:
+        input.status === 'completed' && input.unit === 'repetitions' ? (input.value ?? null) : null,
+      durationMinutes:
+        input.status === 'completed' && input.unit === 'minutes' ? (input.value ?? null) : null,
+      quantity:
+        input.status === 'completed' && input.unit === 'quantity' ? (input.value ?? null) : null,
+      quantityUnitLabel:
+        input.status === 'completed' &&
+        input.unit === 'quantity' &&
+        (activeHabit.data.goalConfig.trackingType === 'quantityPerSession' ||
+          activeHabit.data.goalConfig.trackingType === 'totalQuantityPerPeriod')
+          ? activeHabit.data.goalConfig.unitLabel
+          : null,
       notes: input.note ?? null,
       createdAt:
         existingIndex >= 0 ? state.habitLogs[existingIndex].createdAt : new Date().toISOString(),
@@ -219,7 +226,9 @@ export const mockHabitsRepository: HabitsRepository = {
     }
 
     const state = getMockState()
-    state.habitLogs = state.habitLogs.filter((log) => !(log.userId === userId && log.habitId === habitId))
+    state.habitLogs = state.habitLogs.filter(
+      (log) => !(log.userId === userId && log.habitId === habitId),
+    )
     return ok(null)
   },
 

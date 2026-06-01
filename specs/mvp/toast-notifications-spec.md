@@ -13,7 +13,8 @@ Habit Compass uses a global toast system for brief feedback after user actions.
 
 ## Usage Rules
 
-- Use success toasts for completed items and successful save, archive, reactivate, delete, and reset actions.
+- Use success toasts for completed tasks and recurrent-task occurrences, and for successful save, archive, reactivate, delete, and reset actions.
+- Do not show success toasts for habit day log changes in Items. The updated day state/color is sufficient feedback.
 - Use a generic localized error toast when an item mutation fails.
 - Do not expose raw repository or technical error messages to users.
 - Keep form validation inline.

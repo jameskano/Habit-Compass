@@ -56,7 +56,9 @@ describe('mock repositories', () => {
     if (listResult.ok) {
       expect(listResult.data.find((category) => category.id === 'category-health')).toBeDefined()
       expect(
-        listResult.data.every((category) => category.iconName.length > 0 && category.colorToken.length > 0),
+        listResult.data.every(
+          (category) => category.iconName.length > 0 && category.colorToken.length > 0,
+        ),
       ).toBe(true)
     }
   })
@@ -79,10 +81,14 @@ describe('mock repositories', () => {
     })
 
     expect(result.ok).toBe(true)
-    expect(getMockState().categories.find((category) => category.id === 'category-health')).toBeUndefined()
+    expect(
+      getMockState().categories.find((category) => category.id === 'category-health'),
+    ).toBeUndefined()
     expect(getMockState().habits.find((habit) => habit.id === 'habit-move')?.categoryId).toBeNull()
     expect(getMockState().tasks.find((task) => task.id === 'task-groceries')?.categoryId).toBeNull()
-    expect(getMockState().recurrentTasks.find((task) => task.id === 'recurrent-plants')?.categoryId).toBeNull()
+    expect(
+      getMockState().recurrentTasks.find((task) => task.id === 'recurrent-plants')?.categoryId,
+    ).toBeNull()
   })
 
   it('stores completed and skipped habit logs, removes them, and resets only after confirmation', async () => {
@@ -116,6 +122,58 @@ describe('mock repositories', () => {
       confirmed: true,
     })
     expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
+  })
+
+  it('preserves raw habit amounts and configured quantity labels while rejecting negatives', async () => {
+    const habit = getMockState().habits.find((entry) => entry.id === 'habit-read')
+    if (!habit) {
+      throw new Error('Expected read habit fixture')
+    }
+
+    habit.trackingType = 'repetitionsPerPeriod'
+    habit.goalConfig = {
+      trackingType: 'repetitionsPerPeriod',
+      period: 'week',
+      targetRepetitions: 100,
+    }
+    habit.scheduleRule = { kind: 'flexiblePeriod' }
+
+    const repetitions = await mockHabitsRepository.upsertLog({
+      userId: mockData.currentUserId,
+      habitId: habit.id,
+      logDate: mockData.today,
+      status: 'completed',
+      unit: 'repetitions',
+      value: 140,
+    })
+    expect(repetitions.ok && repetitions.data.repetitions).toBe(140)
+
+    habit.trackingType = 'quantityPerSession'
+    habit.goalConfig = {
+      trackingType: 'quantityPerSession',
+      targetQuantity: 10,
+      unitLabel: 'pages',
+    }
+    const quantity = await mockHabitsRepository.upsertLog({
+      userId: mockData.currentUserId,
+      habitId: habit.id,
+      logDate: mockData.today,
+      status: 'completed',
+      unit: 'quantity',
+      value: 18,
+    })
+    expect(quantity.ok && quantity.data.quantity).toBe(18)
+    expect(quantity.ok && quantity.data.quantityUnitLabel).toBe('pages')
+
+    const negative = await mockHabitsRepository.upsertLog({
+      userId: mockData.currentUserId,
+      habitId: habit.id,
+      logDate: mockData.today,
+      status: 'completed',
+      unit: 'quantity',
+      value: -1,
+    })
+    expect(negative.ok).toBe(false)
   })
 
   it('records archive intervals, restores them, and blocks archived habit mutations', async () => {

@@ -61,6 +61,12 @@ export type {
 export { deriveHabitDayState } from './logic/habitDayState'
 export type { HabitDayState } from './logic/habitDayState'
 export {
+  getHabitAmountInputMetadata,
+  getHabitLogAmount,
+  isHabitDayActionable,
+} from './logic/habitDayInteractions'
+export type { HabitAmountInputMetadata, HabitAmountUnit } from './logic/habitDayInteractions'
+export {
   doesHabitInactivityOverlapRange,
   filterEligibleHabitLogs,
   isDateWithinHabitInactivityPeriod,

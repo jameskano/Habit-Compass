@@ -143,7 +143,7 @@ manual skip sets status skipped
 - Header title with compass icon and search/archive layout is consistent.
 - Archive button receives its primary active styling in archive mode.
 - Empty states are understandable.
-- Transient action confirmations appear as global top-center toasts and can be dismissed.
+- Transient non-day-action confirmations appear as global top-center toasts and can be dismissed.
 - Mutation failures show a localized generic error toast without exposing technical details.
 
 ## Habits
@@ -164,6 +164,12 @@ manual skip sets status skipped
 - Missed appears amber/yellow, not red.
 - Today pending appears neutral gray.
 - Calendar cells render pending today without listing it in the legend.
+- Habit card-strip and calendar day cells use the same tap and long-press actions.
+- Binary tap stores standard completion and clears completed/skipped logs.
+- Numeric tap opens amount entry with the existing raw value, allows values above target, rejects negatives, and clears on `0`.
+- Future, explicitly not-scheduled, inactive, and archived-habit days do not open completion actions.
+- Active flexible-period dates remain actionable even when an empty day renders as not scheduled.
+- Habit day changes do not show success toasts.
 - Archived calendar dates render as neutral inactive dates and remain excluded after reactivation.
 - Archived habit options expose Calendar, Stats, Reactivate, and Delete only.
 - Reactivating a habit returns it to the active list without counting archived dates.

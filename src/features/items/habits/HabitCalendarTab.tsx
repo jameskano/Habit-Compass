@@ -19,6 +19,9 @@ import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
 import { habitDayStateClasses } from '@/styles/itemVisualTokens'
 
+import { HabitDayCell } from './HabitDayCell'
+import { HabitDayInteractions } from './HabitDayInteractions'
+
 type HabitCalendarTabProps = {
   habit: Habit
   logs: HabitLog[]
@@ -81,45 +84,67 @@ export function HabitCalendarTab({ habit, logs, today }: HabitCalendarTabProps) 
 
       <section
         className="rounded-[1.4rem] border border-border/70 bg-card/90 p-3 sm:p-4"
-        aria-label={intl.formatMessage({ id: 'page.items.habit.calendar.label' }, { habit: habit.title })}
+        aria-label={intl.formatMessage(
+          { id: 'page.items.habit.calendar.label' },
+          { habit: habit.title },
+        )}
       >
         <div className="mx-auto mb-2 grid w-full max-w-[20.5rem] grid-cols-7 gap-2">
           {weekDayLabels.map((label, index) => (
-            <span key={`${index}:${label}`} className="py-1 text-center text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <span
+              key={`${index}:${label}`}
+              className="py-1 text-center text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+            >
               {label}
             </span>
           ))}
         </div>
-        <ol className="mx-auto grid w-full max-w-[20.5rem] grid-cols-7 gap-2">
-          {days.map((day) => {
-            const date = toISODate(day)
-            const state = deriveHabitDayState({ habit, logs, date, today })
-            const stateLabel = intl.formatMessage({ id: `page.items.habit.dayState.${state}` })
-            const outsideMonth = day.getMonth() !== visibleMonth.getMonth()
+        <HabitDayInteractions habit={habit} logs={logs} today={today}>
+          {({ isDayDisabled, onLongPressDay, onTapDay }) => (
+            <ol className="mx-auto grid w-full max-w-[20.5rem] grid-cols-7 gap-2">
+              {days.map((day) => {
+                const date = toISODate(day)
+                const state = deriveHabitDayState({ habit, logs, date, today })
+                const stateLabel = intl.formatMessage({ id: `page.items.habit.dayState.${state}` })
+                const outsideMonth = day.getMonth() !== visibleMonth.getMonth()
 
-            return (
-              <li key={date} className="min-w-0">
-                <span
-                  aria-label={`${date}: ${stateLabel}`}
-                  title={stateLabel}
-                  className={cn(
-                    'mx-auto flex aspect-square w-full max-w-10 items-center justify-center rounded-xl border text-sm transition-colors',
-                    habitDayStateClasses[state],
-                    outsideMonth && 'opacity-35',
-                  )}
-                >
-                  {day.getDate()}
-                </span>
-              </li>
-            )
-          })}
-        </ol>
+                return (
+                  <li key={date} className="min-w-0">
+                    <HabitDayCell
+                      label={`${date}: ${stateLabel}`}
+                      title={stateLabel}
+                      disabled={isDayDisabled(date)}
+                      onTap={() => onTapDay(date)}
+                      onLongPress={() => onLongPressDay(date)}
+                      className={cn(
+                        'mx-auto flex aspect-square w-full max-w-10 items-center justify-center rounded-xl border text-sm transition-colors disabled:cursor-not-allowed',
+                        habitDayStateClasses[state],
+                        outsideMonth && 'opacity-35',
+                      )}
+                    >
+                      {day.getDate()}
+                    </HabitDayCell>
+                  </li>
+                )
+              })}
+            </ol>
+          )}
+        </HabitDayInteractions>
       </section>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-2" aria-label={intl.formatMessage({ id: 'page.items.habit.calendar.legend' })}>
+      <div
+        className="flex flex-wrap gap-x-4 gap-y-2"
+        aria-label={intl.formatMessage({ id: 'page.items.habit.calendar.legend' })}
+      >
         {legendStates.map((state) => (
-          <span key={state} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={cn('h-3 w-3 rounded-full border', habitDayStateClasses[state])} aria-hidden="true" />
+          <span
+            key={state}
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <span
+              className={cn('h-3 w-3 rounded-full border', habitDayStateClasses[state])}
+              aria-hidden="true"
+            />
             {intl.formatMessage({ id: `page.items.habit.dayState.${state}` })}
           </span>
         ))}

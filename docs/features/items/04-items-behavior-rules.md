@@ -101,6 +101,41 @@ Quantity/time habits derive completion levels from logged values:
 
 Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 
+### Habit day interaction rules
+
+Habit day cells in the Items card strip and habit calendar use the same behavior:
+
+- Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are disabled.
+- Active `flexiblePeriod` dates inside the habit date window remain actionable even when empty cells render as `not_scheduled`.
+- Successful day changes use the updated day state/color as feedback without a toast.
+- Failed day mutations keep the generic localized error toast.
+
+Binary habit tap behavior:
+
+- Empty, missed, and pending scheduled days store standard completion.
+- Completed and skipped days clear the log.
+- Configured minimum remains available only through long press.
+
+Binary habit long press behavior:
+
+- Without minimum: Complete, Skip day, Mark as undone.
+- With minimum: Complete standard, Complete minimum, Skip day, Mark as undone.
+
+`timesPerPeriod` remains an event-count goal:
+
+- Tap toggles one standard completion event for the selected date.
+- Long press offers Complete, Skip day, and Clear log.
+- Period-level minimum/standard result remains derived from completion-event count.
+
+Repetition, time, and quantity habit behavior:
+
+- Tap opens amount entry, including from skipped days.
+- Long press offers Input quantity/time, Skip day, and Clear log.
+- Existing numeric values prefill the input.
+- Values above the standard target are preserved as raw progress.
+- Negative values are invalid.
+- Saving `0` clears the selected date log.
+
 ## Habit missed days
 
 Missed habit days are not stored.
