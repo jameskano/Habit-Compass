@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useEffect, useState } from 'react'
 import { IntlProvider } from 'react-intl'
 
+import { Toaster } from '@/shared/ui/sonner'
+
 import { useAppPreferencesStore } from '../state/appPreferencesStore'
 import { getMessages } from '../../i18n/messages'
 import { SentryProvider } from './SentryProvider'
@@ -23,7 +25,10 @@ export function AppProviders({ children }: AppProvidersProps) {
     <SentryProvider>
       <IntlProvider locale={locale} messages={getMessages(locale)}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </QueryClientProvider>
       </IntlProvider>
     </SentryProvider>

@@ -143,6 +143,8 @@ manual skip sets status skipped
 - Header title with compass icon and search/archive layout is consistent.
 - Archive button receives its primary active styling in archive mode.
 - Empty states are understandable.
+- Transient action confirmations appear as global top-center toasts and can be dismissed.
+- Mutation failures show a localized generic error toast without exposing technical details.
 
 ## Habits
 
@@ -174,6 +176,7 @@ manual skip sets status skipped
 - Tap opens edit.
 - Swipe left edits.
 - Swipe right completes.
+- Completing a task shows a success toast.
 - Completed task gets completedAt.
 - Completed and archived are not treated as the same internally.
 - Delete requires confirmation.
@@ -185,6 +188,7 @@ manual skip sets status skipped
 - Tap opens edit.
 - Swipe left edits.
 - Swipe right only completes due/overdue occurrence.
+- Completing an occurrence shows a success toast.
 - Carry-forward true keeps overdue pending.
 - Carry-forward false can mark missed after date passes.
 - Skipped is manual.

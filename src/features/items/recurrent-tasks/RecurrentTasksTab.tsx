@@ -1,6 +1,5 @@
 import { formatISO } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { useIntl } from 'react-intl'
 
 import {
   deriveRecurrentOccurrences,
@@ -13,6 +12,7 @@ import {
   useReorderRecurrentTasksMutation,
 } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { useRecurrentTaskOccurrencesQuery } from '@/features/recurrent-tasks/hooks/useRecurrentTaskOccurrencesQuery'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
@@ -26,11 +26,6 @@ type RecurrentTasksTabProps = {
   tasks: RecurrentTask[]
   showingArchived: boolean
   onToggleArchive: () => void
-}
-
-type Announcement = {
-  id: string
-  title: string
 }
 
 const priorityRank = { low: 0, medium: 1, high: 2 } as const
@@ -49,7 +44,7 @@ export function RecurrentTasksTab({
   showingArchived,
   onToggleArchive,
 }: RecurrentTasksTabProps) {
-  const intl = useIntl()
+  const appToast = useAppToast()
   const today = todayAsISODate()
   const from = tasks.reduce(
     (earliest, task) => (task.startsOn < earliest ? task.startsOn : earliest),
@@ -62,7 +57,6 @@ export function RecurrentTasksTab({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
   const revealCards = useItemWaterfallReveal(
     !categoriesQuery.isLoading && !occurrencesQuery.isLoading,
   )
@@ -114,7 +108,9 @@ export function RecurrentTasksTab({
     return <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
   }
 
-  const categoriesById = new Map((categoriesQuery.data ?? []).map((category) => [category.id, category]))
+  const categoriesById = new Map(
+    (categoriesQuery.data ?? []).map((category) => [category.id, category]),
+  )
 
   const completeOccurrence = (
     task: RecurrentTask,
@@ -127,8 +123,7 @@ export function RecurrentTasksTab({
     completionMutation.mutate(
       { recurrentTaskId: task.id, occurrenceDate: occurrence.scheduledForDate },
       {
-        onSuccess: () =>
-          setAnnouncement({ id: 'page.items.recurrent.completedFeedback', title: task.title }),
+        onSuccess: () => appToast.success({ id: 'page.items.recurrent.completedFeedback' }),
       },
     )
   }
@@ -159,11 +154,6 @@ export function RecurrentTasksTab({
         onSearchChange={setSearchText}
         onToggleArchive={onToggleArchive}
       />
-      {announcement ? (
-        <p role="status" className="rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-          {intl.formatMessage({ id: announcement.id }, { task: announcement.title })}
-        </p>
-      ) : null}
       {displayTasks.length === 0 ? (
         <EmptyState
           titleId={
@@ -209,11 +199,11 @@ export function RecurrentTasksTab({
           onClose={() => setSelectedTaskId(null)}
           onArchived={(task) => {
             setSelectedTaskId(null)
-            setAnnouncement({ id: 'page.items.recurrent.archived', title: task.title })
+            appToast.success({ id: 'page.items.recurrent.archived', values: { task: task.title } })
           }}
           onDeleted={(task) => {
             setSelectedTaskId(null)
-            setAnnouncement({ id: 'page.items.recurrent.deleted', title: task.title })
+            appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
           }}
         />
       ) : null}

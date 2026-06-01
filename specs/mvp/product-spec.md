@@ -36,6 +36,13 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Swipe-enabled item cards follow horizontal pointer movement and return smoothly after release.
 - Reduced-motion preferences disable decorative reveal and title animations and remove animated swipe return.
 
+## Transient Notifications
+
+- Brief user-action feedback uses the global toast system.
+- Item completion, save, archive, reactivate, delete, and reset confirmations use success toasts.
+- Mutation failures use localized generic error toasts without exposing technical details.
+- Form validation and persistent query failures remain inline.
+
 ## Later
 
 - Bulk actions.

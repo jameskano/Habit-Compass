@@ -19,18 +19,13 @@ import {
   useDeleteRecurrentTaskMutation,
   useUpdateRecurrentTaskMutation,
 } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import { itemPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
@@ -71,14 +66,17 @@ const RecurrentEditValuesSchema = z
       context.addIssue({ code: 'custom', path: ['endsOn'], message: 'invalidEndDate' })
     }
     if (
-      (values.recurrenceKind === 'specificDaysOfWeek' ||
-        values.recurrenceKind === 'everyXWeeks') &&
+      (values.recurrenceKind === 'specificDaysOfWeek' || values.recurrenceKind === 'everyXWeeks') &&
       values.daysOfWeek.length === 0
     ) {
       context.addIssue({ code: 'custom', path: ['daysOfWeek'], message: 'chooseDay' })
     }
     if (values.recurrenceKind === 'customFutureRule' && !values.customDescription.trim()) {
-      context.addIssue({ code: 'custom', path: ['customDescription'], message: 'descriptionRequired' })
+      context.addIssue({
+        code: 'custom',
+        path: ['customDescription'],
+        message: 'descriptionRequired',
+      })
     }
   })
 
@@ -91,9 +89,7 @@ function valuesForTask(task: RecurrentTask): RecurrentEditValues {
     title: task.title,
     recurrenceKind: rule.kind,
     daysOfWeek:
-      rule.kind === 'specificDaysOfWeek' || rule.kind === 'everyXWeeks'
-        ? [...rule.daysOfWeek]
-        : [],
+      rule.kind === 'specificDaysOfWeek' || rule.kind === 'everyXWeeks' ? [...rule.daysOfWeek] : [],
     intervalDays: rule.kind === 'everyXDays' ? rule.intervalDays : 2,
     intervalWeeks: rule.kind === 'everyXWeeks' ? rule.intervalWeeks : 1,
     intervalMonths: rule.kind === 'everyXMonths' ? rule.intervalMonths : 1,
@@ -146,13 +142,12 @@ export function RecurrentTaskEdit({
   onDeleted,
 }: RecurrentTaskEditProps) {
   const intl = useIntl()
+  const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [saved, setSaved] = useState(false)
   const updateMutation = useUpdateRecurrentTaskMutation()
   const archiveMutation = useArchiveRecurrentTaskMutation()
   const deleteMutation = useDeleteRecurrentTaskMutation()
-  const pending =
-    updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
+  const pending = updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
   const form = useForm<RecurrentEditValues>({
     resolver: zodResolver(RecurrentEditValuesSchema),
     defaultValues: valuesForTask(task),
@@ -195,7 +190,7 @@ export function RecurrentTaskEdit({
           archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
           return
         }
-        setSaved(true)
+        appToast.success({ id: 'page.items.recurrent.edit.saved' })
       },
     })
   })
@@ -222,10 +217,7 @@ export function RecurrentTaskEdit({
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <DialogTitle className="sr-only">
-              {intl.formatMessage(
-                { id: 'page.items.recurrent.edit.title' },
-                { task: task.title },
-              )}
+              {intl.formatMessage({ id: 'page.items.recurrent.edit.title' }, { task: task.title })}
             </DialogTitle>
             <h2 className="text-xl font-semibold tracking-tight">{task.title}</h2>
             <Button
@@ -239,11 +231,6 @@ export function RecurrentTaskEdit({
           </div>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-          {saved ? (
-            <p role="status" className="mb-4 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-              {intl.formatMessage({ id: 'page.items.recurrent.edit.saved' })}
-            </p>
-          ) : null}
           <form
             aria-label={intl.formatMessage({ id: 'page.items.recurrent.edit.form' })}
             onSubmit={submit}
@@ -267,10 +254,14 @@ export function RecurrentTaskEdit({
                 <Select
                   value={recurrenceKind}
                   onValueChange={(value) =>
-                    form.setValue('recurrenceKind', value as RecurrentEditValues['recurrenceKind'], {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      'recurrenceKind',
+                      value as RecurrentEditValues['recurrenceKind'],
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }
                 >
                   <SelectTrigger
@@ -280,11 +271,11 @@ export function RecurrentTaskEdit({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                  {recurrenceKinds.map((kind) => (
-                    <SelectItem key={kind} value={kind}>
-                      {intl.formatMessage({ id: `page.items.recurrent.edit.schedule.${kind}` })}
-                    </SelectItem>
-                  ))}
+                    {recurrenceKinds.map((kind) => (
+                      <SelectItem key={kind} value={kind}>
+                        {intl.formatMessage({ id: `page.items.recurrent.edit.schedule.${kind}` })}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </label>
@@ -321,24 +312,45 @@ export function RecurrentTaskEdit({
               {recurrenceKind === 'everyXDays' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalDays' })}
-                  <Input type="number" min={1} {...form.register('intervalDays', { valueAsNumber: true })} className={inputClass} />
+                  <Input
+                    type="number"
+                    min={1}
+                    {...form.register('intervalDays', { valueAsNumber: true })}
+                    className={inputClass}
+                  />
                 </label>
               ) : null}
               {recurrenceKind === 'everyXWeeks' ? (
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalWeeks' })}
-                  <Input type="number" min={1} {...form.register('intervalWeeks', { valueAsNumber: true })} className={inputClass} />
+                  <Input
+                    type="number"
+                    min={1}
+                    {...form.register('intervalWeeks', { valueAsNumber: true })}
+                    className={inputClass}
+                  />
                 </label>
               ) : null}
               {recurrenceKind === 'everyXMonths' ? (
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block text-sm font-medium">
                     {intl.formatMessage({ id: 'page.items.recurrent.edit.intervalMonths' })}
-                    <Input type="number" min={1} {...form.register('intervalMonths', { valueAsNumber: true })} className={inputClass} />
+                    <Input
+                      type="number"
+                      min={1}
+                      {...form.register('intervalMonths', { valueAsNumber: true })}
+                      className={inputClass}
+                    />
                   </label>
                   <label className="block text-sm font-medium">
                     {intl.formatMessage({ id: 'page.items.recurrent.edit.dayOfMonth' })}
-                    <Input type="number" min={1} max={31} {...form.register('dayOfMonth', { valueAsNumber: true })} className={inputClass} />
+                    <Input
+                      type="number"
+                      min={1}
+                      max={31}
+                      {...form.register('dayOfMonth', { valueAsNumber: true })}
+                      className={inputClass}
+                    />
                   </label>
                 </div>
               ) : null}
@@ -361,11 +373,11 @@ export function RecurrentTaskEdit({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                    {dayOfWeekValues.map((day) => (
-                      <SelectItem key={day} value={String(day)}>
-                        {intl.formatMessage({ id: `page.items.weekday.long.${day}` })}
-                      </SelectItem>
-                    ))}
+                      {dayOfWeekValues.map((day) => (
+                        <SelectItem key={day} value={String(day)}>
+                          {intl.formatMessage({ id: `page.items.weekday.long.${day}` })}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </label>
@@ -387,11 +399,10 @@ export function RecurrentTaskEdit({
                   <Select
                     value={form.watch('categoryId') || noCategoryValue}
                     onValueChange={(value) =>
-                      form.setValue(
-                        'categoryId',
-                        value === noCategoryValue ? '' : value,
-                        { shouldDirty: true, shouldValidate: true },
-                      )
+                      form.setValue('categoryId', value === noCategoryValue ? '' : value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
                     }
                   >
                     <SelectTrigger
@@ -404,13 +415,13 @@ export function RecurrentTaskEdit({
                       <SelectItem value={noCategoryValue}>
                         {intl.formatMessage({ id: 'page.items.recurrent.category.none' })}
                       </SelectItem>
-                    {categories
-                      .filter((category) => category.lifecycleStatus === 'active')
-                      .map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      {categories
+                        .filter((category) => category.lifecycleStatus === 'active')
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </label>
@@ -432,11 +443,11 @@ export function RecurrentTaskEdit({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                    {itemPriorities.map((priority) => (
-                      <SelectItem key={priority} value={priority}>
-                        {intl.formatMessage({ id: `page.items.priority.${priority}` })}
-                      </SelectItem>
-                    ))}
+                      {itemPriorities.map((priority) => (
+                        <SelectItem key={priority} value={priority}>
+                          {intl.formatMessage({ id: `page.items.priority.${priority}` })}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </label>
@@ -465,9 +476,7 @@ export function RecurrentTaskEdit({
               </div>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.recurrent.edit.carryForward' })}</span>
-                <Checkbox
-                  {...form.register('carryForward')}
-                />
+                <Checkbox {...form.register('carryForward')} />
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.recurrent.edit.notes' })}
@@ -486,9 +495,7 @@ export function RecurrentTaskEdit({
               variant="ghost"
               className="w-full justify-start gap-3 border border-border/60 bg-card/75"
               disabled={task.lifecycleStatus === 'archived' || pending}
-              onClick={() =>
-                archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
-              }
+              onClick={() => archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })}
             >
               <Archive aria-hidden="true" size={17} />
               {intl.formatMessage({ id: 'page.items.recurrent.action.archive' })}
@@ -509,9 +516,7 @@ export function RecurrentTaskEdit({
           open={confirmingDelete}
           pending={pending}
           onCancel={() => setConfirmingDelete(false)}
-          onConfirm={() =>
-            deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
-          }
+          onConfirm={() => deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })}
         />
       </DialogContent>
     </Dialog>

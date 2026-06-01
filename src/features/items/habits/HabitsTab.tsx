@@ -1,12 +1,15 @@
 import { formatISO, parseISO, subDays } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useArchiveHabitMutation } from '@/features/habits/hooks/useArchiveHabitMutation'
-import { useReorderHabitsMutation, useRestoreHabitMutation } from '@/features/habits/hooks/useHabitDetailMutations'
+import {
+  useReorderHabitsMutation,
+  useRestoreHabitMutation,
+} from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
@@ -24,11 +27,6 @@ type HabitsTabProps = {
   onToggleArchive: () => void
 }
 
-type Announcement = {
-  id: string
-  title: string
-}
-
 type DetailSelection = {
   habitId: string
   tab: HabitDetailTab
@@ -40,13 +38,10 @@ function asISODate(value: Date) {
 }
 
 export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTabProps) {
-  const intl = useIntl()
+  const appToast = useAppToast()
   const today = asISODate(new Date())
   const dates = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, index) =>
-        asISODate(subDays(parseISO(today), 6 - index)),
-      ),
+    () => Array.from({ length: 7 }, (_, index) => asISODate(subDays(parseISO(today), 6 - index))),
     [today],
   )
   const from = dates[0]
@@ -59,11 +54,9 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
   const revealCards = useItemWaterfallReveal(!categoriesQuery.isLoading && !logsQuery.isLoading)
   const selectedHabit = habits.find((habit) => habit.id === selectedHabitId) ?? null
-  const detailHabit =
-    habits.find((habit) => habit.id === detailSelection?.habitId) ?? null
+  const detailHabit = habits.find((habit) => habit.id === detailSelection?.habitId) ?? null
 
   if (categoriesQuery.isLoading || logsQuery.isLoading) {
     return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
@@ -73,7 +66,9 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
     return <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
   }
 
-  const categoriesById = new Map((categoriesQuery.data ?? []).map((category) => [category.id, category]))
+  const categoriesById = new Map(
+    (categoriesQuery.data ?? []).map((category) => [category.id, category]),
+  )
   const orderedHabits = [...habits].sort((left, right) => left.order - right.order)
   const normalizedSearch = searchText.trim().toLowerCase()
   const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
@@ -93,39 +88,41 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
     reorderMutation.mutate(orderedHabitIds)
   }
 
-  const openDetail = (
-    habit: Habit,
-    tab: HabitDetailTab,
-    dangerAction?: HabitDangerAction,
-  ) => {
+  const openDetail = (habit: Habit, tab: HabitDetailTab, dangerAction?: HabitDangerAction) => {
     setSelectedHabitId(null)
     setDetailSelection({ habitId: habit.id, tab, dangerAction })
   }
 
   const archiveHabit = (habit: Habit) => {
-    archiveMutation.mutate({ habitId: habit.id, date: today }, {
-      onSuccess: () => {
-        setSelectedHabitId(null)
-        setDetailSelection(null)
-        setAnnouncement({ id: 'page.items.habit.archived', title: habit.title })
+    archiveMutation.mutate(
+      { habitId: habit.id, date: today },
+      {
+        onSuccess: () => {
+          setSelectedHabitId(null)
+          setDetailSelection(null)
+          appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
+        },
       },
-    })
+    )
   }
 
   const reactivateHabit = (habit: Habit) => {
-    restoreMutation.mutate({ habitId: habit.id, date: today }, {
-      onSuccess: () => {
-        setSelectedHabitId(null)
-        setDetailSelection(null)
-        setAnnouncement({ id: 'page.items.habit.reactivated', title: habit.title })
+    restoreMutation.mutate(
+      { habitId: habit.id, date: today },
+      {
+        onSuccess: () => {
+          setSelectedHabitId(null)
+          setDetailSelection(null)
+          appToast.success({ id: 'page.items.habit.reactivated', values: { habit: habit.title } })
+        },
       },
-    })
+    )
   }
 
   const handleArchived = (habit: Habit) => {
     setSelectedHabitId(null)
     setDetailSelection(null)
-    setAnnouncement({ id: 'page.items.habit.archived', title: habit.title })
+    appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
   }
 
   return (
@@ -144,14 +141,6 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
         onSearchChange={setSearchText}
         onToggleArchive={onToggleArchive}
       />
-      {announcement ? (
-        <p
-          role="status"
-          className="rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground"
-        >
-          {intl.formatMessage({ id: announcement.id }, { habit: announcement.title })}
-        </p>
-      ) : null}
       {visibleHabits.length === 0 ? (
         <EmptyState
           titleId={
@@ -215,7 +204,7 @@ export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTa
           onArchived={handleArchived}
           onDeleted={(habit) => {
             setDetailSelection(null)
-            setAnnouncement({ id: 'page.items.habit.deleted', title: habit.title })
+            appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
           }}
         />
       ) : null}

@@ -5,6 +5,7 @@ import { useIntl } from 'react-intl'
 import { sortTasks, type Task } from '@/domain/tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useCompleteTaskMutation } from '@/features/tasks/hooks/useTaskMutations'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 
@@ -18,11 +19,6 @@ type TasksTabProps = {
   tasks: Task[]
   showingArchived: boolean
   onToggleArchive: () => void
-}
-
-type Announcement = {
-  id: string
-  title: string
 }
 
 type TaskDateGroup = {
@@ -41,7 +37,11 @@ function addDays(date: Date, days: number) {
   return nextDate
 }
 
-function formatDateHeader(intl: ReturnType<typeof useIntl>, date: ISODateString, today: ISODateString) {
+function formatDateHeader(
+  intl: ReturnType<typeof useIntl>,
+  date: ISODateString,
+  today: ISODateString,
+) {
   const tomorrow = formatISO(addDays(new Date(`${today}T00:00:00`), 1), {
     representation: 'date',
   })
@@ -98,13 +98,13 @@ function groupTasksByDate(
 
 export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabProps) {
   const intl = useIntl()
+  const appToast = useAppToast()
   const today = todayAsISODate()
   const categoriesQuery = useCategoriesQuery()
   const completeMutation = useCompleteTaskMutation()
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchText, setSearchText] = useState('')
   const [categoryId, setCategoryId] = useState('')
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null)
   const revealCards = useItemWaterfallReveal(!categoriesQuery.isLoading)
   const hasFilters = searchText.trim().length > 0 || categoryId.length > 0
   const categoriesById = new Map(
@@ -135,9 +135,13 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
   }
 
   const completeTask = (task: Task) => {
-    completeMutation.mutate({ taskId: task.id }, {
-      onSuccess: () => setAnnouncement(null),
-    })
+    completeMutation.mutate(
+      { taskId: task.id },
+      {
+        onSuccess: () =>
+          appToast.success({ id: 'page.items.task.completed', values: { task: task.title } }),
+      },
+    )
   }
   let waterfallIndex = 0
 
@@ -157,11 +161,6 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
         onSearchChange={setSearchText}
         onToggleArchive={onToggleArchive}
       />
-      {announcement ? (
-        <p role="status" className="rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-          {intl.formatMessage({ id: announcement.id }, { task: announcement.title })}
-        </p>
-      ) : null}
       {visibleTasks.length === 0 ? (
         <EmptyState
           titleId={
@@ -214,11 +213,11 @@ export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabPr
           onClose={() => setSelectedTaskId(null)}
           onArchived={(task) => {
             setSelectedTaskId(null)
-            setAnnouncement({ id: 'page.items.task.archived', title: task.title })
+            appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
           }}
           onDeleted={(task) => {
             setSelectedTaskId(null)
-            setAnnouncement({ id: 'page.items.task.deleted', title: task.title })
+            appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
           }}
         />
       ) : null}

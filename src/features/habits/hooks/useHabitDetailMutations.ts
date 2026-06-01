@@ -3,11 +3,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { UpdateHabitInput } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
 export function useUpdateHabitMutation() {
   const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
 
   return useMutation({
     mutationFn: async (input: UpdateHabitInput) =>
@@ -15,11 +17,13 @@ export function useUpdateHabitMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['habits'] })
     },
+    onError: mutationError,
   })
 }
 
 export function useRestoreHabitMutation(userId = MOCK_USER_ID) {
   const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
 
   return useMutation({
     mutationFn: async ({ habitId, date }: { habitId: EntityId; date: ISODateString }) =>
@@ -27,11 +31,13 @@ export function useRestoreHabitMutation(userId = MOCK_USER_ID) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['habits'] })
     },
+    onError: mutationError,
   })
 }
 
 export function useResetHabitProgressMutation(userId = MOCK_USER_ID) {
   const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
 
   return useMutation({
     mutationFn: async (habitId: EntityId) =>
@@ -39,11 +45,13 @@ export function useResetHabitProgressMutation(userId = MOCK_USER_ID) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] })
     },
+    onError: mutationError,
   })
 }
 
 export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
   const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
 
   return useMutation({
     mutationFn: async (habitId: EntityId) =>
@@ -54,11 +62,13 @@ export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
         queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] }),
       ])
     },
+    onError: mutationError,
   })
 }
 
 export function useReorderHabitsMutation(userId = MOCK_USER_ID) {
   const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
 
   return useMutation({
     mutationFn: async (orderedHabitIds: EntityId[]) =>
@@ -66,5 +76,6 @@ export function useReorderHabitsMutation(userId = MOCK_USER_ID) {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['habits', userId] })
     },
+    onError: mutationError,
   })
 }

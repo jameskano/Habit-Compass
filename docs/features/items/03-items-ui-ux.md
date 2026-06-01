@@ -6,6 +6,8 @@ Keep the feature clean, calm, and practical.
 
 Avoid visual overload. The Items section should feel like a management area, not a complex analytics dashboard.
 
+Brief confirmations for completion, save, archive, reactivate, delete, and reset actions use the global top-center toast system. Keep form validation and persistent loading/error states inline.
+
 ## Items page
 
 The Items page contains three tabs:
@@ -69,16 +71,16 @@ Priority visual should be subtle.
 
 Use semantic visual states:
 
-| Day state | UI treatment |
-|---|---|
-| completed_standard | stronger green |
-| completed_minimum | lighter green |
-| progress_logged | soft blue |
-| today_pending | neutral gray/outline |
-| missed | soft amber/yellow |
-| skipped | muted gray/slate |
-| not_scheduled | empty/very subtle neutral |
-| future | disabled/very muted |
+| Day state          | UI treatment              |
+| ------------------ | ------------------------- |
+| completed_standard | stronger green            |
+| completed_minimum  | lighter green             |
+| progress_logged    | soft blue                 |
+| today_pending      | neutral gray/outline      |
+| missed             | soft amber/yellow         |
+| skipped            | muted gray/slate          |
+| not_scheduled      | empty/very subtle neutral |
+| future             | disabled/very muted       |
 
 Avoid red for missed habits. Amber communicates attention without feeling punishing.
 

@@ -11,6 +11,7 @@ import {
   useUpdateHabitMutation,
 } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -48,12 +49,12 @@ export function HabitDetail({
   onDeleted,
 }: HabitDetailProps) {
   const intl = useIntl()
+  const appToast = useAppToast()
   const [activeTab, setActiveTab] = useState(initialTab)
   const [confirmation, setConfirmation] = useState<HabitDangerAction | null>(
     initialDangerAction ?? null,
   )
   const initialDangerActionRef = useRef<HabitDangerAction | undefined>(initialDangerAction)
-  const [noticeId, setNoticeId] = useState<string | null>(null)
   const logsQuery = useHabitLogsRangeQuery({ from: habit.startsOn, to: today })
   const updateMutation = useUpdateHabitMutation()
   const archiveMutation = useArchiveHabitMutation()
@@ -65,14 +66,16 @@ export function HabitDetail({
     resetMutation.isPending ||
     deleteMutation.isPending
   const detailTabs =
-    habit.lifecycleStatus === 'archived' ? activeDetailTabs.filter((tab) => tab !== 'edit') : activeDetailTabs
+    habit.lifecycleStatus === 'archived'
+      ? activeDetailTabs.filter((tab) => tab !== 'edit')
+      : activeDetailTabs
 
   const confirmAction = () => {
     if (confirmation === 'reset') {
       resetMutation.mutate(habit.id, {
         onSuccess: () => {
           setConfirmation(null)
-          setNoticeId('page.items.habit.detail.progressReset')
+          appToast.success({ id: 'page.items.habit.detail.progressReset' })
         },
       })
     } else if (confirmation === 'delete') {
@@ -93,7 +96,10 @@ export function HabitDetail({
     >
       <DialogContent
         aria-modal="true"
-        aria-label={intl.formatMessage({ id: 'page.items.habit.detail.title' }, { habit: habit.title })}
+        aria-label={intl.formatMessage(
+          { id: 'page.items.habit.detail.title' },
+          { habit: habit.title },
+        )}
         aria-describedby={undefined}
         className="fixed inset-0 left-0 top-0 z-50 flex h-full w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 bg-background p-0 shadow-2xl md:left-1/2 md:top-1/2 md:max-h-[min(92vh,54rem)] md:max-w-3xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-[1.7rem] md:border md:border-border/75"
       >
@@ -131,11 +137,6 @@ export function HabitDetail({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-          {noticeId ? (
-            <p role="status" className="mb-4 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-              {intl.formatMessage({ id: noticeId })}
-            </p>
-          ) : null}
           {logsQuery.isLoading ? (
             <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
           ) : logsQuery.isError ? (
@@ -146,38 +147,44 @@ export function HabitDetail({
                 value={activeTab}
                 aria-label={intl.formatMessage({ id: `page.items.habit.detail.tab.${activeTab}` })}
               >
-              {activeTab === 'calendar' ? (
-                <HabitCalendarTab habit={habit} logs={logsQuery.data ?? []} today={today} />
-              ) : activeTab === 'stats' ? (
-                <HabitStatsTab habit={habit} logs={logsQuery.data ?? []} today={today} />
-              ) : (
-                <HabitEditTab
-                  habit={habit}
-                  categories={categories}
-                  today={today}
-                  archived={habit.lifecycleStatus === 'archived'}
-                  pending={pending}
-                  onSave={(input, options) =>
-                    updateMutation.mutate(input, {
-                      onSuccess: () => {
-                        if (options?.archiveAfterSave) {
-                          archiveMutation.mutate({ habitId: habit.id, date: today }, {
-                            onSuccess: () => onArchived(habit),
-                          })
-                          return
-                        }
-                        setNoticeId('page.items.habit.detail.saved')
-                      },
-                    })
-                  }
-                  onArchive={() =>
-                    archiveMutation.mutate({ habitId: habit.id, date: today }, {
-                      onSuccess: () => onArchived(habit),
-                    })
-                  }
-                  onRequestDangerAction={setConfirmation}
-                />
-              )}
+                {activeTab === 'calendar' ? (
+                  <HabitCalendarTab habit={habit} logs={logsQuery.data ?? []} today={today} />
+                ) : activeTab === 'stats' ? (
+                  <HabitStatsTab habit={habit} logs={logsQuery.data ?? []} today={today} />
+                ) : (
+                  <HabitEditTab
+                    habit={habit}
+                    categories={categories}
+                    today={today}
+                    archived={habit.lifecycleStatus === 'archived'}
+                    pending={pending}
+                    onSave={(input, options) =>
+                      updateMutation.mutate(input, {
+                        onSuccess: () => {
+                          if (options?.archiveAfterSave) {
+                            archiveMutation.mutate(
+                              { habitId: habit.id, date: today },
+                              {
+                                onSuccess: () => onArchived(habit),
+                              },
+                            )
+                            return
+                          }
+                          appToast.success({ id: 'page.items.habit.detail.saved' })
+                        },
+                      })
+                    }
+                    onArchive={() =>
+                      archiveMutation.mutate(
+                        { habitId: habit.id, date: today },
+                        {
+                          onSuccess: () => onArchived(habit),
+                        },
+                      )
+                    }
+                    onRequestDangerAction={setConfirmation}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           )}

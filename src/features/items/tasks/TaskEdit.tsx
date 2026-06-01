@@ -12,18 +12,13 @@ import {
   useDeleteTaskMutation,
   useUpdateTaskMutation,
 } from '@/features/tasks/hooks/useTaskMutations'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 import { itemPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
@@ -63,21 +58,14 @@ function valuesForTask(task: Task): TaskEditValues {
   }
 }
 
-export function TaskEdit({
-  task,
-  categories,
-  onClose,
-  onArchived,
-  onDeleted,
-}: TaskEditProps) {
+export function TaskEdit({ task, categories, onClose, onArchived, onDeleted }: TaskEditProps) {
   const intl = useIntl()
+  const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [saved, setSaved] = useState(false)
   const updateMutation = useUpdateTaskMutation()
   const archiveMutation = useArchiveTaskMutation()
   const deleteMutation = useDeleteTaskMutation()
-  const pending =
-    updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
+  const pending = updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
   const form = useForm<TaskEditValues>({
     resolver: zodResolver(TaskEditValuesSchema),
     defaultValues: valuesForTask(task),
@@ -100,7 +88,9 @@ export function TaskEdit({
       notes: values.notes.trim() || null,
     }
 
-    updateMutation.mutate(input, { onSuccess: () => setSaved(true) })
+    updateMutation.mutate(input, {
+      onSuccess: () => appToast.success({ id: 'page.items.task.edit.saved' }),
+    })
   })
 
   const inputClass = 'mt-1.5 rounded-xl border-border/75'
@@ -136,11 +126,6 @@ export function TaskEdit({
           </div>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
-          {saved ? (
-            <p role="status" className="mb-4 rounded-xl border border-border/70 bg-muted/55 px-4 py-3 text-sm text-muted-foreground">
-              {intl.formatMessage({ id: 'page.items.task.edit.saved' })}
-            </p>
-          ) : null}
           <form
             aria-label={intl.formatMessage({ id: 'page.items.task.edit.form' })}
             onSubmit={submit}
@@ -174,11 +159,10 @@ export function TaskEdit({
                   <Select
                     value={form.watch('categoryId') || noCategoryValue}
                     onValueChange={(value) =>
-                      form.setValue(
-                        'categoryId',
-                        value === noCategoryValue ? '' : value,
-                        { shouldDirty: true, shouldValidate: true },
-                      )
+                      form.setValue('categoryId', value === noCategoryValue ? '' : value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
                     }
                   >
                     <SelectTrigger
@@ -191,13 +175,13 @@ export function TaskEdit({
                       <SelectItem value={noCategoryValue}>
                         {intl.formatMessage({ id: 'page.items.task.category.none' })}
                       </SelectItem>
-                    {categories
-                      .filter((category) => category.lifecycleStatus === 'active')
-                      .map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      {categories
+                        .filter((category) => category.lifecycleStatus === 'active')
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </label>
@@ -219,11 +203,11 @@ export function TaskEdit({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                    {itemPriorities.map((priority) => (
-                      <SelectItem key={priority} value={priority}>
-                        {intl.formatMessage({ id: `page.items.priority.${priority}` })}
-                      </SelectItem>
-                    ))}
+                      {itemPriorities.map((priority) => (
+                        <SelectItem key={priority} value={priority}>
+                          {intl.formatMessage({ id: `page.items.priority.${priority}` })}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </label>
@@ -234,9 +218,7 @@ export function TaskEdit({
               </label>
               <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
                 <span>{intl.formatMessage({ id: 'page.items.task.edit.carryForward' })}</span>
-                <Checkbox
-                  {...form.register('carryForward')}
-                />
+                <Checkbox {...form.register('carryForward')} />
               </label>
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.task.edit.notes' })}
@@ -256,9 +238,7 @@ export function TaskEdit({
               variant="ghost"
               className="w-full justify-start gap-3 border border-border/60 bg-card/75"
               disabled={task.lifecycleStatus === 'archived' || pending}
-              onClick={() =>
-                archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
-              }
+              onClick={() => archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })}
             >
               <Archive aria-hidden="true" size={17} />
               {intl.formatMessage({ id: 'page.items.task.action.archive' })}
@@ -279,9 +259,7 @@ export function TaskEdit({
           open={confirmingDelete}
           pending={pending}
           onCancel={() => setConfirmingDelete(false)}
-          onConfirm={() =>
-            deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
-          }
+          onConfirm={() => deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })}
         />
       </DialogContent>
     </Dialog>
