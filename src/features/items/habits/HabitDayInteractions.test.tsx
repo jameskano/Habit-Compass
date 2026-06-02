@@ -1,10 +1,11 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { formatISO, parseISO, subDays } from 'date-fns'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Habit, HabitLog } from '@/domain/habits'
 import { AppProviders } from '@/app/providers/AppProviders'
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { getMockState, mockData, resetMockState } from '@/integrations/mock/mockData'
 import type { ISODateString } from '@/shared/types'
 import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
@@ -41,7 +42,7 @@ function renderStrip(habit: Habit, logs: HabitLog[] = getLogs(habit.id)) {
 }
 
 function getTodayButton(habit: Habit) {
-  const strip = screen.getByRole('list', { name: `Last 7 days for ${habit.title}` })
+  const strip = screen.getByRole('list', { name: (name) => name.includes(habit.title) })
   return within(strip).getAllByRole('button').at(-1) as HTMLButtonElement
 }
 
@@ -56,6 +57,7 @@ async function longPress(button: HTMLElement) {
 describe('habit day Items interactions', () => {
   beforeEach(() => {
     resetMockState()
+    useAppPreferencesStore.setState({ locale: 'en' })
   })
 
   it('taps an empty binary day to complete standard without a success toast', async () => {
@@ -237,6 +239,70 @@ describe('habit day Items interactions', () => {
     await user.type(input, '-1')
     await user.click(screen.getByRole('button', { name: 'Save amount' }))
     expect(await screen.findByText('Amount cannot be negative.')).toBeInTheDocument()
+  })
+
+  it('does not bubble day-sheet menu or backdrop clicks to the parent card', async () => {
+    const user = userEvent.setup()
+    const parentClick = vi.fn()
+    const binaryHabit = getHabit('habit-water')
+    const view = renderWithAppProviders(
+      <div onClick={parentClick}>
+        <HabitDayStrip habit={binaryHabit} logs={[]} dates={recentDates()} today={mockData.today} />
+      </div>,
+    )
+
+    await longPress(getTodayButton(binaryHabit))
+    await user.click(screen.getByRole('menuitem', { name: 'Skip day' }))
+    await waitFor(() => {
+      expect(
+        getLogs(binaryHabit.id).find((log) => log.loggedForDate === mockData.today),
+      ).toMatchObject({
+        status: 'skipped',
+      })
+    })
+    expect(parentClick).not.toHaveBeenCalled()
+
+    const numericHabit = getHabit('habit-read')
+    view.rerender(
+      <AppProviders>
+        <div onClick={parentClick}>
+          <HabitDayStrip
+            habit={numericHabit}
+            logs={getLogs(numericHabit.id)}
+            dates={recentDates()}
+            today={mockData.today}
+          />
+        </div>
+      </AppProviders>,
+    )
+    await user.click(getTodayButton(numericHabit))
+    await user.click(screen.getByLabelText('Amount'))
+    expect(parentClick).not.toHaveBeenCalled()
+
+    const overlay = document.querySelector('[data-sheet-overlay]')
+    if (!(overlay instanceof HTMLElement)) {
+      throw new Error('Expected sheet overlay')
+    }
+    await user.click(overlay)
+    await waitFor(() => expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument())
+    expect(parentClick).not.toHaveBeenCalled()
+  })
+
+  it('shows the habit title and locale-formatted date in the completion sheet', async () => {
+    useAppPreferencesStore.setState({ locale: 'es' })
+    const habit = getHabit('habit-water')
+    renderStrip(habit)
+
+    await longPress(getTodayButton(habit))
+
+    const formattedDate = new Intl.DateTimeFormat('es', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'UTC',
+    }).format(parseISO(mockData.today))
+    expect(screen.getByRole('heading', { name: habit.title })).toBeInTheDocument()
+    expect(screen.getByText(formattedDate)).toBeInTheDocument()
   })
 
   it('disables explicit not-scheduled strip days and uses the same tap behavior in calendar', async () => {

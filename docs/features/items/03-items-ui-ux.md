@@ -107,6 +107,8 @@ Bottom options menu order:
 
 Place a thin divider between Edit and Archive. The sheet opens with a short upward motion and fade, while honoring reduced-motion preferences.
 
+Tapping the backdrop closes habit option sheets, habit completion sheets, and task editor dialogs when no nested confirmation is active.
+
 Destructive actions require confirmation.
 
 Reset progress should preserve the habit but clear logs/history after confirmation, unless the project has a soft reset policy already defined.

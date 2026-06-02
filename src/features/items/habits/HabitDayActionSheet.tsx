@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { parseISO } from 'date-fns'
 import { useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
@@ -27,6 +28,14 @@ export function HabitDayActionSheet({
   onClose,
 }: HabitDayActionSheetProps) {
   const intl = useIntl()
+  const formattedDate = date
+    ? intl.formatDate(parseISO(date), {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        timeZone: 'UTC',
+      })
+    : ''
 
   return (
     <Sheet
@@ -40,16 +49,14 @@ export function HabitDayActionSheet({
       <SheetContent
         aria-label={intl.formatMessage(
           { id: 'page.items.habit.dayAction.title' },
-          { habit: habit.title, date },
+          { habit: habit.title, date: formattedDate },
         )}
         aria-describedby={undefined}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <SheetTitle className="text-xl font-semibold">
-              {intl.formatMessage({ id: 'page.items.habit.dayAction.heading' })}
-            </SheetTitle>
-            <p className="mt-1 text-sm text-muted-foreground">{date}</p>
+            <SheetTitle className="text-xl font-semibold">{habit.title}</SheetTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{formattedDate}</p>
           </div>
           <Button
             variant="ghost"

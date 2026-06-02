@@ -11,12 +11,23 @@ const DialogClose = DialogPrimitive.Close
 const DialogOverlay = forwardRef<
   ElementRef<typeof DialogPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn('fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm', className)}
-    {...props}
-  />
+>(({ className, onClick, onPointerDown, ...props }, ref) => (
+  <DialogPrimitive.Close asChild>
+    <DialogPrimitive.Overlay
+      ref={ref}
+      data-dialog-overlay
+      onPointerDown={(event) => {
+        onPointerDown?.(event)
+        event.stopPropagation()
+      }}
+      onClick={(event) => {
+        onClick?.(event)
+        event.stopPropagation()
+      }}
+      className={cn('fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm', className)}
+      {...props}
+    />
+  </DialogPrimitive.Close>
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
@@ -41,14 +52,21 @@ const DialogContent = forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => (
-  <div className={cn('border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6', className)} {...props} />
+  <div
+    className={cn('border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6', className)}
+    {...props}
+  />
 )
 
 const DialogTitle = forwardRef<
   ElementRef<typeof DialogPrimitive.Title>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn('text-xl font-semibold tracking-tight', className)} {...props} />
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn('text-xl font-semibold tracking-tight', className)}
+    {...props}
+  />
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
