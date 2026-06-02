@@ -31,6 +31,12 @@ import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
 import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
+import {
+  isValidDaysOfMonthInput,
+  isValidDaysOfYearInput,
+  parseDaysOfMonthInput,
+  parseDaysOfYearInput,
+} from '../components/scheduleInputParsers'
 import { RecurrentTaskConfirmationDialog } from './RecurrentTaskConfirmationDialog'
 
 type RecurrentTaskEditProps = {
@@ -47,6 +53,8 @@ const RecurrentEditValuesSchema = z
     title: z.string().trim().min(1),
     recurrenceKind: z.enum(recurrenceKinds),
     daysOfWeek: z.array(z.number().int().min(0).max(6)),
+    daysOfMonth: z.string(),
+    daysOfYear: z.string(),
     intervalDays: z.number().int().positive(),
     intervalWeeks: z.number().int().positive(),
     intervalMonths: z.number().int().positive(),
@@ -71,6 +79,18 @@ const RecurrentEditValuesSchema = z
     ) {
       context.addIssue({ code: 'custom', path: ['daysOfWeek'], message: 'chooseDay' })
     }
+    if (
+      values.recurrenceKind === 'specificDaysOfMonth' &&
+      !isValidDaysOfMonthInput(values.daysOfMonth)
+    ) {
+      context.addIssue({ code: 'custom', path: ['daysOfMonth'], message: 'chooseDay' })
+    }
+    if (
+      values.recurrenceKind === 'specificDaysOfYear' &&
+      !isValidDaysOfYearInput(values.daysOfYear)
+    ) {
+      context.addIssue({ code: 'custom', path: ['daysOfYear'], message: 'chooseDay' })
+    }
     if (values.recurrenceKind === 'customFutureRule' && !values.customDescription.trim()) {
       context.addIssue({
         code: 'custom',
@@ -90,6 +110,11 @@ function valuesForTask(task: RecurrentTask): RecurrentEditValues {
     recurrenceKind: rule.kind,
     daysOfWeek:
       rule.kind === 'specificDaysOfWeek' || rule.kind === 'everyXWeeks' ? [...rule.daysOfWeek] : [],
+    daysOfMonth: rule.kind === 'specificDaysOfMonth' ? rule.daysOfMonth.join(', ') : '1',
+    daysOfYear:
+      rule.kind === 'specificDaysOfYear'
+        ? rule.daysOfYear.map(({ month, day }) => `${month}-${day}`).join(', ')
+        : '1-1',
     intervalDays: rule.kind === 'everyXDays' ? rule.intervalDays : 2,
     intervalWeeks: rule.kind === 'everyXWeeks' ? rule.intervalWeeks : 1,
     intervalMonths: rule.kind === 'everyXMonths' ? rule.intervalMonths : 1,
@@ -112,6 +137,16 @@ function buildRule(values: RecurrentEditValues): RecurrenceRule {
       return { kind: 'daily' }
     case 'specificDaysOfWeek':
       return { kind: 'specificDaysOfWeek', daysOfWeek: values.daysOfWeek as DayOfWeek[] }
+    case 'specificDaysOfMonth':
+      return {
+        kind: 'specificDaysOfMonth',
+        daysOfMonth: parseDaysOfMonthInput(values.daysOfMonth),
+      }
+    case 'specificDaysOfYear':
+      return {
+        kind: 'specificDaysOfYear',
+        daysOfYear: parseDaysOfYearInput(values.daysOfYear),
+      }
     case 'everyXDays':
       return { kind: 'everyXDays', intervalDays: values.intervalDays }
     case 'everyXWeeks':
@@ -308,6 +343,28 @@ export function RecurrentTaskEdit({
                     </span>
                   ) : null}
                 </fieldset>
+              ) : null}
+              {recurrenceKind === 'specificDaysOfMonth' ? (
+                <label className="block text-sm font-medium">
+                  {intl.formatMessage({ id: 'page.items.create.frequency.monthDays' })}
+                  <Input {...form.register('daysOfMonth')} className={inputClass} />
+                  {form.formState.errors.daysOfMonth ? (
+                    <span className="mt-1 block text-xs text-amber-700">
+                      {intl.formatMessage({ id: 'page.items.recurrent.edit.error.days' })}
+                    </span>
+                  ) : null}
+                </label>
+              ) : null}
+              {recurrenceKind === 'specificDaysOfYear' ? (
+                <label className="block text-sm font-medium">
+                  {intl.formatMessage({ id: 'page.items.create.frequency.yearDays' })}
+                  <Input {...form.register('daysOfYear')} className={inputClass} />
+                  {form.formState.errors.daysOfYear ? (
+                    <span className="mt-1 block text-xs text-amber-700">
+                      {intl.formatMessage({ id: 'page.items.recurrent.edit.error.days' })}
+                    </span>
+                  ) : null}
+                </label>
               ) : null}
               {recurrenceKind === 'everyXDays' ? (
                 <label className="block text-sm font-medium">

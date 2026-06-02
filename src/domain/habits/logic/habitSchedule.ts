@@ -17,7 +17,11 @@ function differenceInDays(date: ISODateString, anchor: ISODateString) {
 function differenceInMonths(date: ISODateString, anchor: ISODateString) {
   const current = toUtcDate(date)
   const start = toUtcDate(anchor)
-  return (current.getUTCFullYear() - start.getUTCFullYear()) * 12 + current.getUTCMonth() - start.getUTCMonth()
+  return (
+    (current.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+    current.getUTCMonth() -
+    start.getUTCMonth()
+  )
 }
 
 function isWithinScheduleWindow(habit: Habit, date: ISODateString) {
@@ -45,6 +49,14 @@ export function isHabitScheduledOnDate(habit: Habit, date: ISODateString) {
       return true
     case 'specificDaysOfWeek':
       return habit.scheduleRule.daysOfWeek.includes(getUtcWeekday(date))
+    case 'specificDaysOfMonth':
+      return habit.scheduleRule.daysOfMonth.includes(toUtcDate(date).getUTCDate())
+    case 'specificDaysOfYear': {
+      const current = toUtcDate(date)
+      return habit.scheduleRule.daysOfYear.some(
+        ({ month, day }) => current.getUTCMonth() + 1 === month && current.getUTCDate() === day,
+      )
+    }
     case 'everyXDays':
       return elapsedDays % habit.scheduleRule.intervalDays === 0
     case 'everyXWeeks':

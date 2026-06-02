@@ -7,19 +7,22 @@ import {
   ItemEntityFieldsSchema,
   ItemPrioritySchema,
   LifecycleStatusSchema,
+  MonthDaySchema,
 } from '@/shared/types'
 
 import { dayOfWeekValues, recurrenceKinds, recurrentTaskOccurrenceStatuses } from './constants'
 
-export const DayOfWeekSchema = z.union(dayOfWeekValues.map((value) => z.literal(value)) as [
-  z.ZodLiteral<0>,
-  z.ZodLiteral<1>,
-  z.ZodLiteral<2>,
-  z.ZodLiteral<3>,
-  z.ZodLiteral<4>,
-  z.ZodLiteral<5>,
-  z.ZodLiteral<6>,
-])
+export const DayOfWeekSchema = z.union(
+  dayOfWeekValues.map((value) => z.literal(value)) as [
+    z.ZodLiteral<0>,
+    z.ZodLiteral<1>,
+    z.ZodLiteral<2>,
+    z.ZodLiteral<3>,
+    z.ZodLiteral<4>,
+    z.ZodLiteral<5>,
+    z.ZodLiteral<6>,
+  ],
+)
 export const RecurrenceKindSchema = z.enum(recurrenceKinds)
 export const RecurrentTaskOccurrenceStatusSchema = z.enum(recurrentTaskOccurrenceStatuses)
 
@@ -30,6 +33,16 @@ export const DailyRecurrenceRuleSchema = z.object({
 export const SpecificDaysOfWeekRecurrenceRuleSchema = z.object({
   kind: z.literal('specificDaysOfWeek'),
   daysOfWeek: z.array(DayOfWeekSchema).min(1),
+})
+
+export const SpecificDaysOfMonthRecurrenceRuleSchema = z.object({
+  kind: z.literal('specificDaysOfMonth'),
+  daysOfMonth: z.array(z.number().int().min(1).max(31)).min(1),
+})
+
+export const SpecificDaysOfYearRecurrenceRuleSchema = z.object({
+  kind: z.literal('specificDaysOfYear'),
+  daysOfYear: z.array(MonthDaySchema).min(1),
 })
 
 export const EveryXDaysRecurrenceRuleSchema = z.object({
@@ -62,6 +75,8 @@ export const CustomFutureRecurrenceRuleSchema = z.object({
 export const RecurrenceRuleSchema = z.discriminatedUnion('kind', [
   DailyRecurrenceRuleSchema,
   SpecificDaysOfWeekRecurrenceRuleSchema,
+  SpecificDaysOfMonthRecurrenceRuleSchema,
+  SpecificDaysOfYearRecurrenceRuleSchema,
   EveryXDaysRecurrenceRuleSchema,
   EveryXWeeksRecurrenceRuleSchema,
   EveryXMonthsRecurrenceRuleSchema,

@@ -57,6 +57,18 @@ function endOfMonth(date: ISODateString) {
   return toISODate(current)
 }
 
+function startOfYear(date: ISODateString) {
+  const current = toUtcDate(date)
+  current.setUTCMonth(0, 1)
+  return toISODate(current)
+}
+
+function endOfYear(date: ISODateString) {
+  const current = toUtcDate(date)
+  current.setUTCMonth(11, 31)
+  return toISODate(current)
+}
+
 function differenceInDays(date: ISODateString, anchor: ISODateString) {
   return Math.floor((toUtcDate(date).getTime() - toUtcDate(anchor).getTime()) / MS_PER_DAY)
 }
@@ -135,6 +147,10 @@ export function getHabitPeriodBounds(habit: Habit, date: ISODateString) {
     return { periodStart: startOfMonth(date), periodEnd: endOfMonth(date) }
   }
 
+  if (habit.goalConfig.period === 'year') {
+    return { periodStart: startOfYear(date), periodEnd: endOfYear(date) }
+  }
+
   const periodLength = habit.goalConfig.customPeriodDays ?? 1
   const elapsed = Math.max(0, differenceInDays(date, habit.startsOn))
   const offset = elapsed % periodLength
@@ -208,7 +224,9 @@ export function evaluateHabitCompletionForLogs(input: {
   const { habit, date } = input
   const targetScope = getHabitTargetScope(habit)
   const { periodStart, periodEnd } =
-    targetScope === 'period' ? getHabitPeriodBounds(habit, date) : { periodStart: date, periodEnd: date }
+    targetScope === 'period'
+      ? getHabitPeriodBounds(habit, date)
+      : { periodStart: date, periodEnd: date }
   const relevantLogs = input.logs.filter(
     (log) =>
       log.status === 'completed' &&

@@ -27,6 +27,16 @@ Each tab has one control row directly below the tabs:
 
 If the app already has a global floating add button, use it. Do not create a second competing add pattern.
 
+The global creation sheet contains exactly Habit, Task, Recurrent task, and Category. It does not
+show Reflection, Quick capture, or placeholder action text.
+
+Creation flows:
+
+- Habit: completion setup, frequency, details.
+- Task: one dated form.
+- Recurrent task: executable frequency, details.
+- Category: one compact form.
+
 ---
 
 # Habits tab
@@ -108,6 +118,8 @@ Bottom options menu order:
 Place a thin divider between Edit and Archive. The sheet opens with a short upward motion and fade, while honoring reduced-motion preferences.
 
 Tapping the backdrop closes habit option sheets, habit completion sheets, and task editor dialogs when no nested confirmation is active.
+Closing an open nested dropdown by tapping its trigger again must close only the dropdown, not its
+parent create/edit screen.
 
 Destructive actions require confirmation.
 
@@ -191,6 +203,7 @@ Required:
 
 - Name
 - Frequency
+- Category
 
 Important optional:
 
@@ -217,6 +230,10 @@ Default values:
 - Start date: today
 - Status: active
 - Target: binary, unless the user chooses quantity/time
+
+Item create/edit date controls use the same calendar-icon presentation. Existing habit and
+recurrent-task edit start dates remain read-only, and their end-date controls retain the archive
+warning before opening the picker.
 
 ---
 

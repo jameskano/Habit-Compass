@@ -31,13 +31,13 @@ You can add cached snapshots later for performance, but the cache must not becom
 ## Shared primitive types
 
 ```ts
-export type ItemLifecycleStatus = "active" | "archived";
+export type ItemLifecycleStatus = 'active' | 'archived'
 
-export type HabitPriority = "low" | "medium" | "high" | "essential";
+export type HabitPriority = 'low' | 'medium' | 'high' | 'essential'
 
-export type TaskPriority = "low" | "medium" | "high";
+export type TaskPriority = 'low' | 'medium' | 'high'
 
-export type ItemType = "habit" | "task" | "recurrent_task";
+export type ItemType = 'habit' | 'task' | 'recurrent_task'
 ```
 
 ---
@@ -50,19 +50,19 @@ Do not add a category `type` field.
 
 ```ts
 export interface Category {
-  id: string;
-  userId: string;
+  id: string
+  userId: string
 
-  name: string;
-  iconName: string;
-  colorToken: string;
+  name: string
+  iconName: string
+  colorToken: string
 
-  order: number;
+  order: number
 
-  lifecycleStatus: ItemLifecycleStatus;
+  lifecycleStatus: ItemLifecycleStatus
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string
+  updatedAt: string
 }
 ```
 
@@ -77,16 +77,21 @@ Keep the existing codebase separation:
 
 ```ts
 export type HabitScheduleRule =
-  | { kind: "daily" }
-  | { kind: "specificDaysOfWeek"; daysOfWeek: number[] }
-  | { kind: "everyXDays"; intervalDays: number }
-  | { kind: "everyXWeeks"; intervalWeeks: number; daysOfWeek: number[] }
-  | { kind: "everyXMonths"; intervalMonths: number; dayOfMonth: number }
-  | { kind: "firstWeekdayOfMonth"; weekday: number }
-  | { kind: "flexiblePeriod" };
+  | { kind: 'daily' }
+  | { kind: 'specificDaysOfWeek'; daysOfWeek: number[] }
+  | { kind: 'specificDaysOfMonth'; daysOfMonth: number[] }
+  | { kind: 'specificDaysOfYear'; daysOfYear: { month: number; day: number }[] }
+  | { kind: 'everyXDays'; intervalDays: number }
+  | { kind: 'everyXWeeks'; intervalWeeks: number; daysOfWeek: number[] }
+  | { kind: 'everyXMonths'; intervalMonths: number; dayOfMonth: number }
+  | { kind: 'firstWeekdayOfMonth'; weekday: number }
+  | { kind: 'flexiblePeriod' }
 ```
 
 `flexiblePeriod` is only valid with an existing period-based `goalConfig`. It does not assign missed state to individual empty dates.
+
+Persisted habit categories and task due dates remain nullable for legacy and unlinking
+compatibility. New and edited habits require a category. New and edited tasks require a date.
 
 Frequency-summary utilities should return translation-ready message descriptors; display strings are added with the Items UI.
 
@@ -96,38 +101,38 @@ Frequency-summary utilities should return translation-ready message descriptors;
 
 ```ts
 export interface Habit {
-  id: string;
-  userId: string;
+  id: string
+  userId: string
 
-  title: string;
-  description?: string;
-  notes?: string;
+  title: string
+  description?: string
+  notes?: string
 
-  categoryId?: string;
+  categoryId?: string
 
-  priority: HabitPriority;
-  lifecycleStatus: ItemLifecycleStatus;
+  priority: HabitPriority
+  lifecycleStatus: ItemLifecycleStatus
 
-  scheduleRule: HabitScheduleRule;
-  goalConfig: HabitGoalConfig;
+  scheduleRule: HabitScheduleRule
+  goalConfig: HabitGoalConfig
 
-  startsOn: string; // YYYY-MM-DD
-  endsOn?: string;  // YYYY-MM-DD
+  startsOn: string // YYYY-MM-DD
+  endsOn?: string // YYYY-MM-DD
 
-  order: number;
+  order: number
 
-  createdAt: string;
-  updatedAt: string;
-  archivedAt?: string;
-  inactivityPeriods: HabitInactivityPeriod[];
+  createdAt: string
+  updatedAt: string
+  archivedAt?: string
+  inactivityPeriods: HabitInactivityPeriod[]
 }
 ```
 
 ```ts
 export interface HabitInactivityPeriod {
-  reason: "archived" | "paused";
-  startsOn: string;  // YYYY-MM-DD, inclusive
-  resumesOn?: string; // YYYY-MM-DD, exclusive
+  reason: 'archived' | 'paused'
+  startsOn: string // YYYY-MM-DD, inclusive
+  resumesOn?: string // YYYY-MM-DD, exclusive
 }
 ```
 
@@ -138,10 +143,10 @@ Archive uses `reason = "archived"` in MVP. `paused` is reserved for a future hab
 Completion levels for MVP are limited to minimum and standard.
 Standard completion always exists. Minimum completion is optional and is only valid when configured for that habit.
 For binary habits, the configured minimum is an optional text definition on the binary goal config.
-For numeric habits, the configured minimum is the relevant numeric minimum target and must be lower than the standard target.
+For numeric habits, the configured minimum is the relevant numeric minimum target and must not exceed the standard target.
 
 ```ts
-export type HabitCompletionLevel = "minimum" | "standard";
+export type HabitCompletionLevel = 'minimum' | 'standard'
 ```
 
 ### Habit completion log
@@ -151,25 +156,25 @@ Store completed and skipped dates.
 Do not store missed dates for habits. Missed days are derived from the schedule.
 
 ```ts
-export type HabitLogStatus = "completed" | "skipped";
+export type HabitLogStatus = 'completed' | 'skipped'
 
 export interface HabitCompletionLog {
-  id: string;
-  habitId: string;
-  userId: string;
+  id: string
+  habitId: string
+  userId: string
 
-  date: string; // YYYY-MM-DD
+  date: string // YYYY-MM-DD
 
-  status: HabitLogStatus;
+  status: HabitLogStatus
 
-  level?: HabitCompletionLevel;
+  level?: HabitCompletionLevel
 
-  amount?: number;
-  unit?: HabitTargetUnit;
-  customUnit?: string;
+  amount?: number
+  unit?: HabitTargetUnit
+  customUnit?: string
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string
+  updatedAt: string
 }
 ```
 
@@ -181,15 +186,15 @@ Habit day states are derived for the calendar and last-7-days UI.
 
 ```ts
 export type HabitDayState =
-  | "completed_minimum"
-  | "completed_standard"
-  | "progress_logged"
-  | "today_pending"
-  | "missed"
-  | "skipped"
-  | "not_scheduled"
-  | "inactive"
-  | "future";
+  | 'completed_minimum'
+  | 'completed_standard'
+  | 'progress_logged'
+  | 'today_pending'
+  | 'missed'
+  | 'skipped'
+  | 'not_scheduled'
+  | 'inactive'
+  | 'future'
 ```
 
 Meanings:
@@ -281,12 +286,12 @@ Use two separate ideas:
 
 ```ts
 export interface HabitStats {
-  completionEvents: number; // number of valid completions
-  completionScore: number;  // sum of valid completion scores
-  expectedScore: number;    // denominator after skipped exclusions
-  completionPercentage: number;
-  currentStreak: number;
-  bestStreak: number;
+  completionEvents: number // number of valid completions
+  completionScore: number // sum of valid completion scores
+  expectedScore: number // denominator after skipped exclusions
+  completionPercentage: number
+  currentStreak: number
+  bestStreak: number
 }
 ```
 
@@ -313,29 +318,29 @@ Tasks have no checkbox in the Items list.
 
 ```ts
 export interface Task {
-  id: string;
-  userId: string;
+  id: string
+  userId: string
 
-  title: string;
-  description?: string;
-  notes?: string;
+  title: string
+  description?: string
+  notes?: string
 
-  categoryId?: string;
+  categoryId?: string
 
-  priority: TaskPriority;
-  order: number; // retained for storage compatibility; Items task UI groups by date.
-  lifecycleStatus: ItemLifecycleStatus;
+  priority: TaskPriority
+  order: number // retained for storage compatibility; Items task UI groups by date.
+  lifecycleStatus: ItemLifecycleStatus
 
-  dueDate?: string; // YYYY-MM-DD
+  dueDate?: string // YYYY-MM-DD
 
   // If true, an undone task remains visible in Today after the date passes.
-  carryForward: boolean;
+  carryForward: boolean
 
-  completedAt?: string;
+  completedAt?: string
 
-  createdAt: string;
-  updatedAt: string;
-  archivedAt?: string;
+  createdAt: string
+  updatedAt: string
+  archivedAt?: string
 }
 ```
 
@@ -351,30 +356,30 @@ Completed tasks are not the same as archived tasks:
 
 ```ts
 export interface RecurrentTask {
-  id: string;
-  userId: string;
+  id: string
+  userId: string
 
-  title: string;
-  description?: string;
-  notes?: string;
+  title: string
+  description?: string
+  notes?: string
 
-  categoryId?: string;
+  categoryId?: string
 
-  priority: TaskPriority;
-  lifecycleStatus: ItemLifecycleStatus;
+  priority: TaskPriority
+  lifecycleStatus: ItemLifecycleStatus
 
-  recurrenceRule: RecurrenceRule;
+  recurrenceRule: RecurrenceRule
 
-  startsOn: string; // YYYY-MM-DD
-  endsOn?: string;  // YYYY-MM-DD
+  startsOn: string // YYYY-MM-DD
+  endsOn?: string // YYYY-MM-DD
 
-  carryForward: boolean;
+  carryForward: boolean
 
-  order: number;
+  order: number
 
-  createdAt: string;
-  updatedAt: string;
-  archivedAt?: string;
+  createdAt: string
+  updatedAt: string
+  archivedAt?: string
 }
 ```
 
@@ -383,27 +388,23 @@ export interface RecurrentTask {
 Recurrent tasks need occurrence logs.
 
 ```ts
-export type RecurrentTaskOccurrenceStatus =
-  | "pending"
-  | "completed"
-  | "skipped"
-  | "missed";
+export type RecurrentTaskOccurrenceStatus = 'pending' | 'completed' | 'skipped' | 'missed'
 
 export interface RecurrentTaskOccurrence {
-  id: string;
-  recurrentTaskId: string;
-  userId: string;
+  id: string
+  recurrentTaskId: string
+  userId: string
 
-  scheduledForDate: string; // YYYY-MM-DD
+  scheduledForDate: string // YYYY-MM-DD
 
-  status: RecurrentTaskOccurrenceStatus;
+  status: RecurrentTaskOccurrenceStatus
 
-  completedAt?: string;
-  skippedAt?: string;
-  missedAt?: string;
+  completedAt?: string
+  skippedAt?: string
+  missedAt?: string
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string
+  updatedAt: string
 }
 ```
 
@@ -430,18 +431,18 @@ Only add this if performance becomes an issue.
 
 ```ts
 export interface HabitStatsSnapshot {
-  habitId: string;
+  habitId: string
 
-  totalScheduled: number;
-  totalCompletionEvents: number;
-  totalCompletionScore: number;
+  totalScheduled: number
+  totalCompletionEvents: number
+  totalCompletionScore: number
 
-  completionPercentage: number;
+  completionPercentage: number
 
-  currentStreak: number;
-  bestStreak: number;
+  currentStreak: number
+  bestStreak: number
 
-  updatedAt: string;
+  updatedAt: string
 }
 ```
 

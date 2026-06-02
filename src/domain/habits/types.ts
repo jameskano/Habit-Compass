@@ -5,6 +5,7 @@ import type {
   ISODateTimeString,
   ItemEntityFields,
   LifecycleStatus,
+  MonthDay,
 } from '@/shared/types'
 
 import type {
@@ -39,6 +40,7 @@ export type HabitFrequencyConfig = {
 
 export type BinaryHabitGoalConfig = {
   trackingType: 'binary'
+  standardDescription?: string
   minimumDescription?: string
 }
 
@@ -98,6 +100,16 @@ export type SpecificDaysHabitScheduleRule = {
   daysOfWeek: readonly HabitDayOfWeek[]
 }
 
+export type SpecificDaysOfMonthHabitScheduleRule = {
+  kind: 'specificDaysOfMonth'
+  daysOfMonth: readonly number[]
+}
+
+export type SpecificDaysOfYearHabitScheduleRule = {
+  kind: 'specificDaysOfYear'
+  daysOfYear: readonly MonthDay[]
+}
+
 export type EveryXDaysHabitScheduleRule = {
   kind: 'everyXDays'
   intervalDays: number
@@ -127,6 +139,8 @@ export type FlexiblePeriodHabitScheduleRule = {
 export type HabitScheduleRule =
   | DailyHabitScheduleRule
   | SpecificDaysHabitScheduleRule
+  | SpecificDaysOfMonthHabitScheduleRule
+  | SpecificDaysOfYearHabitScheduleRule
   | EveryXDaysHabitScheduleRule
   | EveryXWeeksHabitScheduleRule
   | EveryXMonthsHabitScheduleRule

@@ -136,6 +136,15 @@ manual skip sets status skipped
 
 # Manual QA checklist
 
+## Creation flows
+
+- Global add sheet shows Habit, Task, Recurrent task, and Category only.
+- Global add sheet does not show Reflection, Quick capture, or placeholder action text.
+- Habit creation has completion, frequency, and details steps and requires category.
+- Task creation is one screen and defaults its required date to today.
+- Recurrent-task creation has frequency and details steps and remains binary-only.
+- Category creation requires name, icon, and color without role/value/type/orientation metadata.
+
 ## Items page
 
 - Three tabs are visible.
@@ -174,6 +183,11 @@ manual skip sets status skipped
 - Archived habit options expose Calendar, Stats, Reactivate, and Delete only.
 - Reactivating a habit returns it to the active list without counting archived dates.
 - Stats month view has all twelve current-year months and year view begins at the habit start year.
+- Re-clicking an open dropdown trigger closes only the dropdown and keeps its parent create/edit
+  screen open.
+- Item create/edit date controls use the shared calendar-icon presentation.
+- Habit edit restores binary standard/minimum text and measurable standard/minimum amounts. An
+  omitted measurable minimum renders blank and clearing it disables minimum completion.
 
 ## Tasks
 

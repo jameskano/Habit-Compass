@@ -1,10 +1,47 @@
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
-import { type ComponentPropsWithoutRef, type ElementRef, forwardRef } from 'react'
+import {
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
+import { registerOpenSelectCloser } from '@/shared/ui/selectOpenRegistry'
 import { cn } from '@/shared/utils/cn'
 
-const Select = SelectPrimitive.Root
+const Select = ({
+  defaultOpen,
+  onOpenChange,
+  open,
+  ...props
+}: ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
+  const resolvedOpen = open ?? internalOpen
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (open === undefined) {
+        setInternalOpen(nextOpen)
+      }
+      onOpenChange?.(nextOpen)
+    },
+    [onOpenChange, open],
+  )
+  const close = useCallback(() => setOpen(false), [setOpen])
+
+  useEffect(() => {
+    if (!resolvedOpen) {
+      return
+    }
+
+    return registerOpenSelectCloser(close)
+  }, [close, resolvedOpen])
+
+  return <SelectPrimitive.Root {...props} open={resolvedOpen} onOpenChange={setOpen} />
+}
+
 const SelectGroup = SelectPrimitive.Group
 const SelectValue = SelectPrimitive.Value
 
@@ -110,4 +147,11 @@ const SelectItem = forwardRef<
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
-export { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue }
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+}

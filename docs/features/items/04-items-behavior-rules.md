@@ -25,6 +25,7 @@ Required:
 
 - Name
 - Frequency
+- Category
 
 Defaults:
 
@@ -32,6 +33,11 @@ Defaults:
 - Status: `active`
 - Start date: today
 - Target: binary
+
+Creation is a three-step flow: completion setup, frequency, then details. Flexible times-per-period
+frequency is available for binary habits only. Explicit schedules support selected weekdays,
+selected month days, selected yearly month/day pairs, anchored day/week/month intervals, and the
+existing first-weekday-of-month pattern.
 
 Optional fields should be visibly separated below the required fields.
 
@@ -97,7 +103,9 @@ Quantity/time habits derive completion levels from logged values:
 - Minimum reached is `completed_minimum` and scores `0.5`.
 - Standard reached is `completed_standard` and scores `1`.
 - Without a configured minimum, below standard is `progress_logged` and standard reached is `completed_standard`.
-- In edit forms, numeric minimum `0` disables minimum; negative values and values equal to or above the standard target are invalid.
+- In edit forms, a blank numeric minimum or numeric minimum `0` disables minimum. An omitted
+  minimum displays as an empty input; negative values and values above the standard target are
+  invalid.
 
 Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 
@@ -221,6 +229,7 @@ For MVP calendar display:
 Required:
 
 - Name
+- Date
 
 Recommended:
 
@@ -231,6 +240,7 @@ Defaults:
 - Priority: `medium`
 - Status: `active`
 - Carry forward: true or false according to product default. Recommended MVP default: true.
+- Date: today
 
 ## Task list
 
@@ -280,6 +290,9 @@ Required:
 
 - Name
 - Frequency
+
+Creation is a two-step flow. Recurrent tasks are binary-only and use executable dated recurrence
+rules; they do not expose flexible times-per-period scheduling.
 
 Defaults:
 

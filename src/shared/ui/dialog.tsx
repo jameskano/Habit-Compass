@@ -1,6 +1,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { type ComponentPropsWithoutRef, type ElementRef, forwardRef } from 'react'
+import { type ComponentPropsWithoutRef, type ElementRef, forwardRef, useRef } from 'react'
 
+import { dismissOpenSelects } from '@/shared/ui/selectOpenRegistry'
 import { cn } from '@/shared/utils/cn'
 
 const Dialog = DialogPrimitive.Root
@@ -11,24 +12,46 @@ const DialogClose = DialogPrimitive.Close
 const DialogOverlay = forwardRef<
   ElementRef<typeof DialogPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, onClick, onPointerDown, ...props }, ref) => (
-  <DialogPrimitive.Close asChild>
-    <DialogPrimitive.Overlay
-      ref={ref}
-      data-dialog-overlay
-      onPointerDown={(event) => {
-        onPointerDown?.(event)
-        event.stopPropagation()
-      }}
-      onClick={(event) => {
-        onClick?.(event)
-        event.stopPropagation()
-      }}
-      className={cn('fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm', className)}
-      {...props}
-    />
-  </DialogPrimitive.Close>
-))
+>(({ className, onClick, onPointerDown, ...props }, ref) => {
+  const pointerStartedOnBackdrop = useRef(false)
+  const nestedPopupWasOpen = useRef(false)
+
+  return (
+    <DialogPrimitive.Close asChild>
+      <DialogPrimitive.Overlay
+        ref={ref}
+        data-dialog-overlay
+        onPointerDown={(event) => {
+          const nestedPopupIsOpen = Boolean(
+            document.querySelector(
+              '[role="listbox"][data-state="open"], [role="menu"][data-state="open"]',
+            ),
+          )
+          nestedPopupWasOpen.current = dismissOpenSelects() || nestedPopupIsOpen
+          pointerStartedOnBackdrop.current =
+            event.target === event.currentTarget && !nestedPopupWasOpen.current
+          onPointerDown?.(event)
+          event.stopPropagation()
+        }}
+        onClick={(event) => {
+          onClick?.(event)
+          if (
+            nestedPopupWasOpen.current ||
+            !pointerStartedOnBackdrop.current ||
+            event.target !== event.currentTarget
+          ) {
+            event.preventDefault()
+          }
+          pointerStartedOnBackdrop.current = false
+          nestedPopupWasOpen.current = false
+          event.stopPropagation()
+        }}
+        className={cn('fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm', className)}
+        {...props}
+      />
+    </DialogPrimitive.Close>
+  )
+})
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = forwardRef<

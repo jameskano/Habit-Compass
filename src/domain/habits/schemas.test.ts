@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { createHabit } from './logic/habitFixtures'
-import { HabitCompletionLevelSchema, HabitGoalConfigSchema, HabitLogStatusSchema, HabitSchema } from './schemas'
+import {
+  HabitCompletionLevelSchema,
+  HabitGoalConfigSchema,
+  HabitLogStatusSchema,
+  HabitSchema,
+} from './schemas'
 
 describe('HabitGoalConfigSchema', () => {
   it('parses a binary goal', () => {
@@ -19,6 +24,22 @@ describe('HabitGoalConfigSchema', () => {
     }
 
     expect(goal.minimumDescription).toBe('Read one page')
+  })
+
+  it('accepts optional binary standard descriptions and numeric minimum equality', () => {
+    expect(
+      HabitGoalConfigSchema.safeParse({
+        trackingType: 'binary',
+        standardDescription: 'Read ten pages',
+      }).success,
+    ).toBe(true)
+    expect(
+      HabitGoalConfigSchema.safeParse({
+        trackingType: 'timePerSession',
+        targetMinutes: 20,
+        minimumMinutes: 20,
+      }).success,
+    ).toBe(true)
   })
 
   it('parses a frequency goal with a custom period', () => {
@@ -53,6 +74,19 @@ describe('HabitGoalConfigSchema', () => {
       }).success,
     ).toBe(false)
   })
+
+  it('enforces times-per-period limits for week, month, and year', () => {
+    for (const [period, targetCount] of [
+      ['week', 8],
+      ['month', 29],
+      ['year', 366],
+    ] as const) {
+      expect(
+        HabitGoalConfigSchema.safeParse({ trackingType: 'timesPerPeriod', period, targetCount })
+          .success,
+      ).toBe(false)
+    }
+  })
 })
 
 describe('habit persisted state enums', () => {
@@ -74,29 +108,47 @@ describe('HabitSchema schedules', () => {
     expect(HabitSchema.safeParse(createHabit({ trackingType: 'binary' })).success).toBe(true)
     expect(
       HabitSchema.safeParse(
-        createHabit({ trackingType: 'binary' }, { description: 'Clarifies the habit.', notes: 'Private note.' }),
+        createHabit(
+          { trackingType: 'binary' },
+          { description: 'Clarifies the habit.', notes: 'Private note.' },
+        ),
       ).success,
     ).toBe(true)
     expect(
-      HabitSchema.safeParse(createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }))
-        .success,
+      HabitSchema.safeParse(
+        createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }),
+      ).success,
     ).toBe(true)
     for (const scheduleRule of [
       { kind: 'specificDaysOfWeek', daysOfWeek: [1, 3] },
+      { kind: 'specificDaysOfMonth', daysOfMonth: [1, 31] },
+      { kind: 'specificDaysOfYear', daysOfYear: [{ month: 2, day: 29 }] },
       { kind: 'everyXDays', intervalDays: 2 },
       { kind: 'everyXWeeks', intervalWeeks: 2, daysOfWeek: [1] },
       { kind: 'everyXMonths', intervalMonths: 1, dayOfMonth: 20 },
       { kind: 'firstWeekdayOfMonth', weekday: 1 },
     ] as const) {
-      expect(HabitSchema.safeParse(createHabit({ trackingType: 'binary' }, { scheduleRule })).success).toBe(true)
+      expect(
+        HabitSchema.safeParse(createHabit({ trackingType: 'binary' }, { scheduleRule })).success,
+      ).toBe(true)
     }
+  })
+
+  it('rejects invalid explicit yearly dates', () => {
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          { trackingType: 'binary' },
+          { scheduleRule: { kind: 'specificDaysOfYear', daysOfYear: [{ month: 2, day: 30 }] } },
+        ),
+      ).success,
+    ).toBe(false)
   })
 
   it('rejects ended-before-start and flexible non-period habits', () => {
     expect(
-      HabitSchema.safeParse(
-        createHabit({ trackingType: 'binary' }, { endsOn: '2025-12-31' }),
-      ).success,
+      HabitSchema.safeParse(createHabit({ trackingType: 'binary' }, { endsOn: '2025-12-31' }))
+        .success,
     ).toBe(false)
     expect(
       HabitSchema.safeParse(
@@ -126,7 +178,11 @@ describe('HabitSchema schedules', () => {
       HabitSchema.safeParse(
         createHabit(
           { trackingType: 'binary' },
-          { inactivityPeriods: [{ reason: 'paused', startsOn: '2026-05-20', resumesOn: '2026-05-20' }] },
+          {
+            inactivityPeriods: [
+              { reason: 'paused', startsOn: '2026-05-20', resumesOn: '2026-05-20' },
+            ],
+          },
         ),
       ).success,
     ).toBe(true)
@@ -134,7 +190,11 @@ describe('HabitSchema schedules', () => {
       HabitSchema.safeParse(
         createHabit(
           { trackingType: 'binary' },
-          { inactivityPeriods: [{ reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-19' }] },
+          {
+            inactivityPeriods: [
+              { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-19' },
+            ],
+          },
         ),
       ).success,
     ).toBe(false)

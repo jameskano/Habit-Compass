@@ -7,10 +7,13 @@ import { z } from 'zod'
 
 import {
   habitDayOfWeekValues,
+  habitPeriods,
   habitScheduleKinds,
+  habitTrackingTypes,
   type Habit,
   type HabitDayOfWeek,
   type HabitGoalConfig,
+  type HabitPeriod,
   type HabitScheduleRule,
   type UpdateHabitInput,
 } from '@/domain/habits'
@@ -24,6 +27,12 @@ import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
 import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
+import {
+  isValidDaysOfMonthInput,
+  isValidDaysOfYearInput,
+  parseDaysOfMonthInput,
+  parseDaysOfYearInput,
+} from '../components/scheduleInputParsers'
 import type { HabitDangerAction } from './HabitConfirmationDialog'
 
 type HabitEditTabProps = {
@@ -46,10 +55,12 @@ const periodBasedTrackingTypes = new Set([
 
 const BaseHabitEditValuesSchema = z.object({
   title: z.string().trim().min(1),
-  categoryId: z.string(),
+  categoryId: z.string().min(1),
   priority: z.enum(habitPriorities),
   scheduleKind: z.enum(habitScheduleKinds),
   daysOfWeek: z.array(z.number().int().min(0).max(6)),
+  daysOfMonth: z.string(),
+  daysOfYear: z.string(),
   intervalDays: z.number().int().positive(),
   intervalWeeks: z.number().int().positive(),
   intervalMonths: z.number().int().positive(),
@@ -59,11 +70,17 @@ const BaseHabitEditValuesSchema = z.object({
   endsOn: z.string(),
   description: z.string(),
   notes: z.string(),
+  trackingType: z.enum(habitTrackingTypes),
+  standardText: z.string(),
+  standardAmount: z.number(),
   minimumText: z.string(),
   minimumAmount: z.number(),
+  unitLabel: z.string(),
+  period: z.enum(habitPeriods),
+  customPeriodDays: z.number(),
 })
 
-function createHabitEditValuesSchema(goalConfig: HabitGoalConfig) {
+function createHabitEditValuesSchema() {
   return BaseHabitEditValuesSchema.superRefine((value, context) => {
     if (value.endsOn && value.endsOn < value.startsOn) {
       context.addIssue({ code: 'custom', path: ['endsOn'], message: 'invalidEndDate' })
@@ -74,21 +91,66 @@ function createHabitEditValuesSchema(goalConfig: HabitGoalConfig) {
     ) {
       context.addIssue({ code: 'custom', path: ['daysOfWeek'], message: 'chooseDay' })
     }
+    if (
+      value.scheduleKind === 'specificDaysOfMonth' &&
+      !isValidDaysOfMonthInput(value.daysOfMonth)
+    ) {
+      context.addIssue({ code: 'custom', path: ['daysOfMonth'], message: 'chooseDay' })
+    }
+    if (value.scheduleKind === 'specificDaysOfYear' && !isValidDaysOfYearInput(value.daysOfYear)) {
+      context.addIssue({ code: 'custom', path: ['daysOfYear'], message: 'chooseDay' })
+    }
 
-    if (goalConfig.trackingType !== 'binary') {
-      const standardTarget = getStandardTarget(goalConfig)
+    if (
+      value.scheduleKind === 'flexiblePeriod' &&
+      !periodBasedTrackingTypes.has(value.trackingType)
+    ) {
+      context.addIssue({ code: 'custom', path: ['scheduleKind'], message: 'invalidSchedule' })
+    }
+
+    if (value.trackingType !== 'binary') {
+      if (value.standardAmount <= 0) {
+        context.addIssue({ code: 'custom', path: ['standardAmount'], message: 'invalidStandard' })
+      }
       if (value.minimumAmount < 0) {
         context.addIssue({
           code: 'custom',
           path: ['minimumAmount'],
           message: 'negativeMinimum',
         })
-      } else if (value.minimumAmount > 0 && value.minimumAmount >= standardTarget) {
+      } else if (value.minimumAmount > 0 && value.minimumAmount > value.standardAmount) {
         context.addIssue({
           code: 'custom',
           path: ['minimumAmount'],
           message: 'minimumAboveStandard',
         })
+      }
+      if (
+        (value.trackingType === 'quantityPerSession' ||
+          value.trackingType === 'totalQuantityPerPeriod') &&
+        !value.unitLabel.trim()
+      ) {
+        context.addIssue({ code: 'custom', path: ['unitLabel'], message: 'unitRequired' })
+      }
+      if (
+        periodBasedTrackingTypes.has(value.trackingType) &&
+        value.period === 'custom' &&
+        value.customPeriodDays < 1
+      ) {
+        context.addIssue({ code: 'custom', path: ['customPeriodDays'], message: 'invalidPeriod' })
+      }
+      if (value.trackingType === 'timesPerPeriod' && value.period !== 'custom') {
+        const maximum =
+          value.period === 'week'
+            ? 7
+            : value.period === 'month'
+              ? 28
+              : value.period === 'year'
+                ? 365
+                : 1
+        if (value.standardAmount > maximum) {
+          context.addIssue({ code: 'custom', path: ['standardAmount'], message: 'invalidStandard' })
+        }
       }
     }
   })
@@ -133,71 +195,87 @@ function getStandardTargetForDisplay(goalConfig: HabitGoalConfig) {
   return goalConfig.trackingType === 'binary' ? null : getStandardTarget(goalConfig)
 }
 
-function getMinimumUnitLabel(goalConfig: HabitGoalConfig) {
-  switch (goalConfig.trackingType) {
+function getMinimumUnitLabel(trackingType: HabitEditValues['trackingType'], unitLabel: string) {
+  switch (trackingType) {
     case 'timePerSession':
     case 'totalTimePerPeriod':
       return 'min'
     case 'quantityPerSession':
     case 'totalQuantityPerPeriod':
-      return goalConfig.unitLabel
+      return unitLabel
     default:
       return ''
   }
 }
 
-function buildGoalConfigWithMinimum(
-  goalConfig: HabitGoalConfig,
-  values: HabitEditValues,
-): HabitGoalConfig {
-  if (goalConfig.trackingType === 'binary') {
+function periodConfig(values: HabitEditValues) {
+  return {
+    period: values.period,
+    ...(values.period === 'custom' ? { customPeriodDays: values.customPeriodDays } : {}),
+  }
+}
+
+function buildGoalConfig(values: HabitEditValues): HabitGoalConfig {
+  if (values.trackingType === 'binary') {
+    const standardDescription = values.standardText.trim()
     const minimumDescription = values.minimumText.trim()
-    if (minimumDescription) {
-      return { ...goalConfig, minimumDescription }
+    return {
+      trackingType: 'binary',
+      ...(standardDescription ? { standardDescription } : {}),
+      ...(minimumDescription ? { minimumDescription } : {}),
     }
-    const withoutMinimum = { ...goalConfig }
-    delete withoutMinimum.minimumDescription
-    return withoutMinimum
   }
 
   const minimum = values.minimumAmount > 0 ? values.minimumAmount : undefined
 
-  switch (goalConfig.trackingType) {
-    case 'timesPerPeriod': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumCount
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumCount: minimum }
-    }
-    case 'repetitionsPerPeriod': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumRepetitions
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumRepetitions: minimum }
-    }
-    case 'timePerSession': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumMinutes
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumMinutes: minimum }
-    }
-    case 'totalTimePerPeriod': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumMinutes
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumMinutes: minimum }
-    }
-    case 'quantityPerSession': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumQuantity
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumQuantity: minimum }
-    }
-    case 'totalQuantityPerPeriod': {
-      const baseGoal = { ...goalConfig }
-      delete baseGoal.minimumQuantity
-      return minimum === undefined ? baseGoal : { ...baseGoal, minimumQuantity: minimum }
-    }
+  switch (values.trackingType) {
+    case 'timesPerPeriod':
+      return {
+        trackingType: 'timesPerPeriod',
+        ...periodConfig(values),
+        targetCount: values.standardAmount,
+        ...(minimum ? { minimumCount: minimum } : {}),
+      }
+    case 'repetitionsPerPeriod':
+      return {
+        trackingType: 'repetitionsPerPeriod',
+        ...periodConfig(values),
+        targetRepetitions: values.standardAmount,
+        ...(minimum ? { minimumRepetitions: minimum } : {}),
+      }
+    case 'timePerSession':
+      return {
+        trackingType: 'timePerSession',
+        targetMinutes: values.standardAmount,
+        ...(minimum ? { minimumMinutes: minimum } : {}),
+      }
+    case 'totalTimePerPeriod':
+      return {
+        trackingType: 'totalTimePerPeriod',
+        ...periodConfig(values),
+        targetMinutes: values.standardAmount,
+        ...(minimum ? { minimumMinutes: minimum } : {}),
+      }
+    case 'quantityPerSession':
+      return {
+        trackingType: 'quantityPerSession',
+        targetQuantity: values.standardAmount,
+        unitLabel: values.unitLabel.trim(),
+        ...(minimum ? { minimumQuantity: minimum } : {}),
+      }
+    case 'totalQuantityPerPeriod':
+      return {
+        trackingType: 'totalQuantityPerPeriod',
+        ...periodConfig(values),
+        targetQuantity: values.standardAmount,
+        unitLabel: values.unitLabel.trim(),
+        ...(minimum ? { minimumQuantity: minimum } : {}),
+      }
   }
 }
 
-function hasConfiguredMinimum(goalConfig: HabitGoalConfig, values: HabitEditValues) {
-  return goalConfig.trackingType === 'binary'
+function hasConfiguredMinimum(values: HabitEditValues) {
+  return values.trackingType === 'binary'
     ? values.minimumText.trim().length > 0
     : values.minimumAmount > 0
 }
@@ -213,6 +291,11 @@ function defaultValuesForHabit(habit: Habit): HabitEditValues {
       schedule.kind === 'specificDaysOfWeek' || schedule.kind === 'everyXWeeks'
         ? [...schedule.daysOfWeek]
         : [],
+    daysOfMonth: schedule.kind === 'specificDaysOfMonth' ? schedule.daysOfMonth.join(', ') : '1',
+    daysOfYear:
+      schedule.kind === 'specificDaysOfYear'
+        ? schedule.daysOfYear.map(({ month, day }) => `${month}-${day}`).join(', ')
+        : '1-1',
     intervalDays: schedule.kind === 'everyXDays' ? schedule.intervalDays : 2,
     intervalWeeks: schedule.kind === 'everyXWeeks' ? schedule.intervalWeeks : 1,
     intervalMonths: schedule.kind === 'everyXMonths' ? schedule.intervalMonths : 1,
@@ -222,9 +305,23 @@ function defaultValuesForHabit(habit: Habit): HabitEditValues {
     endsOn: habit.endsOn ?? '',
     description: habit.description ?? '',
     notes: habit.notes ?? '',
+    trackingType: habit.goalConfig.trackingType,
+    standardText:
+      habit.goalConfig.trackingType === 'binary'
+        ? (habit.goalConfig.standardDescription ?? '')
+        : '',
+    standardAmount: getStandardTargetForDisplay(habit.goalConfig) ?? 1,
     minimumText:
       habit.goalConfig.trackingType === 'binary' ? (habit.goalConfig.minimumDescription ?? '') : '',
     minimumAmount: getMinimumAmount(habit.goalConfig),
+    unitLabel:
+      habit.goalConfig.trackingType === 'quantityPerSession' ||
+      habit.goalConfig.trackingType === 'totalQuantityPerPeriod'
+        ? habit.goalConfig.unitLabel
+        : '',
+    period: 'period' in habit.goalConfig ? habit.goalConfig.period : 'week',
+    customPeriodDays:
+      'customPeriodDays' in habit.goalConfig ? (habit.goalConfig.customPeriodDays ?? 1) : 1,
   }
 }
 
@@ -234,6 +331,16 @@ function buildSchedule(values: HabitEditValues): HabitScheduleRule {
       return { kind: 'daily' }
     case 'specificDaysOfWeek':
       return { kind: 'specificDaysOfWeek', daysOfWeek: values.daysOfWeek as HabitDayOfWeek[] }
+    case 'specificDaysOfMonth':
+      return {
+        kind: 'specificDaysOfMonth',
+        daysOfMonth: parseDaysOfMonthInput(values.daysOfMonth),
+      }
+    case 'specificDaysOfYear':
+      return {
+        kind: 'specificDaysOfYear',
+        daysOfYear: parseDaysOfYearInput(values.daysOfYear),
+      }
     case 'everyXDays':
       return { kind: 'everyXDays', intervalDays: values.intervalDays }
     case 'everyXWeeks':
@@ -266,10 +373,7 @@ export function HabitEditTab({
   onRequestDangerAction,
 }: HabitEditTabProps) {
   const intl = useIntl()
-  const formSchema = useMemo(
-    () => createHabitEditValuesSchema(habit.goalConfig),
-    [habit.goalConfig],
-  )
+  const formSchema = useMemo(() => createHabitEditValuesSchema(), [])
   const form = useForm<HabitEditValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValuesForHabit(habit),
@@ -277,9 +381,11 @@ export function HabitEditTab({
   const scheduleKind = form.watch('scheduleKind')
   const selectedDays = form.watch('daysOfWeek')
   const selectedPriority = form.watch('priority')
-  const supportsFlexible = periodBasedTrackingTypes.has(habit.goalConfig.trackingType)
-  const standardTarget = getStandardTargetForDisplay(habit.goalConfig)
-  const minimumUnitLabel = getMinimumUnitLabel(habit.goalConfig)
+  const selectedTrackingType = form.watch('trackingType')
+  const selectedPeriod = form.watch('period')
+  const supportsFlexible = periodBasedTrackingTypes.has(selectedTrackingType)
+  const standardTarget = form.watch('standardAmount')
+  const minimumUnitLabel = getMinimumUnitLabel(selectedTrackingType, form.watch('unitLabel'))
   const nameInputId = useId()
   const minimumInputId = useId()
 
@@ -298,23 +404,26 @@ export function HabitEditTab({
   }
 
   const submit = form.handleSubmit((values) => {
-    const minimumConfigured = hasConfiguredMinimum(habit.goalConfig, values)
+    const minimumConfigured = hasConfiguredMinimum(values)
 
-    onSave({
-      id: habit.id,
-      title: values.title.trim(),
-      description: values.description.trim() || null,
-      notes: values.notes.trim() || null,
-      categoryId: values.categoryId || null,
-      priority: values.priority,
-      goalConfig: buildGoalConfigWithMinimum(habit.goalConfig, values),
-      scheduleRule: buildSchedule(values),
-      startsOn: values.startsOn,
-      endsOn: values.endsOn || null,
-      usesCompletionLevels: minimumConfigured,
-      enabledCompletionLevels: minimumConfigured ? ['minimum', 'standard'] : ['standard'],
-      defaultCompletionLevel: minimumConfigured ? 'standard' : null,
-    }, { archiveAfterSave: Boolean(values.endsOn && values.endsOn < today) })
+    onSave(
+      {
+        id: habit.id,
+        title: values.title.trim(),
+        description: values.description.trim() || null,
+        notes: values.notes.trim() || null,
+        categoryId: values.categoryId || null,
+        priority: values.priority,
+        goalConfig: buildGoalConfig(values),
+        scheduleRule: buildSchedule(values),
+        startsOn: values.startsOn,
+        endsOn: values.endsOn || null,
+        usesCompletionLevels: minimumConfigured,
+        enabledCompletionLevels: minimumConfigured ? ['minimum', 'standard'] : ['standard'],
+        defaultCompletionLevel: minimumConfigured ? 'standard' : null,
+      },
+      { archiveAfterSave: Boolean(values.endsOn && values.endsOn < today) },
+    )
   })
 
   const inputClass = 'mt-1.5 rounded-xl border-border/75'
@@ -403,6 +512,30 @@ export function HabitEditTab({
                 </span>
               ) : null}
             </fieldset>
+          ) : null}
+
+          {scheduleKind === 'specificDaysOfMonth' ? (
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.frequency.monthDays' })}
+              <Input {...form.register('daysOfMonth')} className={inputClass} />
+              {form.formState.errors.daysOfMonth ? (
+                <span className="mt-1 block text-xs text-amber-700">
+                  {intl.formatMessage({ id: 'page.items.habit.edit.error.days' })}
+                </span>
+              ) : null}
+            </label>
+          ) : null}
+
+          {scheduleKind === 'specificDaysOfYear' ? (
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.frequency.yearDays' })}
+              <Input {...form.register('daysOfYear')} className={inputClass} />
+              {form.formState.errors.daysOfYear ? (
+                <span className="mt-1 block text-xs text-amber-700">
+                  {intl.formatMessage({ id: 'page.items.habit.edit.error.days' })}
+                </span>
+              ) : null}
+            </label>
           ) : null}
 
           {scheduleKind === 'everyXDays' ? (
@@ -515,6 +648,11 @@ export function HabitEditTab({
                     ))}
                 </SelectContent>
               </Select>
+              {form.formState.errors.categoryId ? (
+                <span className="mt-1 block text-xs text-amber-700">
+                  {intl.formatMessage({ id: 'page.items.habit.edit.error.category' })}
+                </span>
+              ) : null}
             </label>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
@@ -543,7 +681,107 @@ export function HabitEditTab({
               </Select>
             </label>
           </div>
-          {habit.goalConfig.trackingType === 'binary' ? (
+          <label className="block text-sm font-medium">
+            {intl.formatMessage({ id: 'page.items.habit.edit.trackingType' })}
+            <Select
+              value={selectedTrackingType}
+              onValueChange={(value) =>
+                form.setValue('trackingType', value as HabitEditValues['trackingType'], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            >
+              <SelectTrigger
+                aria-label={intl.formatMessage({ id: 'page.items.habit.edit.trackingType' })}
+                className={inputClass}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {habitTrackingTypes.map((trackingType) => (
+                  <SelectItem key={trackingType} value={trackingType}>
+                    {intl.formatMessage({
+                      id: `page.items.habit.edit.trackingType.${trackingType}`,
+                    })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+          {selectedTrackingType === 'binary' ? (
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.habit.standardText' })}
+              <Input {...form.register('standardText')} className={inputClass} />
+            </label>
+          ) : (
+            <>
+              {selectedTrackingType === 'quantityPerSession' ||
+              selectedTrackingType === 'totalQuantityPerPeriod' ? (
+                <label className="block text-sm font-medium">
+                  {intl.formatMessage({ id: 'page.items.create.habit.unit' })}
+                  <Input {...form.register('unitLabel')} className={inputClass} />
+                  {form.formState.errors.unitLabel ? (
+                    <span className="mt-1 block text-xs text-amber-700">
+                      {intl.formatMessage({ id: 'page.items.habit.edit.error.unit' })}
+                    </span>
+                  ) : null}
+                </label>
+              ) : null}
+              {periodBasedTrackingTypes.has(selectedTrackingType) ? (
+                <label className="block text-sm font-medium">
+                  {intl.formatMessage({ id: 'page.items.create.frequency.period' })}
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={(value) =>
+                      form.setValue('period', value as HabitPeriod, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger className={inputClass}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {habitPeriods.map((period) => (
+                        <SelectItem key={period} value={period}>
+                          {intl.formatMessage({ id: `items.period.${period}` })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </label>
+              ) : null}
+              {periodBasedTrackingTypes.has(selectedTrackingType) && selectedPeriod === 'custom' ? (
+                <label className="block text-sm font-medium">
+                  {intl.formatMessage({ id: 'page.items.habit.edit.customPeriodDays' })}
+                  <Input
+                    type="number"
+                    min={1}
+                    {...form.register('customPeriodDays', { valueAsNumber: true })}
+                    className={inputClass}
+                  />
+                </label>
+              ) : null}
+              <label className="block text-sm font-medium">
+                {intl.formatMessage({ id: 'page.items.create.habit.standardAmount' })}
+                <Input
+                  type="number"
+                  min={1}
+                  step="any"
+                  {...form.register('standardAmount', { valueAsNumber: true })}
+                  className={inputClass}
+                />
+                {form.formState.errors.standardAmount ? (
+                  <span className="mt-1 block text-xs text-amber-700">
+                    {intl.formatMessage({ id: 'page.items.habit.edit.error.standard' })}
+                  </span>
+                ) : null}
+              </label>
+            </>
+          )}
+          {selectedTrackingType === 'binary' ? (
             <div className="block text-sm font-medium">
               <label htmlFor={minimumInputId}>
                 {intl.formatMessage({ id: 'page.items.habit.edit.minimum' })}
@@ -575,6 +813,7 @@ export function HabitEditTab({
                   {...form.register('minimumAmount', {
                     setValueAs: (value) => (value === '' ? 0 : Number(value)),
                   })}
+                  value={form.watch('minimumAmount') || ''}
                   aria-invalid={Boolean(form.formState.errors.minimumAmount)}
                   className="rounded-xl border-border/75"
                 />
@@ -597,6 +836,12 @@ export function HabitEditTab({
                   )}
                 </span>
               ) : null}
+              <span className="mt-1.5 block text-xs text-muted-foreground">
+                {intl.formatMessage(
+                  { id: 'page.items.habit.edit.minimumNumericHelp' },
+                  { standard: standardTarget },
+                )}
+              </span>
             </div>
           )}
           <label className="block text-sm font-medium">

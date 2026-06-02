@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { TaskCompletionStatus, UpdateTaskInput } from '@/domain/tasks'
+import type { CreateTaskInput, TaskCompletionStatus, UpdateTaskInput } from '@/domain/tasks'
 import { tasksRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
@@ -24,6 +24,17 @@ export function useUpdateTaskMutation(userId = MOCK_USER_ID) {
 
   return useMutation({
     mutationFn: async (input: UpdateTaskInput) => unwrapResult(await tasksRepository.update(input)),
+    onSuccess: invalidateTasks,
+    onError: mutationError,
+  })
+}
+
+export function useCreateTaskMutation(userId = MOCK_USER_ID) {
+  const invalidateTasks = useInvalidateTasks(userId)
+  const { mutationError } = useAppToast()
+
+  return useMutation({
+    mutationFn: async (input: CreateTaskInput) => unwrapResult(await tasksRepository.create(input)),
     onSuccess: invalidateTasks,
     onError: mutationError,
   })

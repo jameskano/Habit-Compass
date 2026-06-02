@@ -8,6 +8,80 @@ test('loads the app shell', async ({ page }) => {
   await expect(page.getByText('Habit Compass')).toHaveCount(0)
 })
 
+test('add menu opens the four focused creation flows', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  const addSheet = page.getByRole('dialog', { name: 'Choose what to create' })
+  await expect(addSheet.getByRole('button', { name: 'Habit' })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: 'Task', exact: true })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: 'Recurrent task' })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: 'Category' })).toBeVisible()
+  await expect(addSheet.getByText('Reflection')).toHaveCount(0)
+  await expect(addSheet.getByText('Quick capture')).toHaveCount(0)
+
+  await addSheet.getByRole('button', { name: 'Habit' }).click()
+  await expect(page.getByRole('heading', { name: 'Create habit' })).toBeVisible()
+  await expect(page.getByText('Step 1 of 3')).toBeVisible()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByText('Step 2 of 3')).toBeVisible()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByText('Step 3 of 3')).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).click()
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: 'Task', exact: true })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Create task' })).toBeVisible()
+  await expect(page.getByRole('checkbox')).toBeChecked()
+  await page.getByRole('button', { name: 'Close' }).click()
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: 'Recurrent task' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Create recurrent task' })).toBeVisible()
+  await expect(page.getByText('Step 1 of 2')).toBeVisible()
+  await expect(page.getByText('Certain times per period')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Close' }).click()
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: 'Category' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Create category' })).toBeVisible()
+})
+
+test('re-clicking an open item-form dropdown keeps its creation screen open', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: 'Task', exact: true })
+    .click()
+
+  const prioritySelect = page.getByRole('combobox', { name: 'Priority' })
+  const triggerBounds = await prioritySelect.boundingBox()
+  if (!triggerBounds) {
+    throw new Error('Expected the priority trigger to be visible.')
+  }
+  await prioritySelect.click()
+  await expect(page.getByRole('listbox')).toBeVisible()
+
+  await page.mouse.click(
+    triggerBounds.x + triggerBounds.width / 2,
+    triggerBounds.y + triggerBounds.height / 2,
+  )
+
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Create task' })).toBeVisible()
+})
+
 test('items header search focuses each active tab filter', async ({ page }) => {
   await page.goto('/items')
 

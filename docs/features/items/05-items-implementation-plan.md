@@ -4,6 +4,10 @@ This document gives Codex or a developer a safe implementation order.
 
 Do not implement everything in one pass.
 
+Creation-flow refinement adds working global add actions without rebuilding the existing Items
+lists. Implement Habit as a three-step wizard, Task as one dated form, Recurrent task as a two-step
+wizard, and Category as one compact form. Keep legacy nullable persistence fallbacks readable.
+
 ## Phase 0 — Inspect current project
 
 Before coding:

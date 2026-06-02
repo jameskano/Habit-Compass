@@ -41,16 +41,26 @@ Users need a habit model that works for the simplest possible case, while still 
   - `totalTimePerPeriod`
   - `quantityPerSession`
   - `totalQuantityPerPeriod`
-- Period-based goals must support `day`, `week`, `month`, and `custom`.
+- Period-based goals must support `day`, `week`, `month`, `year`, and `custom`.
+- Habit creation uses a three-step flow: completion setup, frequency, then details.
+- New and edited habits require a category selection. Persisted `categoryId` remains nullable so
+  legacy habits and habits unlinked by category deletion remain readable until edited.
 - A habit always supports standard completion; minimum completion exists only when configured for that habit.
-- Binary habits use manual minimum/standard completion, with minimum offered only when a non-empty minimum description is configured.
+- Binary habits use manual minimum/standard completion. Standard and minimum descriptions are
+  optional text; minimum is offered only when a non-empty minimum description is configured.
 - Quantity/time habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
+- New measurable habits expose quantity or time tracking with session or period scope. Legacy
+  repetition and custom-period configurations remain editable when encountered.
+- Flexible `X times per period` creation is available only for binary habits, with limits of
+  `7` per week, `28` per month, and `365` per year.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
 - Below-minimum quantity/time logs are visible as progress but score `0` for completion stats.
 - Period-based quantity/time habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
 - Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
 - Habits persist an order value and a schedule rule bounded by a start date and optional end date.
+- Explicit schedules support selected weekdays, selected month days, selected yearly month/day
+  pairs, anchored day/week/month intervals, and the existing first-weekday-of-month pattern.
 - Habits may include a description for item clarification and separate notes for extra user information.
 - Saving an end date before today archives the habit after confirmation in the edit flow.
 - Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.

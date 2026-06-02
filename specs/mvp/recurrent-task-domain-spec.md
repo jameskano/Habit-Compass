@@ -34,6 +34,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Recurrent tasks must support these recurrence concepts:
   - `daily`
   - `specificDaysOfWeek`
+  - `specificDaysOfMonth`
+  - `specificDaysOfYear`
   - `everyXDays`
   - `everyXWeeks`
   - `everyXMonths`
@@ -41,6 +43,9 @@ Users need repeatable tasks that regenerate over time without forcing them into 
   - `customFutureRule`
 - MVP execution logic must only rely on the structured rules above.
 - `customFutureRule` may exist as a descriptive placeholder only.
+- New recurrent-task creation uses a two-step flow: executable frequency, then details.
+- Recurrent tasks remain binary-only and do not expose flexible times-per-period recurrence.
+- `customFutureRule` remains editable for legacy data but is not offered during creation.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
 - Recurrent tasks have priority `low`, `medium`, or `high`, stored order, and carry-forward behavior.
 - Recurrent tasks may include a description for item clarification and separate notes for extra user information.
@@ -87,6 +92,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 ## Edge Cases
 
 - `specificDaysOfWeek` must contain at least one day.
+- `specificDaysOfMonth` and `specificDaysOfYear` must contain at least one valid date.
+- A yearly date uses a validated `{ month, day }` pair. Dates absent from a shorter month are skipped safely.
 - Month-based rules must reject invalid day-of-month values.
 - A future custom rule must not be interpreted as an executable schedule yet.
 

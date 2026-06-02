@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getHabitMinimumTargetValue } from '@/domain/habits'
+
 import { mockCategoriesRepository } from './mockCategoriesRepository'
 import { mockHabitsRepository } from './mockHabitsRepository'
 import { getMockState, mockData, resetMockState } from './mockData'
 import { mockRecurrentTasksRepository } from './mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mockTasksRepository'
+
+function omitFields<T extends object, K extends keyof T>(value: T, ...keys: K[]): Omit<T, K> {
+  const result = { ...value }
+  for (const key of keys) {
+    delete result[key]
+  }
+  return result
+}
 
 describe('mock repositories', () => {
   beforeEach(() => {
@@ -22,6 +32,92 @@ describe('mock repositories', () => {
     if (result.ok) {
       expect(result.data).toHaveLength(3)
     }
+  })
+
+  it('creates habit, task, recurrent-task, and category records with their creation defaults', async () => {
+    const state = getMockState()
+    const habitInput = omitFields(
+      state.habits[0],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+      'inactivityPeriods',
+    )
+    const taskInput = omitFields(
+      state.tasks[1],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+      'carryForward',
+    )
+    const recurrentInput = omitFields(
+      state.recurrentTasks[0],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+      'carryForward',
+    )
+    const categoryInput = omitFields(
+      state.categories[0],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+    )
+
+    const habit = await mockHabitsRepository.create({ ...habitInput, title: 'Created habit' })
+    const createdTask = await mockTasksRepository.create({
+      ...taskInput,
+      title: 'Created task',
+    } as (typeof state.tasks)[number])
+    const recurrent = await mockRecurrentTasksRepository.create({
+      ...recurrentInput,
+      title: 'Created recurrent task',
+    } as (typeof state.recurrentTasks)[number])
+    const category = await mockCategoriesRepository.create({
+      ...categoryInput,
+      name: 'Created category',
+      isDefault: false,
+    })
+
+    expect(habit.ok && habit.data.title).toBe('Created habit')
+    expect(createdTask.ok && createdTask.data.carryForward).toBe(true)
+    expect(recurrent.ok && recurrent.data.carryForward).toBe(false)
+    expect(category.ok && category.data.isDefault).toBe(false)
+  })
+
+  it('rejects newly created uncategorized habits and undated tasks while preserving legacy nullable records', async () => {
+    const state = getMockState()
+    const habitInput = omitFields(
+      state.habits[0],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+      'inactivityPeriods',
+    )
+    const taskInput = omitFields(state.tasks[1], 'id', 'createdAt', 'updatedAt', 'archivedAt')
+
+    expect((await mockHabitsRepository.create({ ...habitInput, categoryId: null })).ok).toBe(false)
+    expect((await mockTasksRepository.create({ ...taskInput, dueDate: null })).ok).toBe(false)
+
+    state.habits[0].categoryId = null
+    state.tasks[0].dueDate = null
+    expect((await mockHabitsRepository.listForUser({ userId: mockData.currentUserId })).ok).toBe(
+      true,
+    )
+    expect((await mockTasksRepository.listForUser({ userId: mockData.currentUserId })).ok).toBe(
+      true,
+    )
+    expect(
+      (await mockHabitsRepository.update({ id: state.habits[0].id, title: 'Needs category' })).ok,
+    ).toBe(false)
+    expect(
+      (await mockTasksRepository.update({ id: state.tasks[0].id, title: 'Needs date' })).ok,
+    ).toBe(false)
   })
 
   it('updates task completion state in memory', async () => {
@@ -122,6 +218,25 @@ describe('mock repositories', () => {
       confirmed: true,
     })
     expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
+  })
+
+  it('removes future minimum support without deleting historical minimum logs', async () => {
+    const updated = await mockHabitsRepository.update({
+      id: 'habit-move',
+      goalConfig: { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+      usesCompletionLevels: false,
+      enabledCompletionLevels: ['standard'],
+      defaultCompletionLevel: null,
+    })
+    const logs = await mockHabitsRepository.listLogsForRange({
+      userId: mockData.currentUserId,
+      habitId: 'habit-move',
+      from: mockData.today,
+      to: mockData.today,
+    })
+
+    expect(updated.ok && getHabitMinimumTargetValue(updated.data)).toBeNull()
+    expect(logs.ok && logs.data[0]?.completionLevel).toBe('minimum')
   })
 
   it('preserves raw habit amounts and configured quantity labels while rejecting negatives', async () => {

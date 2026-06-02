@@ -81,7 +81,12 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Add item' }))
 
     expect(screen.getByRole('dialog', { name: 'Choose what to create' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Habit/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Habit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Task' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recurrent task' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Category' })).toBeInTheDocument()
+    expect(screen.queryByText('Reflection')).not.toBeInTheDocument()
+    expect(screen.queryByText('Quick capture')).not.toBeInTheDocument()
   })
 
   it('shows only the three item management tabs', async () => {
@@ -464,15 +469,21 @@ describe('app shell', () => {
     expect(
       within(detail).queryByRole('combobox', { name: 'Default completion' }),
     ).not.toBeInTheDocument()
+    const standardInput = within(detail).getByLabelText('Standard amount')
+    expect(standardInput).toHaveValue(20)
     const minimumInput = within(detail).getByLabelText('Minimum') as HTMLInputElement
     expect(minimumInput).toHaveAttribute('type', 'number')
+    expect(minimumInput).toHaveValue(null)
+    expect(standardInput.closest('label')?.nextElementSibling?.querySelector('input')).toBe(
+      minimumInput,
+    )
     fireEvent.change(minimumInput, { target: { value: '-1' } })
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     expect(await within(detail).findByText('Minimum cannot be negative.')).toBeInTheDocument()
-    fireEvent.change(minimumInput, { target: { value: '20' } })
+    fireEvent.change(minimumInput, { target: { value: '21' } })
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     expect(
-      await within(detail).findByText('Minimum must be lower than the standard target (20).'),
+      await within(detail).findByText('Minimum must not exceed the standard target (20).'),
     ).toBeInTheDocument()
     fireEvent.change(minimumInput, { target: { value: '10' } })
     const startDateInput = within(detail).getByLabelText('Start date') as HTMLInputElement
@@ -499,6 +510,18 @@ describe('app shell', () => {
       trackingType: 'timePerSession',
       minimumMinutes: 10,
     })
+
+    fireEvent.change(minimumInput, { target: { value: '' } })
+    await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => {
+      const habitWithoutMinimum = cloneMockState().habits.find((habit) => habit.id === 'habit-read')
+      expect(habitWithoutMinimum?.usesCompletionLevels).toBe(false)
+      expect(habitWithoutMinimum?.enabledCompletionLevels).toEqual(['standard'])
+      expect(habitWithoutMinimum?.goalConfig).toEqual({
+        trackingType: 'timePerSession',
+        targetMinutes: 20,
+      })
+    })
   })
 
   it('edits binary habit minimum text and can disable it when blank', async () => {
@@ -513,9 +536,18 @@ describe('app shell', () => {
     )
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
     const detail = screen.getByRole('dialog', { name: 'Habit detail for Drink water after lunch' })
+    const standardInput = within(detail).getByLabelText(
+      'Standard completion - optional',
+    ) as HTMLInputElement
     const minimumInput = within(detail).getByLabelText('Minimum') as HTMLInputElement
+    expect(standardInput).toHaveValue('')
     expect(minimumInput).toHaveAttribute('type', 'text')
+    expect(minimumInput).toHaveValue('')
+    expect(standardInput.closest('label')?.nextElementSibling?.querySelector('input')).toBe(
+      minimumInput,
+    )
 
+    await user.type(standardInput, 'Drink two glasses')
     await user.type(minimumInput, 'Drink one glass')
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Habit changes saved.')).toBeInTheDocument()
@@ -524,6 +556,7 @@ describe('app shell', () => {
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['minimum', 'standard'])
     expect(updatedHabit?.goalConfig).toMatchObject({
       trackingType: 'binary',
+      standardDescription: 'Drink two glasses',
       minimumDescription: 'Drink one glass',
     })
 
@@ -533,7 +566,10 @@ describe('app shell', () => {
     expect(updatedHabit?.usesCompletionLevels).toBe(false)
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['standard'])
     expect(updatedHabit?.defaultCompletionLevel).toBeNull()
-    expect(updatedHabit?.goalConfig).toEqual({ trackingType: 'binary' })
+    expect(updatedHabit?.goalConfig).toEqual({
+      trackingType: 'binary',
+      standardDescription: 'Drink two glasses',
+    })
   })
 
   it('confirms reset progress and permanent deletion from habit detail', async () => {
@@ -628,6 +664,7 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit Start laundry' }))
     let editDialog = screen.getByRole('dialog', { name: 'Edit task Start laundry' })
     expect(within(editDialog).queryByText('Task details')).not.toBeInTheDocument()
+    expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),
@@ -721,6 +758,8 @@ describe('app shell', () => {
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
     const editDialog = screen.getByRole('dialog', { name: 'Edit recurrent task Water the plants' })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
+    expect(within(editDialog).getByLabelText('Start date')).toHaveAttribute('readonly')
+    expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),

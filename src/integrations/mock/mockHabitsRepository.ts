@@ -74,6 +74,9 @@ export const mockHabitsRepository: HabitsRepository = {
   },
 
   async create(input) {
+    if (!input.categoryId) {
+      return err(createAppError('validation', 'Habits require a category.'))
+    }
     const state = getMockState()
     const habit: Habit = {
       ...input,
@@ -92,6 +95,9 @@ export const mockHabitsRepository: HabitsRepository = {
     const activeHabit = requireActiveHabit(input.id)
     if (!activeHabit.ok) {
       return activeHabit
+    }
+    if (!('categoryId' in input ? input.categoryId : activeHabit.data.categoryId)) {
+      return err(createAppError('validation', 'Habits require a category.'))
     }
     return updateHabitInState(input.id, (habit) => ({
       ...habit,

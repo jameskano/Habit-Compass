@@ -10,7 +10,20 @@ export function getHabitFrequencySummary(rule: HabitScheduleRule): FrequencySumm
     case 'daily':
       return { messageId: 'items.frequency.daily' }
     case 'specificDaysOfWeek':
-      return { messageId: 'items.frequency.specificDays', values: { days: rule.daysOfWeek.join(',') } }
+      return {
+        messageId: 'items.frequency.specificDays',
+        values: { days: rule.daysOfWeek.join(',') },
+      }
+    case 'specificDaysOfMonth':
+      return {
+        messageId: 'items.frequency.specificDaysOfMonth',
+        values: { days: rule.daysOfMonth.join(', ') },
+      }
+    case 'specificDaysOfYear':
+      return {
+        messageId: 'items.frequency.specificDaysOfYear',
+        values: { days: rule.daysOfYear.map(({ month, day }) => `${month}/${day}`).join(', ') },
+      }
     case 'everyXDays':
       return { messageId: 'items.frequency.everyXDays', values: { count: rule.intervalDays } }
     case 'everyXWeeks':

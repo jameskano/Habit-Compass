@@ -1,4 +1,4 @@
-export const habitPeriods = ['day', 'week', 'month', 'custom'] as const
+export const habitPeriods = ['day', 'week', 'month', 'year', 'custom'] as const
 export const habitTrackingTypes = [
   'binary',
   'timesPerPeriod',
@@ -14,6 +14,8 @@ export const habitLogStatuses = ['completed', 'skipped'] as const
 export const habitScheduleKinds = [
   'daily',
   'specificDaysOfWeek',
+  'specificDaysOfMonth',
+  'specificDaysOfYear',
   'everyXDays',
   'everyXWeeks',
   'everyXMonths',

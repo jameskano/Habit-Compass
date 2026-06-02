@@ -1,4 +1,12 @@
-import type { EntityId, ISODateString, ISODateTimeString, ItemEntityFields, ItemPriority, LifecycleStatus } from '@/shared/types'
+import type {
+  EntityId,
+  ISODateString,
+  ISODateTimeString,
+  ItemEntityFields,
+  ItemPriority,
+  LifecycleStatus,
+  MonthDay,
+} from '@/shared/types'
 
 import type { dayOfWeekValues, recurrenceKinds, recurrentTaskOccurrenceStatuses } from './constants'
 
@@ -13,6 +21,16 @@ export type DailyRecurrenceRule = {
 export type SpecificDaysOfWeekRecurrenceRule = {
   kind: 'specificDaysOfWeek'
   daysOfWeek: DayOfWeek[]
+}
+
+export type SpecificDaysOfMonthRecurrenceRule = {
+  kind: 'specificDaysOfMonth'
+  daysOfMonth: number[]
+}
+
+export type SpecificDaysOfYearRecurrenceRule = {
+  kind: 'specificDaysOfYear'
+  daysOfYear: MonthDay[]
 }
 
 export type EveryXDaysRecurrenceRule = {
@@ -45,6 +63,8 @@ export type CustomFutureRecurrenceRule = {
 export type RecurrenceRule =
   | DailyRecurrenceRule
   | SpecificDaysOfWeekRecurrenceRule
+  | SpecificDaysOfMonthRecurrenceRule
+  | SpecificDaysOfYearRecurrenceRule
   | EveryXDaysRecurrenceRule
   | EveryXWeeksRecurrenceRule
   | EveryXMonthsRecurrenceRule

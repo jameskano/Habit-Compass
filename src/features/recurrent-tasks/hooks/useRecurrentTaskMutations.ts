@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import type {
+  CreateRecurrentTaskInput,
   RecurrentTaskOccurrenceStatus,
   UpdateRecurrentTaskInput,
 } from '@/domain/recurrent-tasks'
@@ -28,6 +29,18 @@ export function useUpdateRecurrentTaskMutation(userId = MOCK_USER_ID) {
   return useMutation({
     mutationFn: async (input: UpdateRecurrentTaskInput) =>
       unwrapResult(await recurrentTasksRepository.update(input)),
+    onSuccess: invalidate,
+    onError: mutationError,
+  })
+}
+
+export function useCreateRecurrentTaskMutation(userId = MOCK_USER_ID) {
+  const invalidate = useInvalidateRecurrentTasks(userId)
+  const { mutationError } = useAppToast()
+
+  return useMutation({
+    mutationFn: async (input: CreateRecurrentTaskInput) =>
+      unwrapResult(await recurrentTasksRepository.create(input)),
     onSuccess: invalidate,
     onError: mutationError,
   })

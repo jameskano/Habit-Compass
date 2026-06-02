@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '@/shared/utils/result'
-import { createNotFoundError } from '@/shared/utils/appError'
+import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import type { Task, TasksRepository } from '@/domain/tasks'
 
 import { getMockState } from './mockData'
@@ -26,12 +26,16 @@ export const mockTasksRepository: TasksRepository = {
   async listForToday({ userId, date }) {
     return ok(
       getMockState().tasks.filter(
-        (task) => task.userId === userId && task.lifecycleStatus === 'active' && task.dueDate === date,
+        (task) =>
+          task.userId === userId && task.lifecycleStatus === 'active' && task.dueDate === date,
       ),
     )
   },
 
   async create(input) {
+    if (!input.dueDate) {
+      return err(createAppError('validation', 'Tasks require a date.'))
+    }
     const state = getMockState()
     const task: Task = {
       ...input,
@@ -47,6 +51,13 @@ export const mockTasksRepository: TasksRepository = {
   },
 
   async update(input) {
+    const currentTask = getMockState().tasks.find((task) => task.id === input.id)
+    if (!currentTask) {
+      return err(createNotFoundError('Task', input.id))
+    }
+    if (!('dueDate' in input ? input.dueDate : currentTask.dueDate)) {
+      return err(createAppError('validation', 'Tasks require a date.'))
+    }
     return updateTaskInState(input.id, (task) => ({
       ...task,
       ...input,

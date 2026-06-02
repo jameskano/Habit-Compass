@@ -23,6 +23,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
+import { MutableDateField } from '../components/ItemDateFields'
 import { TaskConfirmationDialog } from './TaskConfirmationDialog'
 
 type TaskEditProps = {
@@ -35,7 +36,7 @@ type TaskEditProps = {
 
 const TaskEditValuesSchema = z.object({
   title: z.string().trim().min(1),
-  dueDate: z.string(),
+  dueDate: z.string().min(1),
   categoryId: z.string(),
   priority: z.enum(itemPriorities),
   carryForward: z.boolean(),
@@ -144,10 +145,15 @@ export function TaskEdit({ task, categories, onClose, onArchived, onDeleted }: T
                   </span>
                 ) : null}
               </label>
-              <label className="block text-sm font-medium">
-                {intl.formatMessage({ id: 'page.items.task.edit.dueDate' })}
-                <Input type="date" {...form.register('dueDate')} className={inputClass} />
-              </label>
+              <MutableDateField
+                labelId="page.items.task.edit.dueDate"
+                registration={form.register('dueDate')}
+                error={
+                  form.formState.errors.dueDate
+                    ? intl.formatMessage({ id: 'page.items.task.edit.error.date' })
+                    : undefined
+                }
+              />
             </section>
             <section className="space-y-4 rounded-[1.4rem] border border-border/70 bg-card/90 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">

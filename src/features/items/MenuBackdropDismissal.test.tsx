@@ -1,4 +1,5 @@
-import { fireEvent, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getMockState, resetMockState } from '@/integrations/mock/mockData'
@@ -65,5 +66,36 @@ describe('Items menu backdrop dismissal', () => {
     fireEvent.click(overlay)
 
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+  })
+
+  it('ignores a retargeted backdrop click while an expanded select is closing', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    const task = getMockState().tasks[0]
+
+    renderWithAppProviders(
+      <TaskEdit
+        task={task}
+        categories={[]}
+        onClose={onClose}
+        onArchived={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    )
+
+    const prioritySelect = screen.getByRole('combobox', { name: 'Priority' })
+    await user.click(prioritySelect)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    const overlay = getOverlay('[data-dialog-overlay]')
+    fireEvent.pointerDown(overlay)
+    fireEvent.pointerUp(overlay)
+    fireEvent.click(overlay)
+    if (screen.queryByRole('listbox')) {
+      await user.keyboard('{Escape}')
+    }
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: `Edit task ${task.title}` })).toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
   })
 })

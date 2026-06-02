@@ -1,6 +1,11 @@
 import type { ISODateString } from '@/shared/types'
 
-import type { DayOfWeek, RecurrentTask, RecurrentTaskOccurrence, RecurrentTaskOccurrenceStatus } from '../types'
+import type {
+  DayOfWeek,
+  RecurrentTask,
+  RecurrentTaskOccurrence,
+  RecurrentTaskOccurrenceStatus,
+} from '../types'
 
 export type DerivedRecurrentOccurrence = {
   scheduledForDate: ISODateString
@@ -22,7 +27,11 @@ function differenceInDays(date: ISODateString, anchor: ISODateString) {
 function differenceInMonths(date: ISODateString, anchor: ISODateString) {
   const current = toUtcDate(date)
   const start = toUtcDate(anchor)
-  return (current.getUTCFullYear() - start.getUTCFullYear()) * 12 + current.getUTCMonth() - start.getUTCMonth()
+  return (
+    (current.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+    current.getUTCMonth() -
+    start.getUTCMonth()
+  )
 }
 
 export function isRecurrentTaskScheduledOnDate(task: RecurrentTask, date: ISODateString) {
@@ -42,6 +51,14 @@ export function isRecurrentTaskScheduledOnDate(task: RecurrentTask, date: ISODat
       return true
     case 'specificDaysOfWeek':
       return task.recurrenceRule.daysOfWeek.includes(weekday)
+    case 'specificDaysOfMonth':
+      return task.recurrenceRule.daysOfMonth.includes(toUtcDate(date).getUTCDate())
+    case 'specificDaysOfYear': {
+      const current = toUtcDate(date)
+      return task.recurrenceRule.daysOfYear.some(
+        ({ month, day }) => current.getUTCMonth() + 1 === month && current.getUTCDate() === day,
+      )
+    }
     case 'everyXDays':
       return elapsedDays % task.recurrenceRule.intervalDays === 0
     case 'everyXWeeks':
@@ -64,7 +81,11 @@ export function isRecurrentTaskScheduledOnDate(task: RecurrentTask, date: ISODat
   }
 }
 
-export function enumerateRecurrentTaskDates(task: RecurrentTask, from: ISODateString, to: ISODateString) {
+export function enumerateRecurrentTaskDates(
+  task: RecurrentTask,
+  from: ISODateString,
+  to: ISODateString,
+) {
   const dates: ISODateString[] = []
   const current = toUtcDate(from)
   const end = toUtcDate(to)
@@ -93,8 +114,7 @@ export function deriveRecurrentOccurrences(input: {
     )
     const overdue = scheduledForDate < input.today
     const status =
-      storedOccurrence?.status ??
-      (overdue && !input.task.carryForward ? 'missed' : 'pending')
+      storedOccurrence?.status ?? (overdue && !input.task.carryForward ? 'missed' : 'pending')
 
     return {
       scheduledForDate,

@@ -13,6 +13,8 @@ export {
   RecurrentTaskOccurrenceStatusSchema,
   RecurrentTaskSchema,
   SpecificDaysOfWeekRecurrenceRuleSchema,
+  SpecificDaysOfMonthRecurrenceRuleSchema,
+  SpecificDaysOfYearRecurrenceRuleSchema,
 } from './schemas'
 export type {
   CustomFutureRecurrenceRule,
@@ -28,6 +30,8 @@ export type {
   RecurrenceKind,
   RecurrenceRule,
   SpecificDaysOfWeekRecurrenceRule,
+  SpecificDaysOfMonthRecurrenceRule,
+  SpecificDaysOfYearRecurrenceRule,
 } from './types'
 export type {
   CreateRecurrentTaskInput,

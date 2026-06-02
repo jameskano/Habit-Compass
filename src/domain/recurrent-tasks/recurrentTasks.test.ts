@@ -4,7 +4,10 @@ import type { ISODateString } from '@/shared/types'
 
 import type { RecurrentTask } from './types'
 import { RecurrentTaskSchema } from './schemas'
-import { deriveRecurrentOccurrences, isRecurrentTaskScheduledOnDate } from './logic/recurrentOccurrences'
+import {
+  deriveRecurrentOccurrences,
+  isRecurrentTaskScheduledOnDate,
+} from './logic/recurrentOccurrences'
 
 function task(overrides: Partial<RecurrentTask> = {}): RecurrentTask {
   return {
@@ -31,7 +34,9 @@ function task(overrides: Partial<RecurrentTask> = {}): RecurrentTask {
 describe('recurrent tasks domain', () => {
   it('validates priority, ordering, and bounded dates', () => {
     expect(RecurrentTaskSchema.safeParse(task()).success).toBe(true)
-    expect(RecurrentTaskSchema.safeParse(task({ description: 'Clarifies the recurrence.' })).success).toBe(true)
+    expect(
+      RecurrentTaskSchema.safeParse(task({ description: 'Clarifies the recurrence.' })).success,
+    ).toBe(true)
     expect(RecurrentTaskSchema.safeParse(task({ endsOn: '2026-04-30' })).success).toBe(false)
   })
 
@@ -39,6 +44,11 @@ describe('recurrent tasks domain', () => {
     const executableCases: Array<{ rule: RecurrentTask['recurrenceRule']; date: ISODateString }> = [
       { rule: { kind: 'daily' }, date: '2026-05-03' },
       { rule: { kind: 'specificDaysOfWeek', daysOfWeek: [1] }, date: '2026-05-04' },
+      { rule: { kind: 'specificDaysOfMonth', daysOfMonth: [31] }, date: '2026-05-31' },
+      {
+        rule: { kind: 'specificDaysOfYear', daysOfYear: [{ month: 5, day: 3 }] },
+        date: '2026-05-03',
+      },
       { rule: { kind: 'everyXDays', intervalDays: 2 }, date: '2026-05-03' },
       { rule: { kind: 'everyXWeeks', intervalWeeks: 1, daysOfWeek: [1] }, date: '2026-05-04' },
       { rule: { kind: 'everyXMonths', intervalMonths: 1, dayOfMonth: 3 }, date: '2026-05-03' },
@@ -46,7 +56,9 @@ describe('recurrent tasks domain', () => {
     ]
 
     for (const item of executableCases) {
-      expect(isRecurrentTaskScheduledOnDate(task({ recurrenceRule: item.rule }), item.date)).toBe(true)
+      expect(isRecurrentTaskScheduledOnDate(task({ recurrenceRule: item.rule }), item.date)).toBe(
+        true,
+      )
     }
 
     expect(
@@ -59,13 +71,29 @@ describe('recurrent tasks domain', () => {
 
   it('rejects invalid weekday and month-day recurrence payloads', () => {
     expect(
-      RecurrentTaskSchema.safeParse(task({ recurrenceRule: { kind: 'specificDaysOfWeek', daysOfWeek: [] } }))
-        .success,
+      RecurrentTaskSchema.safeParse(
+        task({ recurrenceRule: { kind: 'specificDaysOfWeek', daysOfWeek: [] } }),
+      ).success,
     ).toBe(false)
     expect(
-      RecurrentTaskSchema.safeParse(task({ recurrenceRule: { kind: 'everyXMonths', intervalMonths: 1, dayOfMonth: 32 } }))
-        .success,
+      RecurrentTaskSchema.safeParse(
+        task({ recurrenceRule: { kind: 'everyXMonths', intervalMonths: 1, dayOfMonth: 32 } }),
+      ).success,
     ).toBe(false)
+    expect(
+      RecurrentTaskSchema.safeParse(
+        task({
+          recurrenceRule: { kind: 'specificDaysOfYear', daysOfYear: [{ month: 2, day: 30 }] },
+        }),
+      ).success,
+    ).toBe(false)
+  })
+
+  it('skips explicit month days that are absent from shorter months', () => {
+    const monthly = task({ recurrenceRule: { kind: 'specificDaysOfMonth', daysOfMonth: [31] } })
+
+    expect(isRecurrentTaskScheduledOnDate(monthly, '2027-01-31')).toBe(true)
+    expect(isRecurrentTaskScheduledOnDate(monthly, '2027-02-28')).toBe(false)
   })
 
   it('derives overdue pending or missed states without storing them', () => {
@@ -84,7 +112,12 @@ describe('recurrent tasks domain', () => {
       today: '2026-05-21',
     })[0]
 
-    expect(carried).toMatchObject({ status: 'pending', isOverdue: true, isStored: false, actionable: true })
+    expect(carried).toMatchObject({
+      status: 'pending',
+      isOverdue: true,
+      isStored: false,
+      actionable: true,
+    })
     expect(expired).toMatchObject({ status: 'missed', isStored: false, actionable: false })
   })
 })

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { UpdateHabitInput } from '@/domain/habits'
+import type { CreateHabitInput, UpdateHabitInput } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
@@ -14,6 +14,20 @@ export function useUpdateHabitMutation() {
   return useMutation({
     mutationFn: async (input: UpdateHabitInput) =>
       unwrapResult(await habitsRepository.update(input)),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['habits'] })
+    },
+    onError: mutationError,
+  })
+}
+
+export function useCreateHabitMutation() {
+  const queryClient = useQueryClient()
+  const { mutationError } = useAppToast()
+
+  return useMutation({
+    mutationFn: async (input: CreateHabitInput) =>
+      unwrapResult(await habitsRepository.create(input)),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['habits'] })
     },

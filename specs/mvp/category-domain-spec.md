@@ -19,10 +19,13 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 ## Functional Requirements
 
 - Categories are customizable labels with `name`, required `iconName`, required `colorToken`, and `order`.
-- Items may reference zero or one category.
+- Items may reference zero or one category at rest. New and edited habits require one category;
+  tasks and recurrent tasks keep category optional.
 - Category lifecycle status is limited to `active` and `archived`.
 - Delete physically removes a category after explicit confirmation and does not delete linked items.
 - A category may remain marked as a starter/default label without imposing a category type.
+- Category creation uses required name, icon, and color inputs plus optional description. New
+  user-created categories are active, ordered after existing categories, and not marked default.
 
 ## Data Model
 
