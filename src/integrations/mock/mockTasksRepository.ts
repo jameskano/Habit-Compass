@@ -27,7 +27,14 @@ export const mockTasksRepository: TasksRepository = {
     return ok(
       getMockState().tasks.filter(
         (task) =>
-          task.userId === userId && task.lifecycleStatus === 'active' && task.dueDate === date,
+          task.userId === userId &&
+          task.lifecycleStatus === 'active' &&
+          (task.dueDate === date ||
+            (task.dueDate !== null &&
+              task.dueDate !== undefined &&
+              task.dueDate < date &&
+              task.carryForward &&
+              task.completionStatus === 'pending')),
       ),
     )
   },

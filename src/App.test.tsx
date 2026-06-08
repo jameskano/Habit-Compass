@@ -51,21 +51,31 @@ describe('app shell', () => {
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
     render(<App />)
 
-    const habitCard = await screen.findByRole('article', { name: 'Move for 20 minutes' })
+    const habitCard = await screen.findByRole('button', {
+      name: 'Complete or edit Move for 20 minutes',
+    })
     expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
     expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
+    expect(within(habitCard).getByText('Habit')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Health')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Drag to reorder Move for 20 minutes' }),
+    ).toBeInTheDocument()
     expect(within(habitCard).queryByText('Kept intentionally lightweight.')).not.toBeInTheDocument()
 
-    const taskCard = screen.getByRole('article', { name: 'Pay rent' })
+    const taskCard = screen.getByRole('button', { name: 'Complete or edit Pay rent' })
     expect(within(taskCard).getByText('Pay rent')).toBeInTheDocument()
-    expect(within(taskCard).getByText(/^Today - /)).toBeInTheDocument()
+    expect(within(taskCard).getByText('Today')).toBeInTheDocument()
     expect(within(taskCard).getByLabelText('Uncategorized')).toBeInTheDocument()
     expect(within(taskCard).getByLabelText('Priority: High')).toBeInTheDocument()
+    expect(within(taskCard).queryByText('Task')).not.toBeInTheDocument()
     expect(
       within(taskCard).queryByText('One-off task with a due date placeholder.'),
     ).not.toBeInTheDocument()
+
+    expect(screen.getByText(/Overdue - Due/)).toBeInTheDocument()
+    expect(screen.getByText('Weekly review')).toBeInTheDocument()
   })
 
   it('bottom nav contains the expected tabs', async () => {
@@ -375,10 +385,12 @@ describe('app shell', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('refreshes Today habit totals after archiving a habit', async () => {
+  it('removes archived habits from Today', async () => {
     render(<App />)
 
-    expect(await screen.findByText('2/3')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Complete or edit Drink water after lunch' }),
+    ).toBeInTheDocument()
     await act(async () => {
       await router.navigate({ to: '/items' })
     })
@@ -398,7 +410,11 @@ describe('app shell', () => {
     await act(async () => {
       await router.navigate({ to: '/today' })
     })
-    expect(await screen.findByText('2/2')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Complete or edit Drink water after lunch' }),
+      ).not.toBeInTheDocument()
+    })
   })
 
   it('reveals item cards in sequence when each items section is displayed', async () => {

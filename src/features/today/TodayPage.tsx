@@ -1,25 +1,115 @@
-import { parseISO } from 'date-fns'
-import { FormattedMessage, useIntl } from 'react-intl'
+import { formatISO, parseISO } from 'date-fns'
+import {
+  BarChart3,
+  CalendarDays,
+  Check,
+  Edit3,
+  Eraser,
+  RotateCcw,
+  Search,
+  SkipForward,
+  Undo2,
+  X,
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useIntl } from 'react-intl'
 
-import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import { getHabitFrequencySummary, type Habit, type HabitDayOfWeek } from '@/domain/habits'
+import {
+  evaluateHabitCompletionForLogs,
+  getHabitAmountInputMetadata,
+  getHabitFrequencySummary,
+  getHabitLogAmount,
+  getHabitMinimumTargetValue,
+  type Habit,
+  type HabitDayOfWeek,
+  type HabitLog,
+} from '@/domain/habits'
+import {
+  buildTodayItems,
+  filterTodayItems,
+  getSourceItemId,
+  getTodayDateMode,
+  isMeasurableHabit,
+  mergeTodayManualOrder,
+  type HabitTodayState,
+  type TodayFilterState,
+  type TodayItem,
+} from '@/domain/today'
+import {
+  getRecurrentFrequencySummary,
+  type DayOfWeek,
+  type RecurrentTask,
+} from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
+import {
+  useRemoveHabitLogMutation,
+  useUpsertHabitLogMutation,
+} from '@/features/habits/hooks/useHabitLogMutations'
 import { useTodayHabitsQuery } from '@/features/habits/hooks/useTodayHabitsQuery'
-import { useMoodLogForDateQuery } from '@/features/mood/hooks/useMoodLogForDateQuery'
+import { HabitAmountInputSheet } from '@/features/items/habits/HabitAmountInputSheet'
+import { HabitDetail, type HabitDetailTab } from '@/features/items/habits/HabitDetail'
+import type { HabitDangerAction } from '@/features/items/habits/HabitConfirmationDialog'
+import { RecurrentTaskEdit } from '@/features/items/recurrent-tasks/RecurrentTaskEdit'
+import { TaskEdit } from '@/features/items/tasks/TaskEdit'
+import {
+  useCompleteRecurrentOccurrenceMutation,
+} from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
+import { useTodayRecurrentTasksQuery } from '@/features/recurrent-tasks/hooks/useTodayRecurrentTasksQuery'
+import { useCompleteTaskMutation } from '@/features/tasks/hooks/useTaskMutations'
 import { useTodayTasksQuery } from '@/features/tasks/hooks/useTodayTasksQuery'
-import { mockData } from '@/integrations/mock/mockData'
-import type { ISODateString } from '@/shared/types'
+import { useAppToast } from '@/shared/hooks/useAppToast'
+import type { HabitPriority, ISODateString } from '@/shared/types'
+import { Button } from '@/shared/ui/button'
 import { EmptyState } from '@/shared/ui/EmptyState'
-import { ItemCard } from '@/shared/ui/ItemCard'
-import { StatCard } from '@/shared/ui/StatCard'
-import { SuggestionCard } from '@/shared/ui/SuggestionCard'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { cn } from '@/shared/utils/cn'
 
+import { SortableItemsList } from '../items/components/SortableItemsList'
+import { TodayActionSheet, type TodayMenuAction } from './TodayActionSheet'
 import { TodayItemCard } from './TodayItemCard'
+import { useTodayOrderStore } from './todayOrderStore'
 
 type Intl = ReturnType<typeof useIntl>
 
-function formatWeekdays(intl: Intl, days: readonly HabitDayOfWeek[]) {
+type DetailSelection = {
+  habitId: string
+  tab: HabitDetailTab
+  dangerAction?: HabitDangerAction
+}
+
+const todayTypeFilters: { type: TodayFilterState['type']; labelId: string }[] = [
+  { type: 'all', labelId: 'page.today.filter.all' },
+  { type: 'habit', labelId: 'page.today.filter.habits' },
+  { type: 'task', labelId: 'page.today.filter.tasks' },
+  { type: 'recurrentTask', labelId: 'page.today.filter.recurrent' },
+]
+
+const allCategoriesValue = '__all__'
+const allPrioritiesValue = '__all__'
+const priorities: HabitPriority[] = ['essential', 'high', 'medium', 'low']
+const emptyTodayOrder: string[] = []
+const emptyHabitLogs: HabitLog[] = []
+
+function todayAsISODate() {
+  return formatISO(new Date(), { representation: 'date' }) as ISODateString
+}
+
+function openNativeDatePicker(input: HTMLInputElement | null) {
+  if (!input) {
+    return
+  }
+  input.focus()
+  const pickerInput = input as HTMLInputElement & { showPicker?: () => void }
+  if (pickerInput.showPicker) {
+    pickerInput.showPicker()
+    return
+  }
+  input.click()
+}
+
+function formatWeekdays(intl: Intl, days: readonly HabitDayOfWeek[] | readonly DayOfWeek[]) {
   return intl.formatList(
     days.map((day) => intl.formatMessage({ id: `page.items.weekday.short.${day}` })),
   )
@@ -72,41 +162,494 @@ function formatHabitFrequency(intl: Intl, habit: Habit) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-function formatTaskDueDate(intl: Intl, task: Task, today: ISODateString) {
-  if (!task.dueDate) {
-    return intl.formatMessage({ id: 'page.items.task.date.none' })
+function formatRecurrentFrequency(intl: Intl, task: RecurrentTask) {
+  const descriptor = getRecurrentFrequencySummary(task.recurrenceRule)
+  const rule = task.recurrenceRule
+
+  if (rule.kind === 'specificDaysOfWeek') {
+    return intl.formatMessage(
+      { id: descriptor.messageId },
+      { days: formatWeekdays(intl, rule.daysOfWeek) },
+    )
+  }
+  if (rule.kind === 'everyXWeeks') {
+    return intl.formatMessage(
+      { id: descriptor.messageId },
+      { count: rule.intervalWeeks, days: formatWeekdays(intl, rule.daysOfWeek) },
+    )
+  }
+  if (rule.kind === 'firstWeekdayOfMonth') {
+    return intl.formatMessage(
+      { id: descriptor.messageId },
+      { weekday: intl.formatMessage({ id: `page.items.weekday.long.${rule.weekday}` }) },
+    )
   }
 
-  const formattedDate = intl.formatDate(parseISO(task.dueDate), {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
+}
+
+function formatTaskMeta(intl: Intl, task: Task, selectedDate: ISODateString) {
+  if (task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending') {
+    const formattedDate = intl.formatDate(parseISO(task.dueDate), {
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+    return intl.formatMessage({ id: 'page.today.item.task.overdue' }, { date: formattedDate })
+  }
+
+  return intl.formatMessage({ id: 'page.today.item.task.today' })
+}
+
+function shortUnitLabel(intl: Intl, habit: Habit) {
+  const metadata = getHabitAmountInputMetadata(habit)
+  if (!metadata) {
+    return ''
+  }
+  if (metadata.unit === 'minutes') {
+    return intl.formatMessage({ id: 'page.today.amount.unit.minutes.short' })
+  }
+  if (metadata.unit === 'repetitions') {
+    return intl.formatMessage({ id: 'page.today.amount.unit.repetitions.short' })
+  }
+  return metadata.quantityUnitLabel ?? ''
+}
+
+function amountText(intl: Intl, item: TodayItem) {
+  if (item.type !== 'habit' || !item.amount || item.amount <= 0) {
+    return null
+  }
+  const unit = shortUnitLabel(intl, item.habit)
+  return unit ? `${item.amount} ${unit}` : `${item.amount}`
+}
+
+function amountHelperLines(intl: Intl, habit: Habit, logs: HabitLog[], selectedDate: ISODateString) {
+  const completion = evaluateHabitCompletionForLogs({ habit, logs, date: selectedDate })
+  const labelId =
+    'period' in habit.goalConfig && habit.goalConfig.period !== 'day'
+      ? `page.today.amount.period.${habit.goalConfig.period}`
+      : 'page.today.amount.period.day'
+  const unit = shortUnitLabel(intl, habit)
+  const value = unit
+    ? `${completion.rawProgressValue} / ${completion.standardTargetValue} ${unit}`
+    : `${completion.rawProgressValue} / ${completion.standardTargetValue}`
+  const lines = [
+    intl.formatMessage({ id: 'page.today.amount.progress' }, {
+      period: intl.formatMessage({ id: labelId }),
+      value,
+    }),
+  ]
+  const minimum = getHabitMinimumTargetValue(habit)
+  if (minimum !== null) {
+    lines.push(
+      intl.formatMessage(
+        { id: 'page.today.amount.minimum' },
+        { value: unit ? `${minimum} ${unit}` : `${minimum}` },
+      ),
+    )
+  }
+  return lines
+}
+
+function selectedDateLabel(intl: Intl, date: ISODateString) {
+  return intl.formatDate(parseISO(date), {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
     timeZone: 'UTC',
   })
+}
 
-  if (task.dueDate < today) {
-    return intl.formatMessage({ id: 'page.items.task.date.overdue' }, { date: formattedDate })
-  }
-  if (task.dueDate === today) {
-    return intl.formatMessage({ id: 'page.items.task.date.today' }, { date: formattedDate })
-  }
-  return intl.formatMessage({ id: 'page.items.task.date.upcoming' }, { date: formattedDate })
+function canModify(dateMode: ReturnType<typeof getTodayDateMode>) {
+  return dateMode === 'today' || dateMode === 'past'
 }
 
 export function TodayPage() {
   const intl = useIntl()
-  const featureToggles = useAppPreferencesStore((state) => state.featureToggles)
-  const habitsQuery = useTodayHabitsQuery()
-  const tasksQuery = useTodayTasksQuery()
-  const moodQuery = useMoodLogForDateQuery()
+  const appToast = useAppToast()
+  const actualToday = todayAsISODate()
+  const dateInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedDate, setSelectedDate] = useState<ISODateString>(actualToday)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [filters, setFilters] = useState<TodayFilterState>({
+    type: 'all',
+    categoryId: '',
+    priority: '',
+    searchText: '',
+  })
+  const [selectedMenuItemId, setSelectedMenuItemId] = useState<string | null>(null)
+  const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [selectedRecurrentTaskId, setSelectedRecurrentTaskId] = useState<string | null>(null)
+  const [amountHabitId, setAmountHabitId] = useState<string | null>(null)
+  const orderForDate = useTodayOrderStore(
+    (state) => state.ordersByDate[selectedDate] ?? emptyTodayOrder,
+  )
+  const setOrderForDate = useTodayOrderStore((state) => state.setOrderForDate)
+  const pruneOrderForDate = useTodayOrderStore((state) => state.pruneOrderForDate)
   const categoriesQuery = useCategoriesQuery()
+  const habitsQuery = useTodayHabitsQuery(undefined, selectedDate)
+  const tasksQuery = useTodayTasksQuery(undefined, selectedDate)
+  const recurrentQuery = useTodayRecurrentTasksQuery(undefined, selectedDate)
+  const upsertHabitLogMutation = useUpsertHabitLogMutation()
+  const removeHabitLogMutation = useRemoveHabitLogMutation()
+  const completeTaskMutation = useCompleteTaskMutation()
+  const completeRecurrentMutation = useCompleteRecurrentOccurrenceMutation()
+  const dateMode = getTodayDateMode(selectedDate, actualToday)
+  const completionEnabled = canModify(dateMode)
+  const habitLogs = habitsQuery.data?.logs ?? emptyHabitLogs
 
-  if (
+  const rawItems = useMemo(
+    () =>
+      buildTodayItems({
+        habits: habitsQuery.data?.habits ?? [],
+        habitLogs,
+        tasks: tasksQuery.data?.tasks ?? [],
+        recurrentTasks: recurrentQuery.data?.tasks ?? [],
+        recurrentOccurrences: recurrentQuery.data?.occurrences ?? [],
+        selectedDate,
+        today: actualToday,
+      }),
+    [
+      actualToday,
+      habitLogs,
+      habitsQuery.data?.habits,
+      recurrentQuery.data?.occurrences,
+      recurrentQuery.data?.tasks,
+      selectedDate,
+      tasksQuery.data?.tasks,
+    ],
+  )
+  const orderedItems = useMemo(
+    () => mergeTodayManualOrder(rawItems, orderForDate),
+    [orderForDate, rawItems],
+  )
+  const visibleItems = useMemo(
+    () => filterTodayItems(orderedItems, filters),
+    [filters, orderedItems],
+  )
+  const categoriesById = new Map(
+    (categoriesQuery.data ?? []).map((category) => [category.id, category]),
+  )
+  const selectedMenuItem = orderedItems.find((item) => item.id === selectedMenuItemId) ?? null
+  const selectedHabitForAmount =
+    (habitsQuery.data?.habits ?? []).find((habit) => habit.id === amountHabitId) ?? null
+  const selectedTask = (tasksQuery.data?.tasks ?? []).find((task) => task.id === selectedTaskId) ?? null
+  const selectedRecurrentTask =
+    (recurrentQuery.data?.tasks ?? []).find((task) => task.id === selectedRecurrentTaskId) ?? null
+  const detailHabit =
+    (habitsQuery.data?.habits ?? []).find((habit) => habit.id === detailSelection?.habitId) ?? null
+  const activeCategories = (categoriesQuery.data ?? []).filter(
+    (category) => category.lifecycleStatus === 'active',
+  )
+  const isLoading =
     habitsQuery.isLoading ||
     tasksQuery.isLoading ||
-    moodQuery.isLoading ||
+    recurrentQuery.isLoading ||
     categoriesQuery.isLoading
-  ) {
+  const isError =
+    habitsQuery.isError || tasksQuery.isError || recurrentQuery.isError || categoriesQuery.isError
+  const hasFilters =
+    filters.type !== 'all' ||
+    filters.categoryId.length > 0 ||
+    filters.priority.length > 0 ||
+    filters.searchText.trim().length > 0
+
+  useEffect(() => {
+    pruneOrderForDate(
+      selectedDate,
+      rawItems.map((item) => item.id),
+    )
+  }, [pruneOrderForDate, rawItems, selectedDate])
+
+  const closeMenu = () => setSelectedMenuItemId(null)
+
+  const upsertHabitCompleted = (habit: Habit, completionLevel?: 'minimum' | 'standard') => {
+    upsertHabitLogMutation.mutate({
+      habitId: habit.id,
+      logDate: selectedDate,
+      status: 'completed',
+      completionLevel,
+    })
+  }
+
+  const skipHabit = (habit: Habit) => {
+    upsertHabitLogMutation.mutate({
+      habitId: habit.id,
+      logDate: selectedDate,
+      status: 'skipped',
+    })
+  }
+
+  const clearHabitLog = (habit: Habit) => {
+    removeHabitLogMutation.mutate({ habitId: habit.id, logDate: selectedDate })
+  }
+
+  const toggleTask = (task: Task) => {
+    const nextStatus = task.completionStatus === 'completed' ? 'pending' : 'completed'
+    completeTaskMutation.mutate(
+      { taskId: task.id, status: nextStatus },
+      {
+        onSuccess: () => {
+          appToast.success({
+            id:
+              nextStatus === 'completed'
+                ? 'page.today.toast.task.completed'
+                : 'page.today.toast.task.pending',
+            values: { task: task.title },
+          })
+        },
+      },
+    )
+  }
+
+  const toggleRecurrentTask = (item: Extract<TodayItem, { type: 'recurrentTask' }>) => {
+    const nextStatus = item.occurrence.status === 'completed' ? 'pending' : 'completed'
+    completeRecurrentMutation.mutate(
+      {
+        recurrentTaskId: item.task.id,
+        occurrenceDate: selectedDate,
+        status: nextStatus,
+      },
+      {
+        onSuccess: () => {
+          appToast.success({
+            id:
+              nextStatus === 'completed'
+                ? 'page.today.toast.recurrent.completed'
+                : 'page.today.toast.recurrent.pending',
+          })
+        },
+      },
+    )
+  }
+
+  const runPrimaryAction = (item: TodayItem) => {
+    if (!completionEnabled) {
+      return
+    }
+
+    if (item.type === 'habit') {
+      if (isMeasurableHabit(item.habit)) {
+        setAmountHabitId(item.habit.id)
+        return
+      }
+
+      if (item.log?.status === 'completed') {
+        clearHabitLog(item.habit)
+      } else {
+        upsertHabitCompleted(item.habit, 'standard')
+      }
+      return
+    }
+
+    if (item.type === 'task') {
+      toggleTask(item.task)
+      return
+    }
+
+    toggleRecurrentTask(item)
+  }
+
+  const openHabitDetail = (
+    habit: Habit,
+    tab: HabitDetailTab,
+    dangerAction?: HabitDangerAction,
+  ) => {
+    closeMenu()
+    setDetailSelection({ habitId: habit.id, tab, dangerAction })
+  }
+
+  const menuActionsForItem = (item: TodayItem | null): TodayMenuAction[] => {
+    if (!item) {
+      return []
+    }
+
+    const run = (action: () => void) => () => {
+      closeMenu()
+      action()
+    }
+
+    if (item.type === 'habit') {
+      const habit = item.habit
+      const isFuture = dateMode === 'future'
+      const minimumEnabled = habit.enabledCompletionLevels.includes('minimum')
+      const nonCompletionActions: TodayMenuAction[] = [
+        {
+          labelId: 'page.items.habit.menu.stats',
+          icon: BarChart3,
+          dividerBefore: !isFuture,
+          onSelect: () => openHabitDetail(habit, 'stats'),
+        },
+        {
+          labelId: 'page.items.habit.menu.edit',
+          icon: Edit3,
+          onSelect: () => openHabitDetail(habit, 'edit'),
+        },
+        {
+          labelId: 'page.items.habit.menu.reset',
+          icon: RotateCcw,
+          onSelect: () => openHabitDetail(habit, 'edit', 'reset'),
+        },
+      ]
+
+      if (isFuture) {
+        return nonCompletionActions
+      }
+
+      const state = item.state as HabitTodayState
+      if (isMeasurableHabit(habit)) {
+        const completionActions =
+          state === 'skipped'
+            ? [
+                {
+                  labelId: 'page.today.menu.habit.enterAmount',
+                  icon: Check,
+                  onSelect: run(() => setAmountHabitId(habit.id)),
+                },
+                {
+                  labelId: 'page.today.menu.habit.undoSkip',
+                  icon: Undo2,
+                  onSelect: run(() => clearHabitLog(habit)),
+                },
+              ]
+            : state === 'undone'
+              ? [
+                  {
+                    labelId: 'page.today.menu.habit.enterAmount',
+                    icon: Check,
+                    onSelect: run(() => setAmountHabitId(habit.id)),
+                  },
+                  {
+                    labelId: 'page.today.menu.habit.skip',
+                    icon: SkipForward,
+                    onSelect: run(() => skipHabit(habit)),
+                  },
+                ]
+              : [
+                  {
+                    labelId: 'page.today.menu.habit.editAmount',
+                    icon: Edit3,
+                    onSelect: run(() => setAmountHabitId(habit.id)),
+                  },
+                  {
+                    labelId: 'page.today.menu.habit.clearAmount',
+                    icon: Eraser,
+                    onSelect: run(() => clearHabitLog(habit)),
+                  },
+                  {
+                    labelId: 'page.today.menu.habit.skip',
+                    icon: SkipForward,
+                    onSelect: run(() => skipHabit(habit)),
+                  },
+                ]
+
+        return [...completionActions, ...nonCompletionActions]
+      }
+
+      const completeStandard = {
+        labelId:
+          state === 'minimumCompleted'
+            ? 'page.today.menu.habit.completeStandard'
+            : 'page.today.menu.habit.complete',
+        icon: Check,
+        onSelect: run(() => upsertHabitCompleted(habit, 'standard')),
+      }
+      const completeMinimum = {
+        labelId: 'page.today.menu.habit.completeMinimum',
+        icon: Check,
+        onSelect: run(() => upsertHabitCompleted(habit, 'minimum')),
+      }
+      const undoCompletion = {
+        labelId: 'page.today.menu.habit.undoCompletion',
+        icon: Undo2,
+        onSelect: run(() => clearHabitLog(habit)),
+      }
+      const skip = {
+        labelId: 'page.today.menu.habit.skip',
+        icon: SkipForward,
+        onSelect: run(() => skipHabit(habit)),
+      }
+      const undoSkip = {
+        labelId: 'page.today.menu.habit.undoSkip',
+        icon: Undo2,
+        onSelect: run(() => clearHabitLog(habit)),
+      }
+
+      if (state === 'standardCompleted') {
+        return [
+          undoCompletion,
+          ...(minimumEnabled ? [completeMinimum] : []),
+          skip,
+          ...nonCompletionActions,
+        ]
+      }
+      if (state === 'minimumCompleted') {
+        return [completeStandard, undoCompletion, skip, ...nonCompletionActions]
+      }
+      if (state === 'skipped') {
+        return [
+          completeStandard,
+          ...(minimumEnabled ? [completeMinimum] : []),
+          undoSkip,
+          ...nonCompletionActions,
+        ]
+      }
+      return [
+        completeStandard,
+        ...(minimumEnabled ? [completeMinimum] : []),
+        skip,
+        ...nonCompletionActions,
+      ]
+    }
+
+    const isDone =
+      item.type === 'task'
+        ? item.task.completionStatus === 'completed'
+        : item.occurrence.status === 'completed'
+    const editAction = {
+      labelId: 'page.today.menu.item.edit',
+      icon: Edit3,
+      dividerBefore: dateMode !== 'future',
+      onSelect: run(() => {
+        if (item.type === 'task') {
+          setSelectedTaskId(item.task.id)
+        } else {
+          setSelectedRecurrentTaskId(item.task.id)
+        }
+      }),
+    }
+
+    if (dateMode === 'future') {
+      return [editAction]
+    }
+
+    return [
+      {
+        labelId: isDone ? 'page.today.menu.item.markPending' : 'page.today.menu.item.markDone',
+        icon: isDone ? Undo2 : Check,
+        onSelect: run(() => {
+          if (item.type === 'task') {
+            toggleTask(item.task)
+          } else {
+            toggleRecurrentTask(item)
+          }
+        }),
+      },
+      editAction,
+    ]
+  }
+
+  const reorderTodayItems = (visibleOrderedIds: string[]) => {
+    const visibleIds = new Set(visibleOrderedIds)
+    let visibleIndex = 0
+    const nextOrder = orderedItems.map((item) =>
+      visibleIds.has(item.id) ? visibleOrderedIds[visibleIndex++] : item.id,
+    )
+    setOrderForDate(selectedDate, nextOrder)
+  }
+
+  if (isLoading) {
     return (
       <section className="space-y-6">
         <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
@@ -114,7 +657,7 @@ export function TodayPage() {
     )
   }
 
-  if (habitsQuery.isError || tasksQuery.isError || moodQuery.isError || categoriesQuery.isError) {
+  if (isError) {
     return (
       <section className="space-y-6">
         <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
@@ -122,126 +665,332 @@ export function TodayPage() {
     )
   }
 
-  const todayHabits = habitsQuery.data?.habits ?? []
-  const todayTasks = tasksQuery.data?.tasks ?? []
-  const habitsCompletedCount = habitsQuery.data?.completedCount ?? 0
-  const tasksCompletedCount = tasksQuery.data?.completedCount ?? 0
-  const completionCompleted = habitsCompletedCount + tasksCompletedCount
-  const completionTotal = todayHabits.length + todayTasks.length
-  const completionPercentage =
-    completionTotal > 0 ? Math.round((completionCompleted / completionTotal) * 100) : 0
-  const leadHabit = todayHabits[0]
-  const leadTask = todayTasks[0]
-  const todayHabitLogs = habitsQuery.data?.logs ?? []
-  const todayMood = moodQuery.data
-  const categoriesById = new Map(
-    (categoriesQuery.data ?? []).map((category) => [category.id, category]),
-  )
-
   return (
-    <section className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          labelId="page.today.stat.completed"
-          value={`${completionPercentage}%`}
-          detailId="page.today.stat.completedDetail"
-        />
-        <StatCard
-          labelId="page.today.stat.habits"
-          value={`${habitsCompletedCount}/${todayHabits.length}`}
-          detailId="page.today.stat.habitsDetail"
-        />
-        <StatCard
-          labelId="page.today.stat.tasks"
-          value={`${tasksCompletedCount}/${todayTasks.length}`}
-          detailId="page.today.stat.tasksDetail"
-        />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-4">
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">
-              {intl.formatMessage({ id: 'page.today.greeting' }, { name: 'Ari' })}
-            </h2>
-            <p className="text-sm leading-6 text-muted-foreground">
-              <FormattedMessage id="page.today.summary" />
-            </p>
-          </section>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {leadHabit ? (
-              <TodayItemCard
-                title={leadHabit.title}
-                meta={formatHabitFrequency(intl, leadHabit)}
-                category={
-                  leadHabit.categoryId ? categoriesById.get(leadHabit.categoryId) : undefined
-                }
-                fallbackCategoryLabel={intl.formatMessage({
-                  id: 'page.items.habit.category.none',
-                })}
-                priority={leadHabit.priority}
-                priorityLabel={`${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${leadHabit.priority}` })}`}
-                completed={todayHabitLogs.some(
-                  (log) => log.habitId === leadHabit.id && log.status === 'completed',
-                )}
-              />
-            ) : (
-              <EmptyState
-                titleId="page.items.empty.title"
-                descriptionId="page.items.empty.description"
-              />
-            )}
-
-            {leadTask ? (
-              <TodayItemCard
-                title={leadTask.title}
-                meta={formatTaskDueDate(intl, leadTask, mockData.today)}
-                category={leadTask.categoryId ? categoriesById.get(leadTask.categoryId) : undefined}
-                fallbackCategoryLabel={intl.formatMessage({
-                  id: 'page.items.task.category.none',
-                })}
-                priority={leadTask.priority}
-                priorityLabel={`${intl.formatMessage({ id: 'page.items.task.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${leadTask.priority}` })}`}
-                completed={leadTask.completionStatus === 'completed'}
-              />
-            ) : (
-              <EmptyState
-                titleId="page.items.empty.title"
-                descriptionId="page.items.empty.description"
-              />
-            )}
-          </div>
-
-          {featureToggles.suggestions ? (
-            <SuggestionCard
-              titleId="page.today.suggestion.title"
-              descriptionId="page.today.suggestion.description"
-              actionId="page.today.suggestion.action"
-            />
-          ) : null}
+    <section className="space-y-4">
+      <div className="flex items-center justify-between gap-3 rounded-[1.35rem] border border-border/70 bg-card/65 p-3">
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold">{selectedDateLabel(intl, selectedDate)}</p>
+          <p className="text-xs text-muted-foreground">
+            {intl.formatMessage({ id: `page.today.dateMode.${dateMode}` })}
+          </p>
         </div>
-
-        <div className="space-y-4">
-          {featureToggles.mood ? (
-            <ItemCard
-              titleId="page.today.moodPrompt.title"
-              meta={
-                todayMood
-                  ? `${todayMood.mood} - ${todayMood.loggedForDate}`
-                  : intl.formatMessage({ id: 'page.today.moodPrompt.meta' })
-              }
-              tone="neutral"
-            />
+        <div className="flex shrink-0 items-center gap-2">
+          {selectedDate !== actualToday ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 rounded-full border border-border/70 px-3 text-sm"
+              onClick={() => setSelectedDate(actualToday)}
+            >
+              {intl.formatMessage({ id: 'page.today.action.today' })}
+            </Button>
           ) : null}
-
-          <ItemCard
-            titleId="page.today.simpleMode.title"
-            metaId="page.today.simpleMode.meta"
-            tone="neutral"
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+              'h-10 w-10 rounded-full border border-border/70 p-0 text-muted-foreground',
+              searchOpen && 'border-primary bg-primary/15 text-primary',
+            )}
+            aria-label={intl.formatMessage({ id: 'page.today.action.search' })}
+            onClick={() => setSearchOpen((current) => !current)}
+          >
+            <Search aria-hidden="true" size={18} />
+          </Button>
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={selectedDate}
+            aria-label={intl.formatMessage({ id: 'page.today.action.chooseDate' })}
+            onChange={(event) => setSelectedDate(event.target.value as ISODateString)}
+            className="sr-only"
           />
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-10 w-10 rounded-full border border-border/70 p-0 text-muted-foreground"
+            aria-label={intl.formatMessage({ id: 'page.today.action.chooseDate' })}
+            onClick={() => openNativeDatePicker(dateInputRef.current)}
+          >
+            <CalendarDays aria-hidden="true" size={18} />
+          </Button>
         </div>
       </div>
+
+      <section
+        className="space-y-3 rounded-[1.35rem] border border-border/70 bg-card/65 p-3"
+        aria-label={intl.formatMessage({ id: 'page.today.filters.aria' })}
+      >
+        {searchOpen ? (
+          <div className="relative">
+            <Search
+              aria-hidden="true"
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              value={filters.searchText}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, searchText: event.target.value }))
+              }
+              aria-label={intl.formatMessage({ id: 'page.today.filter.search' })}
+              placeholder={intl.formatMessage({ id: 'page.today.filter.searchPlaceholder' })}
+              className="rounded-full border-border/75 pl-9 pr-9"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              className="absolute right-1.5 top-1/2 h-7 min-h-7 w-7 -translate-y-1/2 rounded-full p-0 text-muted-foreground"
+              aria-label={intl.formatMessage({ id: 'action.close' })}
+              onClick={() => {
+                setFilters((current) => ({ ...current, searchText: '' }))
+                setSearchOpen(false)
+              }}
+            >
+              <X aria-hidden="true" size={15} />
+            </Button>
+          </div>
+        ) : null}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {todayTypeFilters.map((filter) => (
+            <Button
+              key={filter.type}
+              type="button"
+              variant="ghost"
+              className={cn(
+                'h-9 shrink-0 rounded-full border border-border/70 px-3 text-sm text-muted-foreground',
+                filters.type === filter.type &&
+                  'border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
+              )}
+              aria-pressed={filters.type === filter.type}
+              onClick={() => setFilters((current) => ({ ...current, type: filter.type }))}
+            >
+              {intl.formatMessage({ id: filter.labelId })}
+            </Button>
+          ))}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Select
+            value={filters.categoryId || allCategoriesValue}
+            onValueChange={(value) =>
+              setFilters((current) => ({
+                ...current,
+                categoryId: value === allCategoriesValue ? '' : value,
+              }))
+            }
+          >
+            <SelectTrigger
+              aria-label={intl.formatMessage({ id: 'page.today.filter.category' })}
+              className="rounded-xl border-border/75"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={allCategoriesValue}>
+                {intl.formatMessage({ id: 'page.today.filter.allCategories' })}
+              </SelectItem>
+              {activeCategories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={filters.priority || allPrioritiesValue}
+            onValueChange={(value) =>
+              setFilters((current) => ({
+                ...current,
+                priority: value === allPrioritiesValue ? '' : (value as HabitPriority),
+              }))
+            }
+          >
+            <SelectTrigger
+              aria-label={intl.formatMessage({ id: 'page.today.filter.priority' })}
+              className="rounded-xl border-border/75"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={allPrioritiesValue}>
+                {intl.formatMessage({ id: 'page.today.filter.allPriorities' })}
+              </SelectItem>
+              {priorities.map((priority) => (
+                <SelectItem key={priority} value={priority}>
+                  {intl.formatMessage({ id: `page.items.priority.${priority}` })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      {visibleItems.length === 0 ? (
+        <EmptyState
+          titleId={
+            filters.searchText.trim().length > 0
+              ? 'page.today.empty.search.title'
+              : selectedDate === actualToday
+                ? 'page.today.empty.today.title'
+                : 'page.today.empty.date.title'
+          }
+          descriptionId={
+            filters.searchText.trim().length > 0
+              ? 'page.today.empty.search.description'
+              : selectedDate === actualToday
+                ? 'page.today.empty.today.description'
+                : 'page.today.empty.date.description'
+          }
+        />
+      ) : (
+        <SortableItemsList
+          items={visibleItems}
+          group={`today-${selectedDate}`}
+          reorderLabelId="page.today.action.reorder"
+          onReorder={reorderTodayItems}
+          revealCards={false}
+        >
+          {(item) => {
+            const sourceId = getSourceItemId(item)
+            const category = item.categoryId ? categoriesById.get(item.categoryId) : undefined
+            const fallbackCategoryLabel = intl.formatMessage({
+              id:
+                item.type === 'habit'
+                  ? 'page.items.habit.category.none'
+                  : item.type === 'task'
+                    ? 'page.items.task.category.none'
+                    : 'page.items.recurrent.category.none',
+            })
+            const meta =
+              item.type === 'habit'
+                ? formatHabitFrequency(intl, item.habit)
+                : item.type === 'task'
+                  ? formatTaskMeta(intl, item.task, selectedDate)
+                  : formatRecurrentFrequency(intl, item.task)
+
+            return (
+              <TodayItemCard
+                type={item.type}
+                title={item.title}
+                amountText={amountText(intl, item)}
+                meta={meta}
+                category={category}
+                fallbackCategoryLabel={fallbackCategoryLabel}
+                priority={item.priority}
+                priorityLabel={`${intl.formatMessage({ id: 'page.today.item.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${item.priority}` })}`}
+                state={item.state}
+                disabled={!completionEnabled}
+                onPrimaryAction={() => runPrimaryAction(item)}
+                onOpenMenu={() => setSelectedMenuItemId(item.id)}
+                key={`${item.type}:${sourceId}`}
+              />
+            )
+          }}
+        </SortableItemsList>
+      )}
+
+      <TodayActionSheet
+        title={selectedMenuItem?.title ?? ''}
+        open={Boolean(selectedMenuItem)}
+        actions={menuActionsForItem(selectedMenuItem)}
+        onClose={closeMenu}
+      />
+
+      {selectedHabitForAmount ? (
+        <HabitAmountInputSheet
+          habit={selectedHabitForAmount}
+          date={amountHabitId ? selectedDate : null}
+          initialAmount={getHabitLogAmount(
+            selectedHabitForAmount,
+            habitLogs.find(
+              (log) =>
+                log.habitId === selectedHabitForAmount.id && log.loggedForDate === selectedDate,
+            ),
+          )}
+          metadata={getHabitAmountInputMetadata(selectedHabitForAmount)!}
+          helperLines={amountHelperLines(intl, selectedHabitForAmount, habitLogs, selectedDate)}
+          pending={upsertHabitLogMutation.isPending || removeHabitLogMutation.isPending}
+          onClose={() => setAmountHabitId(null)}
+          onSave={(amount) => {
+            const metadata = getHabitAmountInputMetadata(selectedHabitForAmount)
+            if (!metadata) {
+              return
+            }
+            if (amount <= 0) {
+              removeHabitLogMutation.mutate(
+                { habitId: selectedHabitForAmount.id, logDate: selectedDate },
+                { onSuccess: () => setAmountHabitId(null) },
+              )
+              return
+            }
+            upsertHabitLogMutation.mutate(
+              {
+                habitId: selectedHabitForAmount.id,
+                logDate: selectedDate,
+                status: 'completed',
+                value: amount,
+                unit: metadata.unit,
+              },
+              { onSuccess: () => setAmountHabitId(null) },
+            )
+          }}
+        />
+      ) : null}
+
+      {detailHabit && detailSelection ? (
+        <HabitDetail
+          key={`${detailHabit.id}:${detailSelection.tab}:${detailSelection.dangerAction ?? ''}`}
+          habit={detailHabit}
+          categories={categoriesQuery.data ?? []}
+          initialTab={detailSelection.tab}
+          initialDangerAction={detailSelection.dangerAction}
+          today={actualToday}
+          onClose={() => setDetailSelection(null)}
+          onArchived={(habit) => {
+            setDetailSelection(null)
+            appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
+          }}
+          onDeleted={(habit) => {
+            setDetailSelection(null)
+            appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
+          }}
+        />
+      ) : null}
+
+      {selectedTask ? (
+        <TaskEdit
+          task={selectedTask}
+          categories={categoriesQuery.data ?? []}
+          onClose={() => setSelectedTaskId(null)}
+          onArchived={(task) => {
+            setSelectedTaskId(null)
+            appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
+          }}
+          onDeleted={(task) => {
+            setSelectedTaskId(null)
+            appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
+          }}
+        />
+      ) : null}
+
+      {selectedRecurrentTask ? (
+        <RecurrentTaskEdit
+          task={selectedRecurrentTask}
+          categories={categoriesQuery.data ?? []}
+          today={actualToday}
+          onClose={() => setSelectedRecurrentTaskId(null)}
+          onArchived={(task) => {
+            setSelectedRecurrentTaskId(null)
+            appToast.success({ id: 'page.items.recurrent.archived', values: { task: task.title } })
+          }}
+          onDeleted={(task) => {
+            setSelectedRecurrentTaskId(null)
+            appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
+          }}
+        />
+      ) : null}
+
+      {hasFilters ? <span className="sr-only">{intl.formatMessage({ id: 'page.today.filters.active' })}</span> : null}
     </section>
   )
 }

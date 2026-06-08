@@ -17,6 +17,7 @@ function useInvalidateRecurrentTasks(userId: string) {
   return async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['recurrent-tasks', userId] }),
+      queryClient.invalidateQueries({ queryKey: ['recurrent-tasks', 'today', userId] }),
       queryClient.invalidateQueries({ queryKey: ['recurrent-task-occurrences', userId] }),
     ])
   }

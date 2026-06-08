@@ -23,6 +23,7 @@ type HabitAmountInputSheetProps = {
   habit: Habit
   initialAmount: number | null
   metadata: HabitAmountInputMetadata
+  helperLines?: string[]
   pending: boolean
   onClose: () => void
   onSave: (amount: number) => void
@@ -33,6 +34,7 @@ export function HabitAmountInputSheet({
   habit,
   initialAmount,
   metadata,
+  helperLines = [],
   pending,
   onClose,
   onSave,
@@ -130,6 +132,13 @@ export function HabitAmountInputSheet({
                       : 'page.items.habit.amount.error.required',
                 })}
               </span>
+            ) : null}
+            {helperLines.length > 0 ? (
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                {helperLines.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
             ) : null}
           </div>
           <div className="flex gap-2">
