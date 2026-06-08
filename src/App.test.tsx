@@ -48,6 +48,26 @@ describe('app shell', () => {
     expect(screen.queryByText('Simple by default, deep by choice')).not.toBeInTheDocument()
   })
 
+  it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
+    render(<App />)
+
+    const habitCard = await screen.findByRole('article', { name: 'Move for 20 minutes' })
+    expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
+    expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
+    expect(within(habitCard).getByLabelText('Health')).toBeInTheDocument()
+    expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
+    expect(within(habitCard).queryByText('Kept intentionally lightweight.')).not.toBeInTheDocument()
+
+    const taskCard = screen.getByRole('article', { name: 'Pay rent' })
+    expect(within(taskCard).getByText('Pay rent')).toBeInTheDocument()
+    expect(within(taskCard).getByText(/^Today - /)).toBeInTheDocument()
+    expect(within(taskCard).getByLabelText('Uncategorized')).toBeInTheDocument()
+    expect(within(taskCard).getByLabelText('Priority: High')).toBeInTheDocument()
+    expect(
+      within(taskCard).queryByText('One-off task with a due date placeholder.'),
+    ).not.toBeInTheDocument()
+  })
+
   it('bottom nav contains the expected tabs', async () => {
     render(<App />)
 
