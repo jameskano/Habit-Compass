@@ -5,11 +5,6 @@ type HabitLogFixtureOverrides = Partial<HabitLog>
 
 const baseTimestamp = '2026-05-21T08:00:00.000Z'
 
-export type HabitSchedule =
-  | { kind: 'anyDay' }
-  | { kind: 'specificDaysOfWeek'; daysOfWeek: readonly number[] }
-  | { kind: 'advancedFutureRule'; description: string }
-
 export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixtureOverrides = {}): Habit {
   return {
     id: 'habit-1',
@@ -17,17 +12,26 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
     createdAt: baseTimestamp,
     updatedAt: baseTimestamp,
     archivedAt: null,
-    deletedAt: null,
     title: 'Habit fixture',
+    description: null,
     notes: null,
     lifecycleStatus: 'active',
     categoryId: null,
+    priority: 'medium',
+    startsOn: '2026-01-01',
+    endsOn: null,
+    order: 0,
+    scheduleRule:
+      'period' in goalConfig
+        ? { kind: 'flexiblePeriod' }
+        : { kind: 'daily' },
     trackingType: goalConfig.trackingType,
     goalConfig,
     usesCompletionLevels: false,
-    enabledCompletionLevels: [],
+    enabledCompletionLevels: ['standard'],
     defaultCompletionLevel: null,
     resetMode: 'soft',
+    inactivityPeriods: [],
     ...overrides,
   }
 }
@@ -56,7 +60,6 @@ export function createHabitLog(overrides: HabitLogFixtureOverrides = {}): HabitL
     createdAt: baseTimestamp,
     updatedAt: baseTimestamp,
     archivedAt: null,
-    deletedAt: null,
     habitId: 'habit-1',
     loggedForDate: '2026-05-21',
     loggedAt: '2026-05-21T08:00:00.000Z',
@@ -76,10 +79,6 @@ export function createResettableHabit(resetMode: HabitResetMode = 'soft') {
 }
 
 export const habitSchedules = {
-  anyDay: { kind: 'anyDay' } as const,
+  daily: { kind: 'daily' } as const,
   mondayWednesdayFriday: { kind: 'specificDaysOfWeek', daysOfWeek: [1, 3, 5] } as const,
-  futurePlaceholder: {
-    kind: 'advancedFutureRule',
-    description: 'Future advanced recurrence support',
-  } as const,
 }

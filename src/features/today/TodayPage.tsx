@@ -6,7 +6,6 @@ import { useMoodLogForDateQuery } from '@/features/mood/hooks/useMoodLogForDateQ
 import { useTodayTasksQuery } from '@/features/tasks/hooks/useTodayTasksQuery'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
-import { PageHeader } from '@/shared/ui/PageHeader'
 import { StatCard } from '@/shared/ui/StatCard'
 import { SuggestionCard } from '@/shared/ui/SuggestionCard'
 
@@ -20,11 +19,6 @@ export function TodayPage() {
   if (habitsQuery.isLoading || tasksQuery.isLoading || moodQuery.isLoading) {
     return (
       <section className="space-y-6">
-        <PageHeader
-          eyebrowId="page.today.eyebrow"
-          titleId="page.today.title"
-          descriptionId="page.today.description"
-        />
         <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
       </section>
     )
@@ -33,11 +27,6 @@ export function TodayPage() {
   if (habitsQuery.isError || tasksQuery.isError || moodQuery.isError) {
     return (
       <section className="space-y-6">
-        <PageHeader
-          eyebrowId="page.today.eyebrow"
-          titleId="page.today.title"
-          descriptionId="page.today.description"
-        />
         <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
       </section>
     )
@@ -57,12 +46,6 @@ export function TodayPage() {
 
   return (
     <section className="space-y-6">
-      <PageHeader
-        eyebrowId="page.today.eyebrow"
-        titleId="page.today.title"
-        descriptionId="page.today.description"
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           labelId="page.today.stat.completed"

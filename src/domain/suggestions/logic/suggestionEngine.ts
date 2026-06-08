@@ -1,8 +1,5 @@
-import { evaluateHabitCompletion } from '@/domain/habits/logic/evaluateHabitCompletion'
 import { selectSuggestionCopy, type SuggestionCopyVariant } from './suggestionCopy'
 import {
-  canSuggestDeep,
-  countRecentMisses,
   hasMinimumHabitVersion,
   isCategoryNeglected,
   isInactiveUser,
@@ -20,13 +17,14 @@ export type SuggestionRecommendation = {
   body: string
   targetHabitId?: string | null
   targetCategoryId?: string | null
-  suggestedLevel?: 'minimum' | 'standard' | 'deep' | null
+  suggestedLevel?: 'minimum' | 'standard' | null
 }
 
 export type SuggestionRecommendationContext = {
   habitEntries: Array<{
     habit: Habit
     recentLogs: HabitLog[]
+    missedDayCount?: number
   }>
   recentMood?: MoodValue | null
   categoryEntries?: Array<{
@@ -60,8 +58,8 @@ export function generateSuggestions(context: SuggestionRecommendationContext): S
   const suggestions: SuggestionRecommendation[] = []
 
   for (const entry of context.habitEntries) {
-    const { habit, recentLogs } = entry
-    const recentMisses = countRecentMisses(recentLogs)
+    const { habit } = entry
+    const recentMisses = entry.missedDayCount ?? 0
 
     if (isLowMood(context.recentMood) && hasMinimumHabitVersion(habit)) {
       suggestions.push(
@@ -102,23 +100,6 @@ export function generateSuggestions(context: SuggestionRecommendationContext): S
       continue
     }
 
-    const completion = evaluateHabitCompletion({
-      habit,
-      logs: recentLogs,
-      periodStart: recentLogs[0]?.loggedForDate ?? '2026-05-01',
-      periodEnd: recentLogs[recentLogs.length - 1]?.loggedForDate ?? '2026-05-31',
-    })
-
-    if (canSuggestDeep(habit, completion.progress.progressRatio >= 1)) {
-      suggestions.push(
-        buildSuggestion('useMinimum', 'simplePattern', context.variantSelector, {
-          targetHabitId: habit.id,
-          suggestedLevel: 'deep',
-          title: 'Deep version is available',
-          body: 'You can choose the deeper version because the current context supports it.',
-        }),
-      )
-    }
   }
 
   for (const categoryEntry of context.categoryEntries ?? []) {

@@ -4,10 +4,6 @@ import type { CategoriesRepository, Category } from '@/domain/categories'
 
 import { getMockState } from './mockData'
 
-function isVisibleCategory(category: Category) {
-  return category.lifecycleStatus !== 'deleted' && !category.deletedAt
-}
-
 function updateCategoryInState(
   categoryId: string,
   updater: (category: Category) => Category,
@@ -29,7 +25,7 @@ export const mockCategoriesRepository: CategoriesRepository = {
   async listForUser({ userId }) {
     return ok(
       getMockState().categories.filter(
-        (category) => category.userId === userId && isVisibleCategory(category),
+        (category) => category.userId === userId,
       ),
     )
   },
@@ -42,7 +38,6 @@ export const mockCategoriesRepository: CategoriesRepository = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
-      deletedAt: null,
     }
 
     state.categories.push(category)
@@ -66,13 +61,26 @@ export const mockCategoriesRepository: CategoriesRepository = {
     }))
   },
 
-  async softDelete({ categoryId }) {
-    return updateCategoryInState(categoryId, (category) => ({
-      ...category,
-      lifecycleStatus: 'deleted',
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+  async delete({ categoryId }) {
+    const state = getMockState()
+    const index = state.categories.findIndex((category) => category.id === categoryId)
+
+    if (index === -1) {
+      return err(createNotFoundError('Category', categoryId))
+    }
+
+    state.categories.splice(index, 1)
+    state.habits = state.habits.map((habit) =>
+      habit.categoryId === categoryId ? { ...habit, categoryId: null } : habit,
+    )
+    state.tasks = state.tasks.map((task) =>
+      task.categoryId === categoryId ? { ...task, categoryId: null } : task,
+    )
+    state.recurrentTasks = state.recurrentTasks.map((task) =>
+      task.categoryId === categoryId ? { ...task, categoryId: null } : task,
+    )
+
+    return ok(null)
   },
 
   async restore({ categoryId }) {
@@ -80,7 +88,6 @@ export const mockCategoriesRepository: CategoriesRepository = {
       ...category,
       lifecycleStatus: 'active',
       archivedAt: null,
-      deletedAt: null,
       updatedAt: new Date().toISOString(),
     }))
   },

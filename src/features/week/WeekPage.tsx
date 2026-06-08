@@ -5,7 +5,6 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { mockAppShellData } from '@/shared/config/mockAppShellData'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
-import { PageHeader } from '@/shared/ui/PageHeader'
 import { StatCard } from '@/shared/ui/StatCard'
 
 export function WeekPage() {
@@ -13,8 +12,6 @@ export function WeekPage() {
 
   return (
     <section className="space-y-6">
-      <PageHeader titleId="page.week.title" descriptionId="page.week.description" />
-
       {!weeklyPlanningEnabled ? (
         <EmptyState
           titleId="page.week.disabled.title"

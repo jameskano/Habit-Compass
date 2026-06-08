@@ -2,6 +2,7 @@ import { calculateCalendarCompletion, type CalendarCompletionState } from '@/dom
 
 import type { Habit, HabitCompletionLevel, HabitLog } from '../types'
 import { evaluateHabitProgress, type HabitProgressEvaluation, type HabitProgressInput } from './evaluateHabitProgress'
+import { deriveHabitDayState } from './habitDayState'
 
 export type HabitCompletionOutcome = 'pending' | 'completed' | 'missed' | 'skipped' | 'partial'
 
@@ -14,15 +15,7 @@ export type HabitCompletionEvaluation = {
 }
 
 function getLevelRank(level: HabitCompletionLevel) {
-  if (level === 'minimum') {
-    return 1
-  }
-
-  if (level === 'standard') {
-    return 2
-  }
-
-  return 3
+  return level === 'minimum' ? 1 : 2
 }
 
 function getHighestExplicitCompletionLevel(logs: HabitLog[]) {
@@ -38,6 +31,10 @@ function hasCompletionLevel(habit: Habit, level: HabitCompletionLevel) {
 }
 
 function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, completedLogs: HabitLog[]) {
+  if (progress.derivedCompletionLevel) {
+    return progress.derivedCompletionLevel
+  }
+
   if (!habit.usesCompletionLevels || habit.enabledCompletionLevels.length === 0 || progress.actual <= 0) {
     return null
   }
@@ -54,10 +51,6 @@ function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, 
     }
 
     return habit.enabledCompletionLevels[0] ?? null
-  }
-
-  if (progress.progressRatio >= 1 && hasCompletionLevel(habit, 'deep')) {
-    return 'deep'
   }
 
   if (progress.progressRatio >= 0.66 && hasCompletionLevel(habit, 'standard')) {
@@ -79,23 +72,13 @@ function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, 
   return null
 }
 
-function countRecentFailures(logs: HabitLog[]) {
-  return logs.filter((log) => log.status === 'missed' || log.status === 'skipped').length
-}
-
-function evaluateSuggestedLevel(habit: Habit, progress: HabitProgressEvaluation, logs: HabitLog[]) {
+function evaluateSuggestedLevel(habit: Habit, progress: HabitProgressEvaluation, missedDayCount: number) {
   if (!habit.usesCompletionLevels || habit.enabledCompletionLevels.length === 0) {
     return null
   }
 
-  const recentFailures = countRecentFailures(logs)
-
-  if (recentFailures >= 2 && hasCompletionLevel(habit, 'minimum')) {
+  if (missedDayCount >= 2 && hasCompletionLevel(habit, 'minimum')) {
     return 'minimum'
-  }
-
-  if (progress.progressRatio >= 1 && hasCompletionLevel(habit, 'deep')) {
-    return 'deep'
   }
 
   if (progress.progressRatio >= 0.66 && hasCompletionLevel(habit, 'standard')) {
@@ -116,7 +99,17 @@ export function evaluateHabitCompletion(input: HabitProgressInput): HabitComplet
   )
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
   const hasSkipped = relevantLogs.some((log) => log.status === 'skipped')
-  const hasMissed = relevantLogs.some((log) => log.status === 'missed')
+  const singleDayState =
+    input.periodStart === input.periodEnd
+      ? deriveHabitDayState({
+          habit: input.habit,
+          date: input.periodStart,
+          today: input.today ?? input.periodEnd,
+          logs: relevantLogs,
+        })
+      : null
+  const hasMissed = singleDayState === 'missed'
+  const missedDayCount = hasMissed ? 1 : 0
 
   let outcome: HabitCompletionOutcome = 'pending'
 
@@ -140,6 +133,6 @@ export function evaluateHabitCompletion(input: HabitProgressInput): HabitComplet
     }),
     progress,
     achievedLevel: evaluateAchievedLevel(input.habit, progress, completedLogs),
-    suggestedLevel: evaluateSuggestedLevel(input.habit, progress, relevantLogs),
+    suggestedLevel: evaluateSuggestedLevel(input.habit, progress, missedDayCount),
   }
 }

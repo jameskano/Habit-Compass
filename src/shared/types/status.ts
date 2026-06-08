@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const lifecycleStatuses = ['active', 'archived', 'deleted'] as const
+export const lifecycleStatuses = ['active', 'archived'] as const
 export const trackableStatuses = ['pending', 'completed', 'skipped', 'missed'] as const
 export const allStatuses = [...lifecycleStatuses, ...trackableStatuses] as const
 

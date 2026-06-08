@@ -34,6 +34,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Recurrent tasks must support these recurrence concepts:
   - `daily`
   - `specificDaysOfWeek`
+  - `specificDaysOfMonth`
+  - `specificDaysOfYear`
   - `everyXDays`
   - `everyXWeeks`
   - `everyXMonths`
@@ -41,8 +43,17 @@ Users need repeatable tasks that regenerate over time without forcing them into 
   - `customFutureRule`
 - MVP execution logic must only rely on the structured rules above.
 - `customFutureRule` may exist as a descriptive placeholder only.
+- New recurrent-task creation uses a two-step flow: executable frequency, then details.
+- Recurrent tasks remain binary-only and do not expose flexible times-per-period recurrence.
+- `customFutureRule` remains editable for legacy data but is not offered during creation.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
-- Parent recurrent tasks must support active, archived, and deleted lifecycle state.
+- Recurrent tasks have priority `low`, `medium`, or `high`, stored order, and carry-forward behavior.
+- Recurrent tasks may include a description for item clarification and separate notes for extra user information.
+- The parent schedule is bounded by `startsOn` and optional `endsOn`.
+- Saving an end date before today archives the parent recurrent task after confirmation in the edit flow.
+- Read logic derives overdue pending/missed presentation without writing automatic missed occurrences.
+- Parent recurrent tasks must support only active and archived lifecycle state.
+- Delete physically removes a parent recurrent task after explicit confirmation.
 
 ## Non-Functional Requirements
 
@@ -54,10 +65,15 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - `RecurrentTask`
   - base entity fields
   - `title`
+  - `description`
   - `notes`
   - `categoryId`
+  - `priority`
+  - `carryForward`
+  - `order`
   - `lifecycleStatus`
   - `startsOn`
+  - `endsOn`
   - `recurrenceRule`
 - `RecurrentTaskOccurrence`
   - base entity fields
@@ -76,6 +92,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 ## Edge Cases
 
 - `specificDaysOfWeek` must contain at least one day.
+- `specificDaysOfMonth` and `specificDaysOfYear` must contain at least one valid date.
+- A yearly date uses a validated `{ month, day }` pair. Dates absent from a shorter month are skipped safely.
 - Month-based rules must reject invalid day-of-month values.
 - A future custom rule must not be interpreted as an executable schedule yet.
 
@@ -91,3 +109,4 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Schema tests for each recurrence rule.
 - Unit tests for invalid day-of-week and day-of-month payloads.
 - Schema tests for recurrent task occurrence statuses.
+- Unit tests for carry-forward occurrence derivation without read-side writes.

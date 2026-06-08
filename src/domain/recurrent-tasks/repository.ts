@@ -5,7 +5,7 @@ import type { RecurrentTask, RecurrentTaskOccurrence, RecurrentTaskOccurrenceSta
 
 export type CreateRecurrentTaskInput = Omit<
   RecurrentTask,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt' | 'deletedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
 >
 export type UpdateRecurrentTaskInput = Partial<
   Omit<RecurrentTask, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
@@ -19,11 +19,21 @@ export interface RecurrentTasksRepository {
     userId: UserId
     date: ISODateString
   }): Promise<Result<RecurrentTaskOccurrence[]>>
+  listOccurrencesForRange(input: {
+    userId: UserId
+    recurrentTaskId?: EntityId
+    from: ISODateString
+    to: ISODateString
+  }): Promise<Result<RecurrentTaskOccurrence[]>>
   create(input: CreateRecurrentTaskInput): Promise<Result<RecurrentTask>>
   update(input: UpdateRecurrentTaskInput): Promise<Result<RecurrentTask>>
   archive(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
-  softDelete(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
+  delete(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<null>>
   restore(input: { userId: UserId; recurrentTaskId: EntityId }): Promise<Result<RecurrentTask>>
+  reorder(input: {
+    userId: UserId
+    orderedRecurrentTaskIds: EntityId[]
+  }): Promise<Result<RecurrentTask[]>>
   logCompletion(input: {
     userId: UserId
     recurrentTaskId: EntityId

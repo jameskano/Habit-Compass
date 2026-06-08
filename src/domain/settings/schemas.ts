@@ -12,7 +12,7 @@ export const FeatureTogglesSchema = z.object({
   mood: z.boolean(),
   weeklyPlanning: z.boolean(),
   suggestions: z.boolean(),
-  minimumStandardDeep: z.boolean(),
+  habitCompletionLevels: z.boolean(),
   categories: z.boolean(),
   reflections: z.boolean(),
 })

@@ -23,10 +23,13 @@ export const supabaseTasksRepository: TasksRepository = {
   async archive() {
     return error()
   },
-  async softDelete() {
+  async delete() {
     return error()
   },
   async restore() {
+    return error()
+  },
+  async reorder() {
     return error()
   },
 }

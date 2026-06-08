@@ -14,6 +14,9 @@ export const supabaseHabitsRepository: HabitsRepository = {
   async listLogsForDate() {
     return error()
   },
+  async listLogsForRange() {
+    return error()
+  },
   async create() {
     return error()
   },
@@ -23,13 +26,22 @@ export const supabaseHabitsRepository: HabitsRepository = {
   async archive() {
     return error()
   },
-  async softDelete() {
+  async delete() {
     return error()
   },
   async restore() {
     return error()
   },
-  async logCompletion() {
+  async upsertLog() {
+    return error()
+  },
+  async removeLog() {
+    return error()
+  },
+  async hardResetLogs() {
+    return error()
+  },
+  async reorder() {
     return error()
   },
 }

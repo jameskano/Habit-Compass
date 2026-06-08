@@ -17,10 +17,10 @@ Habit Compass harness coverage currently focuses on deterministic non-UI logic t
   - future advanced recurrence placeholder
 - Habit completion evaluation:
   - completed
-  - missed
+  - derived missed days
   - skipped
   - partial progress
-  - minimum, standard, and deep level handling
+  - minimum and standard level handling
 - Stats:
   - completion percentage
   - calendar completion state
@@ -36,7 +36,8 @@ Habit Compass harness coverage currently focuses on deterministic non-UI logic t
   - soft reset
   - hard reset confirmation
   - archive
-  - delete with future hard-delete preparation flag
+  - repeated archive/reactivation intervals and inactive-day stat exclusions
+  - confirmed physical item deletion through repository behavior
 
 ## Intent
 

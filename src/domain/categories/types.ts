@@ -1,15 +1,11 @@
-import type { BaseEntityFields, LifecycleStatus } from '@/shared/types'
+import type { ItemEntityFields, LifecycleStatus } from '@/shared/types'
 
-import type { categoryOrientations } from './constants'
-
-export type CategoryOrientation = (typeof categoryOrientations)[number]
-
-export type Category = BaseEntityFields & {
+export type Category = ItemEntityFields & {
   name: string
   description?: string | null
-  colorToken?: string | null
-  iconName?: string | null
-  orientation: CategoryOrientation
+  colorToken: string
+  iconName: string
+  order: number
   lifecycleStatus: LifecycleStatus
   isDefault: boolean
 }

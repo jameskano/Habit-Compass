@@ -1,24 +1,25 @@
 import { X } from 'lucide-react'
-import { type KeyboardEvent as ReactKeyboardEvent, useEffect } from 'react'
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { Button } from './button'
+import { CreateItemDialogs } from '@/features/items/create/CreateItemDialogs'
 
 type AddItemSheetProps = {
   open: boolean
   onClose: () => void
 }
 
-const optionIds = [
-  'sheet.add.habit',
-  'sheet.add.task',
-  'sheet.add.recurrentTask',
-  'sheet.add.category',
-  'sheet.add.reflection',
+const options = [
+  { kind: 'habit', messageId: 'sheet.add.habit' },
+  { kind: 'task', messageId: 'sheet.add.task' },
+  { kind: 'recurrentTask', messageId: 'sheet.add.recurrentTask' },
+  { kind: 'category', messageId: 'sheet.add.category' },
 ] as const
 
 export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
   const intl = useIntl()
+  const [createKind, setCreateKind] = useState<(typeof options)[number]['kind'] | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -35,7 +36,7 @@ export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose, open])
 
-  if (!open) {
+  if (!open && !createKind) {
     return null
   }
 
@@ -45,8 +46,19 @@ export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-40 flex items-end bg-foreground/35 backdrop-blur-sm" onClick={onClose}>
+  return createKind ? (
+    <CreateItemDialogs
+      kind={createKind}
+      onClose={() => {
+        setCreateKind(null)
+        onClose()
+      }}
+    />
+  ) : (
+    <div
+      className="fixed inset-0 z-40 flex items-end bg-foreground/35 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
         role="dialog"
         aria-modal="true"
@@ -57,9 +69,6 @@ export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
       >
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              <FormattedMessage id="sheet.add.eyebrow" />
-            </p>
             <h2 id="add-item-sheet-title" className="text-xl font-semibold">
               <FormattedMessage id="sheet.add.title" />
             </h2>
@@ -75,18 +84,15 @@ export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
         </div>
 
         <div className="space-y-3">
-          {optionIds.map((optionId) => (
+          {options.map((option) => (
             <Button
-              key={optionId}
+              key={option.kind}
               variant="secondary"
               className="w-full justify-between rounded-2xl border border-border/60 px-4 py-4 text-left"
-              onClick={onClose}
+              onClick={() => setCreateKind(option.kind)}
             >
               <span>
-                <FormattedMessage id={optionId} />
-              </span>
-              <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                <FormattedMessage id="sheet.add.comingSoon" />
+                <FormattedMessage id={option.messageId} />
               </span>
             </Button>
           ))}

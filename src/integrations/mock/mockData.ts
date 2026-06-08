@@ -3,6 +3,7 @@ import { formatISO } from 'date-fns'
 import type { Category } from '@/domain/categories'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
+import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
 
@@ -11,12 +12,15 @@ export const MOCK_USER_ID = 'mock-user-1'
 const today = new Date()
 const yesterday = new Date(today)
 yesterday.setDate(today.getDate() - 1)
+const tomorrow = new Date(today)
+tomorrow.setDate(today.getDate() + 1)
 const twoDaysAgo = new Date(today)
 twoDaysAgo.setDate(today.getDate() - 2)
 const threeDaysAgo = new Date(today)
 threeDaysAgo.setDate(today.getDate() - 3)
 const fourDaysAgo = new Date(today)
 fourDaysAgo.setDate(today.getDate() - 4)
+const todayWeekday = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 function toIsoDate(value: Date): ISODateString {
   return formatISO(value, { representation: 'date' })
@@ -33,7 +37,6 @@ function buildBaseFields(id: EntityId) {
     createdAt: toIsoDateTime(fourDaysAgo),
     updatedAt: toIsoDateTime(today),
     archivedAt: null,
-    deletedAt: null,
   }
 }
 
@@ -42,6 +45,8 @@ export type MockDataState = {
   habits: Habit[]
   habitLogs: HabitLog[]
   tasks: Task[]
+  recurrentTasks: RecurrentTask[]
+  recurrentTaskOccurrences: RecurrentTaskOccurrence[]
   moodLogs: MoodLog[]
 }
 
@@ -50,20 +55,20 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('category-health'),
       name: 'Health',
-      description: 'Role-oriented support for movement and energy.',
+      description: 'Movement and energy routines.',
       colorToken: 'emerald',
       iconName: 'heart',
-      orientation: 'role',
+      order: 0,
       lifecycleStatus: 'active',
       isDefault: true,
     },
     {
       ...buildBaseFields('category-learning'),
       name: 'Learning',
-      description: 'Value-oriented support for reading and study.',
+      description: 'Reading and study routines.',
       colorToken: 'sky',
       iconName: 'book-open',
-      orientation: 'value',
+      order: 1,
       lifecycleStatus: 'active',
       isDefault: true,
     },
@@ -73,50 +78,72 @@ function createInitialMockData(): MockDataState {
     {
       ...buildBaseFields('habit-move'),
       title: 'Move for 20 minutes',
-      notes: 'Three times per week, kept intentionally lightweight.',
+      description: 'Three lightweight movement sessions each week.',
+      notes: 'Kept intentionally lightweight.',
       lifecycleStatus: 'active',
       categoryId: 'category-health',
+      priority: 'medium',
+      startsOn: toIsoDate(fourDaysAgo),
+      endsOn: null,
+      order: 0,
+      scheduleRule: { kind: 'flexiblePeriod' },
       trackingType: 'timesPerPeriod',
       goalConfig: {
         trackingType: 'timesPerPeriod',
         period: 'week',
         targetCount: 3,
+        minimumCount: 1,
       },
       usesCompletionLevels: true,
       enabledCompletionLevels: ['minimum', 'standard'],
       defaultCompletionLevel: 'standard',
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
     {
       ...buildBaseFields('habit-read'),
       title: 'Read before bed',
-      notes: 'A quiet session target with deeper versions available later.',
+      description: 'Read before sleeping to close the day calmly.',
+      notes: 'A quiet session target with optional completion levels.',
       lifecycleStatus: 'active',
       categoryId: 'category-learning',
+      priority: 'low',
+      startsOn: toIsoDate(fourDaysAgo),
+      endsOn: null,
+      order: 1,
+      scheduleRule: { kind: 'daily' },
       trackingType: 'timePerSession',
       goalConfig: {
         trackingType: 'timePerSession',
         targetMinutes: 20,
       },
       usesCompletionLevels: false,
-      enabledCompletionLevels: [],
+      enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
     {
       ...buildBaseFields('habit-water'),
       title: 'Drink water after lunch',
-      notes: 'Simple binary support for a stable midday routine.',
+      description: 'A stable midday hydration cue.',
+      notes: 'Simple binary support.',
       lifecycleStatus: 'active',
       categoryId: 'category-health',
+      priority: 'high',
+      startsOn: toIsoDate(fourDaysAgo),
+      endsOn: null,
+      order: 2,
+      scheduleRule: { kind: 'daily' },
       trackingType: 'binary',
       goalConfig: {
         trackingType: 'binary',
       },
       usesCompletionLevels: false,
-      enabledCompletionLevels: [],
+      enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
       resetMode: 'soft',
+      inactivityPeriods: [],
     },
   ]
 
@@ -147,48 +174,131 @@ function createInitialMockData(): MockDataState {
       quantityUnitLabel: null,
       notes: 'Standard session complete.',
     },
+    {
+      ...buildBaseFields('habit-log-read-yesterday'),
+      habitId: 'habit-read',
+      loggedForDate: toIsoDate(yesterday),
+      loggedAt: toIsoDateTime(yesterday),
+      status: 'skipped',
+      completionLevel: null,
+      repetitions: null,
+      durationMinutes: null,
+      quantity: null,
+      quantityUnitLabel: null,
+      notes: 'Intentionally skipped.',
+    },
+    {
+      ...buildBaseFields('habit-log-read-two-days-ago'),
+      habitId: 'habit-read',
+      loggedForDate: toIsoDate(twoDaysAgo),
+      loggedAt: toIsoDateTime(twoDaysAgo),
+      status: 'completed',
+      completionLevel: null,
+      repetitions: null,
+      durationMinutes: 20,
+      quantity: null,
+      quantityUnitLabel: null,
+      notes: 'Standard session complete.',
+    },
   ]
 
   const tasks: Task[] = [
     {
       ...buildBaseFields('task-rent'),
       title: 'Pay rent',
+      description: 'Monthly payment task.',
       notes: 'One-off task with a due date placeholder.',
       dueDate: toIsoDate(today),
       completedAt: toIsoDateTime(today),
       categoryId: null,
+      priority: 'high',
+      carryForward: true,
+      order: 0,
       lifecycleStatus: 'active',
       completionStatus: 'completed',
     },
     {
       ...buildBaseFields('task-clinic'),
       title: 'Call the clinic',
+      description: 'Follow up on the appointment.',
       notes: 'Simple task card, no project hierarchy attached.',
-      dueDate: toIsoDate(today),
+      dueDate: toIsoDate(yesterday),
       completedAt: null,
       categoryId: null,
+      priority: 'medium',
+      carryForward: true,
+      order: 1,
       lifecycleStatus: 'active',
       completionStatus: 'pending',
     },
     {
       ...buildBaseFields('task-groceries'),
       title: 'Buy groceries',
+      description: 'Restock household basics.',
       notes: 'A regular one-off task that still belongs on Today.',
       dueDate: toIsoDate(today),
       completedAt: toIsoDateTime(today),
       categoryId: 'category-health',
+      priority: 'medium',
+      carryForward: true,
+      order: 2,
       lifecycleStatus: 'active',
       completionStatus: 'completed',
     },
     {
       ...buildBaseFields('task-laundry'),
       title: 'Start laundry',
+      description: 'Start a wash cycle.',
       notes: 'A practical household task still shown without projects.',
-      dueDate: toIsoDate(today),
+      dueDate: toIsoDate(tomorrow),
       completedAt: null,
       categoryId: null,
+      priority: 'low',
+      carryForward: true,
+      order: 3,
       lifecycleStatus: 'active',
       completionStatus: 'pending',
+    },
+  ]
+
+  const recurrentTasks: RecurrentTask[] = [
+    {
+      ...buildBaseFields('recurrent-review'),
+      title: 'Weekly review',
+      description: 'Review the week and adjust next actions.',
+      notes: 'A recurring check-in with a fixed weekday.',
+      categoryId: 'category-learning',
+      priority: 'medium',
+      carryForward: false,
+      order: 0,
+      lifecycleStatus: 'active',
+      startsOn: toIsoDate(fourDaysAgo),
+      endsOn: null,
+      recurrenceRule: { kind: 'specificDaysOfWeek', daysOfWeek: [todayWeekday] },
+    },
+    {
+      ...buildBaseFields('recurrent-plants'),
+      title: 'Water the plants',
+      description: 'Keep balcony plants watered.',
+      notes: 'A responsibility that stays actionable when overdue.',
+      categoryId: 'category-health',
+      priority: 'low',
+      carryForward: false,
+      order: 1,
+      lifecycleStatus: 'active',
+      startsOn: toIsoDate(fourDaysAgo),
+      endsOn: null,
+      recurrenceRule: { kind: 'daily' },
+    },
+  ]
+
+  const recurrentTaskOccurrences: RecurrentTaskOccurrence[] = [
+    {
+      ...buildBaseFields('recurrent-log-plants-today'),
+      recurrentTaskId: 'recurrent-plants',
+      scheduledForDate: toIsoDate(today),
+      status: 'pending',
+      completedAt: null,
     },
   ]
 
@@ -230,6 +340,8 @@ function createInitialMockData(): MockDataState {
     habits,
     habitLogs,
     tasks,
+    recurrentTasks,
+    recurrentTaskOccurrences,
     moodLogs,
   }
 }
@@ -241,18 +353,6 @@ function cloneMockData<T>(value: T): T {
 export const mockData = {
   today: toIsoDate(today),
   currentUserId: MOCK_USER_ID,
-  recurrentPreviewItems: [
-    {
-      id: 'rec-1',
-      title: 'Weekly review',
-      meta: 'Recurring every Friday, still shown as a lightweight placeholder.',
-    },
-    {
-      id: 'rec-2',
-      title: 'Water the plants',
-      meta: 'Recurring home task with simple cadence.',
-    },
-  ],
 }
 
 let mockState = createInitialMockData()

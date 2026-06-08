@@ -5,7 +5,6 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { useMoodLogsQuery } from '@/features/mood/hooks/useMoodLogsQuery'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
-import { PageHeader } from '@/shared/ui/PageHeader'
 import { StatCard } from '@/shared/ui/StatCard'
 
 export function MoodPage() {
@@ -14,8 +13,6 @@ export function MoodPage() {
 
   return (
     <section className="space-y-6">
-      <PageHeader titleId="page.mood.title" descriptionId="page.mood.description" />
-
       {!featureToggles.mood ? (
         <EmptyState
           titleId="page.mood.disabled.title"

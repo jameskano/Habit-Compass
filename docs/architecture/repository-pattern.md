@@ -34,7 +34,7 @@ Additional repository interfaces also exist for recurrent tasks, reflections, an
 ## Local Development
 
 - `VITE_APP_DATA_SOURCE=mock` keeps the app backend-free.
-- Mock repositories share an in-memory state object so archive, soft delete, completion, and list behavior can be tested together.
+- Mock repositories share an in-memory state object so archive, confirmed physical delete, completion, and list behavior can be tested together.
 
 ## Future Supabase Path
 

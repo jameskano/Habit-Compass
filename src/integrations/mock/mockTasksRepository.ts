@@ -1,12 +1,8 @@
 import { err, ok, type Result } from '@/shared/utils/result'
-import { createNotFoundError } from '@/shared/utils/appError'
+import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import type { Task, TasksRepository } from '@/domain/tasks'
 
 import { getMockState } from './mockData'
-
-function isVisibleTask(task: Task) {
-  return task.lifecycleStatus !== 'deleted' && !task.deletedAt
-}
 
 function updateTaskInState(taskId: string, updater: (task: Task) => Task): Result<Task> {
   const state = getMockState()
@@ -24,26 +20,30 @@ function updateTaskInState(taskId: string, updater: (task: Task) => Task): Resul
 
 export const mockTasksRepository: TasksRepository = {
   async listForUser({ userId }) {
-    return ok(getMockState().tasks.filter((task) => task.userId === userId && isVisibleTask(task)))
+    return ok(getMockState().tasks.filter((task) => task.userId === userId))
   },
 
   async listForToday({ userId, date }) {
     return ok(
       getMockState().tasks.filter(
-        (task) => task.userId === userId && isVisibleTask(task) && task.dueDate === date,
+        (task) =>
+          task.userId === userId && task.lifecycleStatus === 'active' && task.dueDate === date,
       ),
     )
   },
 
   async create(input) {
+    if (!input.dueDate) {
+      return err(createAppError('validation', 'Tasks require a date.'))
+    }
     const state = getMockState()
     const task: Task = {
       ...input,
+      carryForward: input.carryForward ?? true,
       id: `task-${state.tasks.length + 1}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       archivedAt: null,
-      deletedAt: null,
     }
 
     state.tasks.push(task)
@@ -51,6 +51,13 @@ export const mockTasksRepository: TasksRepository = {
   },
 
   async update(input) {
+    const currentTask = getMockState().tasks.find((task) => task.id === input.id)
+    if (!currentTask) {
+      return err(createNotFoundError('Task', input.id))
+    }
+    if (!('dueDate' in input ? input.dueDate : currentTask.dueDate)) {
+      return err(createAppError('validation', 'Tasks require a date.'))
+    }
     return updateTaskInState(input.id, (task) => ({
       ...task,
       ...input,
@@ -76,13 +83,16 @@ export const mockTasksRepository: TasksRepository = {
     }))
   },
 
-  async softDelete({ taskId }) {
-    return updateTaskInState(taskId, (task) => ({
-      ...task,
-      lifecycleStatus: 'deleted',
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+  async delete({ taskId }) {
+    const state = getMockState()
+    const index = state.tasks.findIndex((task) => task.id === taskId)
+
+    if (index === -1) {
+      return err(createNotFoundError('Task', taskId))
+    }
+
+    state.tasks.splice(index, 1)
+    return ok(null)
   },
 
   async restore({ taskId }) {
@@ -90,8 +100,24 @@ export const mockTasksRepository: TasksRepository = {
       ...task,
       lifecycleStatus: 'active',
       archivedAt: null,
-      deletedAt: null,
       updatedAt: new Date().toISOString(),
     }))
+  },
+
+  async reorder({ userId, orderedTaskIds }) {
+    const state = getMockState()
+    const tasks = state.tasks.filter(
+      (task) => task.userId === userId && orderedTaskIds.includes(task.id),
+    )
+
+    for (const [order, taskId] of orderedTaskIds.entries()) {
+      const task = tasks.find((entry) => entry.id === taskId)
+      if (task) {
+        task.order = order
+        task.updatedAt = new Date().toISOString()
+      }
+    }
+
+    return ok([...tasks].sort((left, right) => left.order - right.order))
   },
 }
