@@ -5,10 +5,7 @@ import {
   type Habit,
   type HabitLog,
 } from '@/domain/habits'
-import {
-  isRecurrentTaskScheduledOnDate,
-  type RecurrentTask,
-} from '@/domain/recurrent-tasks'
+import { isRecurrentTaskScheduledOnDate, type RecurrentTask } from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, HabitPriority, ISODateString } from '@/shared/types'
 
@@ -60,7 +57,9 @@ export function getSourceItemId(item: TodayItem) {
 }
 
 export function isMeasurableHabit(habit: Habit) {
-  return habit.goalConfig.trackingType !== 'binary' && habit.goalConfig.trackingType !== 'timesPerPeriod'
+  return (
+    habit.goalConfig.trackingType !== 'binary' && habit.goalConfig.trackingType !== 'timesPerPeriod'
+  )
 }
 
 export function deriveHabitTodayState(input: {
@@ -74,7 +73,9 @@ export function deriveHabitTodayState(input: {
     return 'futureDisabled'
   }
 
-  const selectedLog = logs.find((log) => log.habitId === habit.id && log.loggedForDate === selectedDate)
+  const selectedLog = logs.find(
+    (log) => log.habitId === habit.id && log.loggedForDate === selectedDate,
+  )
 
   if (selectedLog?.status === 'skipped') {
     return 'skipped'
@@ -125,9 +126,9 @@ export function shouldShowTaskOnToday(task: Task, selectedDate: ISODateString) {
   }
   return Boolean(
     task.dueDate &&
-      task.dueDate < selectedDate &&
-      task.carryForward &&
-      task.completionStatus === 'pending',
+    task.dueDate < selectedDate &&
+    task.carryForward &&
+    task.completionStatus === 'pending',
   )
 }
 
@@ -150,42 +151,48 @@ export function buildTodayItems(input: BuildTodayItemsInput): TodayItem[] {
   )
 
   return [
-    ...habits.filter((habit) => shouldShowHabitOnToday(habit, selectedDate)).map((habit) => {
-      const log = habitLogs.find(
-        (entry) => entry.habitId === habit.id && entry.loggedForDate === selectedDate,
-      )
-      return {
-        id: getTodayItemId('habit', habit.id),
-        type: 'habit' as const,
-        title: habit.title,
-        description: habit.description,
-        notes: habit.notes,
-        categoryId: habit.categoryId,
-        priority: habit.priority,
-        createdAt: habit.createdAt,
-        habit,
-        log: log ?? null,
-        state: deriveHabitTodayState({ habit, logs: habitLogs, selectedDate, today }),
-        amount: log ? getHabitLogAmount(habit, log) : null,
-      }
-    }),
-    ...tasks.filter((task) => shouldShowTaskOnToday(task, selectedDate)).map((task) => ({
-      id: getTodayItemId('task', task.id),
-      type: 'task' as const,
-      title: task.title,
-      description: task.description,
-      notes: task.notes,
-      categoryId: task.categoryId,
-      priority: task.priority,
-      createdAt: task.createdAt,
-      task,
-      state: deriveTaskTodayState({
-        completed: task.completionStatus === 'completed',
-        selectedDate,
-        today,
+    ...habits
+      .filter((habit) => shouldShowHabitOnToday(habit, selectedDate))
+      .map((habit) => {
+        const log = habitLogs.find(
+          (entry) => entry.habitId === habit.id && entry.loggedForDate === selectedDate,
+        )
+        return {
+          id: getTodayItemId('habit', habit.id),
+          type: 'habit' as const,
+          title: habit.title,
+          description: habit.description,
+          notes: habit.notes,
+          categoryId: habit.categoryId,
+          priority: habit.priority,
+          createdAt: habit.createdAt,
+          habit,
+          log: log ?? null,
+          state: deriveHabitTodayState({ habit, logs: habitLogs, selectedDate, today }),
+          amount: log ? getHabitLogAmount(habit, log) : null,
+        }
       }),
-      overdue: Boolean(task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending'),
-    })),
+    ...tasks
+      .filter((task) => shouldShowTaskOnToday(task, selectedDate))
+      .map((task) => ({
+        id: getTodayItemId('task', task.id),
+        type: 'task' as const,
+        title: task.title,
+        description: task.description,
+        notes: task.notes,
+        categoryId: task.categoryId,
+        priority: task.priority,
+        createdAt: task.createdAt,
+        task,
+        state: deriveTaskTodayState({
+          completed: task.completionStatus === 'completed',
+          selectedDate,
+          today,
+        }),
+        overdue: Boolean(
+          task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending',
+        ),
+      })),
     ...recurrentTasks
       .filter((task) => shouldShowRecurrentTaskOnToday(task, selectedDate))
       .flatMap((task) => {
@@ -249,7 +256,10 @@ export function filterTodayItems(items: readonly TodayItem[], filters: TodayFilt
   const normalizedSearch = filters.searchText.trim().toLowerCase()
 
   return items.filter((item) => {
-    if (filters.type !== 'all' && item.type !== filters.type) {
+    if (filters.type === 'habit' && item.type !== 'habit') {
+      return false
+    }
+    if (filters.type === 'task' && item.type !== 'task' && item.type !== 'recurrentTask') {
       return false
     }
     if (filters.categoryId && item.categoryId !== filters.categoryId) {

@@ -36,7 +36,7 @@ import {
   parseDaysOfMonthInput,
   parseDaysOfYearInput,
 } from '../components/scheduleInputParsers'
-import { MutableDateField } from '../components/ItemDateFields'
+import { DatePickerField } from '../components/ItemDateFields'
 
 type CreateKind = 'habit' | 'task' | 'recurrentTask' | 'category'
 type FrequencyKind =
@@ -779,15 +779,16 @@ function HabitCreate({ onClose }: { onClose: () => void }) {
                 </SelectContent>
               </Select>
             </label>
-            <MutableDateField
+            <DatePickerField
               labelId="page.items.create.details.startsOn"
               value={startsOn}
-              onChange={(event) => setStartsOn(event.target.value)}
+              onValueChange={setStartsOn}
             />
-            <MutableDateField
+            <DatePickerField
               labelId="page.items.create.details.endsOn"
               value={endsOn}
-              onChange={(event) => setEndsOn(event.target.value)}
+              onValueChange={setEndsOn}
+              allowClear
             />
           </section>
         ) : null}
@@ -863,10 +864,10 @@ function TaskCreate({ onClose }: { onClose: () => void }) {
             className={inputClass}
           />
         </label>
-        <MutableDateField
+        <DatePickerField
           labelId="page.items.create.task.date"
           value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
+          onValueChange={setDueDate}
         />
         <ActiveCategorySelect value={categoryId} onChange={setCategoryId} />
         <label className="text-sm font-medium">
@@ -1003,15 +1004,16 @@ function RecurrentTaskCreate({ onClose }: { onClose: () => void }) {
                 className={inputClass}
               />
             </label>
-            <MutableDateField
+            <DatePickerField
               labelId="page.items.create.details.startsOn"
               value={startsOn}
-              onChange={(event) => setStartsOn(event.target.value)}
+              onValueChange={setStartsOn}
             />
-            <MutableDateField
+            <DatePickerField
               labelId="page.items.create.details.endsOn"
               value={endsOn}
-              onChange={(event) => setEndsOn(event.target.value)}
+              onValueChange={setEndsOn}
+              allowClear
             />
             <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
               <span>{intl.formatMessage({ id: 'page.items.create.task.carryForward' })}</span>

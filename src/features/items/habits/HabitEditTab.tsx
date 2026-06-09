@@ -856,11 +856,13 @@ export function HabitEditTab({
             <ReadOnlyStartDateField
               labelId="page.items.habit.edit.startsOn"
               value={form.watch('startsOn')}
-              registration={form.register('startsOn')}
             />
             <GuardedEndDateField
               labelId="page.items.habit.edit.endsOn"
-              registration={form.register('endsOn')}
+              value={form.watch('endsOn')}
+              onValueChange={(value) =>
+                form.setValue('endsOn', value, { shouldDirty: true, shouldValidate: true })
+              }
               error={
                 form.formState.errors.endsOn
                   ? intl.formatMessage({ id: 'page.items.habit.edit.error.endDate' })

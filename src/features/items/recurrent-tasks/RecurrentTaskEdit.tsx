@@ -517,11 +517,13 @@ export function RecurrentTaskEdit({
                 <ReadOnlyStartDateField
                   labelId="page.items.recurrent.edit.startsOn"
                   value={form.watch('startsOn')}
-                  registration={form.register('startsOn')}
                 />
                 <GuardedEndDateField
                   labelId="page.items.recurrent.edit.endsOn"
-                  registration={form.register('endsOn')}
+                  value={form.watch('endsOn')}
+                  onValueChange={(value) =>
+                    form.setValue('endsOn', value, { shouldDirty: true, shouldValidate: true })
+                  }
                   error={
                     form.formState.errors.endsOn
                       ? intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })

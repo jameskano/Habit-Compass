@@ -54,6 +54,10 @@ describe('app shell', () => {
     const habitCard = await screen.findByRole('button', {
       name: 'Complete or edit Move for 20 minutes',
     })
+    expect(screen.queryByDisplayValue(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Previous day' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next day' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
     expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
     expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
     expect(within(habitCard).getByText('Habit')).toBeInTheDocument()
@@ -76,6 +80,73 @@ describe('app shell', () => {
 
     expect(screen.getByText(/Overdue - Due/)).toBeInTheDocument()
     expect(screen.getByText('Weekly review')).toBeInTheDocument()
+  })
+
+  it('navigates Today dates with chevrons and the non-native date picker', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await screen.findByRole('button', { name: 'Complete or edit Move for 20 minutes' })
+    await user.click(screen.getByRole('button', { name: 'Next day' }))
+    expect(await screen.findByText('View only')).toBeInTheDocument()
+    const todayShortcut = screen.getByRole('button', { name: 'Today' })
+    expect(todayShortcut).toBeInTheDocument()
+    expect(todayShortcut).toHaveTextContent('')
+
+    await user.click(screen.getByRole('button', { name: 'Previous day' }))
+    expect(await screen.findByText('Ready for today')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Choose date' }))
+    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument()
+  })
+
+  it('keeps Today search in filters and includes recurrent tasks in the task filter', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await screen.findByRole('button', { name: 'Complete or edit Move for 20 minutes' })
+    const filters = screen.getByLabelText('Today filters')
+
+    expect(within(filters).queryByRole('button', { name: 'Recurrent' })).not.toBeInTheDocument()
+    const searchButton = within(filters).getByRole('button', { name: 'Search Today' })
+    expect(searchButton.closest('div')).toHaveClass('transition-[width]')
+
+    await user.click(searchButton)
+    const searchInput = within(filters).getByLabelText('Search Today')
+    expect(searchInput).toHaveFocus()
+    await user.type(searchInput, 'Weekly')
+
+    expect(screen.getByText('Weekly review')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Pay rent' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(within(filters).getByRole('button', { name: 'Close' }))
+    expect(within(filters).queryByRole('textbox', { name: 'Search Today' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('button', { name: 'Complete or edit Pay rent' }),
+    ).toBeInTheDocument()
+
+    await user.click(within(filters).getByRole('button', { name: 'Tasks' }))
+    expect(screen.getByRole('button', { name: 'Complete or edit Pay rent' })).toBeInTheDocument()
+    expect(screen.getByText('Weekly review')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens measurable habit amount entry with the shared bottom-sheet animation', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Complete or edit Read before bed' }),
+    )
+
+    const amountDialog = screen.getByRole('dialog', { name: 'Read before bed' })
+    expect(amountDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
+    expect(within(amountDialog).getByLabelText('Amount')).toBeInTheDocument()
   })
 
   it('bottom nav contains the expected tabs', async () => {
@@ -522,10 +593,15 @@ describe('app shell', () => {
       await within(detail).findByText('Minimum must not exceed the standard target (20).'),
     ).toBeInTheDocument()
     fireEvent.change(minimumInput, { target: { value: '10' } })
-    const startDateInput = within(detail).getByLabelText('Start date') as HTMLInputElement
-    expect(startDateInput).toHaveAttribute('type', 'text')
-    expect(startDateInput).toHaveAttribute('readonly')
-    expect(startDateInput.parentElement?.querySelector('svg')).not.toBeNull()
+    const startDateControl = within(detail).getByRole('button', { name: 'Choose date' })
+    expect(startDateControl).toBeDisabled()
+    expect(startDateControl.querySelector('svg')).not.toBeNull()
+    expect(detail.querySelector('input[type="date"]')).toBeNull()
+    await user.click(within(detail).getByRole('button', { name: 'Choose end date' }))
+    const endDateWarning = screen.getByRole('dialog', {
+      name: 'End date can archive this habit',
+    })
+    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
     await user.clear(within(detail).getByLabelText('Name'))
     await user.type(within(detail).getByLabelText('Name'), 'Read for ten minutes')
     await user.clear(within(detail).getByLabelText('Description'))
@@ -701,6 +777,7 @@ describe('app shell', () => {
     let editDialog = screen.getByRole('dialog', { name: 'Edit task Start laundry' })
     expect(within(editDialog).queryByText('Task details')).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
+    expect(editDialog.querySelector('input[type="date"]')).toBeNull()
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),
@@ -730,6 +807,8 @@ describe('app shell', () => {
 
     await user.click(screen.getByRole('button', { name: 'Edit Pay rent' }))
     editDialog = screen.getByRole('dialog', { name: 'Edit task Pay rent' })
+    expect(editDialog.querySelector('input[type="date"]')).toBeNull()
+    expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
     await user.click(within(editDialog).getByRole('button', { name: 'Delete' }))
     const deleteDialog = screen.getByRole('alertdialog', { name: 'Delete task permanently?' })
     await user.click(within(deleteDialog).getByRole('button', { name: 'Delete permanently' }))
@@ -794,8 +873,14 @@ describe('app shell', () => {
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
     const editDialog = screen.getByRole('dialog', { name: 'Edit recurrent task Water the plants' })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
-    expect(within(editDialog).getByLabelText('Start date')).toHaveAttribute('readonly')
+    expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeDisabled()
     expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
+    expect(editDialog.querySelector('input[type="date"]')).toBeNull()
+    await user.click(within(editDialog).getByRole('button', { name: 'Choose end date' }))
+    const endDateWarning = screen.getByRole('dialog', {
+      name: 'End date can archive this recurrent task',
+    })
+    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),

@@ -231,9 +231,9 @@ Default values:
 - Status: active
 - Target: binary, unless the user chooses quantity/time
 
-Item create/edit date controls use the same calendar-icon presentation. Existing habit and
-recurrent-task edit start dates remain read-only, and their end-date controls retain the archive
-warning before opening the picker.
+Item create/edit date controls use the same calendar-icon presentation with a non-native calendar
+picker. Existing habit and recurrent-task edit start dates remain read-only, and their end-date
+controls retain the archive warning before opening the picker.
 
 ---
 

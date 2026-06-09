@@ -39,8 +39,10 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 ## UI Requirements
 
 - The shell header remains `Today` with the settings action.
-- A date/action header shows the selected date, search action, date picker action, and a Today button only when selected date differs from the actual current day.
-- Filters include All, Habits, Tasks, Recurrent, Category, and Priority. There is no archive filter.
+- A date/action header shows the selected date, previous-day and next-day actions, a dedicated non-native calendar action, and an icon-only Today button only when selected date differs from the actual current day.
+- The selected date opens a non-native calendar picker; Today must not depend on the browser's native date input.
+- Filters include All, Habits, Tasks, Category, Priority, and an expanding search control. There is no archive filter.
+- The Tasks filter includes both one-time tasks and recurrent tasks; recurrent tasks do not have a separate type filter.
 - Cards reuse the Items visual language: drag handle, category circle, item title, priority circle, schedule/due helper text, and right-side completion control.
 - Habits show a small `Habit` chip. Tasks and recurrent tasks do not show type chips.
 - Tapping the card body and tapping the completion control run the same primary action.

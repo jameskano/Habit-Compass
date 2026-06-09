@@ -79,6 +79,7 @@ export function HabitAmountInputSheet({
           { habit: habit.title, date: formattedDate },
         )}
         aria-describedby={undefined}
+        className="animate-[habit-sheet-in_300ms_ease-out] motion-reduce:animate-none"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>

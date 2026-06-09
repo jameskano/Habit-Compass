@@ -23,7 +23,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
-import { MutableDateField } from '../components/ItemDateFields'
+import { DatePickerField } from '../components/ItemDateFields'
 import { TaskConfirmationDialog } from './TaskConfirmationDialog'
 
 type TaskEditProps = {
@@ -145,9 +145,12 @@ export function TaskEdit({ task, categories, onClose, onArchived, onDeleted }: T
                   </span>
                 ) : null}
               </label>
-              <MutableDateField
+              <DatePickerField
                 labelId="page.items.task.edit.dueDate"
-                registration={form.register('dueDate')}
+                value={form.watch('dueDate')}
+                onValueChange={(value) =>
+                  form.setValue('dueDate', value, { shouldDirty: true, shouldValidate: true })
+                }
                 error={
                   form.formState.errors.dueDate
                     ? intl.formatMessage({ id: 'page.items.task.edit.error.date' })

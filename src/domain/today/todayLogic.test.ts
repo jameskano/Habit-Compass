@@ -6,6 +6,7 @@ import { cloneMockState, mockData } from '@/integrations/mock/mockData'
 import {
   buildTodayItems,
   deriveHabitTodayState,
+  filterTodayItems,
   getTodayDateMode,
   mergeTodayManualOrder,
   shouldShowTaskOnToday,
@@ -22,7 +23,11 @@ describe('today logic', () => {
   it('includes pending overdue carry-forward tasks only', () => {
     const state = cloneMockState()
     const overdueCarryTask = state.tasks.find((task) => task.id === 'task-clinic')!
-    const completedOverdueTask = { ...overdueCarryTask, id: 'done', completionStatus: 'completed' as const }
+    const completedOverdueTask = {
+      ...overdueCarryTask,
+      id: 'done',
+      completionStatus: 'completed' as const,
+    }
     const noCarryTask = { ...overdueCarryTask, id: 'no-carry', carryForward: false }
 
     expect(shouldShowTaskOnToday(overdueCarryTask, mockData.today)).toBe(true)
@@ -69,6 +74,42 @@ describe('today logic', () => {
       type: 'task',
       overdue: true,
     })
+  })
+
+  it('filters tasks as one-time and recurrent task items', () => {
+    const state = cloneMockState()
+    const recurrentOccurrences = state.recurrentTasks.flatMap((task) =>
+      deriveRecurrentOccurrences({
+        task,
+        storedOccurrences: state.recurrentTaskOccurrences.filter(
+          (occurrence) => occurrence.recurrentTaskId === task.id,
+        ),
+        from: mockData.today,
+        to: mockData.today,
+        today: mockData.today,
+      }),
+    )
+    const items = buildTodayItems({
+      habits: state.habits,
+      habitLogs: state.habitLogs,
+      tasks: state.tasks,
+      recurrentTasks: state.recurrentTasks,
+      recurrentOccurrences,
+      selectedDate: mockData.today,
+      today: mockData.today,
+    })
+
+    const filtered = filterTodayItems(items, {
+      type: 'task',
+      categoryId: '',
+      priority: '',
+      searchText: '',
+    })
+
+    expect(filtered.map((item) => item.type)).toEqual(
+      expect.arrayContaining(['task', 'recurrentTask']),
+    )
+    expect(filtered.every((item) => item.type !== 'habit')).toBe(true)
   })
 
   it('derives measurable, skipped, and future habit states', () => {

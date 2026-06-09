@@ -17,7 +17,7 @@ export type HabitTodayState =
 
 export type TaskTodayState = 'pending' | 'completed' | 'futureDisabled'
 
-export type TodayFilterType = 'all' | TodayItemType
+export type TodayFilterType = 'all' | 'habit' | 'task'
 
 export type TodayFilterState = {
   type: TodayFilterType
