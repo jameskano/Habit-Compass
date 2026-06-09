@@ -40,6 +40,7 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 
 - The shell header remains `Today` with the settings action.
 - A date/action header shows the selected date, previous-day and next-day actions, a dedicated non-native calendar action, and an icon-only Today button only when selected date differs from the actual current day.
+- On narrow screens, date navigation occupies its own row so the selected date remains fully readable; calendar and Today actions move to a secondary action row.
 - The selected date opens a non-native calendar picker; Today must not depend on the browser's native date input.
 - Filters include All, Habits, Tasks, Category, Priority, and an expanding search control. There is no archive filter.
 - The Tasks filter includes both one-time tasks and recurrent tasks; recurrent tasks do not have a separate type filter.

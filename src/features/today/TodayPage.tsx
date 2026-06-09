@@ -685,8 +685,8 @@ export function TodayPage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.35rem] border border-border/70 bg-card/65 p-3">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex flex-col gap-3 rounded-[1.35rem] border border-border/70 bg-card/65 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full min-w-0 items-center gap-2 sm:flex-1">
           <Button
             type="button"
             variant="ghost"
@@ -704,7 +704,7 @@ export function TodayPage() {
                 className="h-auto min-w-0 flex-1 justify-start rounded-2xl border border-transparent px-3 py-2 text-left hover:border-border/70 hover:bg-background/60"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-base font-semibold">
+                  <span className="block text-base font-semibold leading-snug">
                     {selectedDateLabel(intl, selectedDate)}
                   </span>
                   <span className="block text-xs text-muted-foreground">
@@ -738,7 +738,7 @@ export function TodayPage() {
             <ChevronRight aria-hidden="true" size={18} />
           </Button>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
           {selectedDate !== actualToday ? (
             <Button
               type="button"
