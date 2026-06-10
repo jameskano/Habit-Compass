@@ -1,9 +1,9 @@
 import { CalendarDays } from 'lucide-react'
-import { type ChangeEventHandler, useId, useRef, useState } from 'react'
-import type { UseFormRegisterReturn } from 'react-hook-form'
+import { useId, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { Button } from '@/shared/ui/button'
+import { Calendar } from '@/shared/ui/calendar'
 import {
   Dialog,
   DialogContent,
@@ -11,149 +11,181 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { cn } from '@/shared/utils/cn'
+
+import { calendarDateToISODate, isoDateToCalendarDate } from './datePickerUtils'
+
+type DatePickerFieldProps = {
+  labelId: string
+  value: string
+  onValueChange: (value: string) => void
+  error?: string
+  allowClear?: boolean
+  readOnly?: boolean
+  openLabelId?: string
+}
 
 type ReadOnlyStartDateFieldProps = {
   labelId: string
   value: string
-  registration: UseFormRegisterReturn
-}
-
-type MutableDateFieldProps = {
-  labelId: string
-  value?: string
-  registration?: UseFormRegisterReturn
-  onChange?: ChangeEventHandler<HTMLInputElement>
-  error?: string
 }
 
 type GuardedEndDateFieldProps = {
   labelId: string
-  registration: UseFormRegisterReturn
+  value: string
+  onValueChange: (value: string) => void
   error?: string
   warningTitleId: string
   warningDescriptionId: string
 }
 
-function openNativeDatePicker(input: HTMLInputElement | null) {
-  if (!input) {
-    return
+function formatDateValue(intl: ReturnType<typeof useIntl>, value: string) {
+  const date = isoDateToCalendarDate(value)
+  if (!date) {
+    return ''
   }
-
-  input.focus()
-  const dateInput = input as HTMLInputElement & { showPicker?: () => void }
-  if (dateInput.showPicker) {
-    dateInput.showPicker()
-    return
-  }
-  input.click()
+  return intl.formatDate(date, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
 }
 
-export function ReadOnlyStartDateField({
+export function DatePickerField({
   labelId,
   value,
-  registration,
-}: ReadOnlyStartDateFieldProps) {
-  const intl = useIntl()
-  const inputId = useId()
-
-  return (
-    <div className="block text-sm font-medium">
-      <label htmlFor={inputId}>{intl.formatMessage({ id: labelId })}</label>
-      <div className="relative mt-1.5">
-        <Input id={inputId} type="text" value={value} readOnly className="rounded-xl border-border/75 pr-10" />
-        <input type="hidden" {...registration} />
-        <CalendarDays
-          aria-hidden="true"
-          size={16}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-      </div>
-    </div>
-  )
-}
-
-export function MutableDateField({
-  labelId,
-  value,
-  registration,
-  onChange,
+  onValueChange,
   error,
-}: MutableDateFieldProps) {
+  allowClear = false,
+  readOnly = false,
+  openLabelId = 'page.items.date.openPicker',
+}: DatePickerFieldProps) {
   const intl = useIntl()
   const inputId = useId()
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [open, setOpen] = useState(false)
+  const selectedDate = isoDateToCalendarDate(value)
+  const formattedValue = formatDateValue(intl, value)
 
   return (
     <div className="block text-sm font-medium">
-      <label htmlFor={inputId}>{intl.formatMessage({ id: labelId })}</label>
-      <div className="relative mt-1.5">
-        <Input
-          {...registration}
-          id={inputId}
-          ref={(element) => {
-            inputRef.current = element
-            registration?.ref(element)
-          }}
-          type="date"
-          value={value}
-          onChange={onChange ?? registration?.onChange}
-          className="rounded-xl border-border/75 pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0"
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          className="absolute right-1 top-1/2 h-8 min-h-8 w-8 -translate-y-1/2 rounded-full p-0 text-muted-foreground"
-          aria-label={intl.formatMessage({ id: 'page.items.date.openPicker' })}
-          onClick={() => openNativeDatePicker(inputRef.current)}
-        >
-          <CalendarDays aria-hidden="true" size={16} />
-        </Button>
-      </div>
+      <label id={inputId}>{intl.formatMessage({ id: labelId })}</label>
+      <Popover open={open} onOpenChange={readOnly ? undefined : setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label={intl.formatMessage({ id: openLabelId })}
+            aria-invalid={Boolean(error)}
+            disabled={readOnly}
+            className={cn(
+              'mt-1.5 h-10 w-full justify-between rounded-xl border border-border/75 bg-background px-3 text-sm font-normal',
+              !formattedValue && 'text-muted-foreground',
+            )}
+          >
+            <span>{formattedValue || intl.formatMessage({ id: 'page.items.date.empty' })}</span>
+            <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-auto">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            defaultMonth={selectedDate}
+            onSelect={(date) => {
+              if (!date) {
+                return
+              }
+              onValueChange(calendarDateToISODate(date))
+              setOpen(false)
+            }}
+          />
+          {allowClear && value ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="mt-2 w-full rounded-xl border border-border/70"
+              onClick={() => {
+                onValueChange('')
+                setOpen(false)
+              }}
+            >
+              {intl.formatMessage({ id: 'page.items.date.clear' })}
+            </Button>
+          ) : null}
+        </PopoverContent>
+      </Popover>
       {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
     </div>
   )
 }
 
+export function ReadOnlyStartDateField({ labelId, value }: ReadOnlyStartDateFieldProps) {
+  return <DatePickerField labelId={labelId} value={value} onValueChange={() => {}} readOnly />
+}
+
 export function GuardedEndDateField({
   labelId,
-  registration,
+  value,
+  onValueChange,
   error,
   warningTitleId,
   warningDescriptionId,
 }: GuardedEndDateFieldProps) {
   const intl = useIntl()
-  const inputId = useId()
-  const inputRef = useRef<HTMLInputElement | null>(null)
   const [warningOpen, setWarningOpen] = useState(false)
-  const { ref, ...registeredInputProps } = registration
-
-  const setInputRef = (element: HTMLInputElement | null) => {
-    inputRef.current = element
-    ref(element)
-  }
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   return (
     <div className="block text-sm font-medium">
-      <label htmlFor={inputId}>{intl.formatMessage({ id: labelId })}</label>
-      <div className="relative mt-1.5">
-        <Input
-          id={inputId}
-          ref={setInputRef}
-          type="date"
-          {...registeredInputProps}
-          className="rounded-xl border-border/75 pr-10 [&::-webkit-calendar-picker-indicator]:opacity-0"
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          className="absolute right-1 top-1/2 h-8 min-h-8 w-8 -translate-y-1/2 rounded-full p-0 text-muted-foreground"
-          aria-label={intl.formatMessage({ id: 'page.items.date.openEndDatePicker' })}
-          onClick={() => setWarningOpen(true)}
-        >
-          <CalendarDays aria-hidden="true" size={16} />
-        </Button>
-      </div>
+      <label>{intl.formatMessage({ id: labelId })}</label>
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverAnchor asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label={intl.formatMessage({ id: 'page.items.date.openEndDatePicker' })}
+            aria-invalid={Boolean(error)}
+            className={cn(
+              'mt-1.5 h-10 w-full justify-between rounded-xl border border-border/75 bg-background px-3 text-sm font-normal',
+              !value && 'text-muted-foreground',
+            )}
+            onClick={() => setWarningOpen(true)}
+          >
+            <span>
+              {formatDateValue(intl, value) || intl.formatMessage({ id: 'page.items.date.empty' })}
+            </span>
+            <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
+          </Button>
+        </PopoverAnchor>
+        <PopoverContent align="start" className="w-auto">
+          <Calendar
+            mode="single"
+            selected={isoDateToCalendarDate(value)}
+            defaultMonth={isoDateToCalendarDate(value)}
+            onSelect={(date) => {
+              if (!date) {
+                return
+              }
+              onValueChange(calendarDateToISODate(date))
+              setPickerOpen(false)
+            }}
+          />
+          {value ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="mt-2 w-full rounded-xl border border-border/70"
+              onClick={() => {
+                onValueChange('')
+                setPickerOpen(false)
+              }}
+            >
+              {intl.formatMessage({ id: 'page.items.date.clear' })}
+            </Button>
+          ) : null}
+        </PopoverContent>
+      </Popover>
       {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
 
       <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
@@ -172,7 +204,7 @@ export function GuardedEndDateField({
               type="button"
               onClick={() => {
                 setWarningOpen(false)
-                openNativeDatePicker(inputRef.current)
+                setPickerOpen(true)
               }}
             >
               {intl.formatMessage({ id: 'page.items.date.confirmOpenPicker' })}

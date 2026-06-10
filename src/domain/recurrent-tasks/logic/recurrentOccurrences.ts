@@ -8,6 +8,7 @@ import type {
 } from '../types'
 
 export type DerivedRecurrentOccurrence = {
+  recurrentTaskId: string
   scheduledForDate: ISODateString
   status: RecurrentTaskOccurrenceStatus
   isOverdue: boolean
@@ -117,6 +118,7 @@ export function deriveRecurrentOccurrences(input: {
       storedOccurrence?.status ?? (overdue && !input.task.carryForward ? 'missed' : 'pending')
 
     return {
+      recurrentTaskId: input.task.id,
       scheduledForDate,
       status,
       isOverdue: overdue && status === 'pending',

@@ -24,6 +24,7 @@ describe('CreateItemDialogs', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }))
     expect(screen.getByText('Step 3 of 3')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Choose date' })).toHaveLength(2)
+    expect(document.querySelector('input[type="date"]')).toBeNull()
     await user.type(screen.getByLabelText('Name'), 'New habit')
     await user.click(screen.getByRole('button', { name: 'Create' }))
     expect(screen.getByText('Complete the required fields before saving.')).toBeInTheDocument()
@@ -34,8 +35,8 @@ describe('CreateItemDialogs', () => {
     const onClose = vi.fn()
     renderWithAppProviders(<CreateItemDialogs kind="task" onClose={onClose} />)
 
-    expect(screen.getByLabelText('Date')).toHaveValue(mockData.today)
     expect(screen.getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
+    expect(document.querySelector('input[type="date"]')).toBeNull()
     expect(screen.getByRole('checkbox')).toBeChecked()
     await user.type(screen.getByLabelText('Name'), 'Dated task')
     await user.click(screen.getByRole('button', { name: 'Create' }))
@@ -70,6 +71,7 @@ describe('CreateItemDialogs', () => {
     await user.click(screen.getByRole('button', { name: 'Continue' }))
     expect(screen.getByText('Step 2 of 2')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: 'Choose date' })).toHaveLength(2)
+    expect(document.querySelector('input[type="date"]')).toBeNull()
   })
 
   it('creates categories with internal lifecycle and ordering defaults', async () => {
