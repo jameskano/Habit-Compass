@@ -14,7 +14,7 @@ import {
   Undo2,
   X,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import {
@@ -71,9 +71,11 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useShellActions } from '@/shared/ui/useShellActions'
 import { cn } from '@/shared/utils/cn'
 
 import { SortableItemsList } from '../items/components/SortableItemsList'
+import { useItemWaterfallReveal } from '../items/components/useItemWaterfallReveal'
 import { TodayActionSheet, type TodayMenuAction } from './TodayActionSheet'
 import { TodayItemCard } from './TodayItemCard'
 import { useTodayOrderStore } from './todayOrderStore'
@@ -361,6 +363,7 @@ export function TodayPage() {
     categoriesQuery.isLoading
   const isError =
     habitsQuery.isError || tasksQuery.isError || recurrentQuery.isError || categoriesQuery.isError
+  const revealCards = useItemWaterfallReveal(!isLoading && !isError)
   const hasFilters =
     filters.type !== 'all' ||
     filters.categoryId.length > 0 ||
@@ -385,6 +388,57 @@ export function TodayPage() {
     setFilters((current) => ({ ...current, searchText: '' }))
     setSearchOpen(false)
   }
+  const selectCalendarDate = useCallback((date: Date | undefined) => {
+    if (!date) {
+      return
+    }
+    setSelectedDate(calendarDateToISODate(date) as ISODateString)
+    setDatePickerOpen(false)
+  }, [])
+
+  const todayHeaderActions = useMemo(
+    () => (
+      <>
+        {selectedDate !== actualToday ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
+            aria-label={intl.formatMessage({ id: 'page.today.action.today' })}
+            onClick={() => setSelectedDate(actualToday)}
+          >
+            <CalendarCheck aria-hidden="true" size={18} />
+          </Button>
+        ) : null}
+        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn(
+                'size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground',
+                datePickerOpen && 'border-primary bg-primary/15 text-primary',
+              )}
+              aria-label={intl.formatMessage({ id: 'page.today.action.chooseDate' })}
+            >
+              <CalendarDays aria-hidden="true" size={18} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto">
+            <Calendar
+              mode="single"
+              selected={isoDateToCalendarDate(selectedDate)}
+              defaultMonth={isoDateToCalendarDate(selectedDate)}
+              onSelect={selectCalendarDate}
+            />
+          </PopoverContent>
+        </Popover>
+      </>
+    ),
+    [actualToday, datePickerOpen, intl, selectCalendarDate, selectedDate],
+  )
+
+  useShellActions(todayHeaderActions)
 
   const upsertHabitCompleted = (habit: Habit, completionLevel?: 'minimum' | 'standard') => {
     upsertHabitLogMutation.mutate({
@@ -696,38 +750,21 @@ export function TodayPage() {
           >
             <ChevronLeft aria-hidden="true" size={18} />
           </Button>
-          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-auto min-w-0 flex-1 justify-start rounded-2xl border border-transparent px-3 py-2 text-left hover:border-border/70 hover:bg-background/60"
-              >
-                <span className="min-w-0">
-                  <span className="block text-base font-semibold leading-snug">
-                    {selectedDateLabel(intl, selectedDate)}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {intl.formatMessage({ id: `page.today.dateMode.${dateMode}` })}
-                  </span>
-                </span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-auto">
-              <Calendar
-                mode="single"
-                selected={isoDateToCalendarDate(selectedDate)}
-                defaultMonth={isoDateToCalendarDate(selectedDate)}
-                onSelect={(date) => {
-                  if (!date) {
-                    return
-                  }
-                  setSelectedDate(calendarDateToISODate(date) as ISODateString)
-                  setDatePickerOpen(false)
-                }}
-              />
-            </PopoverContent>
-          </Popover>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto min-w-0 flex-1 justify-start rounded-2xl border border-transparent px-3 py-2 text-left hover:border-border/70 hover:bg-background/60"
+            onClick={() => setDatePickerOpen(true)}
+          >
+            <span className="min-w-0">
+              <span className="block text-base font-semibold leading-snug">
+                {selectedDateLabel(intl, selectedDate)}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {intl.formatMessage({ id: `page.today.dateMode.${dateMode}` })}
+              </span>
+            </span>
+          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -736,31 +773,6 @@ export function TodayPage() {
             onClick={() => setSelectedDate((current) => shiftISODate(current, 1))}
           >
             <ChevronRight aria-hidden="true" size={18} />
-          </Button>
-        </div>
-        <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
-          {selectedDate !== actualToday ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="size-10 rounded-full border border-border/70 p-0 text-muted-foreground"
-              aria-label={intl.formatMessage({ id: 'page.today.action.today' })}
-              onClick={() => setSelectedDate(actualToday)}
-            >
-              <CalendarCheck aria-hidden="true" size={18} />
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            className={cn(
-              'size-10 rounded-full border border-border/70 p-0 text-muted-foreground',
-              datePickerOpen && 'border-primary bg-primary/15 text-primary',
-            )}
-            aria-label={intl.formatMessage({ id: 'page.today.action.chooseDate' })}
-            onClick={() => setDatePickerOpen(true)}
-          >
-            <CalendarDays aria-hidden="true" size={18} />
           </Button>
         </div>
       </div>
@@ -786,53 +798,8 @@ export function TodayPage() {
               {intl.formatMessage({ id: filter.labelId })}
             </Button>
           ))}
-          <div
-            className={cn(
-              'shrink-0 transition-[width] duration-200 ease-out motion-reduce:transition-none',
-              searchOpen ? 'w-[min(13rem,48vw)]' : 'w-9',
-            )}
-          >
-            {searchOpen ? (
-              <div className="relative flex h-9 items-center rounded-full border border-border/70 bg-background">
-                <Search
-                  aria-hidden="true"
-                  size={16}
-                  className="absolute left-3 text-muted-foreground"
-                />
-                <Input
-                  ref={searchInputRef}
-                  value={filters.searchText}
-                  onChange={(event) =>
-                    setFilters((current) => ({ ...current, searchText: event.target.value }))
-                  }
-                  aria-label={intl.formatMessage({ id: 'page.today.filter.search' })}
-                  placeholder={intl.formatMessage({ id: 'page.today.filter.searchPlaceholder' })}
-                  className="h-full min-w-0 flex-1 rounded-full border-0 bg-transparent py-2 pl-9 pr-9 shadow-none"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="absolute right-1.5 h-7 min-h-7 w-7 rounded-full p-0 text-muted-foreground"
-                  aria-label={intl.formatMessage({ id: 'action.close' })}
-                  onClick={closeSearch}
-                >
-                  <X aria-hidden="true" size={15} />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 w-9 rounded-full border border-border/70 p-0 text-muted-foreground"
-                aria-label={intl.formatMessage({ id: 'page.today.action.search' })}
-                onClick={() => setSearchOpen(true)}
-              >
-                <Search aria-hidden="true" size={18} />
-              </Button>
-            )}
-          </div>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2">
           <Select
             value={filters.categoryId || allCategoriesValue}
             onValueChange={(value) =>
@@ -886,6 +853,51 @@ export function TodayPage() {
             </SelectContent>
           </Select>
         </div>
+        <div
+          className={cn(
+            'transition-[width] duration-200 ease-out motion-reduce:transition-none',
+            searchOpen ? 'w-full' : 'w-10',
+          )}
+        >
+          {searchOpen ? (
+            <div className="relative flex h-10 items-center rounded-full border border-border/70 bg-background">
+              <Search
+                aria-hidden="true"
+                size={16}
+                className="absolute left-3 text-muted-foreground"
+              />
+              <Input
+                ref={searchInputRef}
+                value={filters.searchText}
+                onChange={(event) =>
+                  setFilters((current) => ({ ...current, searchText: event.target.value }))
+                }
+                aria-label={intl.formatMessage({ id: 'page.today.filter.search' })}
+                placeholder={intl.formatMessage({ id: 'page.today.filter.searchPlaceholder' })}
+                className="h-full min-w-0 flex-1 rounded-full border-0 bg-transparent py-2 pl-9 pr-9 shadow-none"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                className="absolute right-1.5 h-7 min-h-7 w-7 rounded-full p-0 text-muted-foreground"
+                aria-label={intl.formatMessage({ id: 'action.close' })}
+                onClick={closeSearch}
+              >
+                <X aria-hidden="true" size={15} />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 w-10 rounded-full border border-border/70 p-0 text-muted-foreground"
+              aria-label={intl.formatMessage({ id: 'page.today.action.search' })}
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search aria-hidden="true" size={18} />
+            </Button>
+          )}
+        </div>
       </section>
 
       {visibleItems.length === 0 ? (
@@ -911,7 +923,7 @@ export function TodayPage() {
           group={`today-${selectedDate}`}
           reorderLabelId="page.today.action.reorder"
           onReorder={reorderTodayItems}
-          revealCards={false}
+          revealCards={revealCards}
         >
           {(item) => {
             const sourceId = getSourceItemId(item)

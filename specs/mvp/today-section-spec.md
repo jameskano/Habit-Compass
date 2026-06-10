@@ -39,12 +39,14 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 ## UI Requirements
 
 - The shell header remains `Today` with the settings action.
-- A date/action header shows the selected date, previous-day and next-day actions, a dedicated non-native calendar action, and an icon-only Today button only when selected date differs from the actual current day.
-- On narrow screens, date navigation occupies its own row so the selected date remains fully readable; calendar and Today actions move to a secondary action row.
+- The app header shows Today-specific actions only on the Today section: an icon-only Today shortcut when selected date differs from the actual current day, followed by a dedicated non-native calendar action, then Settings.
+- A date/action header shows the selected date plus previous-day and next-day actions. Date navigation gets the full row so the selected date remains readable.
 - The selected date opens a non-native calendar picker; Today must not depend on the browser's native date input.
-- Filters include All, Habits, Tasks, Category, Priority, and an expanding search control. There is no archive filter.
+- Filters include All, Habits, Tasks, Category, Priority, and search. There is no archive filter.
+- Filters are arranged as type chips, a category/priority row split into equal columns, and a search row whose icon expands to a full-width input with the same width animation used by Items filters.
 - The Tasks filter includes both one-time tasks and recurrent tasks; recurrent tasks do not have a separate type filter.
 - Cards reuse the Items visual language: drag handle, category circle, item title, priority circle, schedule/due helper text, and right-side completion control.
+- Today list cards use the same initial waterfall reveal as Items lists.
 - Habits show a small `Habit` chip. Tasks and recurrent tasks do not show type chips.
 - Tapping the card body and tapping the completion control run the same primary action.
 

@@ -1,13 +1,15 @@
 import { Link } from '@tanstack/react-router'
 import { Compass, Settings2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useIntl } from 'react-intl'
 
 type TopBarProps = {
   titleId: string
   hideSettings?: boolean
+  actions?: ReactNode
 }
 
-export function TopBar({ titleId, hideSettings = false }: TopBarProps) {
+export function TopBar({ titleId, hideSettings = false, actions }: TopBarProps) {
   const intl = useIntl()
 
   return (
@@ -27,15 +29,18 @@ export function TopBar({ titleId, hideSettings = false }: TopBarProps) {
           </h1>
         </div>
 
-        {!hideSettings ? (
-          <Link
-            to="/settings"
-            aria-label={intl.formatMessage({ id: 'nav.settings' })}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/90 text-foreground transition-colors hover:bg-muted"
-          >
-            <Settings2 aria-hidden="true" size={20} />
-          </Link>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {actions}
+          {!hideSettings ? (
+            <Link
+              to="/settings"
+              aria-label={intl.formatMessage({ id: 'nav.settings' })}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/90 text-foreground transition-colors hover:bg-muted"
+            >
+              <Settings2 aria-hidden="true" size={20} />
+            </Link>
+          ) : null}
+        </div>
       </div>
     </header>
   )
