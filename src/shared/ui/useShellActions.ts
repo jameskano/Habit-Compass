@@ -2,7 +2,7 @@ import { useContext, useEffect, type ReactNode } from 'react'
 
 import { ShellActionsContext } from './shellActionsStore'
 
-export function useShellActions(actions: ReactNode) {
+export const useShellActions = (actions: ReactNode) => {
   const setActions = useContext(ShellActionsContext)
 
   useEffect(() => {

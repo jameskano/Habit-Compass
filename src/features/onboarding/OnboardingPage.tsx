@@ -8,7 +8,11 @@ import { Card } from '@/shared/ui/card'
 import { FeatureToggle } from '@/shared/ui/FeatureToggle'
 
 const onboardingStyles = [
-  { value: 'simple', labelId: 'onboarding.style.simple', descriptionId: 'onboarding.style.simpleDescription' },
+  {
+    value: 'simple',
+    labelId: 'onboarding.style.simple',
+    descriptionId: 'onboarding.style.simpleDescription',
+  },
   {
     value: 'intentional',
     labelId: 'onboarding.style.intentional',
@@ -21,7 +25,7 @@ const onboardingStyles = [
   },
 ] as const
 
-export function OnboardingPage() {
+export const OnboardingPage = () => {
   const navigate = useNavigate()
   const intl = useIntl()
   const [step, setStep] = useState(0)
@@ -38,7 +42,10 @@ export function OnboardingPage() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <ol className="grid gap-2 md:grid-cols-3" aria-label={intl.formatMessage({ id: 'onboarding.steps.aria' })}>
+      <ol
+        className="grid gap-2 md:grid-cols-3"
+        aria-label={intl.formatMessage({ id: 'onboarding.steps.aria' })}
+      >
         {Array.from({ length: stepCount }, (_, index) => (
           <li
             key={index}
@@ -102,7 +109,10 @@ export function OnboardingPage() {
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
             <FormattedMessage
               id="onboarding.step.2.preview"
-              values={{ value: firstHabitName || intl.formatMessage({ id: 'onboarding.step.2.previewFallback' }) }}
+              values={{
+                value:
+                  firstHabitName || intl.formatMessage({ id: 'onboarding.step.2.previewFallback' }),
+              }}
             />
           </p>
         </Card>
@@ -196,7 +206,10 @@ export function OnboardingPage() {
         </Button>
 
         {step < stepCount - 1 ? (
-          <Button onClick={() => setStep((currentStep) => Math.min(stepCount - 1, currentStep + 1))} className="rounded-full">
+          <Button
+            onClick={() => setStep((currentStep) => Math.min(stepCount - 1, currentStep + 1))}
+            className="rounded-full"
+          >
             <FormattedMessage id="action.next" />
           </Button>
         ) : (

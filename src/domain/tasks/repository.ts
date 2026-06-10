@@ -3,10 +3,7 @@ import type { Result } from '@/shared/utils/result'
 
 import type { Task, TaskCompletionStatus } from './types'
 
-export type CreateTaskInput = Omit<
-  Task,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
->
+export type CreateTaskInput = Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'archivedAt'>
 export type UpdateTaskInput = Partial<Omit<Task, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
   id: EntityId
 }

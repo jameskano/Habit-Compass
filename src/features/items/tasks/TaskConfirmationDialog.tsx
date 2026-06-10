@@ -12,13 +12,13 @@ type TaskConfirmationDialogProps = {
   onConfirm: () => void
 }
 
-export function TaskConfirmationDialog({
+export const TaskConfirmationDialog = ({
   task,
   open,
   pending,
   onCancel,
   onConfirm,
-}: TaskConfirmationDialogProps) {
+}: TaskConfirmationDialogProps) => {
   const intl = useIntl()
 
   if (!open) {

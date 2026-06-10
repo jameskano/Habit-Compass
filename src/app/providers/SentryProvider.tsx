@@ -5,6 +5,6 @@ type SentryProviderProps = {
   children: ReactNode
 }
 
-export function SentryProvider({ children }: SentryProviderProps) {
+export const SentryProvider = ({ children }: SentryProviderProps) => {
   return <Sentry.ErrorBoundary fallback={<div role="alert" />}>{children}</Sentry.ErrorBoundary>
 }

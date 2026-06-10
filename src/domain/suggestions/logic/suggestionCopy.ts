@@ -72,9 +72,10 @@ export const suggestionCopy: Record<SuggestionType, SuggestionCopyVariant[]> = {
   ],
 }
 
-export function selectSuggestionCopy(
+export const selectSuggestionCopy = (
   type: SuggestionType,
-  selector: (variants: SuggestionCopyVariant[]) => SuggestionCopyVariant = (variants) => variants[0],
-) {
+  selector: (variants: SuggestionCopyVariant[]) => SuggestionCopyVariant = (variants) =>
+    variants[0],
+) => {
   return selector(suggestionCopy[type])
 }

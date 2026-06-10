@@ -80,7 +80,7 @@ const BaseHabitEditValuesSchema = z.object({
   customPeriodDays: z.number(),
 })
 
-function createHabitEditValuesSchema() {
+const createHabitEditValuesSchema = () => {
   return BaseHabitEditValuesSchema.superRefine((value, context) => {
     if (value.endsOn && value.endsOn < value.startsOn) {
       context.addIssue({ code: 'custom', path: ['endsOn'], message: 'invalidEndDate' })
@@ -159,7 +159,7 @@ function createHabitEditValuesSchema() {
 type HabitEditValues = z.infer<typeof BaseHabitEditValuesSchema>
 const noCategoryValue = '__none__'
 
-function getStandardTarget(goalConfig: Exclude<HabitGoalConfig, { trackingType: 'binary' }>) {
+const getStandardTarget = (goalConfig: Exclude<HabitGoalConfig, { trackingType: 'binary' }>) => {
   switch (goalConfig.trackingType) {
     case 'timesPerPeriod':
       return goalConfig.targetCount
@@ -174,7 +174,7 @@ function getStandardTarget(goalConfig: Exclude<HabitGoalConfig, { trackingType: 
   }
 }
 
-function getMinimumAmount(goalConfig: HabitGoalConfig) {
+const getMinimumAmount = (goalConfig: HabitGoalConfig) => {
   switch (goalConfig.trackingType) {
     case 'binary':
       return 0
@@ -191,11 +191,11 @@ function getMinimumAmount(goalConfig: HabitGoalConfig) {
   }
 }
 
-function getStandardTargetForDisplay(goalConfig: HabitGoalConfig) {
+const getStandardTargetForDisplay = (goalConfig: HabitGoalConfig) => {
   return goalConfig.trackingType === 'binary' ? null : getStandardTarget(goalConfig)
 }
 
-function getMinimumUnitLabel(trackingType: HabitEditValues['trackingType'], unitLabel: string) {
+const getMinimumUnitLabel = (trackingType: HabitEditValues['trackingType'], unitLabel: string) => {
   switch (trackingType) {
     case 'timePerSession':
     case 'totalTimePerPeriod':
@@ -208,14 +208,14 @@ function getMinimumUnitLabel(trackingType: HabitEditValues['trackingType'], unit
   }
 }
 
-function periodConfig(values: HabitEditValues) {
+const periodConfig = (values: HabitEditValues) => {
   return {
     period: values.period,
     ...(values.period === 'custom' ? { customPeriodDays: values.customPeriodDays } : {}),
   }
 }
 
-function buildGoalConfig(values: HabitEditValues): HabitGoalConfig {
+const buildGoalConfig = (values: HabitEditValues): HabitGoalConfig => {
   if (values.trackingType === 'binary') {
     const standardDescription = values.standardText.trim()
     const minimumDescription = values.minimumText.trim()
@@ -274,13 +274,13 @@ function buildGoalConfig(values: HabitEditValues): HabitGoalConfig {
   }
 }
 
-function hasConfiguredMinimum(values: HabitEditValues) {
+const hasConfiguredMinimum = (values: HabitEditValues) => {
   return values.trackingType === 'binary'
     ? values.minimumText.trim().length > 0
     : values.minimumAmount > 0
 }
 
-function defaultValuesForHabit(habit: Habit): HabitEditValues {
+const defaultValuesForHabit = (habit: Habit): HabitEditValues => {
   const schedule = habit.scheduleRule
   return {
     title: habit.title,
@@ -325,7 +325,7 @@ function defaultValuesForHabit(habit: Habit): HabitEditValues {
   }
 }
 
-function buildSchedule(values: HabitEditValues): HabitScheduleRule {
+const buildSchedule = (values: HabitEditValues): HabitScheduleRule => {
   switch (values.scheduleKind) {
     case 'daily':
       return { kind: 'daily' }
@@ -362,7 +362,7 @@ function buildSchedule(values: HabitEditValues): HabitScheduleRule {
   }
 }
 
-export function HabitEditTab({
+export const HabitEditTab = ({
   habit,
   categories,
   today,
@@ -371,7 +371,7 @@ export function HabitEditTab({
   onSave,
   onArchive,
   onRequestDangerAction,
-}: HabitEditTabProps) {
+}: HabitEditTabProps) => {
   const intl = useIntl()
   const formSchema = useMemo(() => createHabitEditValuesSchema(), [])
   const form = useForm<HabitEditValues>({

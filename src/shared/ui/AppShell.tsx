@@ -12,7 +12,7 @@ type AppShellProps = {
   children: ReactNode
 }
 
-export function AppShell({ children }: AppShellProps) {
+export const AppShell = ({ children }: AppShellProps) => {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false)
   const [titleOverrideId, setTitleOverrideId] = useState<string | null>(null)

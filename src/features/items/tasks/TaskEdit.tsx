@@ -47,7 +47,7 @@ const TaskEditValuesSchema = z.object({
 type TaskEditValues = z.infer<typeof TaskEditValuesSchema>
 const noCategoryValue = '__none__'
 
-function valuesForTask(task: Task): TaskEditValues {
+const valuesForTask = (task: Task): TaskEditValues => {
   return {
     title: task.title,
     dueDate: task.dueDate ?? '',
@@ -59,7 +59,7 @@ function valuesForTask(task: Task): TaskEditValues {
   }
 }
 
-export function TaskEdit({ task, categories, onClose, onArchived, onDeleted }: TaskEditProps) {
+export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: TaskEditProps) => {
   const intl = useIntl()
   const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)

@@ -20,64 +20,64 @@ export type HabitCompletionRuleEvaluation = {
 
 const MS_PER_DAY = 86_400_000
 
-function toUtcDate(date: ISODateString) {
+const toUtcDate = (date: ISODateString) => {
   return new Date(`${date}T00:00:00.000Z`)
 }
 
-function toISODate(date: Date) {
+const toISODate = (date: Date) => {
   return date.toISOString().slice(0, 10) as ISODateString
 }
 
-function addDays(date: ISODateString, amount: number) {
+const addDays = (date: ISODateString, amount: number) => {
   const current = toUtcDate(date)
   current.setUTCDate(current.getUTCDate() + amount)
   return toISODate(current)
 }
 
-function startOfWeek(date: ISODateString) {
+const startOfWeek = (date: ISODateString) => {
   const current = toUtcDate(date)
   const offset = (current.getUTCDay() + 6) % 7
   current.setUTCDate(current.getUTCDate() - offset)
   return toISODate(current)
 }
 
-function endOfWeek(date: ISODateString) {
+const endOfWeek = (date: ISODateString) => {
   return addDays(startOfWeek(date), 6)
 }
 
-function startOfMonth(date: ISODateString) {
+const startOfMonth = (date: ISODateString) => {
   const current = toUtcDate(date)
   current.setUTCDate(1)
   return toISODate(current)
 }
 
-function endOfMonth(date: ISODateString) {
+const endOfMonth = (date: ISODateString) => {
   const current = toUtcDate(startOfMonth(date))
   current.setUTCMonth(current.getUTCMonth() + 1, 0)
   return toISODate(current)
 }
 
-function startOfYear(date: ISODateString) {
+const startOfYear = (date: ISODateString) => {
   const current = toUtcDate(date)
   current.setUTCMonth(0, 1)
   return toISODate(current)
 }
 
-function endOfYear(date: ISODateString) {
+const endOfYear = (date: ISODateString) => {
   const current = toUtcDate(date)
   current.setUTCMonth(11, 31)
   return toISODate(current)
 }
 
-function differenceInDays(date: ISODateString, anchor: ISODateString) {
+const differenceInDays = (date: ISODateString, anchor: ISODateString) => {
   return Math.floor((toUtcDate(date).getTime() - toUtcDate(anchor).getTime()) / MS_PER_DAY)
 }
 
-function hasConfiguredMinimum(habit: Habit) {
+const hasConfiguredMinimum = (habit: Habit) => {
   return habit.enabledCompletionLevels.includes('minimum')
 }
 
-export function getHabitTargetScope(habit: Habit): HabitTargetScope {
+export const getHabitTargetScope = (habit: Habit): HabitTargetScope => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 'binary'
@@ -92,7 +92,7 @@ export function getHabitTargetScope(habit: Habit): HabitTargetScope {
   }
 }
 
-export function getHabitStandardTargetValue(habit: Habit) {
+export const getHabitStandardTargetValue = (habit: Habit) => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 1
@@ -109,7 +109,7 @@ export function getHabitStandardTargetValue(habit: Habit) {
   }
 }
 
-export function getHabitMinimumTargetValue(habit: Habit): number | null {
+export const getHabitMinimumTargetValue = (habit: Habit): number | null => {
   if (!hasConfiguredMinimum(habit)) {
     return null
   }
@@ -130,7 +130,7 @@ export function getHabitMinimumTargetValue(habit: Habit): number | null {
   }
 }
 
-export function getHabitPeriodBounds(habit: Habit, date: ISODateString) {
+export const getHabitPeriodBounds = (habit: Habit, date: ISODateString) => {
   if (!('period' in habit.goalConfig)) {
     return { periodStart: date, periodEnd: date }
   }
@@ -158,7 +158,7 @@ export function getHabitPeriodBounds(habit: Habit, date: ISODateString) {
   return { periodStart, periodEnd: addDays(periodStart, periodLength - 1) }
 }
 
-export function getHabitLogProgressValue(habit: Habit, log: HabitLog) {
+export const getHabitLogProgressValue = (habit: Habit, log: HabitLog) => {
   if (log.status !== 'completed') {
     return 0
   }
@@ -178,11 +178,11 @@ export function getHabitLogProgressValue(habit: Habit, log: HabitLog) {
   }
 }
 
-function deriveLevelForValue(
+const deriveLevelForValue = (
   rawProgressValue: number,
   standardTargetValue: number,
   minimumTargetValue: number | null,
-) {
+) => {
   const isStandardReached = standardTargetValue > 0 && rawProgressValue >= standardTargetValue
   const isMinimumReached =
     minimumTargetValue !== null && minimumTargetValue > 0 && rawProgressValue >= minimumTargetValue
@@ -216,11 +216,11 @@ function deriveLevelForValue(
   }
 }
 
-export function evaluateHabitCompletionForLogs(input: {
+export const evaluateHabitCompletionForLogs = (input: {
   habit: Habit
   logs: HabitLog[]
   date: ISODateString
-}): HabitCompletionRuleEvaluation {
+}): HabitCompletionRuleEvaluation => {
   const { habit, date } = input
   const targetScope = getHabitTargetScope(habit)
   const { periodStart, periodEnd } =
@@ -276,7 +276,7 @@ export function evaluateHabitCompletionForLogs(input: {
   }
 }
 
-export function hasHabitProgressOnDate(habit: Habit, logs: HabitLog[], date: ISODateString) {
+export const hasHabitProgressOnDate = (habit: Habit, logs: HabitLog[], date: ISODateString) => {
   return logs.some(
     (log) =>
       log.status === 'completed' &&

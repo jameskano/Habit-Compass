@@ -6,7 +6,7 @@ import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useCreateCategoryMutation(userId = MOCK_USER_ID) {
+export const useCreateCategoryMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 

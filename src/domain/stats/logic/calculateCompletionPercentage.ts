@@ -1,4 +1,4 @@
-export function calculateCompletionPercentage(completed: number, total: number) {
+export const calculateCompletionPercentage = (completed: number, total: number) => {
   if (total <= 0) {
     return 0
   }

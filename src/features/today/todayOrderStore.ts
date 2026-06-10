@@ -32,11 +32,11 @@ export const useTodayOrderStore = create<TodayOrderStore>()(
         }
 
         set((state) => ({
-            ordersByDate: {
-              ...state.ordersByDate,
-              [date]: nextOrder,
-            },
-          }))
+          ordersByDate: {
+            ...state.ordersByDate,
+            [date]: nextOrder,
+          },
+        }))
       },
     }),
     {

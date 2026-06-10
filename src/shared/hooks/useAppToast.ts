@@ -19,7 +19,7 @@ type AppPromiseToastMessages<T> = {
   description?: AppToastMessage
 }
 
-export function useAppToast() {
+export const useAppToast = () => {
   const intl = useIntl()
 
   const format = (message: AppToastMessage) =>

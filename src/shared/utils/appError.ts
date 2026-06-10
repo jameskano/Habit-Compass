@@ -28,21 +28,17 @@ export class AppError extends Error {
   }
 }
 
-export function createAppError(
-  code: AppErrorCode,
-  message: string,
-  options?: AppErrorOptions,
-) {
+export const createAppError = (code: AppErrorCode, message: string, options?: AppErrorOptions) => {
   return new AppError(code, message, options)
 }
 
-export function createNotImplementedError(feature: string) {
+export const createNotImplementedError = (feature: string) => {
   return createAppError(
     'not_implemented',
     `${feature} is not implemented for the current data source.`,
   )
 }
 
-export function createNotFoundError(entityName: string, entityId: string) {
+export const createNotFoundError = (entityName: string, entityId: string) => {
   return createAppError('not_found', `${entityName} "${entityId}" was not found.`)
 }

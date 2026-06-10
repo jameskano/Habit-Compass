@@ -5,11 +5,10 @@ import { calculateHabitDetailStats, createHabitCompletionBars } from './habitDet
 
 describe('habit detail stats', () => {
   it('summarizes explicit-schedule completion counts and percentage', () => {
-    const habit = createCompletionLevelHabit(
-      { trackingType: 'binary' },
-      ['minimum', 'standard'],
-      { startsOn: '2026-05-18', scheduleRule: { kind: 'daily' } },
-    )
+    const habit = createCompletionLevelHabit({ trackingType: 'binary' }, ['minimum', 'standard'], {
+      startsOn: '2026-05-18',
+      scheduleRule: { kind: 'daily' },
+    })
     const result = calculateHabitDetailStats({
       habit,
       today: '2026-05-21',

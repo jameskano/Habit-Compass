@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { archiveHabit, hardResetHabitStats, resetHabitStats } from '@/domain/habits/logic/resetHabitStats'
+import {
+  archiveHabit,
+  hardResetHabitStats,
+  resetHabitStats,
+} from '@/domain/habits/logic/resetHabitStats'
 import { createHabitLog, createResettableHabit } from '@/domain/habits/logic/habitFixtures'
 
 describe('reset archive delete harness', () => {

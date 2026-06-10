@@ -3,6 +3,6 @@ import { render } from '@testing-library/react'
 
 import { AppProviders } from '@/app/providers/AppProviders'
 
-export function renderWithAppProviders(ui: ReactElement) {
+export const renderWithAppProviders = (ui: ReactElement) => {
   return render(<AppProviders>{ui}</AppProviders>)
 }

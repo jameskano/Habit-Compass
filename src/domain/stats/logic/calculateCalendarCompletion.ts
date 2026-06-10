@@ -7,12 +7,12 @@ export type CalendarCompletionInput = {
   progressRatio: number
 }
 
-export function calculateCalendarCompletion({
+export const calculateCalendarCompletion = ({
   hasCompleted,
   hasSkipped,
   hasMissed,
   progressRatio,
-}: CalendarCompletionInput): CalendarCompletionState {
+}: CalendarCompletionInput): CalendarCompletionState => {
   if (hasMissed) {
     return 'missed'
   }

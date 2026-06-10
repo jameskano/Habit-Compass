@@ -7,7 +7,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useUpdateHabitMutation() {
+export const useUpdateHabitMutation = () => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 
@@ -21,7 +21,7 @@ export function useUpdateHabitMutation() {
   })
 }
 
-export function useCreateHabitMutation() {
+export const useCreateHabitMutation = () => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 
@@ -35,7 +35,7 @@ export function useCreateHabitMutation() {
   })
 }
 
-export function useRestoreHabitMutation(userId = MOCK_USER_ID) {
+export const useRestoreHabitMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 
@@ -49,7 +49,7 @@ export function useRestoreHabitMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useResetHabitProgressMutation(userId = MOCK_USER_ID) {
+export const useResetHabitProgressMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 
@@ -63,7 +63,7 @@ export function useResetHabitProgressMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
+export const useDeleteHabitMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 
@@ -80,7 +80,7 @@ export function useDeleteHabitMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useReorderHabitsMutation(userId = MOCK_USER_ID) {
+export const useReorderHabitsMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 

@@ -9,7 +9,7 @@ import {
   isRecurrentTaskScheduledOnDate,
 } from './logic/recurrentOccurrences'
 
-function task(overrides: Partial<RecurrentTask> = {}): RecurrentTask {
+const task = (overrides: Partial<RecurrentTask> = {}): RecurrentTask => {
   return {
     id: 'rec-a',
     userId: 'user-1',

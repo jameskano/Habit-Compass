@@ -6,6 +6,6 @@ type AppLayoutProps = {
   children: ReactNode
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export const AppLayout = ({ children }: AppLayoutProps) => {
   return <AppShell>{children}</AppShell>
 }

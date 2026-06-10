@@ -7,7 +7,7 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
 import { StatCard } from '@/shared/ui/StatCard'
 
-export function MoodPage() {
+export const MoodPage = () => {
   const featureToggles = useAppPreferencesStore((state) => state.featureToggles)
   const moodLogsQuery = useMoodLogsQuery()
 
@@ -37,15 +37,23 @@ export function MoodPage() {
           ) : null}
 
           {!moodLogsQuery.isLoading && !moodLogsQuery.isError ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            <ItemCard titleId="page.mood.checkIn.title" metaId="page.mood.checkIn.meta" tone="neutral" />
-            <ItemCard titleId="page.mood.reflection.title" metaId="page.mood.reflection.meta" tone="neutral" />
-            <StatCard
-              labelId="page.mood.history.title"
-              value={moodLogsQuery.data?.length ?? 0}
-              detailId="page.mood.history.meta"
-            />
-          </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <ItemCard
+                titleId="page.mood.checkIn.title"
+                metaId="page.mood.checkIn.meta"
+                tone="neutral"
+              />
+              <ItemCard
+                titleId="page.mood.reflection.title"
+                metaId="page.mood.reflection.meta"
+                tone="neutral"
+              />
+              <StatCard
+                labelId="page.mood.history.title"
+                value={moodLogsQuery.data?.length ?? 0}
+                detailId="page.mood.history.meta"
+              />
+            </div>
           ) : null}
 
           {!featureToggles.reflections ? (

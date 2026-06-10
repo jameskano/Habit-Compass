@@ -1,5 +1,5 @@
 import { Check, CircleDashed, Minus } from 'lucide-react'
-import { type KeyboardEvent, type PointerEvent, useRef } from 'react'
+import { type KeyboardEvent } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
@@ -13,6 +13,8 @@ import {
   habitDayStateClasses,
   priorityVisualClasses,
 } from '@/styles/itemVisualTokens'
+
+import { useLongPressMenu } from './useLongPressMenu'
 
 type TodayItemCardProps = {
   type: TodayItemType
@@ -29,10 +31,7 @@ type TodayItemCardProps = {
   onOpenMenu: () => void
 }
 
-const LONG_PRESS_DURATION_MS = 500
-const LONG_PRESS_MOVE_TOLERANCE_PX = 8
-
-function stateClasses(state: HabitTodayState | TaskTodayState) {
+const stateClasses = (state: HabitTodayState | TaskTodayState) => {
   switch (state) {
     case 'standardCompleted':
     case 'completed':
@@ -51,7 +50,7 @@ function stateClasses(state: HabitTodayState | TaskTodayState) {
   }
 }
 
-function CompletionIcon({ state }: { state: HabitTodayState | TaskTodayState }) {
+const CompletionIcon = ({ state }: { state: HabitTodayState | TaskTodayState }) => {
   if (state === 'inProgress') {
     return <CircleDashed aria-hidden="true" size={17} strokeWidth={2.4} />
   }
@@ -61,7 +60,7 @@ function CompletionIcon({ state }: { state: HabitTodayState | TaskTodayState }) 
   return <Check aria-hidden="true" size={17} strokeWidth={2.4} />
 }
 
-export function TodayItemCard({
+export const TodayItemCard = ({
   type,
   title,
   amountText,
@@ -74,47 +73,12 @@ export function TodayItemCard({
   disabled,
   onPrimaryAction,
   onOpenMenu,
-}: TodayItemCardProps) {
+}: TodayItemCardProps) => {
   const intl = useIntl()
   const CategoryIcon = getCategoryIcon(category?.iconName ?? '')
   const categoryLabel = category?.name ?? fallbackCategoryLabel
-  const pointerStart = useRef<{ x: number; y: number } | null>(null)
-  const longPressTimer = useRef<number | null>(null)
-  const suppressClick = useRef(false)
-
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-    pointerStart.current = null
-  }
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) {
-      return
-    }
-
-    suppressClick.current = false
-    pointerStart.current = { x: event.clientX, y: event.clientY }
-    longPressTimer.current = window.setTimeout(() => {
-      suppressClick.current = true
-      clearLongPress()
-      onOpenMenu()
-    }, LONG_PRESS_DURATION_MS)
-  }
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const start = pointerStart.current
-    if (
-      start &&
-      (Math.abs(event.clientX - start.x) > LONG_PRESS_MOVE_TOLERANCE_PX ||
-        Math.abs(event.clientY - start.y) > LONG_PRESS_MOVE_TOLERANCE_PX)
-    ) {
-      suppressClick.current = true
-      clearLongPress()
-    }
-  }
+  const { clearLongPress, handlePointerDown, handlePointerMove, shouldSuppressClick } =
+    useLongPressMenu(onOpenMenu)
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -124,9 +88,7 @@ export function TodayItemCard({
   }
 
   const handleClick = () => {
-    clearLongPress()
-    if (suppressClick.current) {
-      suppressClick.current = false
+    if (shouldSuppressClick()) {
       return
     }
     onPrimaryAction()

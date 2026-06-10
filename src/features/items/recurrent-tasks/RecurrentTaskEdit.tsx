@@ -103,7 +103,7 @@ const RecurrentEditValuesSchema = z
 type RecurrentEditValues = z.infer<typeof RecurrentEditValuesSchema>
 const noCategoryValue = '__none__'
 
-function valuesForTask(task: RecurrentTask): RecurrentEditValues {
+const valuesForTask = (task: RecurrentTask): RecurrentEditValues => {
   const rule = task.recurrenceRule
   return {
     title: task.title,
@@ -131,7 +131,7 @@ function valuesForTask(task: RecurrentTask): RecurrentEditValues {
   }
 }
 
-function buildRule(values: RecurrentEditValues): RecurrenceRule {
+const buildRule = (values: RecurrentEditValues): RecurrenceRule => {
   switch (values.recurrenceKind) {
     case 'daily':
       return { kind: 'daily' }
@@ -168,14 +168,14 @@ function buildRule(values: RecurrentEditValues): RecurrenceRule {
   }
 }
 
-export function RecurrentTaskEdit({
+export const RecurrentTaskEdit = ({
   task,
   categories,
   today,
   onClose,
   onArchived,
   onDeleted,
-}: RecurrentTaskEditProps) {
+}: RecurrentTaskEditProps) => {
   const intl = useIntl()
   const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)

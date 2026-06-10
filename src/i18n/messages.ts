@@ -8,6 +8,6 @@ export const messages = {
 
 export type AppLocale = keyof typeof messages
 
-export function getMessages(locale: string) {
+export const getMessages = (locale: string) => {
   return messages[locale as AppLocale] ?? messages.en
 }

@@ -5,7 +5,7 @@ import { habitsRepository } from '@/integrations/repositories'
 import { mockData, MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useTodayHabitsQuery(userId = MOCK_USER_ID, date = mockData.today) {
+export const useTodayHabitsQuery = (userId = MOCK_USER_ID, date = mockData.today) => {
   return useQuery({
     queryKey: ['habits', 'today', userId, date],
     queryFn: async () => {
@@ -24,7 +24,10 @@ export function useTodayHabitsQuery(userId = MOCK_USER_ID, date = mockData.today
         habits,
         logs,
         completedCount: habits.filter((habit) =>
-          logs.some((log) => log.habitId === habit.id && log.loggedForDate === date && log.status === 'completed'),
+          logs.some(
+            (log) =>
+              log.habitId === habit.id && log.loggedForDate === date && log.status === 'completed',
+          ),
         ).length,
       }
     },

@@ -1,4 +1,11 @@
-import type { EntityId, ISODateString, ISODateTimeString, ItemEntityFields, ItemPriority, LifecycleStatus } from '@/shared/types'
+import type {
+  EntityId,
+  ISODateString,
+  ISODateTimeString,
+  ItemEntityFields,
+  ItemPriority,
+  LifecycleStatus,
+} from '@/shared/types'
 
 import type { taskCompletionStatuses } from './constants'
 

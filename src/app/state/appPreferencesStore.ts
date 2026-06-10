@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 
-import type { AppLocale, FeatureToggleKey, FeatureToggles, ThemePreference } from '@/domain/settings'
+import type {
+  AppLocale,
+  FeatureToggleKey,
+  FeatureToggles,
+  ThemePreference,
+} from '@/domain/settings'
 
 type AppPreferencesState = {
   theme: ThemePreference

@@ -4,7 +4,7 @@ import type { Task } from './types'
 import { TaskSchema } from './schemas'
 import { sortTasks } from './logic/taskOrdering'
 
-function task(overrides: Partial<Task> = {}): Task {
+const task = (overrides: Partial<Task> = {}): Task => {
   return {
     id: 'task-a',
     userId: 'user-1',
@@ -51,5 +51,4 @@ describe('tasks domain', () => {
       'done',
     ])
   })
-
 })

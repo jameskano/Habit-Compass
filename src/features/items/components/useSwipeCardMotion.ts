@@ -10,11 +10,11 @@ type UseSwipeCardMotionOptions = {
   onSwipeRight?: () => void
 }
 
-function clamp(value: number, minimum: number, maximum: number) {
+const clamp = (value: number, minimum: number, maximum: number) => {
   return Math.min(Math.max(value, minimum), maximum)
 }
 
-export function useSwipeCardMotion({ onSwipeLeft, onSwipeRight }: UseSwipeCardMotionOptions) {
+export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMotionOptions) => {
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const suppressClick = useRef(false)
   const movedHorizontally = useRef(false)

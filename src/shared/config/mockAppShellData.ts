@@ -23,8 +23,16 @@ export const mockAppShellData = {
       { id: 'task-2', titleId: 'mock.items.task.call', metaId: 'mock.items.task.callMeta' },
     ],
     recurrent: [
-      { id: 'rec-1', titleId: 'mock.items.recurrent.review', metaId: 'mock.items.recurrent.reviewMeta' },
-      { id: 'rec-2', titleId: 'mock.items.recurrent.plants', metaId: 'mock.items.recurrent.plantsMeta' },
+      {
+        id: 'rec-1',
+        titleId: 'mock.items.recurrent.review',
+        metaId: 'mock.items.recurrent.reviewMeta',
+      },
+      {
+        id: 'rec-2',
+        titleId: 'mock.items.recurrent.plants',
+        metaId: 'mock.items.recurrent.plantsMeta',
+      },
     ],
   },
   mood: {

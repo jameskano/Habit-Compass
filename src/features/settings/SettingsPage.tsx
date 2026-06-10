@@ -17,7 +17,11 @@ const localeOptions = [
 ] as const
 
 const toggleItems = [
-  { key: 'mood', labelId: 'settings.toggle.mood', descriptionId: 'settings.toggle.moodDescription' },
+  {
+    key: 'mood',
+    labelId: 'settings.toggle.mood',
+    descriptionId: 'settings.toggle.moodDescription',
+  },
   {
     key: 'weeklyPlanning',
     labelId: 'settings.toggle.weeklyPlanning',
@@ -45,7 +49,7 @@ const toggleItems = [
   },
 ] as const
 
-export function SettingsPage() {
+export const SettingsPage = () => {
   const intl = useIntl()
   const theme = useAppPreferencesStore((state) => state.theme)
   const locale = useAppPreferencesStore((state) => state.locale)

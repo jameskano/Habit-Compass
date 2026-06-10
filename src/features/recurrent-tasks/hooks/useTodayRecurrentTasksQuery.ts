@@ -5,7 +5,7 @@ import { mockData, MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { recurrentTasksRepository } from '@/integrations/repositories'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useTodayRecurrentTasksQuery(userId = MOCK_USER_ID, date = mockData.today) {
+export const useTodayRecurrentTasksQuery = (userId = MOCK_USER_ID, date = mockData.today) => {
   return useQuery({
     queryKey: ['recurrent-tasks', 'today', userId, date],
     queryFn: async () => {

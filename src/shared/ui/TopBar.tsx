@@ -9,7 +9,7 @@ type TopBarProps = {
   actions?: ReactNode
 }
 
-export function TopBar({ titleId, hideSettings = false, actions }: TopBarProps) {
+export const TopBar = ({ titleId, hideSettings = false, actions }: TopBarProps) => {
   const intl = useIntl()
 
   return (

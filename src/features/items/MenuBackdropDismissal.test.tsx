@@ -8,7 +8,7 @@ import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
 import { HabitOptionsSheet } from './habits/HabitOptionsSheet'
 import { TaskEdit } from './tasks/TaskEdit'
 
-function getOverlay(selector: string) {
+const getOverlay = (selector: string) => {
   const overlay = document.querySelector(selector)
   if (!(overlay instanceof HTMLElement)) {
     throw new Error(`Expected overlay: ${selector}`)

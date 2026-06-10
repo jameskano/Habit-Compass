@@ -1,7 +1,14 @@
-import { calculateCalendarCompletion, type CalendarCompletionState } from '@/domain/stats/logic/calculateCalendarCompletion'
+import {
+  calculateCalendarCompletion,
+  type CalendarCompletionState,
+} from '@/domain/stats/logic/calculateCalendarCompletion'
 
 import type { Habit, HabitCompletionLevel, HabitLog } from '../types'
-import { evaluateHabitProgress, type HabitProgressEvaluation, type HabitProgressInput } from './evaluateHabitProgress'
+import {
+  evaluateHabitProgress,
+  type HabitProgressEvaluation,
+  type HabitProgressInput,
+} from './evaluateHabitProgress'
 import { deriveHabitDayState } from './habitDayState'
 
 export type HabitCompletionOutcome = 'pending' | 'completed' | 'missed' | 'skipped' | 'partial'
@@ -14,11 +21,11 @@ export type HabitCompletionEvaluation = {
   suggestedLevel: HabitCompletionLevel | null
 }
 
-function getLevelRank(level: HabitCompletionLevel) {
+const getLevelRank = (level: HabitCompletionLevel) => {
   return level === 'minimum' ? 1 : 2
 }
 
-function getHighestExplicitCompletionLevel(logs: HabitLog[]) {
+const getHighestExplicitCompletionLevel = (logs: HabitLog[]) => {
   const levels = logs
     .map((log) => log.completionLevel)
     .filter((level): level is HabitCompletionLevel => level !== null && level !== undefined)
@@ -26,16 +33,24 @@ function getHighestExplicitCompletionLevel(logs: HabitLog[]) {
   return levels.sort((left, right) => getLevelRank(right) - getLevelRank(left))[0] ?? null
 }
 
-function hasCompletionLevel(habit: Habit, level: HabitCompletionLevel) {
+const hasCompletionLevel = (habit: Habit, level: HabitCompletionLevel) => {
   return habit.usesCompletionLevels && habit.enabledCompletionLevels.includes(level)
 }
 
-function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, completedLogs: HabitLog[]) {
+const evaluateAchievedLevel = (
+  habit: Habit,
+  progress: HabitProgressEvaluation,
+  completedLogs: HabitLog[],
+) => {
   if (progress.derivedCompletionLevel) {
     return progress.derivedCompletionLevel
   }
 
-  if (!habit.usesCompletionLevels || habit.enabledCompletionLevels.length === 0 || progress.actual <= 0) {
+  if (
+    !habit.usesCompletionLevels ||
+    habit.enabledCompletionLevels.length === 0 ||
+    progress.actual <= 0
+  ) {
     return null
   }
 
@@ -72,7 +87,11 @@ function evaluateAchievedLevel(habit: Habit, progress: HabitProgressEvaluation, 
   return null
 }
 
-function evaluateSuggestedLevel(habit: Habit, progress: HabitProgressEvaluation, missedDayCount: number) {
+const evaluateSuggestedLevel = (
+  habit: Habit,
+  progress: HabitProgressEvaluation,
+  missedDayCount: number,
+) => {
   if (!habit.usesCompletionLevels || habit.enabledCompletionLevels.length === 0) {
     return null
   }
@@ -92,7 +111,7 @@ function evaluateSuggestedLevel(habit: Habit, progress: HabitProgressEvaluation,
   return null
 }
 
-export function evaluateHabitCompletion(input: HabitProgressInput): HabitCompletionEvaluation {
+export const evaluateHabitCompletion = (input: HabitProgressInput): HabitCompletionEvaluation => {
   const progress = evaluateHabitProgress(input)
   const relevantLogs = input.logs.filter(
     (log) => log.loggedForDate >= input.periodStart && log.loggedForDate <= input.periodEnd,

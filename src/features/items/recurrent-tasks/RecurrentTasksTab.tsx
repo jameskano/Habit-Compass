@@ -30,20 +30,20 @@ type RecurrentTasksTabProps = {
 
 const priorityRank = { low: 0, medium: 1, high: 2 } as const
 
-function todayAsISODate() {
+const todayAsISODate = () => {
   return formatISO(new Date(), { representation: 'date' }) as ISODateString
 }
 
-function currentOccurrence(occurrences: ReturnType<typeof deriveRecurrentOccurrences>) {
+const currentOccurrence = (occurrences: ReturnType<typeof deriveRecurrentOccurrences>) => {
   const actionable = occurrences.find((occurrence) => occurrence.actionable)
   return actionable ?? occurrences.at(-1)
 }
 
-export function RecurrentTasksTab({
+export const RecurrentTasksTab = ({
   tasks,
   showingArchived,
   onToggleArchive,
-}: RecurrentTasksTabProps) {
+}: RecurrentTasksTabProps) => {
   const appToast = useAppToast()
   const today = todayAsISODate()
   const from = tasks.reduce(

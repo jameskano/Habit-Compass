@@ -9,7 +9,7 @@ const navItems = [
   { to: '/mood', icon: HeartPulse, labelId: 'nav.mood' },
 ] as const
 
-export function BottomNav() {
+export const BottomNav = () => {
   const intl = useIntl()
 
   return (

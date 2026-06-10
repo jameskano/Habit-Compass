@@ -5,11 +5,10 @@ import { calculateHabitStats } from './habitStats'
 
 describe('calculateHabitStats', () => {
   it('scores explicit schedules, excludes skipped days, and calculates streaks', () => {
-    const habit = createCompletionLevelHabit(
-      { trackingType: 'binary' },
-      ['minimum', 'standard'],
-      { startsOn: '2026-05-18', scheduleRule: { kind: 'daily' } },
-    )
+    const habit = createCompletionLevelHabit({ trackingType: 'binary' }, ['minimum', 'standard'], {
+      startsOn: '2026-05-18',
+      scheduleRule: { kind: 'daily' },
+    })
     const result = calculateHabitStats({
       habit,
       logs: [
@@ -89,7 +88,11 @@ describe('calculateHabitStats', () => {
       { startsOn: '2026-05-18' },
     )
     const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', repetitions: 30 })
-    const wednesday = createHabitLog({ id: 'wednesday', loggedForDate: '2026-05-20', repetitions: 20 })
+    const wednesday = createHabitLog({
+      id: 'wednesday',
+      loggedForDate: '2026-05-20',
+      repetitions: 20,
+    })
     const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', repetitions: 50 })
 
     expect(

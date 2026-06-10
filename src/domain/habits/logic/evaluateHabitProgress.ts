@@ -1,4 +1,7 @@
-import { calculatePeriodProgress, type PeriodProgress } from '@/domain/stats/logic/calculatePeriodProgress'
+import {
+  calculatePeriodProgress,
+  type PeriodProgress,
+} from '@/domain/stats/logic/calculatePeriodProgress'
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
@@ -37,12 +40,19 @@ export type HabitProgressEvaluation = PeriodProgress & {
   periodEnd: ISODateString
 }
 
-function isDateWithinRange(date: ISODateString, start: ISODateString, end: ISODateString) {
+const isDateWithinRange = (date: ISODateString, start: ISODateString, end: ISODateString) => {
   return date >= start && date <= end
 }
 
-function getRelevantLogs(habit: Habit, logs: HabitLog[], periodStart: ISODateString, periodEnd: ISODateString) {
-  const logsInRange = logs.filter((log) => isDateWithinRange(log.loggedForDate, periodStart, periodEnd))
+const getRelevantLogs = (
+  habit: Habit,
+  logs: HabitLog[],
+  periodStart: ISODateString,
+  periodEnd: ISODateString,
+) => {
+  const logsInRange = logs.filter((log) =>
+    isDateWithinRange(log.loggedForDate, periodStart, periodEnd),
+  )
 
   if (habit.scheduleRule.kind === 'flexiblePeriod') {
     return logsInRange
@@ -51,12 +61,12 @@ function getRelevantLogs(habit: Habit, logs: HabitLog[], periodStart: ISODateStr
   return logsInRange.filter((log) => isHabitScheduledOnDate(habit, log.loggedForDate))
 }
 
-export function evaluateHabitProgress({
+export const evaluateHabitProgress = ({
   habit,
   logs,
   periodStart,
   periodEnd,
-}: HabitProgressInput): HabitProgressEvaluation {
+}: HabitProgressInput): HabitProgressEvaluation => {
   const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
   const targetScope = getHabitTargetScope(habit)
@@ -124,7 +134,10 @@ export function evaluateHabitProgress({
       }
     }
     case 'timePerSession': {
-      const bestMinutes = completedLogs.reduce((best, log) => Math.max(best, log.durationMinutes ?? 0), 0)
+      const bestMinutes = completedLogs.reduce(
+        (best, log) => Math.max(best, log.durationMinutes ?? 0),
+        0,
+      )
 
       return {
         ...calculatePeriodProgress(bestMinutes, habit.goalConfig.targetMinutes),
@@ -138,7 +151,10 @@ export function evaluateHabitProgress({
       }
     }
     case 'totalTimePerPeriod': {
-      const totalMinutes = completedLogs.reduce((total, log) => total + (log.durationMinutes ?? 0), 0)
+      const totalMinutes = completedLogs.reduce(
+        (total, log) => total + (log.durationMinutes ?? 0),
+        0,
+      )
 
       return {
         ...calculatePeriodProgress(totalMinutes, habit.goalConfig.targetMinutes),

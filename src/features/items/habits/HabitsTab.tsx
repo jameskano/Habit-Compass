@@ -33,11 +33,11 @@ type DetailSelection = {
   dangerAction?: HabitDangerAction
 }
 
-function asISODate(value: Date) {
+const asISODate = (value: Date) => {
   return formatISO(value, { representation: 'date' }) as ISODateString
 }
 
-export function HabitsTab({ habits, showingArchived, onToggleArchive }: HabitsTabProps) {
+export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTabProps) => {
   const appToast = useAppToast()
   const today = asISODate(new Date())
   const dates = useMemo(

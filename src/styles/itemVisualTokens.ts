@@ -17,10 +17,10 @@ const categoryIcons: Record<string, LucideIcon> = {
   'book-open': BookOpen,
 }
 
-export function getCategoryVisualClasses(colorToken: string) {
+export const getCategoryVisualClasses = (colorToken: string) => {
   return categoryVisualClasses[colorToken] ?? 'border-border bg-muted/70 text-foreground'
 }
 
-export function getCategoryIcon(iconName: string) {
+export const getCategoryIcon = (iconName: string) => {
   return categoryIcons[iconName] ?? Tag
 }

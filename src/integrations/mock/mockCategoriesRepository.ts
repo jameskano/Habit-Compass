@@ -4,10 +4,10 @@ import type { CategoriesRepository, Category } from '@/domain/categories'
 
 import { getMockState } from './mockData'
 
-function updateCategoryInState(
+const updateCategoryInState = (
   categoryId: string,
   updater: (category: Category) => Category,
-): Result<Category> {
+): Result<Category> => {
   const state = getMockState()
   const index = state.categories.findIndex((category) => category.id === categoryId)
 
@@ -23,11 +23,7 @@ function updateCategoryInState(
 
 export const mockCategoriesRepository: CategoriesRepository = {
   async listForUser({ userId }) {
-    return ok(
-      getMockState().categories.filter(
-        (category) => category.userId === userId,
-      ),
-    )
+    return ok(getMockState().categories.filter((category) => category.userId === userId))
   },
 
   async create(input) {

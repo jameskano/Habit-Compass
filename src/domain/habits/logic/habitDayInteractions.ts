@@ -11,15 +11,15 @@ export type HabitAmountInputMetadata = {
   quantityUnitLabel: string | null
 }
 
-function isWithinHabitDateWindow(habit: Habit, date: ISODateString) {
+const isWithinHabitDateWindow = (habit: Habit, date: ISODateString) => {
   return date >= habit.startsOn && (!habit.endsOn || date <= habit.endsOn)
 }
 
-export function isHabitDayActionable(input: {
+export const isHabitDayActionable = (input: {
   habit: Habit
   date: ISODateString
   today: ISODateString
-}) {
+}) => {
   const { habit, date, today } = input
 
   if (
@@ -34,7 +34,7 @@ export function isHabitDayActionable(input: {
   return habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date)
 }
 
-export function getHabitAmountInputMetadata(habit: Habit): HabitAmountInputMetadata | null {
+export const getHabitAmountInputMetadata = (habit: Habit): HabitAmountInputMetadata | null => {
   switch (habit.goalConfig.trackingType) {
     case 'repetitionsPerPeriod':
       return { unit: 'repetitions', quantityUnitLabel: null }
@@ -50,7 +50,7 @@ export function getHabitAmountInputMetadata(habit: Habit): HabitAmountInputMetad
   }
 }
 
-export function getHabitLogAmount(habit: Habit, log?: HabitLog | null) {
+export const getHabitLogAmount = (habit: Habit, log?: HabitLog | null) => {
   if (!log || log.status !== 'completed') {
     return null
   }

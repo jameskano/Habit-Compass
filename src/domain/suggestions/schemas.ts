@@ -1,6 +1,11 @@
 import { z } from 'zod'
 
-import { BaseEntityFieldsSchema, EntityIdSchema, IsoDateStringSchema, IsoDateTimeStringSchema } from '@/shared/types'
+import {
+  BaseEntityFieldsSchema,
+  EntityIdSchema,
+  IsoDateStringSchema,
+  IsoDateTimeStringSchema,
+} from '@/shared/types'
 
 import { suggestionStatuses, suggestionTriggers, suggestionTypes } from './constants'
 

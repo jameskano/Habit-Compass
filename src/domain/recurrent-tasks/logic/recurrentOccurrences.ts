@@ -17,15 +17,15 @@ export type DerivedRecurrentOccurrence = {
   storedOccurrence?: RecurrentTaskOccurrence
 }
 
-function toUtcDate(date: ISODateString) {
+const toUtcDate = (date: ISODateString) => {
   return new Date(`${date}T00:00:00.000Z`)
 }
 
-function differenceInDays(date: ISODateString, anchor: ISODateString) {
+const differenceInDays = (date: ISODateString, anchor: ISODateString) => {
   return Math.floor((toUtcDate(date).getTime() - toUtcDate(anchor).getTime()) / 86_400_000)
 }
 
-function differenceInMonths(date: ISODateString, anchor: ISODateString) {
+const differenceInMonths = (date: ISODateString, anchor: ISODateString) => {
   const current = toUtcDate(date)
   const start = toUtcDate(anchor)
   return (
@@ -35,7 +35,7 @@ function differenceInMonths(date: ISODateString, anchor: ISODateString) {
   )
 }
 
-export function isRecurrentTaskScheduledOnDate(task: RecurrentTask, date: ISODateString) {
+export const isRecurrentTaskScheduledOnDate = (task: RecurrentTask, date: ISODateString) => {
   if (
     task.lifecycleStatus !== 'active' ||
     date < task.startsOn ||
@@ -82,11 +82,11 @@ export function isRecurrentTaskScheduledOnDate(task: RecurrentTask, date: ISODat
   }
 }
 
-export function enumerateRecurrentTaskDates(
+export const enumerateRecurrentTaskDates = (
   task: RecurrentTask,
   from: ISODateString,
   to: ISODateString,
-) {
+) => {
   const dates: ISODateString[] = []
   const current = toUtcDate(from)
   const end = toUtcDate(to)
@@ -102,13 +102,13 @@ export function enumerateRecurrentTaskDates(
   return dates
 }
 
-export function deriveRecurrentOccurrences(input: {
+export const deriveRecurrentOccurrences = (input: {
   task: RecurrentTask
   storedOccurrences: RecurrentTaskOccurrence[]
   from: ISODateString
   to: ISODateString
   today: ISODateString
-}) {
+}) => {
   return enumerateRecurrentTaskDates(input.task, input.from, input.to).map((scheduledForDate) => {
     const storedOccurrence = input.storedOccurrences.find(
       (occurrence) => occurrence.scheduledForDate === scheduledForDate,

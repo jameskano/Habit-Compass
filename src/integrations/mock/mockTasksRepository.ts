@@ -4,7 +4,7 @@ import type { Task, TasksRepository } from '@/domain/tasks'
 
 import { getMockState } from './mockData'
 
-function updateTaskInState(taskId: string, updater: (task: Task) => Task): Result<Task> {
+const updateTaskInState = (taskId: string, updater: (task: Task) => Task): Result<Task> => {
   const state = getMockState()
   const index = state.tasks.findIndex((task) => task.id === taskId)
 

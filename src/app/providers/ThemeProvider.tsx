@@ -6,7 +6,7 @@ type ThemeProviderProps = {
   children: ReactNode
 }
 
-function resolveSystemTheme() {
+const resolveSystemTheme = () => {
   if (!window.matchMedia) {
     return 'light'
   }
@@ -14,7 +14,7 @@ function resolveSystemTheme() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const theme = useAppPreferencesStore((state) => state.theme)
 
   useEffect(() => {

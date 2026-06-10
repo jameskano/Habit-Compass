@@ -8,7 +8,7 @@ import { getMockState, mockData, resetMockState } from './mockData'
 import { mockRecurrentTasksRepository } from './mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mockTasksRepository'
 
-function omitFields<T extends object, K extends keyof T>(value: T, ...keys: K[]): Omit<T, K> {
+const omitFields = <T extends object, K extends keyof T>(value: T, ...keys: K[]): Omit<T, K> => {
   const result = { ...value }
   for (const key of keys) {
     delete result[key]

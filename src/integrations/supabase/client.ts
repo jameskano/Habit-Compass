@@ -7,7 +7,7 @@ const supabasePublishableKey =
 export const supabase =
   supabaseUrl && supabasePublishableKey ? createClient(supabaseUrl, supabasePublishableKey) : null
 
-export function getSupabaseClient() {
+export const getSupabaseClient = () => {
   if (!supabase) {
     throw new Error(
       'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',

@@ -18,7 +18,7 @@ const toneStyles: Record<NonNullable<ItemCardProps['tone']>, string> = {
   neutral: 'border-border/70 bg-card/90',
 }
 
-export function ItemCard({ title, titleId, meta, metaId, tone = 'neutral' }: ItemCardProps) {
+export const ItemCard = ({ title, titleId, meta, metaId, tone = 'neutral' }: ItemCardProps) => {
   return (
     <Card className={`rounded-2xl p-4 ${toneStyles[tone]}`}>
       <div className="flex items-start justify-between gap-3">

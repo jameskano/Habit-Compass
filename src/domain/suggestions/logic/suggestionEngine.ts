@@ -36,12 +36,12 @@ export type SuggestionRecommendationContext = {
   variantSelector?: (variants: SuggestionCopyVariant[]) => SuggestionCopyVariant
 }
 
-function buildSuggestion(
+const buildSuggestion = (
   type: SuggestionType,
   trigger: SuggestionTrigger,
   variantSelector?: (variants: SuggestionCopyVariant[]) => SuggestionCopyVariant,
   overrides: Partial<SuggestionRecommendation> = {},
-): SuggestionRecommendation {
+): SuggestionRecommendation => {
   const copy = selectSuggestionCopy(type, variantSelector)
 
   return {
@@ -54,7 +54,9 @@ function buildSuggestion(
   }
 }
 
-export function generateSuggestions(context: SuggestionRecommendationContext): SuggestionRecommendation[] {
+export const generateSuggestions = (
+  context: SuggestionRecommendationContext,
+): SuggestionRecommendation[] => {
   const suggestions: SuggestionRecommendation[] = []
 
   for (const entry of context.habitEntries) {
@@ -99,15 +101,19 @@ export function generateSuggestions(context: SuggestionRecommendationContext): S
       )
       continue
     }
-
   }
 
   for (const categoryEntry of context.categoryEntries ?? []) {
     if (isCategoryNeglected(categoryEntry.daysSinceLastAction)) {
       suggestions.push(
-        buildSuggestion('addSmallCategoryAction', 'repeatedCategoryNeglect', context.variantSelector, {
-          targetCategoryId: categoryEntry.categoryId,
-        }),
+        buildSuggestion(
+          'addSmallCategoryAction',
+          'repeatedCategoryNeglect',
+          context.variantSelector,
+          {
+            targetCategoryId: categoryEntry.categoryId,
+          },
+        ),
       )
     }
   }

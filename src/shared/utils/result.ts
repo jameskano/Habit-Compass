@@ -12,15 +12,15 @@ export type ErrResult<E extends AppError = AppError> = {
 
 export type Result<T, E extends AppError = AppError> = OkResult<T> | ErrResult<E>
 
-export function ok<T>(data: T): OkResult<T> {
+export const ok = <T>(data: T): OkResult<T> => {
   return { ok: true, data }
 }
 
-export function err<E extends AppError>(error: E): ErrResult<E> {
+export const err = <E extends AppError>(error: E): ErrResult<E> => {
   return { ok: false, error }
 }
 
-export function unwrapResult<T, E extends AppError>(result: Result<T, E>) {
+export const unwrapResult = <T, E extends AppError>(result: Result<T, E>) => {
   if (!result.ok) {
     throw result.error
   }

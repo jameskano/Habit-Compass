@@ -13,7 +13,7 @@ type HabitDayCellProps = {
 const LONG_PRESS_DURATION_MS = 500
 const LONG_PRESS_MOVE_TOLERANCE_PX = 8
 
-export function HabitDayCell({
+export const HabitDayCell = ({
   children,
   className,
   disabled,
@@ -21,7 +21,7 @@ export function HabitDayCell({
   title,
   onLongPress,
   onTap,
-}: HabitDayCellProps) {
+}: HabitDayCellProps) => {
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<number | null>(null)
   const suppressClick = useRef(false)

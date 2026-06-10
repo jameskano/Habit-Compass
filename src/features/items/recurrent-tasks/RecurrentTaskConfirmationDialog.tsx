@@ -12,13 +12,13 @@ type RecurrentTaskConfirmationDialogProps = {
   onConfirm: () => void
 }
 
-export function RecurrentTaskConfirmationDialog({
+export const RecurrentTaskConfirmationDialog = ({
   task,
   open,
   pending,
   onCancel,
   onConfirm,
-}: RecurrentTaskConfirmationDialogProps) {
+}: RecurrentTaskConfirmationDialogProps) => {
   const intl = useIntl()
 
   if (!open) {

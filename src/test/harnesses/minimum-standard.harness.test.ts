@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createCompletionLevelHabit, createHabit, createHabitLog } from '@/domain/habits/logic/habitFixtures'
+import {
+  createCompletionLevelHabit,
+  createHabit,
+  createHabitLog,
+} from '@/domain/habits/logic/habitFixtures'
 import { evaluateHabitCompletion } from '@/domain/habits/logic/evaluateHabitCompletion'
 
 describe('minimum standard harness', () => {
@@ -46,7 +50,12 @@ describe('minimum standard harness', () => {
 
   it('supports enabled levels for a quantity habit', () => {
     const habit = createCompletionLevelHabit(
-      { trackingType: 'totalQuantityPerPeriod', period: 'month', targetQuantity: 10, unitLabel: 'glasses' },
+      {
+        trackingType: 'totalQuantityPerPeriod',
+        period: 'month',
+        targetQuantity: 10,
+        unitLabel: 'glasses',
+      },
       ['minimum', 'standard'],
     )
     const result = evaluateHabitCompletion({

@@ -1,18 +1,18 @@
 import type { MonthDay } from '@/shared/types'
 
-function entries(value: string) {
+const entries = (value: string) => {
   return value
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean)
 }
 
-function isValidMonthDay({ month, day }: MonthDay) {
+const isValidMonthDay = ({ month, day }: MonthDay) => {
   const date = new Date(Date.UTC(2024, month - 1, day))
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
 }
 
-export function parseDaysOfMonthInput(value: string) {
+export const parseDaysOfMonthInput = (value: string) => {
   return [
     ...new Set(
       entries(value)
@@ -22,7 +22,7 @@ export function parseDaysOfMonthInput(value: string) {
   ]
 }
 
-export function isValidDaysOfMonthInput(value: string) {
+export const isValidDaysOfMonthInput = (value: string) => {
   const values = entries(value)
   return (
     values.length > 0 &&
@@ -30,7 +30,7 @@ export function isValidDaysOfMonthInput(value: string) {
   )
 }
 
-export function parseDaysOfYearInput(value: string): MonthDay[] {
+export const parseDaysOfYearInput = (value: string): MonthDay[] => {
   const uniqueDays = new Map<string, MonthDay>()
 
   for (const entry of entries(value)) {
@@ -48,7 +48,7 @@ export function parseDaysOfYearInput(value: string): MonthDay[] {
   return [...uniqueDays.values()]
 }
 
-export function isValidDaysOfYearInput(value: string) {
+export const isValidDaysOfYearInput = (value: string) => {
   const values = entries(value)
   return values.length > 0 && values.every((entry) => parseDaysOfYearInput(entry).length === 1)
 }

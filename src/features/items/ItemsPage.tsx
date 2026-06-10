@@ -24,7 +24,7 @@ const itemTabs = [
 
 type ItemTabKey = (typeof itemTabs)[number]['key']
 
-export function ItemsPage() {
+export const ItemsPage = () => {
   const intl = useIntl()
   const [activeTab, setActiveTab] = useState<ItemTabKey>('habits')
   const [showingArchived, setShowingArchived] = useState(false)

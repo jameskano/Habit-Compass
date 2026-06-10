@@ -25,7 +25,7 @@ type ItemsFilterRowProps = {
 
 const allCategoriesValue = '__all__'
 
-export function ItemsFilterRow({
+export const ItemsFilterRow = ({
   categories,
   categoryId,
   categoryLabelId,
@@ -38,7 +38,7 @@ export function ItemsFilterRow({
   onCategoryChange,
   onSearchChange,
   onToggleArchive,
-}: ItemsFilterRowProps) {
+}: ItemsFilterRowProps) => {
   const intl = useIntl()
   const [searchOpen, setSearchOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)

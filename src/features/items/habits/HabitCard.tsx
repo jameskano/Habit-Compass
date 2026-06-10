@@ -37,13 +37,13 @@ type HabitCardProps = {
   onSwipeArchive: () => void
 }
 
-function formatWeekdays(intl: IntlShape, days: readonly HabitDayOfWeek[]) {
+const formatWeekdays = (intl: IntlShape, days: readonly HabitDayOfWeek[]) => {
   return intl.formatList(
     days.map((day) => intl.formatMessage({ id: `page.items.weekday.short.${day}` })),
   )
 }
 
-function formatFrequency(intl: IntlShape, habit: Habit) {
+const formatFrequency = (intl: IntlShape, habit: Habit) => {
   const descriptor = getHabitFrequencySummary(habit.scheduleRule)
 
   if (
@@ -90,7 +90,7 @@ function formatFrequency(intl: IntlShape, habit: Habit) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-export function HabitCard({
+export const HabitCard = ({
   habit,
   category,
   logs,
@@ -102,7 +102,7 @@ export function HabitCard({
   onOpenCalendar,
   onSwipeEdit,
   onSwipeArchive,
-}: HabitCardProps) {
+}: HabitCardProps) => {
   const intl = useIntl()
   const stats = calculateHabitStats({ habit, logs, from, to: today, today })
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null

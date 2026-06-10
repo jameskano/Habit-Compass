@@ -9,7 +9,13 @@ type FeatureToggleProps = {
   onChange: (checked: boolean) => void
 }
 
-export function FeatureToggle({ id, labelId, descriptionId, checked, onChange }: FeatureToggleProps) {
+export const FeatureToggle = ({
+  id,
+  labelId,
+  descriptionId,
+  checked,
+  onChange,
+}: FeatureToggleProps) => {
   return (
     <label
       htmlFor={id}

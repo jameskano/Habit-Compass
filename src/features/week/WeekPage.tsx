@@ -7,8 +7,10 @@ import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
 import { StatCard } from '@/shared/ui/StatCard'
 
-export function WeekPage() {
-  const weeklyPlanningEnabled = useAppPreferencesStore((state) => state.featureToggles.weeklyPlanning)
+export const WeekPage = () => {
+  const weeklyPlanningEnabled = useAppPreferencesStore(
+    (state) => state.featureToggles.weeklyPlanning,
+  )
 
   return (
     <section className="space-y-6">
@@ -47,9 +49,21 @@ export function WeekPage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <ItemCard titleId="page.week.focus.title" metaId="page.week.focus.meta" tone="habit" />
-            <ItemCard titleId="page.week.priorities.title" metaId="page.week.priorities.meta" tone="task" />
-            <ItemCard titleId="page.week.quadrant.title" metaId="page.week.quadrant.meta" tone="neutral" />
-            <ItemCard titleId="page.week.attention.title" metaId="page.week.attention.meta" tone="category" />
+            <ItemCard
+              titleId="page.week.priorities.title"
+              metaId="page.week.priorities.meta"
+              tone="task"
+            />
+            <ItemCard
+              titleId="page.week.quadrant.title"
+              metaId="page.week.quadrant.meta"
+              tone="neutral"
+            />
+            <ItemCard
+              titleId="page.week.attention.title"
+              metaId="page.week.attention.meta"
+              tone="category"
+            />
           </div>
         </>
       )}

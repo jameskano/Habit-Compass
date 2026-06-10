@@ -5,7 +5,7 @@ export type FrequencySummaryDescriptor = {
   values?: Record<string, number | string>
 }
 
-export function getHabitFrequencySummary(rule: HabitScheduleRule): FrequencySummaryDescriptor {
+export const getHabitFrequencySummary = (rule: HabitScheduleRule): FrequencySummaryDescriptor => {
   switch (rule.kind) {
     case 'daily':
       return { messageId: 'items.frequency.daily' }
