@@ -44,7 +44,10 @@ describe('frequency goals harness', () => {
   it('covers X times per month', () => {
     const habit = createHabit({ trackingType: 'timesPerPeriod', period: 'month', targetCount: 8 })
     const logs = Array.from({ length: 5 }, (_, index) =>
-      createHabitLog({ id: `month-${index}`, loggedForDate: `2026-05-${String(index + 1).padStart(2, '0')}` }),
+      createHabitLog({
+        id: `month-${index}`,
+        loggedForDate: `2026-05-${String(index + 1).padStart(2, '0')}`,
+      }),
     )
 
     const result = evaluateHabitProgress({
@@ -59,7 +62,11 @@ describe('frequency goals harness', () => {
   })
 
   it('covers repetitions per period', () => {
-    const habit = createHabit({ trackingType: 'repetitionsPerPeriod', period: 'week', targetRepetitions: 30 })
+    const habit = createHabit({
+      trackingType: 'repetitionsPerPeriod',
+      period: 'week',
+      targetRepetitions: 30,
+    })
     const logs = [
       createHabitLog({ repetitions: 10 }),
       createHabitLog({ id: 'rep-2', repetitions: 8 }),
@@ -95,7 +102,11 @@ describe('frequency goals harness', () => {
   })
 
   it('covers total time per week', () => {
-    const habit = createHabit({ trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 120 })
+    const habit = createHabit({
+      trackingType: 'totalTimePerPeriod',
+      period: 'week',
+      targetMinutes: 120,
+    })
     const logs = [
       createHabitLog({ durationMinutes: 45 }),
       createHabitLog({ id: 'ttw-2', durationMinutes: 60 }),
@@ -112,7 +123,11 @@ describe('frequency goals harness', () => {
   })
 
   it('covers quantity per session', () => {
-    const habit = createHabit({ trackingType: 'quantityPerSession', targetQuantity: 10, unitLabel: 'pages' })
+    const habit = createHabit({
+      trackingType: 'quantityPerSession',
+      targetQuantity: 10,
+      unitLabel: 'pages',
+    })
     const logs = [
       createHabitLog({ quantity: 6, quantityUnitLabel: 'pages' }),
       createHabitLog({ id: 'qps-2', quantity: 11, quantityUnitLabel: 'pages' }),
@@ -130,7 +145,12 @@ describe('frequency goals harness', () => {
   })
 
   it('covers total quantity per month', () => {
-    const habit = createHabit({ trackingType: 'totalQuantityPerPeriod', period: 'month', targetQuantity: 100, unitLabel: 'ounces' })
+    const habit = createHabit({
+      trackingType: 'totalQuantityPerPeriod',
+      period: 'month',
+      targetQuantity: 100,
+      unitLabel: 'ounces',
+    })
     const logs = [
       createHabitLog({ quantity: 25, quantityUnitLabel: 'ounces' }),
       createHabitLog({ id: 'tqm-2', quantity: 40, quantityUnitLabel: 'ounces' }),

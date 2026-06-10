@@ -34,7 +34,7 @@ vi.mock('sonner', () => ({
   },
 }))
 
-function wrapper({ children }: { children: React.ReactNode }) {
+const wrapper = ({ children }: { children: React.ReactNode }) => {
   return (
     <IntlProvider locale="en" messages={getMessages('en')}>
       {children}

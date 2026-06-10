@@ -31,7 +31,7 @@ type UseTodayPageDataInput = {
   selectedRecurrentTaskId: string | null
 }
 
-export function useTodayPageData(input: UseTodayPageDataInput) {
+export const useTodayPageData = (input: UseTodayPageDataInput) => {
   const {
     selectedDate,
     today,

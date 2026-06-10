@@ -20,13 +20,13 @@ type HabitDayActionSheetProps = {
   onClose: () => void
 }
 
-export function HabitDayActionSheet({
+export const HabitDayActionSheet = ({
   actions,
   date,
   habit,
   pending,
   onClose,
-}: HabitDayActionSheetProps) {
+}: HabitDayActionSheetProps) => {
   const intl = useIntl()
   const formattedDate = date
     ? intl.formatDate(parseISO(date), {

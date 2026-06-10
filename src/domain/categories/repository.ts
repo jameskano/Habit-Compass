@@ -3,10 +3,7 @@ import type { Result } from '@/shared/utils/result'
 
 import type { Category } from './types'
 
-export type CreateCategoryInput = Omit<
-  Category,
-  'id' | 'createdAt' | 'updatedAt' | 'archivedAt'
->
+export type CreateCategoryInput = Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'archivedAt'>
 export type UpdateCategoryInput = Partial<
   Omit<Category, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 > & {

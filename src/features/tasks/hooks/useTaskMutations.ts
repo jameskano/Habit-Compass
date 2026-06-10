@@ -7,7 +7,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-function useInvalidateTasks(userId: string) {
+const useInvalidateTasks = (userId: string) => {
   const queryClient = useQueryClient()
 
   return async () => {
@@ -18,7 +18,7 @@ function useInvalidateTasks(userId: string) {
   }
 }
 
-export function useUpdateTaskMutation(userId = MOCK_USER_ID) {
+export const useUpdateTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -29,7 +29,7 @@ export function useUpdateTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useCreateTaskMutation(userId = MOCK_USER_ID) {
+export const useCreateTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -40,7 +40,7 @@ export function useCreateTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useCompleteTaskMutation(userId = MOCK_USER_ID) {
+export const useCompleteTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -58,7 +58,7 @@ export function useCompleteTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useArchiveTaskMutation(userId = MOCK_USER_ID) {
+export const useArchiveTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -70,7 +70,7 @@ export function useArchiveTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useDeleteTaskMutation(userId = MOCK_USER_ID) {
+export const useDeleteTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -82,7 +82,7 @@ export function useDeleteTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useReorderTasksMutation(userId = MOCK_USER_ID) {
+export const useReorderTasksMutation = (userId = MOCK_USER_ID) => {
   const invalidateTasks = useInvalidateTasks(userId)
   const { mutationError } = useAppToast()
 

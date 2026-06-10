@@ -17,7 +17,7 @@ const options = [
   { kind: 'category', messageId: 'sheet.add.category' },
 ] as const
 
-export function AddItemSheet({ open, onClose }: AddItemSheetProps) {
+export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
   const intl = useIntl()
   const [createKind, setCreateKind] = useState<(typeof options)[number]['kind'] | null>(null)
 

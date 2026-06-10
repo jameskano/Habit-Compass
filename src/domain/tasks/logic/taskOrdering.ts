@@ -6,11 +6,11 @@ const priorityRank = {
   high: 2,
 } as const
 
-function statusRank(task: Task) {
+const statusRank = (task: Task) => {
   return task.completionStatus === 'pending' ? 0 : 1
 }
 
-export function compareTasks(left: Task, right: Task) {
+export const compareTasks = (left: Task, right: Task) => {
   const statusDifference = statusRank(left) - statusRank(right)
   if (statusDifference !== 0) {
     return statusDifference
@@ -35,6 +35,6 @@ export function compareTasks(left: Task, right: Task) {
   return createdDifference !== 0 ? createdDifference : left.id.localeCompare(right.id)
 }
 
-export function sortTasks(tasks: readonly Task[]) {
+export const sortTasks = (tasks: readonly Task[]) => {
   return [...tasks].sort(compareTasks)
 }

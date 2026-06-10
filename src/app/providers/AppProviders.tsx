@@ -13,7 +13,7 @@ type AppProvidersProps = {
   children: ReactNode
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export const AppProviders = ({ children }: AppProvidersProps) => {
   const [queryClient] = useState(() => new QueryClient())
   const locale = useAppPreferencesStore((state) => state.locale)
 

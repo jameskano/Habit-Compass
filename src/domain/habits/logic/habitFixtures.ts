@@ -1,11 +1,20 @@
-import type { Habit, HabitCompletionLevel, HabitGoalConfig, HabitLog, HabitResetMode } from '../types'
+import type {
+  Habit,
+  HabitCompletionLevel,
+  HabitGoalConfig,
+  HabitLog,
+  HabitResetMode,
+} from '../types'
 
 type HabitFixtureOverrides = Partial<Habit>
 type HabitLogFixtureOverrides = Partial<HabitLog>
 
 const baseTimestamp = '2026-05-21T08:00:00.000Z'
 
-export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixtureOverrides = {}): Habit {
+export const createHabit = (
+  goalConfig: HabitGoalConfig,
+  overrides: HabitFixtureOverrides = {},
+): Habit => {
   return {
     id: 'habit-1',
     userId: 'user-1',
@@ -21,10 +30,7 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
     startsOn: '2026-01-01',
     endsOn: null,
     order: 0,
-    scheduleRule:
-      'period' in goalConfig
-        ? { kind: 'flexiblePeriod' }
-        : { kind: 'daily' },
+    scheduleRule: 'period' in goalConfig ? { kind: 'flexiblePeriod' } : { kind: 'daily' },
     trackingType: goalConfig.trackingType,
     goalConfig,
     usesCompletionLevels: false,
@@ -36,14 +42,14 @@ export function createHabit(goalConfig: HabitGoalConfig, overrides: HabitFixture
   }
 }
 
-export function createCompletionLevelHabit(
+export const createCompletionLevelHabit = (
   goalConfig: HabitGoalConfig,
   enabledCompletionLevels: HabitCompletionLevel[],
   overrides: HabitFixtureOverrides = {},
-) {
+) => {
   const defaultCompletionLevel = enabledCompletionLevels.includes('standard')
     ? 'standard'
-    : enabledCompletionLevels[0] ?? null
+    : (enabledCompletionLevels[0] ?? null)
 
   return createHabit(goalConfig, {
     usesCompletionLevels: true,
@@ -53,7 +59,7 @@ export function createCompletionLevelHabit(
   })
 }
 
-export function createHabitLog(overrides: HabitLogFixtureOverrides = {}): HabitLog {
+export const createHabitLog = (overrides: HabitLogFixtureOverrides = {}): HabitLog => {
   return {
     id: `habit-log-${overrides.loggedForDate ?? '2026-05-21'}`,
     userId: 'user-1',
@@ -74,7 +80,7 @@ export function createHabitLog(overrides: HabitLogFixtureOverrides = {}): HabitL
   }
 }
 
-export function createResettableHabit(resetMode: HabitResetMode = 'soft') {
+export const createResettableHabit = (resetMode: HabitResetMode = 'soft') => {
   return createHabit({ trackingType: 'binary' }, { resetMode })
 }
 

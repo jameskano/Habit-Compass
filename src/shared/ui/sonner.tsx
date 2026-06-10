@@ -5,7 +5,7 @@ import { cn } from '@/shared/utils/cn'
 
 export const DEFAULT_TOAST_DURATION_MS = 4000
 
-export function Toaster(props: ToasterProps) {
+export const Toaster = (props: ToasterProps) => {
   const theme = useAppPreferencesStore((state) => state.theme)
   const { className, ...toasterProps } = props
 

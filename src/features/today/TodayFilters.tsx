@@ -23,7 +23,7 @@ type TodayFiltersProps = {
   onFiltersChange: (update: (current: TodayFilterState) => TodayFilterState) => void
 }
 
-export function TodayFilters({ filters, activeCategories, onFiltersChange }: TodayFiltersProps) {
+export const TodayFilters = ({ filters, activeCategories, onFiltersChange }: TodayFiltersProps) => {
   const intl = useIntl()
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)

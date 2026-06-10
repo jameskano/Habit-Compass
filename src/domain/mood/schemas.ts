@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
-import { BaseEntityFieldsSchema, IsoDateStringSchema, IsoDateTimeStringSchema } from '@/shared/types'
+import {
+  BaseEntityFieldsSchema,
+  IsoDateStringSchema,
+  IsoDateTimeStringSchema,
+} from '@/shared/types'
 
 import { moodValues } from './constants'
 

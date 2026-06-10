@@ -3,7 +3,7 @@ import { DayPicker, type DayPickerProps } from 'react-day-picker'
 
 import { cn } from '@/shared/utils/cn'
 
-function Calendar({ className, classNames, ...props }: DayPickerProps) {
+const Calendar = ({ className, classNames, ...props }: DayPickerProps) => {
   return (
     <DayPicker
       showOutsideDays

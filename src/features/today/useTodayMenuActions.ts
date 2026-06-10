@@ -20,7 +20,7 @@ type UseTodayMenuActionsInput = {
   openRecurrentTaskEdit: (taskId: string) => void
 }
 
-export function useTodayMenuActions(input: UseTodayMenuActionsInput) {
+export const useTodayMenuActions = (input: UseTodayMenuActionsInput) => {
   const {
     dateMode,
     closeMenu,

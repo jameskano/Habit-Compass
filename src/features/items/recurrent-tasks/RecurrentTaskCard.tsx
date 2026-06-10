@@ -27,13 +27,13 @@ type RecurrentTaskCardProps = {
   onComplete: () => void
 }
 
-function formatWeekdays(intl: IntlShape, days: readonly DayOfWeek[]) {
+const formatWeekdays = (intl: IntlShape, days: readonly DayOfWeek[]) => {
   return intl.formatList(
     days.map((day) => intl.formatMessage({ id: `page.items.weekday.short.${day}` })),
   )
 }
 
-function formatFrequency(intl: IntlShape, task: RecurrentTask) {
+const formatFrequency = (intl: IntlShape, task: RecurrentTask) => {
   const descriptor = getRecurrentFrequencySummary(task.recurrenceRule)
   const rule = task.recurrenceRule
 
@@ -59,14 +59,14 @@ function formatFrequency(intl: IntlShape, task: RecurrentTask) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-export function RecurrentTaskCard({
+export const RecurrentTaskCard = ({
   task,
   category,
   occurrence,
   archived,
   onEdit,
   onComplete,
-}: RecurrentTaskCardProps) {
+}: RecurrentTaskCardProps) => {
   const intl = useIntl()
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${task.priority}` })}`

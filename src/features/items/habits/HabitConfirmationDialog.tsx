@@ -14,13 +14,13 @@ type HabitConfirmationDialogProps = {
   onConfirm: () => void
 }
 
-export function HabitConfirmationDialog({
+export const HabitConfirmationDialog = ({
   action,
   habit,
   pending,
   onCancel,
   onConfirm,
-}: HabitConfirmationDialogProps) {
+}: HabitConfirmationDialogProps) => {
   const intl = useIntl()
 
   if (!action) {

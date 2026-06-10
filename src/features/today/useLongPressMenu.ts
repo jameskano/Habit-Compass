@@ -3,7 +3,7 @@ import { type PointerEvent, useRef } from 'react'
 const LONG_PRESS_DURATION_MS = 500
 const LONG_PRESS_MOVE_TOLERANCE_PX = 8
 
-export function useLongPressMenu(onOpenMenu: () => void) {
+export const useLongPressMenu = (onOpenMenu: () => void) => {
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<number | null>(null)
   const suppressClick = useRef(false)

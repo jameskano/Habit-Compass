@@ -15,7 +15,7 @@ type UseTodayCompletionActionsInput = {
   openAmountInput: (habitId: string) => void
 }
 
-export function useTodayCompletionActions(input: UseTodayCompletionActionsInput) {
+export const useTodayCompletionActions = (input: UseTodayCompletionActionsInput) => {
   const { selectedDate, completionEnabled, openAmountInput } = input
   const appToast = useAppToast()
   const upsertHabitLogMutation = useUpsertHabitLogMutation()

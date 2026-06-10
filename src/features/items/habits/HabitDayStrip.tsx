@@ -16,7 +16,7 @@ type HabitDayStripProps = {
   today: ISODateString
 }
 
-export function HabitDayStrip({ habit, logs, dates, today }: HabitDayStripProps) {
+export const HabitDayStrip = ({ habit, logs, dates, today }: HabitDayStripProps) => {
   const intl = useIntl()
   const weekdayFormatter = new Intl.DateTimeFormat(intl.locale, { weekday: 'narrow' })
   const dateFormatter = new Intl.DateTimeFormat(intl.locale, { month: 'short', day: 'numeric' })

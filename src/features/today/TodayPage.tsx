@@ -28,7 +28,7 @@ import { useTodayMenuActions } from './useTodayMenuActions'
 import { useTodayPageData } from './useTodayPageData'
 import { useTodayShellActions } from './useTodayShellActions'
 
-export function TodayPage() {
+export const TodayPage = () => {
   const intl = useIntl()
   const appToast = useAppToast()
   const actualToday = todayAsISODate()

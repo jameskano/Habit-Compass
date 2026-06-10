@@ -24,7 +24,7 @@ type TodayItemsListProps = {
   onReorder: (visibleOrderedIds: string[]) => void
 }
 
-export function TodayItemsList({
+export const TodayItemsList = ({
   items,
   categoriesById,
   selectedDate,
@@ -33,7 +33,7 @@ export function TodayItemsList({
   onOpenMenu,
   onPrimaryAction,
   onReorder,
-}: TodayItemsListProps) {
+}: TodayItemsListProps) => {
   const intl = useIntl()
 
   return (

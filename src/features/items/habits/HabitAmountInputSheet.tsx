@@ -29,7 +29,7 @@ type HabitAmountInputSheetProps = {
   onSave: (amount: number) => void
 }
 
-export function HabitAmountInputSheet({
+export const HabitAmountInputSheet = ({
   date,
   habit,
   initialAmount,
@@ -38,7 +38,7 @@ export function HabitAmountInputSheet({
   pending,
   onClose,
   onSave,
-}: HabitAmountInputSheetProps) {
+}: HabitAmountInputSheetProps) => {
   const intl = useIntl()
   const amountInputId = useId()
   const formattedDate = date

@@ -9,7 +9,7 @@ type StatCardProps = {
   detailId?: string
 }
 
-export function StatCard({ labelId, value, detailId }: StatCardProps) {
+export const StatCard = ({ labelId, value, detailId }: StatCardProps) => {
   return (
     <Card className="rounded-2xl border-border/70 bg-card/90 p-5">
       <div className="space-y-2">

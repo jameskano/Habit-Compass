@@ -5,10 +5,10 @@ import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import type { ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useHabitLogsRangeQuery(
+export const useHabitLogsRangeQuery = (
   input: { from: ISODateString; to: ISODateString },
   userId = MOCK_USER_ID,
-) {
+) => {
   return useQuery({
     queryKey: ['habit-logs', userId, input.from, input.to],
     queryFn: async () =>

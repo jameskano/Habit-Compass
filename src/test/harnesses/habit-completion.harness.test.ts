@@ -42,7 +42,11 @@ describe('habit completion harness', () => {
   })
 
   it('evaluates partial progress below target', () => {
-    const habit = createHabit({ trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 120 })
+    const habit = createHabit({
+      trackingType: 'totalTimePerPeriod',
+      period: 'week',
+      targetMinutes: 120,
+    })
     const result = evaluateHabitCompletion({
       habit,
       logs: [createHabitLog({ durationMinutes: 40 })],

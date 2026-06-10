@@ -28,7 +28,7 @@ type SortableItemShellProps = {
   children: ReactNode
 }
 
-function moveItem<T>(items: readonly T[], fromIndex: number, toIndex: number) {
+const moveItem = <T,>(items: readonly T[], fromIndex: number, toIndex: number) => {
   const nextItems = [...items]
   const [item] = nextItems.splice(fromIndex, 1)
 
@@ -40,7 +40,7 @@ function moveItem<T>(items: readonly T[], fromIndex: number, toIndex: number) {
   return nextItems
 }
 
-function SortableItemShell({ id, index, group, label, children }: SortableItemShellProps) {
+const SortableItemShell = ({ id, index, group, label, children }: SortableItemShellProps) => {
   const { ref, handleRef, isDragging, isDropTarget } = useSortable({
     id,
     index,
@@ -73,7 +73,7 @@ function SortableItemShell({ id, index, group, label, children }: SortableItemSh
   )
 }
 
-export function SortableItemsList<T extends { id: EntityId; title: string }>({
+export const SortableItemsList = <T extends { id: EntityId; title: string }>({
   items,
   group,
   reorderLabelId,
@@ -81,7 +81,7 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
   revealCards,
   disabled = false,
   children,
-}: SortableItemsListProps<T>) {
+}: SortableItemsListProps<T>) => {
   const intl = useIntl()
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -127,9 +127,5 @@ export function SortableItemsList<T extends { id: EntityId; title: string }>({
     </div>
   )
 
-  return disabled ? cards : (
-    <DragDropProvider onDragEnd={handleDragEnd}>
-      {cards}
-    </DragDropProvider>
-  )
+  return disabled ? cards : <DragDropProvider onDragEnd={handleDragEnd}>{cards}</DragDropProvider>
 }

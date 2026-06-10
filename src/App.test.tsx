@@ -9,11 +9,11 @@ import { useAppPreferencesStore } from './app/state/appPreferencesStore'
 import { cloneMockState, resetMockState } from './integrations/mock/mockData'
 import { renderWithAppProviders } from './test/utils/renderWithAppProviders'
 
-async function chooseSelectOption(
+const chooseSelectOption = async (
   user: ReturnType<typeof userEvent.setup>,
   trigger: HTMLElement,
   optionName: string | RegExp,
-) {
+) => {
   await user.click(trigger)
   await user.click(await screen.findByRole('option', { name: optionName }))
 }

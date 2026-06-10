@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 const ITEM_WATERFALL_TOTAL_DURATION_MS = 630
 
-export function useItemWaterfallReveal(enabled: boolean) {
+export const useItemWaterfallReveal = (enabled: boolean) => {
   const started = useRef(false)
   const [revealing, setRevealing] = useState(false)
 

@@ -2,7 +2,7 @@ import { useContext, useEffect } from 'react'
 
 import { ShellTitleContext } from './shellTitleStore'
 
-export function useShellTitle(titleId: string) {
+export const useShellTitle = (titleId: string) => {
   const setTitleId = useContext(ShellTitleContext)
 
   useEffect(() => {

@@ -24,11 +24,11 @@ import type { ISODateString } from '@/shared/types'
 
 import type { TodayIntl } from './today.types'
 
-export function todayAsISODate() {
+export const todayAsISODate = () => {
   return formatISO(new Date(), { representation: 'date' }) as ISODateString
 }
 
-export function shiftISODate(date: ISODateString, amount: number) {
+export const shiftISODate = (date: ISODateString, amount: number) => {
   const current = isoDateToCalendarDate(date)
   if (!current) {
     return date
@@ -37,15 +37,15 @@ export function shiftISODate(date: ISODateString, amount: number) {
   return calendarDateToISODate(current) as ISODateString
 }
 
-export function canModifyTodayDate(dateMode: TodayDateMode) {
+export const canModifyTodayDate = (dateMode: TodayDateMode) => {
   return dateMode === 'today' || dateMode === 'past'
 }
 
-export function getTodayEmptyStateMessageIds(input: {
+export const getTodayEmptyStateMessageIds = (input: {
   searchText: string
   selectedDate: ISODateString
   today: ISODateString
-}) {
+}) => {
   if (input.searchText.trim().length > 0) {
     return {
       titleId: 'page.today.empty.search.title',
@@ -66,10 +66,10 @@ export function getTodayEmptyStateMessageIds(input: {
   }
 }
 
-export function buildVisibleTodayOrder(
+export const buildVisibleTodayOrder = (
   orderedItems: readonly { id: string }[],
   visibleOrderedIds: readonly string[],
-) {
+) => {
   const visibleIds = new Set(visibleOrderedIds)
   let visibleIndex = 0
   return orderedItems.map((item) =>
@@ -77,13 +77,16 @@ export function buildVisibleTodayOrder(
   )
 }
 
-function formatWeekdays(intl: TodayIntl, days: readonly HabitDayOfWeek[] | readonly DayOfWeek[]) {
+const formatWeekdays = (
+  intl: TodayIntl,
+  days: readonly HabitDayOfWeek[] | readonly DayOfWeek[],
+) => {
   return intl.formatList(
     days.map((day) => intl.formatMessage({ id: `page.items.weekday.short.${day}` })),
   )
 }
 
-export function formatHabitFrequency(intl: TodayIntl, habit: Habit) {
+export const formatHabitFrequency = (intl: TodayIntl, habit: Habit) => {
   const descriptor = getHabitFrequencySummary(habit.scheduleRule)
 
   if (
@@ -130,7 +133,7 @@ export function formatHabitFrequency(intl: TodayIntl, habit: Habit) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-export function formatRecurrentFrequency(intl: TodayIntl, task: RecurrentTask) {
+export const formatRecurrentFrequency = (intl: TodayIntl, task: RecurrentTask) => {
   const descriptor = getRecurrentFrequencySummary(task.recurrenceRule)
   const rule = task.recurrenceRule
 
@@ -156,7 +159,7 @@ export function formatRecurrentFrequency(intl: TodayIntl, task: RecurrentTask) {
   return intl.formatMessage({ id: descriptor.messageId }, descriptor.values)
 }
 
-export function formatTaskMeta(intl: TodayIntl, task: Task, selectedDate: ISODateString) {
+export const formatTaskMeta = (intl: TodayIntl, task: Task, selectedDate: ISODateString) => {
   if (task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending') {
     const formattedDate = intl.formatDate(parseISO(task.dueDate), {
       month: 'short',
@@ -169,7 +172,7 @@ export function formatTaskMeta(intl: TodayIntl, task: Task, selectedDate: ISODat
   return intl.formatMessage({ id: 'page.today.item.task.today' })
 }
 
-export function shortUnitLabel(intl: TodayIntl, habit: Habit) {
+export const shortUnitLabel = (intl: TodayIntl, habit: Habit) => {
   const metadata = getHabitAmountInputMetadata(habit)
   if (!metadata) {
     return ''
@@ -183,7 +186,7 @@ export function shortUnitLabel(intl: TodayIntl, habit: Habit) {
   return metadata.quantityUnitLabel ?? ''
 }
 
-export function amountText(intl: TodayIntl, item: TodayItem) {
+export const amountText = (intl: TodayIntl, item: TodayItem) => {
   if (item.type !== 'habit' || !item.amount || item.amount <= 0) {
     return null
   }
@@ -191,12 +194,12 @@ export function amountText(intl: TodayIntl, item: TodayItem) {
   return unit ? `${item.amount} ${unit}` : `${item.amount}`
 }
 
-export function amountHelperLines(
+export const amountHelperLines = (
   intl: TodayIntl,
   habit: Habit,
   logs: HabitLog[],
   selectedDate: ISODateString,
-) {
+) => {
   const completion = evaluateHabitCompletionForLogs({ habit, logs, date: selectedDate })
   const labelId =
     'period' in habit.goalConfig && habit.goalConfig.period !== 'day'
@@ -227,7 +230,7 @@ export function amountHelperLines(
   return lines
 }
 
-export function selectedDateLabel(intl: TodayIntl, date: ISODateString) {
+export const selectedDateLabel = (intl: TodayIntl, date: ISODateString) => {
   return intl.formatDate(parseISO(date), {
     weekday: 'long',
     month: 'long',
@@ -236,6 +239,6 @@ export function selectedDateLabel(intl: TodayIntl, date: ISODateString) {
   })
 }
 
-export function getTodayDateModeForDates(selectedDate: ISODateString, today: ISODateString) {
+export const getTodayDateModeForDates = (selectedDate: ISODateString, today: ISODateString) => {
   return getTodayDateMode(selectedDate, today)
 }

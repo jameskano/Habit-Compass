@@ -79,11 +79,11 @@ const recurrentFrequencyKinds = frequencyKinds.filter((kind) => kind !== 'timesP
 const colorTokens = ['emerald', 'sky'] as const
 const iconNames = ['heart', 'book-open', 'tag'] as const
 
-function todayAsISODate() {
+const todayAsISODate = () => {
   return formatISO(new Date(), { representation: 'date' })
 }
 
-function initialFrequency(): FrequencyValues {
+const initialFrequency = (): FrequencyValues => {
   return {
     kind: 'daily',
     daysOfWeek: [],
@@ -97,7 +97,7 @@ function initialFrequency(): FrequencyValues {
   }
 }
 
-function buildSchedule(frequency: FrequencyValues): HabitScheduleRule {
+const buildSchedule = (frequency: FrequencyValues): HabitScheduleRule => {
   switch (frequency.kind) {
     case 'daily':
       return { kind: 'daily' }
@@ -131,7 +131,7 @@ function buildSchedule(frequency: FrequencyValues): HabitScheduleRule {
   }
 }
 
-function buildRecurrence(frequency: FrequencyValues): RecurrenceRule {
+const buildRecurrence = (frequency: FrequencyValues): RecurrenceRule => {
   const schedule = buildSchedule(frequency)
   switch (schedule.kind) {
     case 'daily':
@@ -153,7 +153,7 @@ function buildRecurrence(frequency: FrequencyValues): RecurrenceRule {
   }
 }
 
-function validateFrequency(frequency: FrequencyValues) {
+const validateFrequency = (frequency: FrequencyValues) => {
   if (
     (frequency.kind === 'specificDaysOfWeek' || frequency.kind === 'everyXWeeks') &&
     frequency.daysOfWeek.length === 0
@@ -183,7 +183,7 @@ function validateFrequency(frequency: FrequencyValues) {
   )
 }
 
-function DialogFrame({
+const DialogFrame = ({
   title,
   children,
   onClose,
@@ -191,7 +191,7 @@ function DialogFrame({
   title: string
   children: React.ReactNode
   onClose: () => void
-}) {
+}) => {
   const intl = useIntl()
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -218,17 +218,17 @@ function DialogFrame({
   )
 }
 
-function ErrorText({ children }: { children: string }) {
+const ErrorText = ({ children }: { children: string }) => {
   return <p className="mt-1 text-xs text-amber-700">{children}</p>
 }
 
-function WeekdayPicker({
+const WeekdayPicker = ({
   value,
   onChange,
 }: {
   value: DayOfWeek[]
   onChange: (value: DayOfWeek[]) => void
-}) {
+}) => {
   const intl = useIntl()
   return (
     <fieldset className="flex flex-col gap-2">
@@ -262,7 +262,7 @@ function WeekdayPicker({
   )
 }
 
-function FrequencyFields({
+const FrequencyFields = ({
   value,
   onChange,
   includeTimesPerPeriod,
@@ -270,7 +270,7 @@ function FrequencyFields({
   value: FrequencyValues
   onChange: (value: FrequencyValues) => void
   includeTimesPerPeriod: boolean
-}) {
+}) => {
   const intl = useIntl()
   const kinds = includeTimesPerPeriod ? frequencyKinds : recurrentFrequencyKinds
   return (
@@ -374,7 +374,7 @@ function FrequencyFields({
   )
 }
 
-function PeriodSelect({
+const PeriodSelect = ({
   value,
   onChange,
   includeDay = false,
@@ -382,7 +382,7 @@ function PeriodSelect({
   value: HabitPeriod
   onChange: (value: Exclude<HabitPeriod, 'custom'>) => void
   includeDay?: boolean
-}) {
+}) => {
   const intl = useIntl()
   const periods = includeDay ? ['day', 'week', 'month', 'year'] : ['week', 'month', 'year']
   return (
@@ -407,13 +407,13 @@ function PeriodSelect({
   )
 }
 
-function WeekdaySelect({
+const WeekdaySelect = ({
   value,
   onChange,
 }: {
   value: DayOfWeek
   onChange: (value: DayOfWeek) => void
-}) {
+}) => {
   const intl = useIntl()
   return (
     <label className="text-sm font-medium">
@@ -434,7 +434,7 @@ function WeekdaySelect({
   )
 }
 
-function ActiveCategorySelect({
+const ActiveCategorySelect = ({
   value,
   onChange,
   required = false,
@@ -442,7 +442,7 @@ function ActiveCategorySelect({
   value: string
   onChange: (value: string) => void
   required?: boolean
-}) {
+}) => {
   const intl = useIntl()
   const categories =
     useCategoriesQuery().data?.filter((category) => category.lifecycleStatus === 'active') ?? []
@@ -473,7 +473,7 @@ function ActiveCategorySelect({
   )
 }
 
-function HabitCreate({ onClose }: { onClose: () => void }) {
+const HabitCreate = ({ onClose }: { onClose: () => void }) => {
   const intl = useIntl()
   const mutation = useCreateHabitMutation()
   const habits = useHabitsQuery().data ?? []
@@ -816,7 +816,7 @@ function HabitCreate({ onClose }: { onClose: () => void }) {
   )
 }
 
-function TaskCreate({ onClose }: { onClose: () => void }) {
+const TaskCreate = ({ onClose }: { onClose: () => void }) => {
   const intl = useIntl()
   const mutation = useCreateTaskMutation()
   const tasks = useTasksQuery().data ?? []
@@ -909,7 +909,7 @@ function TaskCreate({ onClose }: { onClose: () => void }) {
   )
 }
 
-function RecurrentTaskCreate({ onClose }: { onClose: () => void }) {
+const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
   const intl = useIntl()
   const mutation = useCreateRecurrentTaskMutation()
   const tasks = useRecurrentTasksQuery().data ?? []
@@ -1047,7 +1047,7 @@ function RecurrentTaskCreate({ onClose }: { onClose: () => void }) {
   )
 }
 
-function CategoryCreate({ onClose }: { onClose: () => void }) {
+const CategoryCreate = ({ onClose }: { onClose: () => void }) => {
   const intl = useIntl()
   const mutation = useCreateCategoryMutation()
   const categories = useCategoriesQuery().data ?? []
@@ -1134,13 +1134,13 @@ function CategoryCreate({ onClose }: { onClose: () => void }) {
   )
 }
 
-export function CreateItemDialogs({
+export const CreateItemDialogs = ({
   kind,
   onClose,
 }: {
   kind: CreateKind | null
   onClose: () => void
-}) {
+}) => {
   if (kind === 'habit') return <HabitCreate onClose={onClose} />
   if (kind === 'task') return <TaskCreate onClose={onClose} />
   if (kind === 'recurrentTask') return <RecurrentTaskCreate onClose={onClose} />

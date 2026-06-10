@@ -22,55 +22,52 @@ export type HabitCompletionBar = {
   completionEvents: number
 }
 
-function toUtcDate(date: ISODateString) {
+const toUtcDate = (date: ISODateString) => {
   return new Date(`${date}T00:00:00.000Z`)
 }
 
-function toISODate(date: Date) {
+const toISODate = (date: Date) => {
   return date.toISOString().slice(0, 10) as ISODateString
 }
 
-function startOfWeek(date: ISODateString) {
+const startOfWeek = (date: ISODateString) => {
   const current = toUtcDate(date)
   const offset = (current.getUTCDay() + 6) % 7
   current.setUTCDate(current.getUTCDate() - offset)
   return toISODate(current)
 }
 
-function startOfMonth(date: ISODateString) {
+const startOfMonth = (date: ISODateString) => {
   const current = toUtcDate(date)
   current.setUTCDate(1)
   return toISODate(current)
 }
 
-function startOfYear(date: ISODateString) {
+const startOfYear = (date: ISODateString) => {
   const current = toUtcDate(date)
   current.setUTCMonth(0, 1)
   return toISODate(current)
 }
 
-function addDays(date: ISODateString, amount: number) {
+const addDays = (date: ISODateString, amount: number) => {
   const current = toUtcDate(date)
   current.setUTCDate(current.getUTCDate() + amount)
   return toISODate(current)
 }
 
-function addMonths(date: ISODateString, amount: number) {
+const addMonths = (date: ISODateString, amount: number) => {
   const current = toUtcDate(date)
   current.setUTCMonth(current.getUTCMonth() + amount, 1)
   return toISODate(current)
 }
 
-function countCompletions(logs: HabitLog[], from: ISODateString, to: ISODateString) {
+const countCompletions = (logs: HabitLog[], from: ISODateString, to: ISODateString) => {
   return logs.filter(
-    (log) =>
-      log.status === 'completed' &&
-      log.loggedForDate >= from &&
-      log.loggedForDate <= to,
+    (log) => log.status === 'completed' && log.loggedForDate >= from && log.loggedForDate <= to,
   ).length
 }
 
-function getFlexibleStatsStart(habit: Habit, today: ISODateString) {
+const getFlexibleStatsStart = (habit: Habit, today: ISODateString) => {
   const goal = habit.goalConfig
   if (!('period' in goal)) {
     return habit.startsOn
@@ -88,11 +85,11 @@ function getFlexibleStatsStart(habit: Habit, today: ISODateString) {
   return startsOn < habit.startsOn ? habit.startsOn : startsOn
 }
 
-export function calculateHabitDetailStats(input: {
+export const calculateHabitDetailStats = (input: {
   habit: Habit
   logs: HabitLog[]
   today: ISODateString
-}): HabitDetailStats {
+}): HabitDetailStats => {
   const { habit, logs, today } = input
   const eligibleLogs = filterEligibleHabitLogs(habit, logs)
   const from =
@@ -112,13 +109,13 @@ export function calculateHabitDetailStats(input: {
   }
 }
 
-export function createHabitCompletionBars(input: {
+export const createHabitCompletionBars = (input: {
   habit: Habit
   logs: HabitLog[]
   period: HabitChartPeriod
   today: ISODateString
   startsOn: ISODateString
-}): HabitCompletionBar[] {
+}): HabitCompletionBar[] => {
   const { habit, period, today, startsOn } = input
   const logs = filterEligibleHabitLogs(habit, input.logs)
 

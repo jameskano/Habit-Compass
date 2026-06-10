@@ -14,6 +14,7 @@ Use this skill to keep React feature work modular, testable, and aligned with Ha
 - Keep business/domain logic out of React components.
 - Prefer feature-local extraction before shared/global modules.
 - Use shared/global domain folders only when logic is genuinely reused across multiple features or already follows an established project pattern.
+- Prefer arrow functions for new functions and React components when practical.
 
 ## Extraction Guide
 

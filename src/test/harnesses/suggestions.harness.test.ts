@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createSuggestionContext, createSuggestionHabit, createMood } from '@/domain/suggestions/logic/suggestionFixtures'
+import {
+  createSuggestionContext,
+  createSuggestionHabit,
+  createMood,
+} from '@/domain/suggestions/logic/suggestionFixtures'
 import { generateSuggestions } from '@/domain/suggestions/logic/suggestionEngine'
 
 describe('suggestions harness', () => {
@@ -38,7 +42,9 @@ describe('suggestions harness', () => {
       }),
     )
 
-    expect(suggestions.some((suggestion) => suggestion.type === 'addSmallCategoryAction')).toBe(true)
+    expect(suggestions.some((suggestion) => suggestion.type === 'addSmallCategoryAction')).toBe(
+      true,
+    )
   })
 
   it('suggests minimum mode for an overloaded day', () => {

@@ -7,7 +7,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-function useInvalidateHabitLogs(userId: string) {
+const useInvalidateHabitLogs = (userId: string) => {
   const queryClient = useQueryClient()
 
   return async () => {
@@ -18,7 +18,7 @@ function useInvalidateHabitLogs(userId: string) {
   }
 }
 
-export function useUpsertHabitLogMutation(userId = MOCK_USER_ID) {
+export const useUpsertHabitLogMutation = (userId = MOCK_USER_ID) => {
   const invalidateHabitLogs = useInvalidateHabitLogs(userId)
   const { mutationError } = useAppToast()
 
@@ -30,7 +30,7 @@ export function useUpsertHabitLogMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useRemoveHabitLogMutation(userId = MOCK_USER_ID) {
+export const useRemoveHabitLogMutation = (userId = MOCK_USER_ID) => {
   const invalidateHabitLogs = useInvalidateHabitLogs(userId)
   const { mutationError } = useAppToast()
 

@@ -12,12 +12,12 @@ type ItemWaterfallRevealProps = {
   revealing: boolean
 }
 
-export function ItemWaterfallReveal({
+export const ItemWaterfallReveal = ({
   children,
   className,
   index,
   revealing,
-}: ItemWaterfallRevealProps) {
+}: ItemWaterfallRevealProps) => {
   return (
     <div
       data-item-waterfall-index={index}

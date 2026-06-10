@@ -10,7 +10,7 @@ type EmptyStateProps = {
   action?: ReactNode
 }
 
-export function EmptyState({ titleId, descriptionId, action }: EmptyStateProps) {
+export const EmptyState = ({ titleId, descriptionId, action }: EmptyStateProps) => {
   return (
     <Card className="rounded-2xl border-dashed bg-card/80 p-5">
       <div className="flex items-start gap-4">

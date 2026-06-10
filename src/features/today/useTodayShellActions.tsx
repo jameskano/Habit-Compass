@@ -21,13 +21,13 @@ type UseTodayShellActionsInput = {
   setSelectedDate: (date: ISODateString) => void
 }
 
-export function useTodayShellActions({
+export const useTodayShellActions = ({
   actualToday,
   selectedDate,
   datePickerOpen,
   setDatePickerOpen,
   setSelectedDate,
-}: UseTodayShellActionsInput) {
+}: UseTodayShellActionsInput) => {
   const intl = useIntl()
   const selectCalendarDate = useCallback(
     (date: Date | undefined) => {

@@ -9,7 +9,11 @@ export type HabitResetResult = {
   historyPreserved: boolean
 }
 
-export function resetHabitStats(habit: Habit, logs: HabitLog[], resetAt: ISODateTimeString): HabitResetResult {
+export const resetHabitStats = (
+  habit: Habit,
+  logs: HabitLog[],
+  resetAt: ISODateTimeString,
+): HabitResetResult => {
   return {
     habit: {
       ...habit,
@@ -22,12 +26,12 @@ export function resetHabitStats(habit: Habit, logs: HabitLog[], resetAt: ISODate
   }
 }
 
-export function hardResetHabitStats(
+export const hardResetHabitStats = (
   habit: Habit,
   _logs: HabitLog[],
   resetAt: ISODateTimeString,
   confirmHardReset: boolean,
-): HabitResetResult {
+): HabitResetResult => {
   if (!confirmHardReset) {
     throw new Error('Hard reset requires explicit confirmation.')
   }
@@ -44,7 +48,7 @@ export function hardResetHabitStats(
   }
 }
 
-export function archiveHabit(habit: Habit, logs: HabitLog[], archivedAt: ISODateTimeString) {
+export const archiveHabit = (habit: Habit, logs: HabitLog[], archivedAt: ISODateTimeString) => {
   const startsOn = archivedAt.slice(0, 10) as Habit['startsOn']
   return {
     habit: {
@@ -52,10 +56,7 @@ export function archiveHabit(habit: Habit, logs: HabitLog[], archivedAt: ISODate
       lifecycleStatus: 'archived' as const,
       archivedAt,
       updatedAt: archivedAt,
-      inactivityPeriods: [
-        ...habit.inactivityPeriods,
-        { reason: 'archived' as const, startsOn },
-      ],
+      inactivityPeriods: [...habit.inactivityPeriods, { reason: 'archived' as const, startsOn }],
     },
     logs,
   }

@@ -10,14 +10,14 @@ import {
 
 import { getMockState } from './mockData'
 
-function isTodayHabitDue(habit: Habit, date: string) {
+const isTodayHabitDue = (habit: Habit, date: string) => {
   return (
     habit.lifecycleStatus === 'active' &&
     (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date))
   )
 }
 
-function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): Result<Habit> {
+const updateHabitInState = (habitId: string, updater: (habit: Habit) => Habit): Result<Habit> => {
   const state = getMockState()
   const index = state.habits.findIndex((habit) => habit.id === habitId)
 
@@ -31,7 +31,7 @@ function updateHabitInState(habitId: string, updater: (habit: Habit) => Habit): 
   return ok(nextHabit)
 }
 
-function requireActiveHabit(habitId: string): Result<Habit> {
+const requireActiveHabit = (habitId: string): Result<Habit> => {
   const habit = getMockState().habits.find((entry) => entry.id === habitId)
   if (!habit) {
     return err(createNotFoundError('Habit', habitId))

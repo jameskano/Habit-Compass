@@ -8,6 +8,8 @@ Components may contain JSX composition, simple local UI state, hook calls, event
 
 Move code out of a component when it becomes business logic, repeated transformation, form orchestration, long effects, or a large visual section. A component over about 150 lines should trigger an extraction review. A component over about 250 lines should trigger a stricter responsibility check, but a cohesive component may stay large when it is mostly JSX composition and simple wiring. Extract because responsibilities are mixed, not because a file crosses a numeric line count.
 
+Prefer arrow functions for new functions and React components when practical. Use a function declaration only when it materially improves clarity or avoids a TypeScript/runtime constraint such as intentional hoisting.
+
 ## Extraction Rules
 
 - `*.types.ts`: domain or shared types, component prop types reused by child components, discriminated unions, and stable interface contracts.

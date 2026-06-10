@@ -6,7 +6,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useArchiveHabitMutation(userId = MOCK_USER_ID) {
+export const useArchiveHabitMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
 

@@ -38,7 +38,7 @@ type HabitDetailProps = {
 
 const activeDetailTabs: HabitDetailTab[] = ['calendar', 'stats', 'edit']
 
-export function HabitDetail({
+export const HabitDetail = ({
   habit,
   categories,
   initialTab,
@@ -47,7 +47,7 @@ export function HabitDetail({
   onClose,
   onArchived,
   onDeleted,
-}: HabitDetailProps) {
+}: HabitDetailProps) => {
   const intl = useIntl()
   const appToast = useAppToast()
   const [activeTab, setActiveTab] = useState(initialTab)

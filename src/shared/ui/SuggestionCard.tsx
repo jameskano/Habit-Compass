@@ -10,7 +10,7 @@ type SuggestionCardProps = {
   actionId: string
 }
 
-export function SuggestionCard({ titleId, descriptionId, actionId }: SuggestionCardProps) {
+export const SuggestionCard = ({ titleId, descriptionId, actionId }: SuggestionCardProps) => {
   return (
     <Card className="rounded-2xl border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-5">
       <div className="flex items-start gap-4">

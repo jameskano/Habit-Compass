@@ -1,6 +1,6 @@
 import type { CompletionSummary } from './types'
 
-export function getCompletionRate(summary: CompletionSummary) {
+export const getCompletionRate = (summary: CompletionSummary) => {
   if (summary.total === 0) {
     return 0
   }

@@ -7,7 +7,7 @@ import { resetMockState } from '@/integrations/mock/mockData'
 
 import { useTodayHabitsQuery } from './useTodayHabitsQuery'
 
-function Wrapper({ children }: { children: ReactNode }) {
+const Wrapper = ({ children }: { children: ReactNode }) => {
   return <AppProviders>{children}</AppProviders>
 }
 

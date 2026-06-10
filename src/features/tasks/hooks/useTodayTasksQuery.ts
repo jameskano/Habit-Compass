@@ -4,7 +4,7 @@ import { unwrapResult } from '@/shared/utils/result'
 import { tasksRepository } from '@/integrations/repositories'
 import { mockData, MOCK_USER_ID } from '@/integrations/mock/mockData'
 
-export function useTodayTasksQuery(userId = MOCK_USER_ID, date = mockData.today) {
+export const useTodayTasksQuery = (userId = MOCK_USER_ID, date = mockData.today) => {
   return useQuery({
     queryKey: ['tasks', 'today', userId, date],
     queryFn: async () => {

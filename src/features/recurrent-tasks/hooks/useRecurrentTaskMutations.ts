@@ -11,7 +11,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-function useInvalidateRecurrentTasks(userId: string) {
+const useInvalidateRecurrentTasks = (userId: string) => {
   const queryClient = useQueryClient()
 
   return async () => {
@@ -23,7 +23,7 @@ function useInvalidateRecurrentTasks(userId: string) {
   }
 }
 
-export function useUpdateRecurrentTaskMutation(userId = MOCK_USER_ID) {
+export const useUpdateRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -35,7 +35,7 @@ export function useUpdateRecurrentTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useCreateRecurrentTaskMutation(userId = MOCK_USER_ID) {
+export const useCreateRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -47,7 +47,7 @@ export function useCreateRecurrentTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useCompleteRecurrentOccurrenceMutation(userId = MOCK_USER_ID) {
+export const useCompleteRecurrentOccurrenceMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -70,7 +70,7 @@ export function useCompleteRecurrentOccurrenceMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useArchiveRecurrentTaskMutation(userId = MOCK_USER_ID) {
+export const useArchiveRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -82,7 +82,7 @@ export function useArchiveRecurrentTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useDeleteRecurrentTaskMutation(userId = MOCK_USER_ID) {
+export const useDeleteRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
@@ -94,7 +94,7 @@ export function useDeleteRecurrentTaskMutation(userId = MOCK_USER_ID) {
   })
 }
 
-export function useReorderRecurrentTasksMutation(userId = MOCK_USER_ID) {
+export const useReorderRecurrentTasksMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 

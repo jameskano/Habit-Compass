@@ -1,7 +1,11 @@
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
-import { evaluateHabitCompletionForLogs, getHabitPeriodBounds, getHabitTargetScope } from './habitCompletionRules'
+import {
+  evaluateHabitCompletionForLogs,
+  getHabitPeriodBounds,
+  getHabitTargetScope,
+} from './habitCompletionRules'
 import { deriveHabitDayState, type HabitDayState } from './habitDayState'
 import { enumerateHabitScheduledDates } from './habitSchedule'
 import {
@@ -19,11 +23,11 @@ export type HabitStats = {
   bestStreak: number | null
 }
 
-function isWithinRange(date: ISODateString, from: ISODateString, to: ISODateString) {
+const isWithinRange = (date: ISODateString, from: ISODateString, to: ISODateString) => {
   return date >= from && date <= to
 }
 
-export function scoreHabitLog(log: HabitLog) {
+export const scoreHabitLog = (log: HabitLog) => {
   if (log.status !== 'completed') {
     return 0
   }
@@ -31,7 +35,7 @@ export function scoreHabitLog(log: HabitLog) {
   return log.completionLevel === 'minimum' ? 0.5 : 1
 }
 
-function calculateStreaks(states: HabitDayState[]) {
+const calculateStreaks = (states: HabitDayState[]) => {
   let running = 0
   let best = 0
 
@@ -56,13 +60,13 @@ function calculateStreaks(states: HabitDayState[]) {
   return { current, best }
 }
 
-export function calculateHabitStats(input: {
+export const calculateHabitStats = (input: {
   habit: Habit
   logs: HabitLog[]
   from: ISODateString
   to: ISODateString
   today: ISODateString
-}): HabitStats {
+}): HabitStats => {
   const { habit, from, to, today } = input
   const logs = filterEligibleHabitLogs(habit, input.logs).filter((log) =>
     isWithinRange(log.loggedForDate, from, to),
@@ -82,7 +86,9 @@ export function calculateHabitStats(input: {
         return []
       }
       const evaluationDate = periodStart <= today ? periodStart : periodEnd
-      return [evaluateHabitCompletionForLogs({ habit, logs, date: evaluationDate }).validCompletionScore]
+      return [
+        evaluateHabitCompletionForLogs({ habit, logs, date: evaluationDate }).validCompletionScore,
+      ]
     })
     const completionScore = periodScores.reduce((total, score) => total + score, 0)
     const expectedScore = periodScores.length
@@ -91,7 +97,9 @@ export function calculateHabitStats(input: {
       completionScore,
       expectedScore,
       completionPercentage:
-        expectedScore > 0 ? Math.round((Math.min(completionScore, expectedScore) / expectedScore) * 100) : 0,
+        expectedScore > 0
+          ? Math.round((Math.min(completionScore, expectedScore) / expectedScore) * 100)
+          : 0,
       currentStreak: null,
       bestStreak: null,
     }
@@ -112,18 +120,25 @@ export function calculateHabitStats(input: {
   const accountableStates = states.filter((state) => state !== 'today_pending')
   const expectedScore = accountableStates.filter((state) => state !== 'skipped').length
   const completionScore = scheduledDates.reduce((total, date) => {
-    const score = evaluateHabitCompletionForLogs({ habit, logs: scheduledLogs, date }).validCompletionScore
+    const score = evaluateHabitCompletionForLogs({
+      habit,
+      logs: scheduledLogs,
+      date,
+    }).validCompletionScore
     return total + score
   }, 0)
   const streaks = calculateStreaks(accountableStates)
 
   return {
     completionEvents: scheduledDates.filter(
-      (date) => evaluateHabitCompletionForLogs({ habit, logs: scheduledLogs, date }).validCompletionScore > 0,
+      (date) =>
+        evaluateHabitCompletionForLogs({ habit, logs: scheduledLogs, date }).validCompletionScore >
+        0,
     ).length,
     completionScore,
     expectedScore,
-    completionPercentage: expectedScore > 0 ? Math.round((completionScore / expectedScore) * 100) : 0,
+    completionPercentage:
+      expectedScore > 0 ? Math.round((completionScore / expectedScore) * 100) : 0,
     currentStreak: streaks.current,
     bestStreak: streaks.best,
   }

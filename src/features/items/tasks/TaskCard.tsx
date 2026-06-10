@@ -22,7 +22,7 @@ type TaskCardProps = {
   onComplete: () => void
 }
 
-export function TaskCard({ task, category, archived, onEdit, onComplete }: TaskCardProps) {
+export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskCardProps) => {
   const intl = useIntl()
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.task.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${task.priority}` })}`

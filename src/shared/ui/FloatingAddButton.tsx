@@ -5,7 +5,7 @@ type FloatingAddButtonProps = {
   onClick: () => void
 }
 
-export function FloatingAddButton({ onClick }: FloatingAddButtonProps) {
+export const FloatingAddButton = ({ onClick }: FloatingAddButtonProps) => {
   const intl = useIntl()
 
   return (

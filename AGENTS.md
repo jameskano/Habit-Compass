@@ -30,6 +30,7 @@ If a relevant spec does not exist, create or update the spec before implementing
 - Use React Hook Form and Zod for forms.
 - Use `react-intl` for all user-facing strings.
 - Update specs when behavior changes.
+- Prefer arrow functions for new functions and React components when practical.
 
 ## React Structure Rules
 
@@ -41,6 +42,7 @@ If a relevant spec does not exist, create or update the spec before implementing
 - Extract non-trivial state, effects, forms, and event orchestration to `use*.ts` hooks.
 - Split large visual sections into child components, even when they are not reusable.
 - Prefer feature-local files over global shared files.
+- Prefer arrow-function components unless a specific TypeScript or runtime constraint makes a declaration clearer.
 - If a component grows beyond about 150 lines, review extraction opportunities.
 - If a component grows beyond about 250 lines, extract mixed responsibilities, but do not split solely to satisfy line count.
 

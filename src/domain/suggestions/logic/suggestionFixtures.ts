@@ -4,7 +4,7 @@ import type { Habit } from '@/domain/habits/types'
 
 import type { SuggestionRecommendationContext } from './suggestionEngine'
 
-export function createSuggestionHabit(overrides: Partial<Habit> = {}) {
+export const createSuggestionHabit = (overrides: Partial<Habit> = {}) => {
   return createCompletionLevelHabit(
     { trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 90 },
     ['minimum', 'standard'],
@@ -12,7 +12,9 @@ export function createSuggestionHabit(overrides: Partial<Habit> = {}) {
   )
 }
 
-export function createSuggestionContext(overrides: Partial<SuggestionRecommendationContext> = {}): SuggestionRecommendationContext {
+export const createSuggestionContext = (
+  overrides: Partial<SuggestionRecommendationContext> = {},
+): SuggestionRecommendationContext => {
   const habit = createSuggestionHabit()
 
   return {
@@ -31,6 +33,6 @@ export function createSuggestionContext(overrides: Partial<SuggestionRecommendat
   }
 }
 
-export function createMood(value: MoodValue) {
+export const createMood = (value: MoodValue) => {
   return value
 }

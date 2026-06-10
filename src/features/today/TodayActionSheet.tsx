@@ -19,7 +19,7 @@ type TodayActionSheetProps = {
   onClose: () => void
 }
 
-export function TodayActionSheet({ title, open, actions, onClose }: TodayActionSheetProps) {
+export const TodayActionSheet = ({ title, open, actions, onClose }: TodayActionSheetProps) => {
   const intl = useIntl()
 
   return (

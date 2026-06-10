@@ -5,12 +5,18 @@ import { recurrentTasksRepository } from '@/integrations/repositories'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
-export function useRecurrentTaskOccurrencesQuery(
+export const useRecurrentTaskOccurrencesQuery = (
   input: { recurrentTaskId?: EntityId; from: ISODateString; to: ISODateString },
   userId = MOCK_USER_ID,
-) {
+) => {
   return useQuery({
-    queryKey: ['recurrent-task-occurrences', userId, input.recurrentTaskId ?? 'all', input.from, input.to],
+    queryKey: [
+      'recurrent-task-occurrences',
+      userId,
+      input.recurrentTaskId ?? 'all',
+      input.from,
+      input.to,
+    ],
     queryFn: async () =>
       unwrapResult(
         await recurrentTasksRepository.listOccurrencesForRange({

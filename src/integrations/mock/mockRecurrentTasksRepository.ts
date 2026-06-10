@@ -9,10 +9,10 @@ import { err, ok, type Result } from '@/shared/utils/result'
 
 import { getMockState } from './mockData'
 
-function updateTaskInState(
+const updateTaskInState = (
   recurrentTaskId: string,
   updater: (task: RecurrentTask) => RecurrentTask,
-): Result<RecurrentTask> {
+): Result<RecurrentTask> => {
   const state = getMockState()
   const index = state.recurrentTasks.findIndex((task) => task.id === recurrentTaskId)
 
@@ -94,7 +94,11 @@ export const mockRecurrentTasksRepository: RecurrentTasksRepository = {
   },
 
   async update(input) {
-    return updateTaskInState(input.id, (task) => ({ ...task, ...input, updatedAt: new Date().toISOString() }))
+    return updateTaskInState(input.id, (task) => ({
+      ...task,
+      ...input,
+      updatedAt: new Date().toISOString(),
+    }))
   },
 
   async archive({ recurrentTaskId }) {

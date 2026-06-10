@@ -27,21 +27,21 @@ type TaskDateGroup = {
   tasks: Task[]
 }
 
-function todayAsISODate() {
+const todayAsISODate = () => {
   return formatISO(new Date(), { representation: 'date' }) as ISODateString
 }
 
-function addDays(date: Date, days: number) {
+const addDays = (date: Date, days: number) => {
   const nextDate = new Date(date)
   nextDate.setDate(date.getDate() + days)
   return nextDate
 }
 
-function formatDateHeader(
+const formatDateHeader = (
   intl: ReturnType<typeof useIntl>,
   date: ISODateString,
   today: ISODateString,
-) {
+) => {
   const tomorrow = formatISO(addDays(new Date(`${today}T00:00:00`), 1), {
     representation: 'date',
   })
@@ -64,11 +64,11 @@ function formatDateHeader(
   return formattedDate
 }
 
-function groupTasksByDate(
+const groupTasksByDate = (
   tasks: readonly Task[],
   intl: ReturnType<typeof useIntl>,
   today: ISODateString,
-): TaskDateGroup[] {
+): TaskDateGroup[] => {
   const grouped = new Map<string, Task[]>()
 
   for (const task of tasks) {
@@ -96,7 +96,7 @@ function groupTasksByDate(
     }))
 }
 
-export function TasksTab({ tasks, showingArchived, onToggleArchive }: TasksTabProps) {
+export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabProps) => {
   const intl = useIntl()
   const appToast = useAppToast()
   const today = todayAsISODate()

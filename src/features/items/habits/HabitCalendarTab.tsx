@@ -37,11 +37,11 @@ const legendStates: HabitDayState[] = [
   'inactive',
 ]
 
-function toISODate(value: Date) {
+const toISODate = (value: Date) => {
   return formatISO(value, { representation: 'date' }) as ISODateString
 }
 
-export function HabitCalendarTab({ habit, logs, today }: HabitCalendarTabProps) {
+export const HabitCalendarTab = ({ habit, logs, today }: HabitCalendarTabProps) => {
   const intl = useIntl()
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseISO(today)))
   const days = useMemo(

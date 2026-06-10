@@ -35,5 +35,6 @@ export const completionColorPalette: Record<HabitDayState, string> = {
     'border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
   future: 'border-transparent bg-muted/25 text-muted-foreground/40',
   not_scheduled: 'border-transparent bg-muted/35 text-muted-foreground/55',
-  inactive: 'border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-500',
+  inactive:
+    'border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-500',
 }

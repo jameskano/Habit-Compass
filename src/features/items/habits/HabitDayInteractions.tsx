@@ -30,7 +30,12 @@ type HabitDayInteractionsProps = {
   today: ISODateString
 }
 
-export function HabitDayInteractions({ children, habit, logs, today }: HabitDayInteractionsProps) {
+export const HabitDayInteractions = ({
+  children,
+  habit,
+  logs,
+  today,
+}: HabitDayInteractionsProps) => {
   const [actionDate, setActionDate] = useState<ISODateString | null>(null)
   const [amountDate, setAmountDate] = useState<ISODateString | null>(null)
   const upsertMutation = useUpsertHabitLogMutation()

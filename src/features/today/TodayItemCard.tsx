@@ -31,7 +31,7 @@ type TodayItemCardProps = {
   onOpenMenu: () => void
 }
 
-function stateClasses(state: HabitTodayState | TaskTodayState) {
+const stateClasses = (state: HabitTodayState | TaskTodayState) => {
   switch (state) {
     case 'standardCompleted':
     case 'completed':
@@ -50,7 +50,7 @@ function stateClasses(state: HabitTodayState | TaskTodayState) {
   }
 }
 
-function CompletionIcon({ state }: { state: HabitTodayState | TaskTodayState }) {
+const CompletionIcon = ({ state }: { state: HabitTodayState | TaskTodayState }) => {
   if (state === 'inProgress') {
     return <CircleDashed aria-hidden="true" size={17} strokeWidth={2.4} />
   }
@@ -60,7 +60,7 @@ function CompletionIcon({ state }: { state: HabitTodayState | TaskTodayState }) 
   return <Check aria-hidden="true" size={17} strokeWidth={2.4} />
 }
 
-export function TodayItemCard({
+export const TodayItemCard = ({
   type,
   title,
   amountText,
@@ -73,7 +73,7 @@ export function TodayItemCard({
   disabled,
   onPrimaryAction,
   onOpenMenu,
-}: TodayItemCardProps) {
+}: TodayItemCardProps) => {
   const intl = useIntl()
   const CategoryIcon = getCategoryIcon(category?.iconName ?? '')
   const categoryLabel = category?.name ?? fallbackCategoryLabel

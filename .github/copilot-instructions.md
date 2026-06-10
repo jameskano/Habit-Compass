@@ -23,6 +23,7 @@ React, TypeScript, Vite, Tailwind, TanStack Router, TanStack Query, Zustand, Rea
 - Extract non-trivial state, effects, forms, and event orchestration to `use*.ts` hooks.
 - Split large visual sections into child components, even when they are not reusable.
 - Prefer feature-local files over global shared files.
+- Prefer arrow functions for new functions and React components when practical.
 - If a component grows beyond about 150 lines, review extraction opportunities.
 - If a component grows beyond about 250 lines, extract mixed responsibilities, but do not split solely to satisfy line count.
 

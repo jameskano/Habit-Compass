@@ -48,7 +48,11 @@ const DropdownMenuSeparator = forwardRef<
   ElementRef<typeof DropdownMenuPrimitive.Separator>,
   ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.Separator ref={ref} className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />
+  <DropdownMenuPrimitive.Separator
+    ref={ref}
+    className={cn('-mx-1 my-1 h-px bg-border', className)}
+    {...props}
+  />
 ))
 DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
 
@@ -99,7 +103,10 @@ const DropdownMenuSubContent = forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.SubContent
     ref={ref}
-    className={cn('z-50 min-w-32 overflow-hidden rounded-md border border-border bg-background p-1 shadow-md', className)}
+    className={cn(
+      'z-50 min-w-32 overflow-hidden rounded-md border border-border bg-background p-1 shadow-md',
+      className,
+    )}
     {...props}
   />
 ))

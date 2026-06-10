@@ -27,12 +27,12 @@ type DeriveHabitDayStateInput = {
   logs: HabitLog[]
 }
 
-export function deriveHabitDayState({
+export const deriveHabitDayState = ({
   date,
   today,
   habit,
   logs,
-}: DeriveHabitDayStateInput): HabitDayState {
+}: DeriveHabitDayStateInput): HabitDayState => {
   if (date > today) {
     return 'future'
   }
@@ -48,7 +48,11 @@ export function deriveHabitDayState({
     return 'skipped'
   }
 
-  if (eligibleLogs.some((entry) => entry.loggedForDate === date && getHabitLogProgressValue(habit, entry) > 0)) {
+  if (
+    eligibleLogs.some(
+      (entry) => entry.loggedForDate === date && getHabitLogProgressValue(habit, entry) > 0,
+    )
+  ) {
     const completion = evaluateHabitCompletionForLogs({ habit, logs: eligibleLogs, date })
     if (completion.derivedCompletionLevel === 'standard') {
       return 'completed_standard'

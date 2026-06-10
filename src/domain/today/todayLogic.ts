@@ -32,7 +32,10 @@ const typeRank: Record<TodayItemType, number> = {
   task: 2,
 }
 
-export function getTodayDateMode(selectedDate: ISODateString, today: ISODateString): TodayDateMode {
+export const getTodayDateMode = (
+  selectedDate: ISODateString,
+  today: ISODateString,
+): TodayDateMode => {
   if (selectedDate < today) {
     return 'past'
   }
@@ -42,11 +45,11 @@ export function getTodayDateMode(selectedDate: ISODateString, today: ISODateStri
   return 'future'
 }
 
-export function getTodayItemId(type: TodayItemType, id: EntityId) {
+export const getTodayItemId = (type: TodayItemType, id: EntityId) => {
   return `${type}:${id}`
 }
 
-export function getSourceItemId(item: TodayItem) {
+export const getSourceItemId = (item: TodayItem) => {
   if (item.type === 'habit') {
     return item.habit.id
   }
@@ -56,18 +59,18 @@ export function getSourceItemId(item: TodayItem) {
   return item.task.id
 }
 
-export function isMeasurableHabit(habit: Habit) {
+export const isMeasurableHabit = (habit: Habit) => {
   return (
     habit.goalConfig.trackingType !== 'binary' && habit.goalConfig.trackingType !== 'timesPerPeriod'
   )
 }
 
-export function deriveHabitTodayState(input: {
+export const deriveHabitTodayState = (input: {
   habit: Habit
   logs: HabitLog[]
   selectedDate: ISODateString
   today: ISODateString
-}): HabitTodayState {
+}): HabitTodayState => {
   const { habit, logs, selectedDate, today } = input
   if (getTodayDateMode(selectedDate, today) === 'future') {
     return 'futureDisabled'
@@ -106,18 +109,18 @@ export function deriveHabitTodayState(input: {
   return 'inProgress'
 }
 
-export function deriveTaskTodayState(input: {
+export const deriveTaskTodayState = (input: {
   completed: boolean
   selectedDate: ISODateString
   today: ISODateString
-}): TaskTodayState {
+}): TaskTodayState => {
   if (getTodayDateMode(input.selectedDate, input.today) === 'future') {
     return 'futureDisabled'
   }
   return input.completed ? 'completed' : 'pending'
 }
 
-export function shouldShowTaskOnToday(task: Task, selectedDate: ISODateString) {
+export const shouldShowTaskOnToday = (task: Task, selectedDate: ISODateString) => {
   if (task.lifecycleStatus !== 'active') {
     return false
   }
@@ -132,18 +135,21 @@ export function shouldShowTaskOnToday(task: Task, selectedDate: ISODateString) {
   )
 }
 
-export function shouldShowHabitOnToday(habit: Habit, selectedDate: ISODateString) {
+export const shouldShowHabitOnToday = (habit: Habit, selectedDate: ISODateString) => {
   return (
     habit.lifecycleStatus === 'active' &&
     (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, selectedDate))
   )
 }
 
-export function shouldShowRecurrentTaskOnToday(task: RecurrentTask, selectedDate: ISODateString) {
+export const shouldShowRecurrentTaskOnToday = (
+  task: RecurrentTask,
+  selectedDate: ISODateString,
+) => {
   return task.lifecycleStatus === 'active' && isRecurrentTaskScheduledOnDate(task, selectedDate)
 }
 
-export function buildTodayItems(input: BuildTodayItemsInput): TodayItem[] {
+export const buildTodayItems = (input: BuildTodayItemsInput): TodayItem[] => {
   const { habits, habitLogs, tasks, recurrentTasks, recurrentOccurrences, selectedDate, today } =
     input
   const occurrenceByTaskId = new Map(
@@ -223,7 +229,7 @@ export function buildTodayItems(input: BuildTodayItemsInput): TodayItem[] {
   ]
 }
 
-export function compareTodayItems(left: TodayItem, right: TodayItem) {
+export const compareTodayItems = (left: TodayItem, right: TodayItem) => {
   const priorityDifference = priorityRank[left.priority] - priorityRank[right.priority]
   if (priorityDifference !== 0) {
     return priorityDifference
@@ -238,11 +244,14 @@ export function compareTodayItems(left: TodayItem, right: TodayItem) {
   return createdDifference !== 0 ? createdDifference : left.id.localeCompare(right.id)
 }
 
-export function sortTodayItems(items: readonly TodayItem[]) {
+export const sortTodayItems = (items: readonly TodayItem[]) => {
   return [...items].sort(compareTodayItems)
 }
 
-export function mergeTodayManualOrder(items: readonly TodayItem[], orderedIds: readonly string[]) {
+export const mergeTodayManualOrder = (
+  items: readonly TodayItem[],
+  orderedIds: readonly string[],
+) => {
   const sortedItems = sortTodayItems(items)
   const itemsById = new Map(sortedItems.map((item) => [item.id, item]))
   const ordered = orderedIds
@@ -252,7 +261,7 @@ export function mergeTodayManualOrder(items: readonly TodayItem[], orderedIds: r
   return [...ordered, ...sortedItems.filter((item) => !orderedSet.has(item.id))]
 }
 
-export function filterTodayItems(items: readonly TodayItem[], filters: TodayFilterState) {
+export const filterTodayItems = (items: readonly TodayItem[], filters: TodayFilterState) => {
   const normalizedSearch = filters.searchText.trim().toLowerCase()
 
   return items.filter((item) => {
@@ -278,7 +287,7 @@ export function filterTodayItems(items: readonly TodayItem[], filters: TodayFilt
   })
 }
 
-export function pruneTodayOrder(orderedIds: readonly string[], items: readonly TodayItem[]) {
+export const pruneTodayOrder = (orderedIds: readonly string[], items: readonly TodayItem[]) => {
   const availableIds = new Set(items.map((item) => item.id))
   return orderedIds.filter((id) => availableIds.has(id))
 }

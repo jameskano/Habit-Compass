@@ -5,9 +5,9 @@ export type RecurrentFrequencySummaryDescriptor = {
   values?: Record<string, number | string>
 }
 
-export function getRecurrentFrequencySummary(
+export const getRecurrentFrequencySummary = (
   rule: RecurrenceRule,
-): RecurrentFrequencySummaryDescriptor {
+): RecurrentFrequencySummaryDescriptor => {
   switch (rule.kind) {
     case 'daily':
       return { messageId: 'items.frequency.daily' }

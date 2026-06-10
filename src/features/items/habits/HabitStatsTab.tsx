@@ -20,11 +20,17 @@ type HabitStatsTabProps = {
 
 const periods: HabitChartPeriod[] = ['week', 'month', 'year']
 
-export function HabitStatsTab({ habit, logs, today }: HabitStatsTabProps) {
+export const HabitStatsTab = ({ habit, logs, today }: HabitStatsTabProps) => {
   const intl = useIntl()
   const [chartPeriod, setChartPeriod] = useState<HabitChartPeriod>('week')
   const summary = calculateHabitDetailStats({ habit, logs, today })
-  const bars = createHabitCompletionBars({ habit, logs, period: chartPeriod, today, startsOn: habit.startsOn })
+  const bars = createHabitCompletionBars({
+    habit,
+    logs,
+    period: chartPeriod,
+    today,
+    startsOn: habit.startsOn,
+  })
   const maxValue = Math.max(...bars.map((bar) => bar.completionEvents), 1)
   const shortDate = new Intl.DateTimeFormat(intl.locale, {
     month: 'short',
@@ -79,25 +85,41 @@ export function HabitStatsTab({ habit, logs, today }: HabitStatsTabProps) {
 
       <section className="space-y-4 rounded-[1.4rem] border border-border/70 bg-card/90 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-base font-semibold">{intl.formatMessage({ id: 'page.items.habit.stats.chartTitle' })}</h3>
-          <Tabs value={chartPeriod} onValueChange={(value) => setChartPeriod(value as HabitChartPeriod)}>
-          <TabsList className="flex rounded-full border border-border/70 bg-muted/35 p-1" aria-label={intl.formatMessage({ id: 'page.items.habit.stats.periods' })}>
-            {periods.map((period) => (
-              <TabsTrigger
-                key={period}
-                value={period}
-                className="rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-              >
-                {intl.formatMessage({ id: `page.items.habit.stats.period.${period}` })}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <h3 className="text-base font-semibold">
+            {intl.formatMessage({ id: 'page.items.habit.stats.chartTitle' })}
+          </h3>
+          <Tabs
+            value={chartPeriod}
+            onValueChange={(value) => setChartPeriod(value as HabitChartPeriod)}
+          >
+            <TabsList
+              className="flex rounded-full border border-border/70 bg-muted/35 p-1"
+              aria-label={intl.formatMessage({ id: 'page.items.habit.stats.periods' })}
+            >
+              {periods.map((period) => (
+                <TabsTrigger
+                  key={period}
+                  value={period}
+                  className="rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                >
+                  {intl.formatMessage({ id: `page.items.habit.stats.period.${period}` })}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </Tabs>
         </div>
-        <div className="flex min-h-44 items-end gap-2 overflow-x-auto pb-1" aria-label={intl.formatMessage({ id: 'page.items.habit.stats.chartAria' })}>
+        <div
+          className="flex min-h-44 items-end gap-2 overflow-x-auto pb-1"
+          aria-label={intl.formatMessage({ id: 'page.items.habit.stats.chartAria' })}
+        >
           {bars.map((bar) => (
-            <div key={bar.from} className="flex min-w-9 flex-1 flex-col items-center justify-end gap-1.5">
-              <span className="text-xs font-semibold text-muted-foreground">{bar.completionEvents}</span>
+            <div
+              key={bar.from}
+              className="flex min-w-9 flex-1 flex-col items-center justify-end gap-1.5"
+            >
+              <span className="text-xs font-semibold text-muted-foreground">
+                {bar.completionEvents}
+              </span>
               <span
                 className="w-full rounded-t-lg bg-primary/75"
                 style={{ height: `${Math.max((bar.completionEvents / maxValue) * 96, 5)}px` }}

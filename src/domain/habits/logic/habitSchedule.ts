@@ -2,19 +2,19 @@ import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitDayOfWeek } from '../types'
 
-function toUtcDate(date: ISODateString) {
+const toUtcDate = (date: ISODateString) => {
   return new Date(`${date}T00:00:00.000Z`)
 }
 
-function getUtcWeekday(date: ISODateString) {
+const getUtcWeekday = (date: ISODateString) => {
   return toUtcDate(date).getUTCDay() as HabitDayOfWeek
 }
 
-function differenceInDays(date: ISODateString, anchor: ISODateString) {
+const differenceInDays = (date: ISODateString, anchor: ISODateString) => {
   return Math.floor((toUtcDate(date).getTime() - toUtcDate(anchor).getTime()) / 86_400_000)
 }
 
-function differenceInMonths(date: ISODateString, anchor: ISODateString) {
+const differenceInMonths = (date: ISODateString, anchor: ISODateString) => {
   const current = toUtcDate(date)
   const start = toUtcDate(anchor)
   return (
@@ -24,11 +24,11 @@ function differenceInMonths(date: ISODateString, anchor: ISODateString) {
   )
 }
 
-function isWithinScheduleWindow(habit: Habit, date: ISODateString) {
+const isWithinScheduleWindow = (habit: Habit, date: ISODateString) => {
   return date >= habit.startsOn && (!habit.endsOn || date <= habit.endsOn)
 }
 
-function isFirstWeekdayOfMonth(date: ISODateString, weekday: number) {
+const isFirstWeekdayOfMonth = (date: ISODateString, weekday: number) => {
   const current = toUtcDate(date)
   if (current.getUTCDay() !== weekday) {
     return false
@@ -37,7 +37,7 @@ function isFirstWeekdayOfMonth(date: ISODateString, weekday: number) {
   return current.getUTCDate() <= 7
 }
 
-export function isHabitScheduledOnDate(habit: Habit, date: ISODateString) {
+export const isHabitScheduledOnDate = (habit: Habit, date: ISODateString) => {
   if (!isWithinScheduleWindow(habit, date)) {
     return false
   }
@@ -79,7 +79,11 @@ export function isHabitScheduledOnDate(habit: Habit, date: ISODateString) {
   }
 }
 
-export function enumerateHabitScheduledDates(habit: Habit, from: ISODateString, to: ISODateString) {
+export const enumerateHabitScheduledDates = (
+  habit: Habit,
+  from: ISODateString,
+  to: ISODateString,
+) => {
   if (habit.scheduleRule.kind === 'flexiblePeriod' || to < from) {
     return []
   }

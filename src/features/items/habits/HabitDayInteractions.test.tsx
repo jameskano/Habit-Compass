@@ -13,17 +13,17 @@ import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
 import { HabitCalendarTab } from './HabitCalendarTab'
 import { HabitDayStrip } from './HabitDayStrip'
 
-function asISODate(value: Date) {
+const asISODate = (value: Date) => {
   return formatISO(value, { representation: 'date' }) as ISODateString
 }
 
-function recentDates() {
+const recentDates = () => {
   return Array.from({ length: 7 }, (_, index) =>
     asISODate(subDays(parseISO(mockData.today), 6 - index)),
   )
 }
 
-function getHabit(habitId: string) {
+const getHabit = (habitId: string) => {
   const habit = getMockState().habits.find((entry) => entry.id === habitId)
   if (!habit) {
     throw new Error(`Missing habit fixture: ${habitId}`)
@@ -31,22 +31,22 @@ function getHabit(habitId: string) {
   return habit
 }
 
-function getLogs(habitId: string) {
+const getLogs = (habitId: string) => {
   return getMockState().habitLogs.filter((log) => log.habitId === habitId)
 }
 
-function renderStrip(habit: Habit, logs: HabitLog[] = getLogs(habit.id)) {
+const renderStrip = (habit: Habit, logs: HabitLog[] = getLogs(habit.id)) => {
   return renderWithAppProviders(
     <HabitDayStrip habit={habit} logs={logs} dates={recentDates()} today={mockData.today} />,
   )
 }
 
-function getTodayButton(habit: Habit) {
+const getTodayButton = (habit: Habit) => {
   const strip = screen.getByRole('list', { name: (name) => name.includes(habit.title) })
   return within(strip).getAllByRole('button').at(-1) as HTMLButtonElement
 }
 
-async function longPress(button: HTMLElement) {
+const longPress = async (button: HTMLElement) => {
   fireEvent.pointerDown(button, { button: 0, clientX: 20, clientY: 20 })
   await act(async () => {
     await new Promise((resolve) => window.setTimeout(resolve, 550))

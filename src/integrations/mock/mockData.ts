@@ -22,15 +22,15 @@ const fourDaysAgo = new Date(today)
 fourDaysAgo.setDate(today.getDate() - 4)
 const todayWeekday = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6
 
-function toIsoDate(value: Date): ISODateString {
+const toIsoDate = (value: Date): ISODateString => {
   return formatISO(value, { representation: 'date' })
 }
 
-function toIsoDateTime(value: Date) {
+const toIsoDateTime = (value: Date) => {
   return value.toISOString()
 }
 
-function buildBaseFields(id: EntityId) {
+const buildBaseFields = (id: EntityId) => {
   return {
     id,
     userId: MOCK_USER_ID,
@@ -50,7 +50,7 @@ export type MockDataState = {
   moodLogs: MoodLog[]
 }
 
-function createInitialMockData(): MockDataState {
+const createInitialMockData = (): MockDataState => {
   const categories: Category[] = [
     {
       ...buildBaseFields('category-health'),
@@ -346,7 +346,7 @@ function createInitialMockData(): MockDataState {
   }
 }
 
-function cloneMockData<T>(value: T): T {
+const cloneMockData = <T>(value: T): T => {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
@@ -357,14 +357,14 @@ export const mockData = {
 
 let mockState = createInitialMockData()
 
-export function getMockState() {
+export const getMockState = () => {
   return mockState
 }
 
-export function resetMockState() {
+export const resetMockState = () => {
   mockState = createInitialMockData()
 }
 
-export function cloneMockState() {
+export const cloneMockState = () => {
   return cloneMockData(mockState)
 }

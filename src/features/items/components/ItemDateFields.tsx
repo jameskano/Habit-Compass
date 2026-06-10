@@ -40,7 +40,7 @@ type GuardedEndDateFieldProps = {
   warningDescriptionId: string
 }
 
-function formatDateValue(intl: ReturnType<typeof useIntl>, value: string) {
+const formatDateValue = (intl: ReturnType<typeof useIntl>, value: string) => {
   const date = isoDateToCalendarDate(value)
   if (!date) {
     return ''
@@ -52,7 +52,7 @@ function formatDateValue(intl: ReturnType<typeof useIntl>, value: string) {
   })
 }
 
-export function DatePickerField({
+export const DatePickerField = ({
   labelId,
   value,
   onValueChange,
@@ -60,7 +60,7 @@ export function DatePickerField({
   allowClear = false,
   readOnly = false,
   openLabelId = 'page.items.date.openPicker',
-}: DatePickerFieldProps) {
+}: DatePickerFieldProps) => {
   const intl = useIntl()
   const inputId = useId()
   const [open, setOpen] = useState(false)
@@ -120,18 +120,18 @@ export function DatePickerField({
   )
 }
 
-export function ReadOnlyStartDateField({ labelId, value }: ReadOnlyStartDateFieldProps) {
+export const ReadOnlyStartDateField = ({ labelId, value }: ReadOnlyStartDateFieldProps) => {
   return <DatePickerField labelId={labelId} value={value} onValueChange={() => {}} readOnly />
 }
 
-export function GuardedEndDateField({
+export const GuardedEndDateField = ({
   labelId,
   value,
   onValueChange,
   error,
   warningTitleId,
   warningDescriptionId,
-}: GuardedEndDateFieldProps) {
+}: GuardedEndDateFieldProps) => {
   const intl = useIntl()
   const [warningOpen, setWarningOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)

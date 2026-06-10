@@ -14,12 +14,12 @@ type TodayDateNavigatorProps = {
   onOpenDatePicker: () => void
 }
 
-export function TodayDateNavigator({
+export const TodayDateNavigator = ({
   selectedDate,
   dateMode,
   onDateChange,
   onOpenDatePicker,
-}: TodayDateNavigatorProps) {
+}: TodayDateNavigatorProps) => {
   const intl = useIntl()
 
   return (

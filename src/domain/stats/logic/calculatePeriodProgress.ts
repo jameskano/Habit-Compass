@@ -7,7 +7,7 @@ export type PeriodProgress = {
   isComplete: boolean
 }
 
-export function calculatePeriodProgress(actual: number, target: number): PeriodProgress {
+export const calculatePeriodProgress = (actual: number, target: number): PeriodProgress => {
   const safeTarget = target > 0 ? target : 0
 
   if (safeTarget === 0) {
