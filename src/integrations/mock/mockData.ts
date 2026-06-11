@@ -3,6 +3,7 @@ import { formatISO } from 'date-fns'
 import type { Category } from '@/domain/categories'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
+import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
@@ -44,6 +45,8 @@ export type MockDataState = {
   categories: Category[]
   habits: Habit[]
   habitLogs: HabitLog[]
+  weeklyPlans: WeeklyPlan[]
+  weeklyBigRocks: WeeklyBigRock[]
   tasks: Task[]
   recurrentTasks: RecurrentTask[]
   recurrentTaskOccurrences: RecurrentTaskOccurrence[]
@@ -339,6 +342,8 @@ const createInitialMockData = (): MockDataState => {
     categories,
     habits,
     habitLogs,
+    weeklyPlans: [],
+    weeklyBigRocks: [],
     tasks,
     recurrentTasks,
     recurrentTaskOccurrences,

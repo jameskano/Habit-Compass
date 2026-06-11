@@ -2,16 +2,16 @@ import { z } from 'zod'
 
 import { BaseEntityFieldsSchema, EntityIdSchema, IsoDateStringSchema } from '@/shared/types'
 
-import { weeklyPlanningStates } from './constants'
-
-export const WeeklyPlanningStateSchema = z.enum(weeklyPlanningStates)
-
 export const WeeklyPlanSchema = BaseEntityFieldsSchema.extend({
   weekStartDate: IsoDateStringSchema,
-  focus: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-  highlightedHabitIds: z.array(EntityIdSchema),
-  highlightedTaskIds: z.array(EntityIdSchema),
-  highlightedCategoryIds: z.array(EntityIdSchema),
-  reviewState: WeeklyPlanningStateSchema,
-})
+  focusText: z.string().max(100).optional().nullable(),
+  reviewWentWell: z.string().optional().nullable(),
+  reviewGotInWay: z.string().optional().nullable(),
+  reviewAdjustNextWeek: z.string().optional().nullable(),
+}).strict()
+
+export const WeeklyBigRockSchema = BaseEntityFieldsSchema.extend({
+  weeklyPlanId: EntityIdSchema,
+  habitId: EntityIdSchema,
+  sortOrder: z.number().int().nonnegative(),
+}).strict()

@@ -1,1 +1,1 @@
-export const weeklyPlanningStates = ['pending', 'completed'] as const
+export const MAX_WEEKLY_BIG_ROCKS = 3
