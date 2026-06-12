@@ -14,6 +14,7 @@ type WeeklyMapSectionProps = {
   selectedWeekStart: ISODateString
   weekStartsOn: WeekStartsOn
   today: ISODateString
+  planningLocked: boolean
   onAddBigRock: () => void
 }
 
@@ -23,6 +24,7 @@ export const WeeklyMapSection = ({
   selectedWeekStart,
   weekStartsOn,
   today,
+  planningLocked,
   onAddBigRock,
 }: WeeklyMapSectionProps) => {
   const intl = useIntl()
@@ -46,15 +48,17 @@ export const WeeklyMapSection = ({
           <p className="text-sm leading-6 text-muted-foreground">
             {intl.formatMessage({ id: 'page.week.map.empty' })}
           </p>
-          <Button type="button" className="mt-3 rounded-xl" onClick={onAddBigRock}>
-            {intl.formatMessage({ id: 'page.week.bigRocks.add' })}
-          </Button>
+          {planningLocked ? null : (
+            <Button type="button" className="mt-3 rounded-xl" onClick={onAddBigRock}>
+              {intl.formatMessage({ id: 'page.week.bigRocks.add' })}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto pb-1">
           <div className="min-w-[31rem] space-y-3">
             <div
-              className="grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2 mr-2"
+              className="mr-2 grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2"
               aria-label={intl.formatMessage({ id: 'page.week.map.weekdays' })}
             >
               <span aria-hidden="true" />

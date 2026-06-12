@@ -164,7 +164,7 @@ describe('app shell', () => {
     expect(await screen.findByRole('link', { name: 'Today' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Week' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Items' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Mood' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Mood' })).not.toBeInTheDocument()
   })
 
   it('publishes the current routed section in the global header', async () => {

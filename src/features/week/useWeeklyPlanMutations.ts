@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { WeeklyPlan } from '@/domain/planning'
+import type { WeeklyPlan, WeeklyReviewFeeling } from '@/domain/planning'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { planningRepository } from '@/integrations/repositories'
 import { useAppToast } from '@/shared/hooks/useAppToast'
@@ -10,9 +10,11 @@ import { unwrapResult } from '@/shared/utils/result'
 import { weeklyBigRocksQueryKey, weeklyPlanQueryKey } from './useWeeklyPlanQuery'
 
 type ReviewInput = {
+  reviewOverallFeeling: WeeklyReviewFeeling | null
   reviewWentWell: string
   reviewGotInWay: string
   reviewAdjustNextWeek: string
+  reviewReflections: string
 }
 
 const normalizeOptionalText = (value: string) => {
@@ -35,9 +37,11 @@ export const useWeeklyPlanMutations = (userId = MOCK_USER_ID) => {
         userId,
         weekStartDate,
         focusText: null,
+        reviewOverallFeeling: null,
         reviewWentWell: null,
         reviewGotInWay: null,
         reviewAdjustNextWeek: null,
+        reviewReflections: null,
       }),
     )
   }
@@ -72,9 +76,11 @@ export const useWeeklyPlanMutations = (userId = MOCK_USER_ID) => {
       return unwrapResult(
         await planningRepository.update({
           id: plan.id,
+          reviewOverallFeeling: input.reviewOverallFeeling,
           reviewWentWell: normalizeOptionalText(input.reviewWentWell),
           reviewGotInWay: normalizeOptionalText(input.reviewGotInWay),
           reviewAdjustNextWeek: normalizeOptionalText(input.reviewAdjustNextWeek),
+          reviewReflections: normalizeOptionalText(input.reviewReflections),
         }),
       )
     },

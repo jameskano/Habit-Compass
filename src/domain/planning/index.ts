@@ -2,9 +2,11 @@ export {
   MAX_WEEKLY_BIG_ROCKS,
   WEEKLY_FOCUS_MAX_LENGTH,
   WEEKLY_REVIEW_ANSWER_MAX_LENGTH,
+  WEEKLY_REVIEW_FEELINGS,
+  WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH,
 } from './constants'
 export { WeeklyBigRockSchema, WeeklyPlanSchema } from './schemas'
-export type { WeeklyBigRock, WeeklyPlan } from './types'
+export type { WeeklyBigRock, WeeklyPlan, WeeklyReviewFeeling } from './types'
 export type {
   AddWeeklyBigRockInput,
   CreateWeeklyPlanInput,

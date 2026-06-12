@@ -7,7 +7,7 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Today/Home: the primary daily completion surface.
 - Week/Planning: a lightweight weekly planning surface.
 - Items: manage habits, tasks, and recurrent tasks through three top-level tabs.
-- Optional Mood/Reflections: check-ins that can be ignored.
+- Optional Mood/Reflections: future check-ins that can be ignored and are not in current primary navigation.
 - Settings: available from the top-right of the app shell.
 - Onboarding: short first-run flow, maximum 3 pages.
 

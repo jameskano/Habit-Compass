@@ -20,9 +20,10 @@ Ship a fast daily tracker where users can create items, complete them, review si
 - Today/Home
 - Week/Planning
 - Items
-- Mood
 - Settings
 - Onboarding for first-run setup
+
+Mood remains future optional depth rather than a current primary navigation item.
 
 ## Feature Philosophy
 

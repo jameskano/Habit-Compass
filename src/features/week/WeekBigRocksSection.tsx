@@ -15,6 +15,7 @@ type WeekBigRocksSectionProps = {
   categories: Category[]
   habits: Habit[]
   pending: boolean
+  planningLocked: boolean
   plan: WeeklyPlan | null
   selectorOpen: boolean
   selectedHabits: Habit[]
@@ -32,6 +33,7 @@ export const WeekBigRocksSection = ({
   categories,
   habits,
   pending,
+  planningLocked,
   plan,
   selectorOpen,
   selectedHabits,
@@ -43,7 +45,7 @@ export const WeekBigRocksSection = ({
   const intl = useIntl()
   const categoriesById = buildCategoryMap(categories)
   const selectedHabitIds = new Set(selectedHabits.map((habit) => habit.id))
-  const canAdd = canAddWeeklyBigRock(selectedHabits.length)
+  const canAdd = !planningLocked && canAddWeeklyBigRock(selectedHabits.length)
 
   return (
     <>
@@ -60,16 +62,20 @@ export const WeekBigRocksSection = ({
               )}
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-10 rounded-full border border-border/70 px-3"
-            disabled={!canAdd || pending}
-            onClick={() => onSelectorOpenChange(true)}
-          >
-            <Plus aria-hidden="true" size={17} />
-            <span className="ml-1.5">{intl.formatMessage({ id: 'page.week.bigRocks.add' })}</span>
-          </Button>
+          {planningLocked ? null : (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 rounded-full border border-border/70 px-3"
+              disabled={!canAdd || pending}
+              onClick={() => onSelectorOpenChange(true)}
+            >
+              <Plus aria-hidden="true" size={17} />
+              <span className="ml-1.5">
+                {intl.formatMessage({ id: 'page.week.bigRocks.add' })}
+              </span>
+            </Button>
+          )}
         </div>
 
         {selectedHabits.length > 0 ? (
@@ -93,7 +99,7 @@ export const WeekBigRocksSection = ({
                       )}
                     </p>
                   </div>
-                  {plan ? (
+                  {plan && !planningLocked ? (
                     <Button
                       type="button"
                       variant="ghost"
@@ -120,7 +126,7 @@ export const WeekBigRocksSection = ({
           </div>
         ) : null}
 
-        {!canAdd ? (
+        {!planningLocked && !canAdd ? (
           <p className="mt-3 text-xs text-muted-foreground">
             {intl.formatMessage({ id: 'page.week.bigRocks.limit' })}
           </p>
@@ -130,11 +136,16 @@ export const WeekBigRocksSection = ({
       <WeekHabitSelectorSheet
         categories={categories}
         habits={habits}
-        open={selectorOpen}
+        open={selectorOpen && !planningLocked}
         pending={pending}
         selectedHabitIds={selectedHabitIds}
         onClose={() => onSelectorOpenChange(false)}
         onSelectHabit={(habit) => {
+          if (planningLocked) {
+            onSelectorOpenChange(false)
+            return
+          }
+
           onAddBigRock({ weekStartDate: selectedWeekStart, habitId: habit.id })
           onSelectorOpenChange(false)
         }}

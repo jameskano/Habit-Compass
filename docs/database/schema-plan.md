@@ -45,10 +45,14 @@ The first Supabase schema for Habit Compass is now defined in [supabase/migratio
   - Soft-delete-friendly because reflections are user-authored text.
 - `weekly_plans`
   - Optional weekly planning records keyed by `week_start`.
+  - Stores optional focus text, weekly review feeling, three review answers, and reflections.
   - Unique per user and week start.
+- `weekly_big_rocks`
+  - Habit-only Big Rock references attached to a weekly plan.
+  - Stores sort order without duplicating habit configuration.
 - `weekly_priorities`
   - Items attached to a weekly plan, optionally linked to a category.
-  - Supports a lightweight Eisenhower-style quadrant field.
+  - Legacy planned table, unused by the current habit-only Week section.
 - `suggestion_events`
   - Records emitted rule-based suggestion messages for later analysis.
   - This is storage only; the suggestion engine remains deterministic and local for MVP logic.

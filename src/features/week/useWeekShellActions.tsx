@@ -75,6 +75,7 @@ export const useWeekShellActions = ({
           <PopoverContent align="end" className="w-auto">
             <Calendar
               mode="single"
+              weekStartsOn={weekStartsOn}
               selected={isoDateToCalendarDate(selectedWeekStart)}
               defaultMonth={isoDateToCalendarDate(selectedWeekStart)}
               onSelect={selectCalendarDate}
@@ -91,6 +92,7 @@ export const useWeekShellActions = ({
       selectedWeekStart,
       setDatePickerOpen,
       setSelectedWeekStart,
+      weekStartsOn,
     ],
   )
 

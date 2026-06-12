@@ -1,27 +1,37 @@
-import { parseISO } from 'date-fns'
 import type { IntlShape } from 'react-intl'
 
 import { getHabitFrequencySummary, type Habit, type HabitDayOfWeek } from '@/domain/habits'
 import type { Category } from '@/domain/categories'
 
-export const formatWeekRange = (intl: IntlShape, dates: string[]) => {
-  const firstDate = parseISO(dates[0])
-  const lastDate = parseISO(dates[dates.length - 1])
-  const firstMonth = intl.formatDate(firstDate, { month: 'short', timeZone: 'UTC' })
-  const lastMonth = intl.formatDate(lastDate, { month: 'short', timeZone: 'UTC' })
-  const firstDay = intl.formatDate(firstDate, { day: 'numeric', timeZone: 'UTC' })
-  const lastDay = intl.formatDate(lastDate, { day: 'numeric', timeZone: 'UTC' })
+const getWeekDateParts = (intl: IntlShape, date: string) => {
+  const parsedDate = new Date(`${date}T00:00:00.000Z`)
 
-  return firstMonth === lastMonth
-    ? intl.formatMessage({ id: 'page.week.range.sameMonth' }, { month: firstMonth, start: firstDay, end: lastDay })
-    : intl.formatMessage({
-        id: 'page.week.range.differentMonth',
-      }, {
-        startMonth: firstMonth,
-        startDay: firstDay,
-        endMonth: lastMonth,
-        endDay: lastDay,
-      })
+  return {
+    day: intl.formatDate(parsedDate, { day: 'numeric', timeZone: 'UTC' }),
+    month: intl.formatDate(parsedDate, { month: 'short', timeZone: 'UTC' }),
+  }
+}
+
+export const formatWeekRange = (intl: IntlShape, dates: string[]) => {
+  const firstDate = getWeekDateParts(intl, dates[0])
+  const lastDate = getWeekDateParts(intl, dates[dates.length - 1])
+
+  return firstDate.month === lastDate.month
+    ? intl.formatMessage(
+        { id: 'page.week.range.sameMonth' },
+        { month: firstDate.month, start: firstDate.day, end: lastDate.day },
+      )
+    : intl.formatMessage(
+        {
+          id: 'page.week.range.differentMonth',
+        },
+        {
+          startMonth: firstDate.month,
+          startDay: firstDate.day,
+          endMonth: lastDate.month,
+          endDay: lastDate.day,
+        },
+      )
 }
 
 const formatWeekdays = (intl: IntlShape, days: readonly HabitDayOfWeek[]) => {

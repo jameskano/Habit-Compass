@@ -36,6 +36,7 @@ export const WeekPage = () => {
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const weekDates = getWeekDates(selectedWeekStart, weekStartsOn)
+  const planningLocked = selectedWeekStart < currentWeekStart
 
   useEffect(() => {
     setSelectedWeekStart((current) => getWeekStart(current, weekStartsOn))
@@ -135,6 +136,7 @@ export const WeekPage = () => {
 
       <WeekFocusSection
         plan={weeklyPlanQuery.data ?? null}
+        planningLocked={planningLocked}
         selectedWeekStart={selectedWeekStart}
         pending={mutations.saveFocus.isPending}
         onSave={mutations.saveFocus.mutate}
@@ -144,6 +146,7 @@ export const WeekPage = () => {
         categories={categories}
         habits={habits}
         pending={planningPending}
+        planningLocked={planningLocked}
         plan={weeklyPlanQuery.data ?? null}
         selectorOpen={selectorOpen}
         selectedHabits={selectedBigRockHabits}
@@ -159,6 +162,7 @@ export const WeekPage = () => {
         selectedWeekStart={selectedWeekStart}
         weekStartsOn={weekStartsOn}
         today={today}
+        planningLocked={planningLocked}
         onAddBigRock={() => setSelectorOpen(true)}
       />
 

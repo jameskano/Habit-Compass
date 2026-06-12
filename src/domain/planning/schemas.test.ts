@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { WEEKLY_FOCUS_MAX_LENGTH, WEEKLY_REVIEW_ANSWER_MAX_LENGTH } from './constants'
+import {
+  WEEKLY_FOCUS_MAX_LENGTH,
+  WEEKLY_REVIEW_ANSWER_MAX_LENGTH,
+  WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH,
+} from './constants'
 import { WeeklyBigRockSchema, WeeklyPlanSchema } from './schemas'
 
 const baseFields = {
@@ -18,12 +22,24 @@ describe('WeeklyPlanSchema', () => {
       ...baseFields,
       weekStartDate: '2026-05-18',
       focusText: null,
+      reviewOverallFeeling: null,
       reviewWentWell: null,
       reviewGotInWay: null,
       reviewAdjustNextWeek: null,
+      reviewReflections: null,
     })
 
     expect(result.weekStartDate).toBe('2026-05-18')
+  })
+
+  it('parses valid weekly review feeling values', () => {
+    const result = WeeklyPlanSchema.parse({
+      ...baseFields,
+      weekStartDate: '2026-05-18',
+      reviewOverallFeeling: 'veryHard',
+    })
+
+    expect(result.reviewOverallFeeling).toBe('veryHard')
   })
 
   it('rejects focus text longer than 100 characters and legacy highlight arrays', () => {
@@ -63,6 +79,23 @@ describe('WeeklyPlanSchema', () => {
         ...baseFields,
         weekStartDate: '2026-05-18',
         reviewAdjustNextWeek: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects invalid weekly review feeling and over-limit reflections', () => {
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewOverallFeeling: 'excellent',
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewReflections: 'a'.repeat(WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH + 1),
       }).success,
     ).toBe(false)
   })

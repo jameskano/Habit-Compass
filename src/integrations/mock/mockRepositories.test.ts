@@ -459,16 +459,24 @@ describe('mock repositories', () => {
   })
 
   it('creates and updates a weekly plan focus and review per week', async () => {
+    const beforeHabit = structuredClone(
+      getMockState().habits.find((habit) => habit.id === 'habit-move'),
+    )
+    const beforeBigRocks = structuredClone(getMockState().weeklyBigRocks)
     const created = await mockPlanningRepository.create({
       userId: mockData.currentUserId,
       weekStartDate: '2026-05-18',
       focusText: 'Keep the basics',
+      reviewOverallFeeling: null,
       reviewWentWell: null,
       reviewGotInWay: null,
       reviewAdjustNextWeek: null,
+      reviewReflections: null,
     })
 
     expect(created.ok && created.data.focusText).toBe('Keep the basics')
+    expect(created.ok && created.data.reviewOverallFeeling).toBeNull()
+    expect(created.ok && created.data.reviewReflections).toBeNull()
 
     if (!created.ok) {
       throw new Error('Expected weekly plan creation to succeed')
@@ -476,12 +484,18 @@ describe('mock repositories', () => {
 
     const updated = await mockPlanningRepository.update({
       id: created.data.id,
+      reviewOverallFeeling: 'good',
       reviewWentWell: 'Sleep improved',
       reviewGotInWay: 'Too many evenings out',
       reviewAdjustNextWeek: 'Protect bedtime',
+      reviewReflections: 'A lighter plan helped.',
     })
 
+    expect(updated.ok && updated.data.reviewOverallFeeling).toBe('good')
     expect(updated.ok && updated.data.reviewAdjustNextWeek).toBe('Protect bedtime')
+    expect(updated.ok && updated.data.reviewReflections).toBe('A lighter plan helped.')
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')).toEqual(beforeHabit)
+    expect(getMockState().weeklyBigRocks).toEqual(beforeBigRocks)
     expect(
       (await mockPlanningRepository.getForWeek({
         userId: mockData.currentUserId,
@@ -499,9 +513,11 @@ describe('mock repositories', () => {
       userId: mockData.currentUserId,
       weekStartDate: '2026-05-18',
       focusText: null,
+      reviewOverallFeeling: null,
       reviewWentWell: null,
       reviewGotInWay: null,
       reviewAdjustNextWeek: null,
+      reviewReflections: null,
     })
 
     if (!plan.ok) {
@@ -547,9 +563,11 @@ describe('mock repositories', () => {
       userId: mockData.currentUserId,
       weekStartDate: '2026-05-18',
       focusText: null,
+      reviewOverallFeeling: null,
       reviewWentWell: null,
       reviewGotInWay: null,
       reviewAdjustNextWeek: null,
+      reviewReflections: null,
     })
 
     if (!plan.ok || !fourthHabit) {

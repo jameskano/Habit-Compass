@@ -20,6 +20,7 @@ type FocusFormValues = z.infer<typeof FocusFormSchema>
 
 type WeekFocusSectionProps = {
   plan: WeeklyPlan | null
+  planningLocked: boolean
   selectedWeekStart: ISODateString
   pending: boolean
   onSave: (input: { weekStartDate: ISODateString; focusText: string }) => void
@@ -27,6 +28,7 @@ type WeekFocusSectionProps = {
 
 export const WeekFocusSection = ({
   plan,
+  planningLocked,
   selectedWeekStart,
   pending,
   onSave,
@@ -44,6 +46,12 @@ export const WeekFocusSection = ({
     form.reset({ focusText: plan?.focusText ?? '' })
   }, [form, plan?.focusText, selectedWeekStart])
 
+  useEffect(() => {
+    if (planningLocked) {
+      setOpen(false)
+    }
+  }, [planningLocked])
+
   return (
     <>
       <Card className="rounded-2xl border-border/70 bg-card/85 p-4">
@@ -60,15 +68,17 @@ export const WeekFocusSection = ({
               </p>
             )}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            className="size-10 shrink-0 rounded-full border border-border/70 p-0"
-            aria-label={intl.formatMessage({ id: 'page.week.focus.edit' })}
-            onClick={() => setOpen(true)}
-          >
-            <Pencil aria-hidden="true" size={17} />
-          </Button>
+          {planningLocked ? null : (
+            <Button
+              type="button"
+              variant="ghost"
+              className="size-10 shrink-0 rounded-full border border-border/70 p-0"
+              aria-label={intl.formatMessage({ id: 'page.week.focus.edit' })}
+              onClick={() => setOpen(true)}
+            >
+              <Pencil aria-hidden="true" size={17} />
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -95,6 +105,11 @@ export const WeekFocusSection = ({
             noValidate
             className="space-y-4"
             onSubmit={form.handleSubmit((values) => {
+              if (planningLocked) {
+                setOpen(false)
+                return
+              }
+
               onSave({ weekStartDate: selectedWeekStart, focusText: values.focusText })
               setOpen(false)
             })}

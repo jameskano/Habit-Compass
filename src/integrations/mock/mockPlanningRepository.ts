@@ -71,8 +71,15 @@ export const mockPlanningRepository: PlanningRepository = {
 
     const timestamp = buildTimestamp()
     const plan: WeeklyPlan = {
-      ...input,
       id: `weekly-plan-${state.weeklyPlans.length + 1}`,
+      userId: input.userId,
+      weekStartDate: input.weekStartDate,
+      focusText: input.focusText ?? null,
+      reviewOverallFeeling: input.reviewOverallFeeling ?? null,
+      reviewWentWell: input.reviewWentWell ?? null,
+      reviewGotInWay: input.reviewGotInWay ?? null,
+      reviewAdjustNextWeek: input.reviewAdjustNextWeek ?? null,
+      reviewReflections: input.reviewReflections ?? null,
       createdAt: timestamp,
       updatedAt: timestamp,
       archivedAt: null,
