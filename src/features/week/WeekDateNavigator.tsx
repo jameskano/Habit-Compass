@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useIntl } from 'react-intl'
 
-import { getWeekDates, shiftWeek } from '@/domain/planning'
+import { getWeekDates, shiftWeek, type WeekStartsOn } from '@/domain/planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 
@@ -9,17 +9,19 @@ import { formatWeekRange } from './week.utils'
 
 type WeekDateNavigatorProps = {
   selectedWeekStart: ISODateString
+  weekStartsOn: WeekStartsOn
   onWeekChange: (date: ISODateString) => void
   onOpenDatePicker: () => void
 }
 
 export const WeekDateNavigator = ({
   selectedWeekStart,
+  weekStartsOn,
   onWeekChange,
   onOpenDatePicker,
 }: WeekDateNavigatorProps) => {
   const intl = useIntl()
-  const weekDates = getWeekDates(selectedWeekStart)
+  const weekDates = getWeekDates(selectedWeekStart, weekStartsOn)
 
   return (
     <div className="flex flex-col gap-3 rounded-[1.35rem] border border-border/70 bg-card/65 p-3 sm:flex-row sm:items-center sm:justify-between">

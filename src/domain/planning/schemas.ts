@@ -2,12 +2,14 @@ import { z } from 'zod'
 
 import { BaseEntityFieldsSchema, EntityIdSchema, IsoDateStringSchema } from '@/shared/types'
 
+import { WEEKLY_FOCUS_MAX_LENGTH, WEEKLY_REVIEW_ANSWER_MAX_LENGTH } from './constants'
+
 export const WeeklyPlanSchema = BaseEntityFieldsSchema.extend({
   weekStartDate: IsoDateStringSchema,
-  focusText: z.string().max(100).optional().nullable(),
-  reviewWentWell: z.string().optional().nullable(),
-  reviewGotInWay: z.string().optional().nullable(),
-  reviewAdjustNextWeek: z.string().optional().nullable(),
+  focusText: z.string().max(WEEKLY_FOCUS_MAX_LENGTH).optional().nullable(),
+  reviewWentWell: z.string().max(WEEKLY_REVIEW_ANSWER_MAX_LENGTH).optional().nullable(),
+  reviewGotInWay: z.string().max(WEEKLY_REVIEW_ANSWER_MAX_LENGTH).optional().nullable(),
+  reviewAdjustNextWeek: z.string().max(WEEKLY_REVIEW_ANSWER_MAX_LENGTH).optional().nullable(),
 }).strict()
 
 export const WeeklyBigRockSchema = BaseEntityFieldsSchema.extend({

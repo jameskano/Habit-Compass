@@ -12,7 +12,7 @@ Some users want a weekly planning surface, but planning depth must stay optional
 
 ## Scope
 
-- A week date range with Monday as the default week start.
+- A week date range based on the stored week-start preference, defaulting to Monday until Settings or onboarding can configure it.
 - Optional weekly focus text.
 - Up to 3 selected Big Rock habits per week.
 - Weekly map for selected Big Rock habits using existing habit completion logs.
@@ -43,7 +43,8 @@ Some users want a weekly planning surface, but planning depth must stay optional
 
 - Weekly planning must be optional behind the existing weekly planning feature toggle.
 - A weekly plan must reference a `weekStartDate`.
-- `weekStartDate` must represent the Monday that starts the viewed week unless a future settings feature changes week-start behavior.
+- `weekStartDate` must represent the start of the viewed week according to the stored `weekStartsOn` preference.
+- The current default `weekStartsOn` value is Monday (`1`); future Settings or onboarding work may set it from the user's account or locale defaults.
 - A weekly plan may contain `focusText`.
 - A weekly plan may contain optional review answers for:
   - what went well;
@@ -56,12 +57,13 @@ Some users want a weekly planning surface, but planning depth must stay optional
 - The Weekly Map must show selected Big Rock habits only.
 - Life Areas must show only categories that contain selected Big Rock habits; uncategorized habits use an uncategorized fallback group.
 - Future habit completion cells must be viewable but disabled for completion.
+- Weekly Map habit cells are read-only status indicators; they must not open completion, skip, undo, or amount-input interactions.
 
 ## Non-Functional Requirements
 
 - The model must support simple weekly orientation, not complex scheduling.
 - Weekly planning must remain decoupled from task and recurrent-task logic.
-- Weekly completion display and interactions must reuse existing habit completion logic.
+- Weekly completion display must reuse existing habit completion state logic.
 - Big Rocks must store habit references rather than duplicating habit data.
 
 ## Data Model
@@ -108,6 +110,6 @@ Some users want a weekly planning surface, but planning depth must stay optional
 ## Test Plan
 
 - Schema tests for minimal weekly plans and valid Big Rock references.
-- Unit tests for Monday week range generation, max Big Rock count, and life-area grouping.
+- Unit tests for Monday-start and Sunday-start week range generation, max Big Rock count, and life-area grouping.
 - Repository tests for focus/review updates, add/remove Big Rocks, duplicate rejection, and max-count enforcement.
-- Component tests for Week date navigation, habit-only selector, Weekly Map scoping, Life Areas scoping, and disabled future completion cells.
+- Component tests for Week date navigation, habit-only selector, Weekly Map scoping, read-only map cells, Life Areas scoping, and disabled future completion cells.

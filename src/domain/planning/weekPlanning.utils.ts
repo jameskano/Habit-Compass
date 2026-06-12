@@ -6,6 +6,8 @@ import type { EntityId, ISODateString } from '@/shared/types'
 
 import { MAX_WEEKLY_BIG_ROCKS } from './constants'
 
+export type WeekStartsOn = 0 | 1
+
 export type LifeAreaGroup = {
   id: EntityId | 'uncategorized'
   name: string
@@ -18,12 +20,12 @@ export const toISODate = (value: Date) => {
   return formatISO(value, { representation: 'date' }) as ISODateString
 }
 
-export const getWeekStart = (date: ISODateString) => {
-  return toISODate(startOfWeek(parseISO(date), { weekStartsOn: 1 }))
+export const getWeekStart = (date: ISODateString, weekStartsOn: WeekStartsOn = 1) => {
+  return toISODate(startOfWeek(parseISO(date), { weekStartsOn }))
 }
 
-export const getWeekDates = (weekStartDate: ISODateString) => {
-  const start = parseISO(weekStartDate)
+export const getWeekDates = (weekStartDate: ISODateString, weekStartsOn: WeekStartsOn = 1) => {
+  const start = parseISO(getWeekStart(weekStartDate, weekStartsOn))
   return Array.from({ length: 7 }, (_, index) => toISODate(addDays(start, index)))
 }
 

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
@@ -29,17 +29,23 @@ export const WeekPage = () => {
   const weeklyPlanningEnabled = useAppPreferencesStore(
     (state) => state.featureToggles.weeklyPlanning,
   )
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const today = toISODate(new Date())
-  const currentWeekStart = getWeekStart(today)
+  const currentWeekStart = getWeekStart(today, weekStartsOn)
   const [selectedWeekStart, setSelectedWeekStart] = useState<ISODateString>(currentWeekStart)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
-  const weekDates = getWeekDates(selectedWeekStart)
+  const weekDates = getWeekDates(selectedWeekStart, weekStartsOn)
+
+  useEffect(() => {
+    setSelectedWeekStart((current) => getWeekStart(current, weekStartsOn))
+  }, [weekStartsOn])
 
   useWeekShellActions({
     currentWeekStart,
     selectedWeekStart,
     datePickerOpen,
+    weekStartsOn,
     setDatePickerOpen,
     setSelectedWeekStart,
   })
@@ -122,6 +128,7 @@ export const WeekPage = () => {
     <section className="space-y-4">
       <WeekDateNavigator
         selectedWeekStart={selectedWeekStart}
+        weekStartsOn={weekStartsOn}
         onWeekChange={setSelectedWeekStart}
         onOpenDatePicker={() => setDatePickerOpen(true)}
       />
@@ -150,6 +157,7 @@ export const WeekPage = () => {
         habits={selectedBigRockHabits}
         logs={habitLogsQuery.data ?? emptyHabitLogs}
         selectedWeekStart={selectedWeekStart}
+        weekStartsOn={weekStartsOn}
         today={today}
         onAddBigRock={() => setSelectorOpen(true)}
       />

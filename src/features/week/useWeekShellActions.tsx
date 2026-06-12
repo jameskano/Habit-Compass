@@ -2,7 +2,7 @@ import { CalendarCheck, CalendarDays } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 
-import { getWeekStart } from '@/domain/planning'
+import { getWeekStart, type WeekStartsOn } from '@/domain/planning'
 import {
   calendarDateToISODate,
   isoDateToCalendarDate,
@@ -18,6 +18,7 @@ type UseWeekShellActionsInput = {
   currentWeekStart: ISODateString
   selectedWeekStart: ISODateString
   datePickerOpen: boolean
+  weekStartsOn: WeekStartsOn
   setDatePickerOpen: (open: boolean) => void
   setSelectedWeekStart: (date: ISODateString) => void
 }
@@ -26,6 +27,7 @@ export const useWeekShellActions = ({
   currentWeekStart,
   selectedWeekStart,
   datePickerOpen,
+  weekStartsOn,
   setDatePickerOpen,
   setSelectedWeekStart,
 }: UseWeekShellActionsInput) => {
@@ -36,10 +38,10 @@ export const useWeekShellActions = ({
         return
       }
 
-      setSelectedWeekStart(getWeekStart(calendarDateToISODate(date) as ISODateString))
+      setSelectedWeekStart(getWeekStart(calendarDateToISODate(date) as ISODateString, weekStartsOn))
       setDatePickerOpen(false)
     },
-    [setDatePickerOpen, setSelectedWeekStart],
+    [setDatePickerOpen, setSelectedWeekStart, weekStartsOn],
   )
 
   const weekHeaderActions = useMemo(

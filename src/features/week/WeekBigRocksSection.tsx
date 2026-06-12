@@ -72,11 +72,7 @@ export const WeekBigRocksSection = ({
           </Button>
         </div>
 
-        {selectedHabits.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/75 bg-muted/30 p-4 text-sm leading-6 text-muted-foreground">
-            {intl.formatMessage({ id: 'page.week.bigRocks.empty' })}
-          </div>
-        ) : (
+        {selectedHabits.length > 0 ? (
           <div className="space-y-2">
             {selectedHabits.map((habit) => {
               const category = habit.categoryId ? categoriesById.get(habit.categoryId) : null
@@ -122,7 +118,7 @@ export const WeekBigRocksSection = ({
               )
             })}
           </div>
-        )}
+        ) : null}
 
         {!canAdd ? (
           <p className="mt-3 text-xs text-muted-foreground">

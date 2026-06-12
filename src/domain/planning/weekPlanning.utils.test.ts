@@ -28,8 +28,8 @@ const category = (id: string, name: string): Category => ({
 
 describe('week planning utilities', () => {
   it('uses Monday as week start and returns a 7-day range', () => {
-    expect(getWeekStart('2026-05-21')).toBe('2026-05-18')
-    expect(getWeekDates('2026-05-18')).toEqual([
+    expect(getWeekStart('2026-05-21', 1)).toBe('2026-05-18')
+    expect(getWeekDates('2026-05-18', 1)).toEqual([
       '2026-05-18',
       '2026-05-19',
       '2026-05-20',
@@ -39,6 +39,20 @@ describe('week planning utilities', () => {
       '2026-05-24',
     ])
     expect(shiftWeek('2026-05-18', 1)).toBe('2026-05-25')
+  })
+
+  it('supports Sunday as a stored week-start preference', () => {
+    expect(getWeekStart('2026-05-21', 0)).toBe('2026-05-17')
+    expect(getWeekDates('2026-05-17', 0)).toEqual([
+      '2026-05-17',
+      '2026-05-18',
+      '2026-05-19',
+      '2026-05-20',
+      '2026-05-21',
+      '2026-05-22',
+      '2026-05-23',
+    ])
+    expect(shiftWeek('2026-05-17', 1)).toBe('2026-05-24')
   })
 
   it('guards the max Big Rock count', () => {

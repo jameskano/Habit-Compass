@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { WEEKLY_FOCUS_MAX_LENGTH, WEEKLY_REVIEW_ANSWER_MAX_LENGTH } from './constants'
 import { WeeklyBigRockSchema, WeeklyPlanSchema } from './schemas'
 
 const baseFields = {
@@ -30,7 +31,7 @@ describe('WeeklyPlanSchema', () => {
       WeeklyPlanSchema.safeParse({
         ...baseFields,
         weekStartDate: '2026-05-18',
-        focusText: 'a'.repeat(101),
+        focusText: 'a'.repeat(WEEKLY_FOCUS_MAX_LENGTH + 1),
       }).success,
     ).toBe(false)
     expect(
@@ -38,6 +39,30 @@ describe('WeeklyPlanSchema', () => {
         ...baseFields,
         weekStartDate: '2026-05-18',
         highlightedTaskIds: ['task-1'],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects weekly review answers longer than 500 characters', () => {
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewWentWell: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewGotInWay: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewAdjustNextWeek: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
       }).success,
     ).toBe(false)
   })

@@ -1,10 +1,7 @@
-import { parseISO } from 'date-fns'
 import { useIntl } from 'react-intl'
 
 import { deriveHabitDayState, type Habit, type HabitLog } from '@/domain/habits'
-import { getWeekDates } from '@/domain/planning'
-import { HabitDayCell } from '@/features/items/habits/HabitDayCell'
-import { HabitDayInteractions } from '@/features/items/habits/HabitDayInteractions'
+import { getWeekDates, type WeekStartsOn } from '@/domain/planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
@@ -15,6 +12,7 @@ type WeeklyMapSectionProps = {
   habits: Habit[]
   logs: HabitLog[]
   selectedWeekStart: ISODateString
+  weekStartsOn: WeekStartsOn
   today: ISODateString
   onAddBigRock: () => void
 }
@@ -23,11 +21,14 @@ export const WeeklyMapSection = ({
   habits,
   logs,
   selectedWeekStart,
+  weekStartsOn,
   today,
   onAddBigRock,
 }: WeeklyMapSectionProps) => {
   const intl = useIntl()
-  const weekDates = getWeekDates(selectedWeekStart)
+  const weekDates = getWeekDates(selectedWeekStart, weekStartsOn)
+
+  const getUtcDate = (date: ISODateString) => new Date(`${date}T00:00:00.000Z`)
 
   return (
     <Card className="rounded-2xl border-border/70 bg-card/85 p-4">
@@ -52,11 +53,13 @@ export const WeeklyMapSection = ({
       ) : (
         <div className="overflow-x-auto pb-1">
           <div className="min-w-[31rem] space-y-3">
-            <div className="grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2">
-              <span className="sr-only">{intl.formatMessage({ id: 'page.week.map.habit' })}</span>
+            <div
+              className="grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2 mr-2"
+              aria-label={intl.formatMessage({ id: 'page.week.map.weekdays' })}
+            >
+              <span aria-hidden="true" />
               {weekDates.map((date) => {
-                const parsedDate = parseISO(date)
-                const weekday = parsedDate.getUTCDay()
+                const weekday = getUtcDate(date).getUTCDay()
 
                 return (
                   <span
@@ -73,40 +76,37 @@ export const WeeklyMapSection = ({
               const habitLogs = logs.filter((log) => log.habitId === habit.id)
 
               return (
-                <HabitDayInteractions key={habit.id} habit={habit} logs={habitLogs} today={today}>
-                  {({ isDayDisabled, onLongPressDay, onTapDay }) => (
-                    <div className="grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2 rounded-2xl border border-border/60 bg-background/50 p-2">
-                      <span className="truncate text-sm font-medium">{habit.title}</span>
-                      {weekDates.map((date) => {
-                        const state = deriveHabitDayState({ habit, logs: habitLogs, date, today })
-                        const stateLabel = intl.formatMessage({
-                          id: `page.items.habit.dayState.${state}`,
-                        })
-                        const parsedDate = parseISO(date)
+                <div
+                  key={habit.id}
+                  className="grid grid-cols-[minmax(8rem,1fr)_repeat(7,2.35rem)] items-center gap-2 rounded-2xl border border-border/60 bg-background/50 p-2"
+                >
+                  <span className="truncate text-sm font-medium">{habit.title}</span>
+                  {weekDates.map((date) => {
+                    const state = deriveHabitDayState({ habit, logs: habitLogs, date, today })
+                    const stateLabel = intl.formatMessage({
+                      id: `page.items.habit.dayState.${state}`,
+                    })
+                    const parsedDate = getUtcDate(date)
 
-                        return (
-                          <HabitDayCell
-                            key={date}
-                            className={cn(
-                              'mx-auto flex aspect-square w-9 items-center justify-center rounded-lg border text-[0.68rem] font-semibold disabled:cursor-not-allowed',
-                              habitDayStateClasses[state],
-                            )}
-                            disabled={isDayDisabled(date)}
-                            label={intl.formatMessage(
-                              { id: 'page.week.map.cellLabel' },
-                              { habit: habit.title, date, state: stateLabel },
-                            )}
-                            title={stateLabel}
-                            onTap={() => onTapDay(date)}
-                            onLongPress={() => onLongPressDay(date)}
-                          >
-                            {parsedDate.getUTCDate()}
-                          </HabitDayCell>
-                        )
-                      })}
-                    </div>
-                  )}
-                </HabitDayInteractions>
+                    return (
+                      <span
+                        key={date}
+                        role="img"
+                        aria-label={intl.formatMessage(
+                          { id: 'page.week.map.cellLabel' },
+                          { habit: habit.title, date, state: stateLabel },
+                        )}
+                        title={stateLabel}
+                        className={cn(
+                          'mx-auto flex aspect-square w-9 select-none items-center justify-center rounded-lg border text-[0.68rem] font-semibold',
+                          habitDayStateClasses[state],
+                        )}
+                      >
+                        {parsedDate.getUTCDate()}
+                      </span>
+                    )
+                  })}
+                </div>
               )
             })}
           </div>

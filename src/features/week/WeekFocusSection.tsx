@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 import { z } from 'zod'
 
-import type { WeeklyPlan } from '@/domain/planning'
+import { WEEKLY_FOCUS_MAX_LENGTH, type WeeklyPlan } from '@/domain/planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
 import { Textarea } from '@/shared/ui/textarea'
 
 const FocusFormSchema = z.object({
-  focusText: z.string().max(100),
+  focusText: z.string().max(WEEKLY_FOCUS_MAX_LENGTH),
 })
 
 type FocusFormValues = z.infer<typeof FocusFormSchema>
@@ -38,6 +38,7 @@ export const WeekFocusSection = ({
     resolver: zodResolver(FocusFormSchema),
     defaultValues: { focusText: plan?.focusText ?? '' },
   })
+  const focusText = form.watch('focusText')
 
   useEffect(() => {
     form.reset({ focusText: plan?.focusText ?? '' })
@@ -103,11 +104,17 @@ export const WeekFocusSection = ({
             </label>
             <Textarea
               id={focusInputId}
-              maxLength={100}
+              maxLength={WEEKLY_FOCUS_MAX_LENGTH}
               placeholder={intl.formatMessage({ id: 'page.week.focus.placeholder' })}
               className="min-h-28 rounded-xl border-border/75"
               {...form.register('focusText')}
             />
+            <p className="text-xs text-muted-foreground">
+              {intl.formatMessage(
+                { id: 'page.week.focus.characterLimit' },
+                { count: focusText.length, max: WEEKLY_FOCUS_MAX_LENGTH },
+              )}
+            </p>
             <div className="flex gap-2">
               <Button
                 type="button"
