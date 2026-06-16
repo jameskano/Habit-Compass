@@ -15,7 +15,7 @@
 --   theme_preference,
 --   first_day_of_week,
 --   timezone,
---   onboarding_completed,
+--   onboarding_completed_at,
 --   feature_flags
 -- ) values (
 --   '00000000-0000-0000-0000-000000000000',
@@ -24,7 +24,7 @@
 --   'system',
 --   1,
 --   'Europe/Madrid',
---   false,
+--   null,
 --   '{"mood": true, "weeklyPlanning": true, "suggestions": true, "habitCompletionLevels": false, "categories": true, "reflections": false}'::jsonb
 -- );
 --

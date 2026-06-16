@@ -1,11 +1,13 @@
 import { mockCategoriesRepository } from './mock/mockCategoriesRepository'
 import { mockHabitsRepository } from './mock/mockHabitsRepository'
 import { mockMoodRepository } from './mock/mockMoodRepository'
+import { mockPlanningRepository } from './mock/mockPlanningRepository'
 import { mockRecurrentTasksRepository } from './mock/mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mock/mockTasksRepository'
 import { supabaseCategoriesRepository } from './supabase/repositories/categoriesRepository'
 import { supabaseHabitsRepository } from './supabase/repositories/habitsRepository'
 import { supabaseMoodRepository } from './supabase/repositories/moodRepository'
+import { supabasePlanningRepository } from './supabase/repositories/planningRepository'
 import { supabaseRecurrentTasksRepository } from './supabase/repositories/recurrentTasksRepository'
 import { supabaseTasksRepository } from './supabase/repositories/tasksRepository'
 
@@ -19,6 +21,8 @@ export const categoriesRepository =
   repositorySource === 'supabase' ? supabaseCategoriesRepository : mockCategoriesRepository
 export const moodRepository =
   repositorySource === 'supabase' ? supabaseMoodRepository : mockMoodRepository
+export const planningRepository =
+  repositorySource === 'supabase' ? supabasePlanningRepository : mockPlanningRepository
 export const recurrentTasksRepository =
   repositorySource === 'supabase' ? supabaseRecurrentTasksRepository : mockRecurrentTasksRepository
 

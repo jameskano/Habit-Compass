@@ -5,6 +5,7 @@ import { getHabitMinimumTargetValue } from '@/domain/habits'
 import { mockCategoriesRepository } from './mockCategoriesRepository'
 import { mockHabitsRepository } from './mockHabitsRepository'
 import { getMockState, mockData, resetMockState } from './mockData'
+import { mockPlanningRepository } from './mockPlanningRepository'
 import { mockRecurrentTasksRepository } from './mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mockTasksRepository'
 
@@ -455,5 +456,144 @@ describe('mock repositories', () => {
     expect(
       getMockState().recurrentTasks.find((task) => task.id === 'recurrent-review')?.lifecycleStatus,
     ).toBe('active')
+  })
+
+  it('creates and updates a weekly plan focus and review per week', async () => {
+    const beforeHabit = structuredClone(
+      getMockState().habits.find((habit) => habit.id === 'habit-move'),
+    )
+    const beforeBigRocks = structuredClone(getMockState().weeklyBigRocks)
+    const created = await mockPlanningRepository.create({
+      userId: mockData.currentUserId,
+      weekStartDate: '2026-05-18',
+      focusText: 'Keep the basics',
+      reviewOverallFeeling: null,
+      reviewWentWell: null,
+      reviewGotInWay: null,
+      reviewAdjustNextWeek: null,
+      reviewReflections: null,
+    })
+
+    expect(created.ok && created.data.focusText).toBe('Keep the basics')
+    expect(created.ok && created.data.reviewOverallFeeling).toBeNull()
+    expect(created.ok && created.data.reviewReflections).toBeNull()
+
+    if (!created.ok) {
+      throw new Error('Expected weekly plan creation to succeed')
+    }
+
+    const updated = await mockPlanningRepository.update({
+      id: created.data.id,
+      reviewOverallFeeling: 'good',
+      reviewWentWell: 'Sleep improved',
+      reviewGotInWay: 'Too many evenings out',
+      reviewAdjustNextWeek: 'Protect bedtime',
+      reviewReflections: 'A lighter plan helped.',
+    })
+
+    expect(updated.ok && updated.data.reviewOverallFeeling).toBe('good')
+    expect(updated.ok && updated.data.reviewAdjustNextWeek).toBe('Protect bedtime')
+    expect(updated.ok && updated.data.reviewReflections).toBe('A lighter plan helped.')
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')).toEqual(beforeHabit)
+    expect(getMockState().weeklyBigRocks).toEqual(beforeBigRocks)
+    expect(
+      (await mockPlanningRepository.getForWeek({
+        userId: mockData.currentUserId,
+        weekStartDate: '2026-05-18',
+      })).ok,
+    ).toBe(true)
+  })
+
+  it('adds and removes habit Big Rocks without mutating habit configuration or logs', async () => {
+    const beforeHabit = structuredClone(
+      getMockState().habits.find((habit) => habit.id === 'habit-move'),
+    )
+    const beforeLogCount = getMockState().habitLogs.length
+    const plan = await mockPlanningRepository.create({
+      userId: mockData.currentUserId,
+      weekStartDate: '2026-05-18',
+      focusText: null,
+      reviewOverallFeeling: null,
+      reviewWentWell: null,
+      reviewGotInWay: null,
+      reviewAdjustNextWeek: null,
+      reviewReflections: null,
+    })
+
+    if (!plan.ok) {
+      throw new Error('Expected weekly plan creation to succeed')
+    }
+
+    const added = await mockPlanningRepository.addBigRock({
+      userId: mockData.currentUserId,
+      weeklyPlanId: plan.data.id,
+      habitId: 'habit-move',
+    })
+    const duplicate = await mockPlanningRepository.addBigRock({
+      userId: mockData.currentUserId,
+      weeklyPlanId: plan.data.id,
+      habitId: 'habit-move',
+    })
+    const removed = await mockPlanningRepository.removeBigRock({
+      userId: mockData.currentUserId,
+      weeklyPlanId: plan.data.id,
+      habitId: 'habit-move',
+    })
+
+    expect(added.ok && added.data.habitId).toBe('habit-move')
+    expect(duplicate.ok).toBe(false)
+    expect(removed.ok).toBe(true)
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')).toEqual(beforeHabit)
+    expect(getMockState().habitLogs).toHaveLength(beforeLogCount)
+  })
+
+  it('enforces the 3 Big Rock limit', async () => {
+    const state = getMockState()
+    const habitInput = omitFields(
+      state.habits[0],
+      'id',
+      'createdAt',
+      'updatedAt',
+      'archivedAt',
+      'inactivityPeriods',
+    )
+    await mockHabitsRepository.create({ ...habitInput, title: 'Fourth habit' })
+    const fourthHabit = getMockState().habits.find((habit) => habit.title === 'Fourth habit')
+    const plan = await mockPlanningRepository.create({
+      userId: mockData.currentUserId,
+      weekStartDate: '2026-05-18',
+      focusText: null,
+      reviewOverallFeeling: null,
+      reviewWentWell: null,
+      reviewGotInWay: null,
+      reviewAdjustNextWeek: null,
+      reviewReflections: null,
+    })
+
+    if (!plan.ok || !fourthHabit) {
+      throw new Error('Expected weekly plan and fourth habit fixtures')
+    }
+
+    for (const habitId of ['habit-move', 'habit-read', 'habit-water']) {
+      expect(
+        (
+          await mockPlanningRepository.addBigRock({
+            userId: mockData.currentUserId,
+            weeklyPlanId: plan.data.id,
+            habitId,
+          })
+        ).ok,
+      ).toBe(true)
+    }
+
+    expect(
+      (
+        await mockPlanningRepository.addBigRock({
+          userId: mockData.currentUserId,
+          weeklyPlanId: plan.data.id,
+          habitId: fourthHabit.id,
+        })
+      ).ok,
+    ).toBe(false)
   })
 })

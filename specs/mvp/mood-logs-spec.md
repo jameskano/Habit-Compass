@@ -14,6 +14,7 @@ Some users want quick emotional context for habit tracking, but mood logging mus
 - Mood log definition.
 - Quick mood scale.
 - Optional relationship to suggestions and reflections.
+- Future optional Mood surface; Mood is not part of current primary navigation.
 
 ## Non-Goals
 

@@ -1,4 +1,4 @@
-create table if not exists public.habit_inactivity_periods (
+create table public.habit_inactivity_periods (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   habit_id uuid not null references public.habits (id) on delete cascade,
@@ -12,10 +12,13 @@ create table if not exists public.habit_inactivity_periods (
   )
 );
 
-create index if not exists habit_inactivity_periods_habit_dates_idx
+create index habit_inactivity_periods_user_idx
+on public.habit_inactivity_periods (user_id);
+
+create index habit_inactivity_periods_habit_dates_idx
 on public.habit_inactivity_periods (habit_id, starts_on, resumes_on);
 
-create unique index if not exists habit_inactivity_periods_one_open_idx
+create unique index habit_inactivity_periods_one_open_idx
 on public.habit_inactivity_periods (habit_id)
 where resumes_on is null;
 
@@ -31,40 +34,48 @@ for each row
 execute function public.set_updated_at();
 
 alter table public.habit_inactivity_periods enable row level security;
+alter table public.habit_inactivity_periods force row level security;
+
+revoke all on table public.habit_inactivity_periods from anon;
+grant select, insert, update, delete on table public.habit_inactivity_periods to authenticated;
 
 create policy "habit_inactivity_periods_select_own"
 on public.habit_inactivity_periods
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "habit_inactivity_periods_insert_own"
 on public.habit_inactivity_periods
 for insert
+to authenticated
 with check (
-  auth.uid() = user_id
+  (select auth.uid()) = user_id
   and exists (
     select 1
     from public.habits
     where habits.id = habit_id
-      and habits.user_id = auth.uid()
+      and habits.user_id = (select auth.uid())
   )
 );
 
 create policy "habit_inactivity_periods_update_own"
 on public.habit_inactivity_periods
 for update
-using (auth.uid() = user_id)
+to authenticated
+using ((select auth.uid()) = user_id)
 with check (
-  auth.uid() = user_id
+  (select auth.uid()) = user_id
   and exists (
     select 1
     from public.habits
     where habits.id = habit_id
-      and habits.user_id = auth.uid()
+      and habits.user_id = (select auth.uid())
   )
 );
 
 create policy "habit_inactivity_periods_delete_own"
 on public.habit_inactivity_periods
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);

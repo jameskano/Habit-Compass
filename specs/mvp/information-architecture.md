@@ -5,7 +5,8 @@
 - Today
 - Week
 - Items
-- Mood
+
+Mood remains future optional depth and is not part of current primary navigation.
 
 ## Global Access
 

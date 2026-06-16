@@ -2,7 +2,7 @@
 
 Use feature flags for optional or future depth:
 
-- Mood and reflections.
+- Future Mood and reflections.
 - Weekly planning depth.
 - Suggestions.
 - Future AI.

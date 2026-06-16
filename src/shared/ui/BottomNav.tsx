@@ -1,12 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { CalendarRange, HeartPulse, ListTodo, SunMedium } from 'lucide-react'
+import { CalendarRange, ListTodo, SunMedium } from 'lucide-react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 const navItems = [
   { to: '/today', icon: SunMedium, labelId: 'nav.today' },
   { to: '/week', icon: CalendarRange, labelId: 'nav.week' },
   { to: '/items', icon: ListTodo, labelId: 'nav.items' },
-  { to: '/mood', icon: HeartPulse, labelId: 'nav.mood' },
 ] as const
 
 export const BottomNav = () => {

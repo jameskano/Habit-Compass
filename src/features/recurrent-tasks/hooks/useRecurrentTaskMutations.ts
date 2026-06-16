@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import type {
   CreateRecurrentTaskInput,
+  RecurrentTask,
   RecurrentTaskOccurrenceStatus,
   UpdateRecurrentTaskInput,
 } from '@/domain/recurrent-tasks'
@@ -10,6 +11,25 @@ import { recurrentTasksRepository } from '@/integrations/repositories'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
+
+const applyOptimisticRecurrentTaskOrder = (
+  tasks: RecurrentTask[] | undefined,
+  orderedRecurrentTaskIds: readonly EntityId[],
+) => {
+  if (!tasks) {
+    return tasks
+  }
+
+  const orderById = new Map(
+    orderedRecurrentTaskIds.map((recurrentTaskId, order) => [recurrentTaskId, order]),
+  )
+
+  return tasks.map((task) => {
+    const order = orderById.get(task.id)
+
+    return order === undefined ? task : { ...task, order }
+  })
+}
 
 const useInvalidateRecurrentTasks = (userId: string) => {
   const queryClient = useQueryClient()
@@ -95,13 +115,34 @@ export const useDeleteRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
 }
 
 export const useReorderRecurrentTasksMutation = (userId = MOCK_USER_ID) => {
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
+  const queryKey = ['recurrent-tasks', userId] as const
 
   return useMutation({
     mutationFn: async (orderedRecurrentTaskIds: EntityId[]) =>
       unwrapResult(await recurrentTasksRepository.reorder({ userId, orderedRecurrentTaskIds })),
-    onSuccess: invalidate,
-    onError: mutationError,
+    onMutate: async (orderedRecurrentTaskIds) => {
+      await queryClient.cancelQueries({ queryKey })
+
+      const previousTasks = queryClient.getQueryData<RecurrentTask[]>(queryKey)
+      queryClient.setQueryData<RecurrentTask[]>(queryKey, (tasks) =>
+        applyOptimisticRecurrentTaskOrder(tasks, orderedRecurrentTaskIds),
+      )
+
+      return { previousTasks }
+    },
+    onSuccess: async (tasks) => {
+      queryClient.setQueryData(queryKey, tasks)
+      await invalidate()
+    },
+    onError: (_error, _orderedRecurrentTaskIds, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(queryKey, context.previousTasks)
+      }
+
+      mutationError()
+    },
   })
 }

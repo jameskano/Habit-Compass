@@ -1,0 +1,128 @@
+import { describe, expect, it } from 'vitest'
+
+import {
+  WEEKLY_FOCUS_MAX_LENGTH,
+  WEEKLY_REVIEW_ANSWER_MAX_LENGTH,
+  WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH,
+} from './constants'
+import { WeeklyBigRockSchema, WeeklyPlanSchema } from './schemas'
+
+const baseFields = {
+  id: 'weekly-plan-1',
+  userId: 'user-1',
+  createdAt: '2026-05-21T08:00:00.000Z',
+  updatedAt: '2026-05-21T08:00:00.000Z',
+  archivedAt: null,
+  deletedAt: null,
+}
+
+describe('WeeklyPlanSchema', () => {
+  it('parses an empty weekly plan payload', () => {
+    const result = WeeklyPlanSchema.parse({
+      ...baseFields,
+      weekStartDate: '2026-05-18',
+      focusText: null,
+      reviewOverallFeeling: null,
+      reviewWentWell: null,
+      reviewGotInWay: null,
+      reviewAdjustNextWeek: null,
+      reviewReflections: null,
+    })
+
+    expect(result.weekStartDate).toBe('2026-05-18')
+  })
+
+  it('parses valid weekly review feeling values', () => {
+    const result = WeeklyPlanSchema.parse({
+      ...baseFields,
+      weekStartDate: '2026-05-18',
+      reviewOverallFeeling: 'veryHard',
+    })
+
+    expect(result.reviewOverallFeeling).toBe('veryHard')
+  })
+
+  it('rejects focus text longer than 100 characters and legacy highlight arrays', () => {
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        focusText: 'a'.repeat(WEEKLY_FOCUS_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        highlightedTaskIds: ['task-1'],
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects weekly review answers longer than 500 characters', () => {
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewWentWell: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewGotInWay: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewAdjustNextWeek: 'a'.repeat(WEEKLY_REVIEW_ANSWER_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects invalid weekly review feeling and over-limit reflections', () => {
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewOverallFeeling: 'excellent',
+      }).success,
+    ).toBe(false)
+    expect(
+      WeeklyPlanSchema.safeParse({
+        ...baseFields,
+        weekStartDate: '2026-05-18',
+        reviewReflections: 'a'.repeat(WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+  })
+})
+
+describe('WeeklyBigRockSchema', () => {
+  it('parses a habit reference for a weekly plan', () => {
+    const result = WeeklyBigRockSchema.parse({
+      ...baseFields,
+      id: 'big-rock-1',
+      weeklyPlanId: 'weekly-plan-1',
+      habitId: 'habit-1',
+      sortOrder: 0,
+    })
+
+    expect(result.habitId).toBe('habit-1')
+  })
+
+  it('rejects task-oriented references', () => {
+    expect(
+      WeeklyBigRockSchema.safeParse({
+        ...baseFields,
+        id: 'big-rock-1',
+        weeklyPlanId: 'weekly-plan-1',
+        taskId: 'task-1',
+        sortOrder: 0,
+      }).success,
+    ).toBe(false)
+  })
+})

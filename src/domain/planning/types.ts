@@ -1,15 +1,19 @@
 import type { BaseEntityFields, EntityId, ISODateString } from '@/shared/types'
 
-import type { weeklyPlanningStates } from './constants'
-
-export type WeeklyPlanningState = (typeof weeklyPlanningStates)[number]
+export type WeeklyReviewFeeling = 'great' | 'good' | 'okay' | 'hard' | 'veryHard'
 
 export type WeeklyPlan = BaseEntityFields & {
   weekStartDate: ISODateString
-  focus?: string | null
-  notes?: string | null
-  highlightedHabitIds: EntityId[]
-  highlightedTaskIds: EntityId[]
-  highlightedCategoryIds: EntityId[]
-  reviewState: WeeklyPlanningState
+  focusText?: string | null
+  reviewOverallFeeling?: WeeklyReviewFeeling | null
+  reviewWentWell?: string | null
+  reviewGotInWay?: string | null
+  reviewAdjustNextWeek?: string | null
+  reviewReflections?: string | null
+}
+
+export type WeeklyBigRock = BaseEntityFields & {
+  weeklyPlanId: EntityId
+  habitId: EntityId
+  sortOrder: number
 }
