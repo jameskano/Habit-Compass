@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
 
 import { cn } from '@/shared/utils/cn'
 
@@ -12,25 +12,25 @@ type ItemWaterfallRevealProps = {
   revealing: boolean
 }
 
-export const ItemWaterfallReveal = ({
-  children,
-  className,
-  index,
-  revealing,
-}: ItemWaterfallRevealProps) => {
-  return (
-    <div
-      data-item-waterfall-index={index}
-      className={cn(revealing && 'item-waterfall-enter', className)}
-      style={
-        revealing
-          ? {
-              animationDelay: `${Math.min(index * ITEM_WATERFALL_STAGGER_MS, ITEM_WATERFALL_MAX_DELAY_MS)}ms`,
-            }
-          : undefined
-      }
-    >
-      {children}
-    </div>
-  )
-}
+export const ItemWaterfallReveal = forwardRef<HTMLDivElement, ItemWaterfallRevealProps>(
+  ({ children, className, index, revealing }, ref) => {
+    return (
+      <div
+        ref={ref}
+        data-item-waterfall-index={index}
+        className={cn(revealing && 'item-waterfall-enter', className)}
+        style={
+          revealing
+            ? {
+                animationDelay: `${Math.min(index * ITEM_WATERFALL_STAGGER_MS, ITEM_WATERFALL_MAX_DELAY_MS)}ms`,
+              }
+            : undefined
+        }
+      >
+        {children}
+      </div>
+    )
+  },
+)
+
+ItemWaterfallReveal.displayName = 'ItemWaterfallReveal'

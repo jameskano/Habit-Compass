@@ -1,11 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { CreateHabitInput, UpdateHabitInput } from '@/domain/habits'
+import type { CreateHabitInput, Habit, UpdateHabitInput } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
+
+const applyOptimisticHabitOrder = (
+  habits: Habit[] | undefined,
+  orderedHabitIds: readonly EntityId[],
+) => {
+  if (!habits) {
+    return habits
+  }
+
+  const orderById = new Map(orderedHabitIds.map((habitId, order) => [habitId, order]))
+
+  return habits.map((habit) => {
+    const order = orderById.get(habit.id)
+
+    return order === undefined ? habit : { ...habit, order }
+  })
+}
 
 export const useUpdateHabitMutation = () => {
   const queryClient = useQueryClient()
@@ -83,13 +100,31 @@ export const useDeleteHabitMutation = (userId = MOCK_USER_ID) => {
 export const useReorderHabitsMutation = (userId = MOCK_USER_ID) => {
   const queryClient = useQueryClient()
   const { mutationError } = useAppToast()
+  const queryKey = ['habits', userId] as const
 
   return useMutation({
     mutationFn: async (orderedHabitIds: EntityId[]) =>
       unwrapResult(await habitsRepository.reorder({ userId, orderedHabitIds })),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['habits', userId] })
+    onMutate: async (orderedHabitIds) => {
+      await queryClient.cancelQueries({ queryKey })
+
+      const previousHabits = queryClient.getQueryData<Habit[]>(queryKey)
+      queryClient.setQueryData<Habit[]>(queryKey, (habits) =>
+        applyOptimisticHabitOrder(habits, orderedHabitIds),
+      )
+
+      return { previousHabits }
     },
-    onError: mutationError,
+    onSuccess: async (habits) => {
+      queryClient.setQueryData(queryKey, habits)
+      await queryClient.invalidateQueries({ queryKey })
+    },
+    onError: (_error, _orderedHabitIds, context) => {
+      if (context?.previousHabits) {
+        queryClient.setQueryData(queryKey, context.previousHabits)
+      }
+
+      mutationError()
+    },
   })
 }
