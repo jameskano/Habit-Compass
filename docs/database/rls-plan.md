@@ -1,20 +1,41 @@
 # RLS Plan
 
-The initial RLS rules are implemented in [supabase/migrations/0001_initial_schema.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0001_initial_schema.sql>).
+The production-ready first-deploy RLS rules are implemented in the Supabase migrations under `supabase/migrations/`.
 
 ## Policy Strategy
 
-- Keep policies simple and explicit at the table level.
-- Every user-owned table allows `select`, `insert`, `update`, and `delete` only for the owning user.
-- Do not rely on service-role bypass for normal product behavior.
+- Every public app table enables and forces row-level security.
+- Policies are scoped `to authenticated`; `anon` table access is revoked.
+- Authenticated users receive CRUD grants, but RLS decides which rows are visible or writable.
+- Policies use `(select auth.uid())` to avoid per-row auth function calls in large scans.
 - Shared, team, or delegated-access models are out of scope until a separate spec exists.
 
 ## Ownership Rules
 
 - `profiles`
-  - Owner check is `auth.uid() = id`.
-- All other current MVP tables
-  - Owner check is `auth.uid() = user_id`.
+  - Owner check is `(select auth.uid()) = id`.
+- All other user-owned tables
+  - Owner check is `(select auth.uid()) = user_id`.
+- Parent-linked rows
+  - Insert/update policies also prove linked parent rows belong to the same authenticated user.
+  - Null optional links remain allowed where specs allow them.
+
+## Strict Parent Checks
+
+- `habits`, `tasks`, `recurrent_tasks`, and `weekly_priorities`
+  - Non-null `category_id` must reference the user's own category.
+- `habit_logs` and `habit_inactivity_periods`
+  - `habit_id` must reference the user's own habit.
+- `recurrent_task_logs`
+  - `recurrent_task_id` must reference the user's own recurrent task.
+- `reflections`
+  - Non-null `mood_log_id` must reference the user's own mood log.
+- `weekly_priorities`
+  - `weekly_plan_id` must reference the user's own weekly plan.
+- `weekly_big_rocks`
+  - `weekly_plan_id` and `habit_id` must both reference the user's own rows.
+- `suggestion_events`
+  - Non-null habit/category targets must reference the user's own rows.
 
 ## Covered Tables
 
@@ -30,17 +51,18 @@ The initial RLS rules are implemented in [supabase/migrations/0001_initial_schem
 - `reflections`
 - `weekly_plans`
 - `weekly_priorities`
+- `weekly_big_rocks`
 - `suggestion_events`
 
-## Insert and Update Checks
+## Database-Enforced Limits
 
-- Insert policies use `with check` so a user cannot create rows under another user id.
-- Update policies use both `using` and `with check` so a user cannot rewrite ownership during updates.
-- Habit inactivity interval writes also require ownership of the referenced habit, preventing cross-user child links.
-- Delete policies remain owner-only. Item deletes are physical only after explicit confirmation, while archive remains the reversible item action.
+- Weekly Big Rocks are limited to 3 active rows per weekly plan by `public.enforce_weekly_big_rock_limit()`.
+- The trigger also checks that the referenced weekly plan and habit belong to the same `user_id`.
+- Weekly review fields are constrained to the current domain enum and text length limits.
 
-## Notes for Future Supabase Work
+## Notes For Future Supabase Work
 
-- If onboarding later auto-creates profiles or categories through database triggers or Edge Functions, those flows must still preserve ownership guarantees.
+- After the first production deployment, preserve migration history and add forward-only migrations.
+- If onboarding later auto-creates profiles or categories through database triggers or Edge Functions, those flows must preserve ownership guarantees.
 - If collaborative entities are added later, do not weaken these owner-only policies. Add separate membership tables and explicit policies instead.
 - If analytics or background jobs later write `suggestion_events`, they should do so through carefully scoped server-side paths rather than relaxing client-facing RLS.

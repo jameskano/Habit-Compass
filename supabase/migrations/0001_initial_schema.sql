@@ -10,34 +10,34 @@ begin
 end;
 $$;
 
-create table if not exists public.profiles (
+create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text,
   language text not null default 'en' check (language in ('en', 'es')),
   theme_preference text not null default 'system' check (theme_preference in ('light', 'dark', 'system')),
   first_day_of_week smallint not null default 1 check (first_day_of_week in (0, 1)),
   timezone text not null default 'UTC',
-  onboarding_completed boolean not null default false,
-  feature_flags jsonb not null default '{}'::jsonb,
+  onboarding_completed_at timestamptz,
+  feature_flags jsonb not null default '{}'::jsonb check (jsonb_typeof(feature_flags) = 'object'),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create table if not exists public.categories (
+create table public.categories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null check (char_length(trim(name)) > 0),
   description text,
-  color text not null,
-  icon text not null,
-  sort_order integer not null default 0,
+  color text not null check (char_length(trim(color)) > 0),
+  icon text not null check (char_length(trim(icon)) > 0),
+  sort_order integer not null default 0 check (sort_order >= 0),
   is_default boolean not null default false,
   archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create table if not exists public.habits (
+create table public.habits (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
@@ -47,7 +47,7 @@ create table if not exists public.habits (
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high', 'essential')),
   starts_on date not null default current_date,
   ends_on date,
-  sort_order integer not null default 0,
+  sort_order integer not null default 0 check (sort_order >= 0),
   tracking_type text not null check (
     tracking_type in (
       'binary',
@@ -59,33 +59,36 @@ create table if not exists public.habits (
       'totalQuantityPerPeriod'
     )
   ),
-  schedule_config jsonb not null default '{"kind":"daily"}'::jsonb,
-  goal_config jsonb not null default '{}'::jsonb,
-  minimum_config jsonb,
-  standard_config jsonb,
-  reminders_config jsonb,
+  schedule_config jsonb not null default '{"kind":"daily"}'::jsonb check (jsonb_typeof(schedule_config) = 'object'),
+  goal_config jsonb not null default '{}'::jsonb check (jsonb_typeof(goal_config) = 'object'),
+  minimum_config jsonb check (minimum_config is null or jsonb_typeof(minimum_config) = 'object'),
+  standard_config jsonb check (standard_config is null or jsonb_typeof(standard_config) = 'object'),
+  reminders_config jsonb check (reminders_config is null or jsonb_typeof(reminders_config) = 'object'),
   archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint habits_date_bounds check (ends_on is null or ends_on >= starts_on)
 );
 
-create table if not exists public.habit_logs (
+create table public.habit_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   habit_id uuid not null references public.habits (id) on delete cascade,
   log_date date not null,
+  logged_at timestamptz not null default timezone('utc', now()),
   status text not null check (status in ('completed', 'skipped')),
   completion_level text check (completion_level in ('minimum', 'standard')),
-  value numeric,
-  unit text,
+  repetitions numeric check (repetitions is null or repetitions >= 0),
+  duration_minutes numeric check (duration_minutes is null or duration_minutes >= 0),
+  quantity numeric check (quantity is null or quantity >= 0),
+  quantity_unit_label text,
   note text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint habit_logs_one_per_day unique (user_id, habit_id, log_date)
 );
 
-create table if not exists public.tasks (
+create table public.tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
@@ -96,14 +99,14 @@ create table if not exists public.tasks (
   status text not null default 'pending' check (status in ('pending', 'completed', 'skipped', 'missed')),
   priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
   carry_forward boolean not null default true,
-  sort_order integer not null default 0,
+  sort_order integer not null default 0 check (sort_order >= 0),
   completed_at timestamptz,
   archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create table if not exists public.recurrent_tasks (
+create table public.recurrent_tasks (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   category_id uuid references public.categories (id) on delete set null,
@@ -114,28 +117,29 @@ create table if not exists public.recurrent_tasks (
   starts_on date not null default current_date,
   ends_on date,
   carry_forward boolean not null default false,
-  sort_order integer not null default 0,
-  recurrence_config jsonb not null default '{}'::jsonb,
-  reminders_config jsonb,
+  sort_order integer not null default 0 check (sort_order >= 0),
+  recurrence_config jsonb not null default '{}'::jsonb check (jsonb_typeof(recurrence_config) = 'object'),
+  reminders_config jsonb check (reminders_config is null or jsonb_typeof(reminders_config) = 'object'),
   archived_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint recurrent_tasks_date_bounds check (ends_on is null or ends_on >= starts_on)
 );
 
-create table if not exists public.recurrent_task_logs (
+create table public.recurrent_task_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   recurrent_task_id uuid not null references public.recurrent_tasks (id) on delete cascade,
   occurrence_date date not null,
   status text not null check (status in ('pending', 'completed', 'missed', 'skipped')),
+  completed_at timestamptz,
   note text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint recurrent_task_logs_one_per_day unique (user_id, recurrent_task_id, occurrence_date)
 );
 
-create table if not exists public.mood_logs (
+create table public.mood_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   log_date date not null,
@@ -148,31 +152,35 @@ create table if not exists public.mood_logs (
   constraint mood_logs_one_per_day unique (user_id, log_date)
 );
 
-create table if not exists public.reflections (
+create table public.reflections (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
-  reflection_date date not null,
-  title text,
+  kind text not null check (kind in ('daily', 'weekly')),
   content text not null check (char_length(trim(content)) > 0),
+  recorded_for_date date,
+  week_start_date date,
   mood_log_id uuid references public.mood_logs (id) on delete set null,
+  prompt_key text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   archived_at timestamptz,
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  constraint reflections_kind_date_check check (
+    (kind = 'daily' and recorded_for_date is not null and week_start_date is null)
+    or (kind = 'weekly' and week_start_date is not null and recorded_for_date is null)
+  )
 );
 
-create table if not exists public.weekly_plans (
+create table public.weekly_plans (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   week_start date not null,
-  focus text,
-  review text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint weekly_plans_one_per_week unique (user_id, week_start)
 );
 
-create table if not exists public.weekly_priorities (
+create table public.weekly_priorities (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   weekly_plan_id uuid not null references public.weekly_plans (id) on delete cascade,
@@ -192,11 +200,11 @@ create table if not exists public.weekly_priorities (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
-create table if not exists public.suggestion_events (
+create table public.suggestion_events (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
-  suggestion_type text not null check (
-    suggestion_type in (
+  type text not null check (
+    type in (
       'useMinimum',
       'reduceFrequency',
       'reduceVolume',
@@ -209,14 +217,26 @@ create table if not exists public.suggestion_events (
       'recoveryMode'
     )
   ),
-  source text not null,
-  related_entity_type text check (related_entity_type in ('habit', 'task', 'recurrent_task', 'category', 'mood_log', 'weekly_plan')),
-  related_entity_id uuid,
-  message_key text not null,
-  action_taken text,
+  trigger text not null check (
+    trigger in (
+      'mood',
+      'repeatedHabitFailures',
+      'repeatedCategoryNeglect',
+      'overloadedDay',
+      'lackOfAction',
+      'simplePattern'
+    )
+  ),
+  status text not null default 'pending' check (status in ('pending', 'completed', 'skipped')),
+  title_message_id text not null check (char_length(trim(title_message_id)) > 0),
+  body_message_id text not null check (char_length(trim(body_message_id)) > 0),
+  target_habit_id uuid references public.habits (id) on delete set null,
+  target_category_id uuid references public.categories (id) on delete set null,
+  target_date date,
+  applied_at timestamptz,
   dismissed_at timestamptz,
-  accepted_at timestamptz,
-  created_at timestamptz not null default timezone('utc', now())
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
 );
 
 comment on column public.habits.schedule_config is
@@ -234,23 +254,36 @@ comment on column public.habits.standard_config is
 comment on column public.recurrent_tasks.recurrence_config is
 'JSONB contract for supported recurrence rules: daily, specificDaysOfWeek, everyXDays, everyXWeeks, everyXMonths, firstWeekdayOfMonth, and customFutureRule as descriptive-only future placeholder.';
 
-create index if not exists profiles_language_idx on public.profiles (language);
-create index if not exists categories_user_sort_idx on public.categories (user_id, sort_order);
-create index if not exists categories_user_active_idx on public.categories (user_id, archived_at);
-create index if not exists habits_user_active_idx on public.habits (user_id, archived_at, sort_order);
-create index if not exists habits_user_category_idx on public.habits (user_id, category_id);
-create index if not exists habit_logs_user_date_idx on public.habit_logs (user_id, log_date desc);
-create index if not exists habit_logs_habit_date_idx on public.habit_logs (habit_id, log_date desc);
-create index if not exists tasks_user_status_due_idx on public.tasks (user_id, status, due_date, sort_order);
-create index if not exists recurrent_tasks_user_active_idx on public.recurrent_tasks (user_id, archived_at, sort_order);
-create index if not exists recurrent_task_logs_user_date_idx on public.recurrent_task_logs (user_id, occurrence_date desc);
-create index if not exists recurrent_task_logs_parent_date_idx on public.recurrent_task_logs (recurrent_task_id, occurrence_date desc);
-create index if not exists mood_logs_user_date_idx on public.mood_logs (user_id, log_date desc);
-create index if not exists reflections_user_date_idx on public.reflections (user_id, reflection_date desc);
-create index if not exists weekly_plans_user_week_idx on public.weekly_plans (user_id, week_start desc);
-create index if not exists weekly_priorities_plan_status_idx on public.weekly_priorities (weekly_plan_id, status);
-create index if not exists suggestion_events_user_created_idx on public.suggestion_events (user_id, created_at desc);
-create index if not exists suggestion_events_user_type_idx on public.suggestion_events (user_id, suggestion_type);
+comment on table public.suggestion_events is
+'Rule-based MVP suggestion records. AI-generated suggestions require a future migration and separate review gate.';
+
+create index profiles_language_idx on public.profiles (language);
+create index categories_user_sort_idx on public.categories (user_id, sort_order);
+create index categories_user_active_idx on public.categories (user_id, archived_at);
+create index habits_user_active_idx on public.habits (user_id, archived_at, sort_order);
+create index habits_user_category_idx on public.habits (user_id, category_id);
+create index habits_category_idx on public.habits (category_id);
+create index habit_logs_user_date_idx on public.habit_logs (user_id, log_date desc);
+create index habit_logs_habit_date_idx on public.habit_logs (habit_id, log_date desc);
+create index tasks_user_status_due_idx on public.tasks (user_id, status, due_date, sort_order);
+create index tasks_category_idx on public.tasks (category_id);
+create index recurrent_tasks_user_active_idx on public.recurrent_tasks (user_id, archived_at, sort_order);
+create index recurrent_tasks_category_idx on public.recurrent_tasks (category_id);
+create index recurrent_task_logs_user_date_idx on public.recurrent_task_logs (user_id, occurrence_date desc);
+create index recurrent_task_logs_parent_date_idx on public.recurrent_task_logs (recurrent_task_id, occurrence_date desc);
+create index mood_logs_user_date_idx on public.mood_logs (user_id, log_date desc);
+create index reflections_user_recorded_date_idx on public.reflections (user_id, recorded_for_date desc);
+create index reflections_user_week_start_idx on public.reflections (user_id, week_start_date desc);
+create index reflections_mood_log_idx on public.reflections (mood_log_id);
+create index weekly_plans_user_week_idx on public.weekly_plans (user_id, week_start desc);
+create index weekly_priorities_user_idx on public.weekly_priorities (user_id);
+create index weekly_priorities_plan_status_idx on public.weekly_priorities (weekly_plan_id, status);
+create index weekly_priorities_category_idx on public.weekly_priorities (category_id);
+create index suggestion_events_user_created_idx on public.suggestion_events (user_id, created_at desc);
+create index suggestion_events_user_type_idx on public.suggestion_events (user_id, type);
+create index suggestion_events_target_habit_idx on public.suggestion_events (target_habit_id);
+create index suggestion_events_target_category_idx on public.suggestion_events (target_category_id);
+create index suggestion_events_user_target_date_idx on public.suggestion_events (user_id, target_date desc);
 
 create trigger set_profiles_updated_at
 before update on public.profiles
@@ -307,6 +340,11 @@ before update on public.weekly_priorities
 for each row
 execute function public.set_updated_at();
 
+create trigger set_suggestion_events_updated_at
+before update on public.suggestion_events
+for each row
+execute function public.set_updated_at();
+
 alter table public.profiles enable row level security;
 alter table public.categories enable row level security;
 alter table public.habits enable row level security;
@@ -320,254 +358,535 @@ alter table public.weekly_plans enable row level security;
 alter table public.weekly_priorities enable row level security;
 alter table public.suggestion_events enable row level security;
 
+alter table public.profiles force row level security;
+alter table public.categories force row level security;
+alter table public.habits force row level security;
+alter table public.habit_logs force row level security;
+alter table public.tasks force row level security;
+alter table public.recurrent_tasks force row level security;
+alter table public.recurrent_task_logs force row level security;
+alter table public.mood_logs force row level security;
+alter table public.reflections force row level security;
+alter table public.weekly_plans force row level security;
+alter table public.weekly_priorities force row level security;
+alter table public.suggestion_events force row level security;
+
+revoke all on table public.profiles from anon;
+revoke all on table public.categories from anon;
+revoke all on table public.habits from anon;
+revoke all on table public.habit_logs from anon;
+revoke all on table public.tasks from anon;
+revoke all on table public.recurrent_tasks from anon;
+revoke all on table public.recurrent_task_logs from anon;
+revoke all on table public.mood_logs from anon;
+revoke all on table public.reflections from anon;
+revoke all on table public.weekly_plans from anon;
+revoke all on table public.weekly_priorities from anon;
+revoke all on table public.suggestion_events from anon;
+
+grant select, insert, update, delete on table public.profiles to authenticated;
+grant select, insert, update, delete on table public.categories to authenticated;
+grant select, insert, update, delete on table public.habits to authenticated;
+grant select, insert, update, delete on table public.habit_logs to authenticated;
+grant select, insert, update, delete on table public.tasks to authenticated;
+grant select, insert, update, delete on table public.recurrent_tasks to authenticated;
+grant select, insert, update, delete on table public.recurrent_task_logs to authenticated;
+grant select, insert, update, delete on table public.mood_logs to authenticated;
+grant select, insert, update, delete on table public.reflections to authenticated;
+grant select, insert, update, delete on table public.weekly_plans to authenticated;
+grant select, insert, update, delete on table public.weekly_priorities to authenticated;
+grant select, insert, update, delete on table public.suggestion_events to authenticated;
+
 create policy "profiles_select_own"
 on public.profiles
 for select
-using (auth.uid() = id);
+to authenticated
+using ((select auth.uid()) = id);
 
 create policy "profiles_insert_own"
 on public.profiles
 for insert
-with check (auth.uid() = id);
+to authenticated
+with check ((select auth.uid()) = id);
 
 create policy "profiles_update_own"
 on public.profiles
 for update
-using (auth.uid() = id)
-with check (auth.uid() = id);
+to authenticated
+using ((select auth.uid()) = id)
+with check ((select auth.uid()) = id);
 
 create policy "profiles_delete_own"
 on public.profiles
 for delete
-using (auth.uid() = id);
+to authenticated
+using ((select auth.uid()) = id);
 
 create policy "categories_select_own"
 on public.categories
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "categories_insert_own"
 on public.categories
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check ((select auth.uid()) = user_id);
 
 create policy "categories_update_own"
 on public.categories
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 create policy "categories_delete_own"
 on public.categories
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "habits_select_own"
 on public.habits
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "habits_insert_own"
 on public.habits
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "habits_update_own"
 on public.habits
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "habits_delete_own"
 on public.habits
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "habit_logs_select_own"
 on public.habit_logs
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "habit_logs_insert_own"
 on public.habit_logs
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.habits
+    where habits.id = habit_id
+      and habits.user_id = (select auth.uid())
+  )
+);
 
 create policy "habit_logs_update_own"
 on public.habit_logs
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.habits
+    where habits.id = habit_id
+      and habits.user_id = (select auth.uid())
+  )
+);
 
 create policy "habit_logs_delete_own"
 on public.habit_logs
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "tasks_select_own"
 on public.tasks
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "tasks_insert_own"
 on public.tasks
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "tasks_update_own"
 on public.tasks
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "tasks_delete_own"
 on public.tasks
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "recurrent_tasks_select_own"
 on public.recurrent_tasks
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "recurrent_tasks_insert_own"
 on public.recurrent_tasks
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "recurrent_tasks_update_own"
 on public.recurrent_tasks
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "recurrent_tasks_delete_own"
 on public.recurrent_tasks
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "recurrent_task_logs_select_own"
 on public.recurrent_task_logs
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "recurrent_task_logs_insert_own"
 on public.recurrent_task_logs
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.recurrent_tasks
+    where recurrent_tasks.id = recurrent_task_id
+      and recurrent_tasks.user_id = (select auth.uid())
+  )
+);
 
 create policy "recurrent_task_logs_update_own"
 on public.recurrent_task_logs
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.recurrent_tasks
+    where recurrent_tasks.id = recurrent_task_id
+      and recurrent_tasks.user_id = (select auth.uid())
+  )
+);
 
 create policy "recurrent_task_logs_delete_own"
 on public.recurrent_task_logs
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "mood_logs_select_own"
 on public.mood_logs
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "mood_logs_insert_own"
 on public.mood_logs
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check ((select auth.uid()) = user_id);
 
 create policy "mood_logs_update_own"
 on public.mood_logs
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 create policy "mood_logs_delete_own"
 on public.mood_logs
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "reflections_select_own"
 on public.reflections
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "reflections_insert_own"
 on public.reflections
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and (
+    mood_log_id is null
+    or exists (
+      select 1
+      from public.mood_logs
+      where mood_logs.id = mood_log_id
+        and mood_logs.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "reflections_update_own"
 on public.reflections
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and (
+    mood_log_id is null
+    or exists (
+      select 1
+      from public.mood_logs
+      where mood_logs.id = mood_log_id
+        and mood_logs.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "reflections_delete_own"
 on public.reflections
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "weekly_plans_select_own"
 on public.weekly_plans
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "weekly_plans_insert_own"
 on public.weekly_plans
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check ((select auth.uid()) = user_id);
 
 create policy "weekly_plans_update_own"
 on public.weekly_plans
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 create policy "weekly_plans_delete_own"
 on public.weekly_plans
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "weekly_priorities_select_own"
 on public.weekly_priorities
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "weekly_priorities_insert_own"
 on public.weekly_priorities
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.weekly_plans
+    where weekly_plans.id = weekly_plan_id
+      and weekly_plans.user_id = (select auth.uid())
+  )
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "weekly_priorities_update_own"
 on public.weekly_priorities
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and exists (
+    select 1
+    from public.weekly_plans
+    where weekly_plans.id = weekly_plan_id
+      and weekly_plans.user_id = (select auth.uid())
+  )
+  and (
+    category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "weekly_priorities_delete_own"
 on public.weekly_priorities
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "suggestion_events_select_own"
 on public.suggestion_events
 for select
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
 
 create policy "suggestion_events_insert_own"
 on public.suggestion_events
 for insert
-with check (auth.uid() = user_id);
+to authenticated
+with check (
+  (select auth.uid()) = user_id
+  and (
+    target_habit_id is null
+    or exists (
+      select 1
+      from public.habits
+      where habits.id = target_habit_id
+        and habits.user_id = (select auth.uid())
+    )
+  )
+  and (
+    target_category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = target_category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "suggestion_events_update_own"
 on public.suggestion_events
 for update
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id)
+with check (
+  (select auth.uid()) = user_id
+  and (
+    target_habit_id is null
+    or exists (
+      select 1
+      from public.habits
+      where habits.id = target_habit_id
+        and habits.user_id = (select auth.uid())
+    )
+  )
+  and (
+    target_category_id is null
+    or exists (
+      select 1
+      from public.categories
+      where categories.id = target_category_id
+        and categories.user_id = (select auth.uid())
+    )
+  )
+);
 
 create policy "suggestion_events_delete_own"
 on public.suggestion_events
 for delete
-using (auth.uid() = user_id);
+to authenticated
+using ((select auth.uid()) = user_id);
