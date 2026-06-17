@@ -6,7 +6,7 @@ import App from './App'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
-import { cloneMockState, resetMockState } from './integrations/mock/mockData'
+import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 import { renderWithAppProviders } from './test/utils/renderWithAppProviders'
 
 const chooseSelectOption = async (
@@ -64,7 +64,7 @@ describe('app shell', () => {
     expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
     expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
     expect(within(habitCard).getByText('Habit')).toBeInTheDocument()
-    expect(within(habitCard).getByLabelText('Health')).toBeInTheDocument()
+    expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Drag to reorder Move for 20 minutes' }),
@@ -184,6 +184,59 @@ describe('app shell', () => {
     }
   })
 
+  it('uses categories header actions and filters categories by search text', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.categories.push({
+      ...state.categories[0],
+      id: 'category-long-custom',
+      name: 'Very long custom category name',
+      description: null,
+      order: state.categories.length,
+      isDefault: false,
+      defaultKey: null,
+    })
+
+    await act(async () => {
+      await router.navigate({ to: '/settings/categories' })
+    })
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Categories', level: 1 })).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
+    expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create category' })).toBeInTheDocument()
+
+    const searchInput = await screen.findByRole('searchbox', { name: 'Search categories' })
+    expect(await screen.findByRole('button', { name: 'Edit Wellbeing' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Edit Very long custom category name' }),
+    ).toBeInTheDocument()
+
+    await user.type(searchInput, 'well')
+    expect(screen.getByRole('button', { name: 'Edit Wellbeing' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Edit Very long custom category name' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Your categories' })).not.toBeInTheDocument()
+
+    await user.clear(searchInput)
+    await user.type(searchInput, 'long custom')
+    expect(
+      screen.getByRole('button', { name: 'Edit Very long custom category name' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit Wellbeing' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Default life areas' })).not.toBeInTheDocument()
+
+    await user.clear(searchInput)
+    await user.type(searchInput, 'no matching category')
+    expect(screen.getByText('No matching categories.')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Your categories' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Default life areas' })).not.toBeInTheDocument()
+  })
+
   it('floating add button opens the selector', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -263,7 +316,7 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Search Habits' }))
     const habitSearch = screen.getByLabelText('Search habits')
     await user.type(habitSearch, 'Read')
-    await chooseSelectOption(user, screen.getByRole('combobox', { name: 'Category' }), 'Health')
+    await chooseSelectOption(user, screen.getByRole('combobox', { name: 'Category' }), 'Wellbeing')
     expect(await screen.findByText('No matching habits')).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Tasks' }))
@@ -279,7 +332,7 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Search Recurrent Tasks' }))
     const recurrentSearch = screen.getByLabelText('Search recurrent tasks')
     await user.type(recurrentSearch, 'Weekly')
-    await chooseSelectOption(user, screen.getByRole('combobox', { name: 'Category' }), 'Health')
+    await chooseSelectOption(user, screen.getByRole('combobox', { name: 'Category' }), 'Wellbeing')
     expect(await screen.findByText('No matching recurrent tasks')).toBeInTheDocument()
   })
 
@@ -294,7 +347,7 @@ describe('app shell', () => {
     expect(await screen.findByText('Move for 20 minutes')).toBeInTheDocument()
     expect(screen.getByText('3 times per week')).toBeInTheDocument()
     const habitCard = screen.getByRole('button', { name: 'Open options for Move for 20 minutes' })
-    expect(within(habitCard).getByLabelText('Health')).toBeInTheDocument()
+    expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
     expect(within(habitCard).queryByText('Medium')).not.toBeInTheDocument()
     expect(within(habitCard).queryByText('Completion')).not.toBeInTheDocument()
@@ -753,7 +806,7 @@ describe('app shell', () => {
     ).not.toBeInTheDocument()
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
     const categorizedTask = screen.getByRole('button', { name: 'Edit Buy groceries' })
-    expect(within(categorizedTask).getByLabelText('Health')).toBeInTheDocument()
+    expect(within(categorizedTask).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(categorizedTask).getByLabelText('Priority: Medium')).toBeInTheDocument()
     expect(within(categorizedTask).queryByText('Medium')).not.toBeInTheDocument()
     expect(within(categorizedTask).queryByText(/Overdue/)).not.toBeInTheDocument()
@@ -842,7 +895,7 @@ describe('app shell', () => {
     expect(within(overdueCard).getByText('Every day')).toBeInTheDocument()
     expect(within(overdueCard).queryByText(/^\d{2}\/\d{2}\/\d{4}$/)).not.toBeInTheDocument()
     expect(within(overdueCard).queryByText(/Due today|Overdue|Completed/)).not.toBeInTheDocument()
-    expect(within(overdueCard).getByLabelText('Health')).toBeInTheDocument()
+    expect(within(overdueCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(overdueCard).getByLabelText('Priority: Low')).toBeInTheDocument()
     expect(within(overdueCard).queryByText('Low')).not.toBeInTheDocument()
     expect(

@@ -19,8 +19,12 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 ## Functional Requirements
 
 - Categories are customizable labels with `name`, required `iconName`, required `colorToken`, and `order`.
-- Every user has protected defaults: `Health`, `Learning`, and `Uncategorized`.
-- Protected defaults use stable `defaultKey` values: `health`, `learning`, and `uncategorized`.
+- Every user has protected defaults: `Wellbeing`, `Family`, `Relationships`, `Career`,
+  `Learning`, `Finance`, `Home`, `Projects`, `Creativity`, `Leisure`, `Growth`,
+  `Reflection`, `Community`, `Meaning`, and `Uncategorized`.
+- Protected defaults use stable `defaultKey` values: `wellbeing`, `family`,
+  `relationships`, `career`, `learning`, `finance`, `home`, `projects`, `creativity`,
+  `leisure`, `growth`, `reflection`, `community`, `meaning`, and `uncategorized`.
 - `isDefault` marks protected defaults. Default category names and deletion are blocked.
 - Custom categories must have `defaultKey = null` and `isDefault = false`.
 - Items may reference zero or one category at rest. Habits require one category and fall back to
@@ -51,7 +55,7 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 
 - Categories can be created without role, value, type, or orientation metadata.
 - Categories require icon and color metadata for their visual token.
-- Health, Learning, and Uncategorized are provisioned for each user and cannot be renamed or deleted.
+- The protected defaults are provisioned for each user and cannot be renamed or deleted.
 - Custom category deletion is atomic: habits move to Uncategorized, tasks and recurrent tasks clear
   their category, and the category row is physically removed.
 - Settings exposes category management at `/settings/categories`; item create/edit forms can open

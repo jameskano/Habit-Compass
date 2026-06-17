@@ -7,7 +7,7 @@ const category = {
   userId: 'user-1',
   createdAt: '2026-05-21T08:00:00.000Z',
   updatedAt: '2026-05-21T08:00:00.000Z',
-  name: 'Health',
+  name: 'Wellbeing',
   description: null,
   colorToken: 'emerald',
   iconName: 'heartPulse',
@@ -18,7 +18,7 @@ const category = {
 
 describe('CategorySchema', () => {
   it('parses a customizable label without orientation', () => {
-    expect(CategorySchema.parse(category).name).toBe('Health')
+    expect(CategorySchema.parse(category).name).toBe('Wellbeing')
   })
 
   it('rejects role/value orientation metadata', () => {
@@ -41,10 +41,10 @@ describe('CategorySchema', () => {
   it('requires protected defaults to carry a default key', () => {
     expect(CategorySchema.safeParse({ ...category, isDefault: true }).success).toBe(false)
     expect(
-      CategorySchema.safeParse({ ...category, isDefault: true, defaultKey: 'health' }).success,
+      CategorySchema.safeParse({ ...category, isDefault: true, defaultKey: 'wellbeing' }).success,
     ).toBe(true)
     expect(
-      CategorySchema.safeParse({ ...category, isDefault: false, defaultKey: 'health' }).success,
+      CategorySchema.safeParse({ ...category, isDefault: false, defaultKey: 'wellbeing' }).success,
     ).toBe(false)
   })
 })

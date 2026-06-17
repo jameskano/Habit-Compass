@@ -96,7 +96,9 @@ describe('WeekPage', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Add' })[0])
     const selector = screen.getByRole('dialog', { name: 'Choose a habit to focus on' })
-    expect(within(selector).getByRole('button', { name: /Move for 20 minutes/ })).toBeInTheDocument()
+    expect(
+      within(selector).getByRole('button', { name: /Move for 20 minutes/ }),
+    ).toBeInTheDocument()
     expect(within(selector).queryByText('Pay rent')).not.toBeInTheDocument()
     expect(within(selector).queryByText('Weekly review')).not.toBeInTheDocument()
     await user.click(within(selector).getByRole('button', { name: /Move for 20 minutes/ }))
@@ -104,7 +106,7 @@ describe('WeekPage', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Move for 20 minutes').length).toBeGreaterThan(1)
     })
-    expect(screen.getByText('Health')).toBeInTheDocument()
+    expect(screen.getByText('Wellbeing')).toBeInTheDocument()
     expect(screen.queryByText('Work')).not.toBeInTheDocument()
     expect(screen.getByText('Only selected Big Rock habits appear here.')).toBeInTheDocument()
     expect(screen.queryByText('Read before bed')).not.toBeInTheDocument()
@@ -180,7 +182,9 @@ describe('WeekPage', () => {
     expect(screen.queryByRole('button', { name: "Edit this week's focus" })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add' })).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'Remove Move for 20 minutes from this week\'s Big Rocks' }),
+      screen.queryByRole('button', {
+        name: "Remove Move for 20 minutes from this week's Big Rocks",
+      }),
     ).not.toBeInTheDocument()
     expect(screen.getAllByText('Move for 20 minutes').length).toBeGreaterThan(1)
 
@@ -220,10 +224,7 @@ describe('WeekPage', () => {
     await user.click(reviewToggle)
     expect(reviewToggle).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('How did this week feel overall?')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Great' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
+    expect(screen.getByRole('button', { name: 'Great' })).toHaveAttribute('aria-pressed', 'false')
     await user.click(screen.getByRole('button', { name: 'Good' }))
     expect(screen.getByRole('button', { name: 'Good' })).toHaveAttribute('aria-pressed', 'true')
     await user.click(screen.getByRole('button', { name: 'Hard' }))

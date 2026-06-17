@@ -37,7 +37,7 @@ Creation flows:
 - Recurrent task: executable frequency, details.
 - Category: create/edit bottom sheet with name, icon picker, and horizontal color palette.
 
-Habit, task, and recurrent-task create/edit forms show `+ Create category` below their category
+Habit, task, and recurrent-task create/edit forms show `Create category` below their category
 selector. Opening it must not unmount or reset the interrupted item form, and successful creation
 selects the new category.
 

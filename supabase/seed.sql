@@ -31,5 +31,5 @@
 -- Example starter categories for that user:
 -- insert into public.categories (user_id, name, color, icon, sort_order)
 -- values
---   ('00000000-0000-0000-0000-000000000000', 'Health', '#16a34a', 'heart', 0),
+--   ('00000000-0000-0000-0000-000000000000', 'Wellbeing', '#24936e', 'heartPulse', 0),
 --   ('00000000-0000-0000-0000-000000000000', 'Learning', '#2563eb', 'book-open', 1);

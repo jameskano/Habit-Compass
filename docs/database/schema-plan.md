@@ -24,7 +24,9 @@ The first Supabase schema for Habit Compass is defined across:
   - Optional grouping for items and weekly priorities.
   - Stores customizable label name, required app-owned icon/color visual metadata, sort order,
     protected default marker, and protected default key.
-  - Protected defaults are unique per user: Health, Learning, and Uncategorized.
+  - Protected defaults are unique per user: Wellbeing, Family, Relationships, Career, Learning,
+    Finance, Home, Projects, Creativity, Leisure, Growth, Reflection, Community, Meaning, and
+    Uncategorized.
 - `habits`
   - Stores habit definitions, category link, priority, ordering, schedule, tracking type, optional descriptions/notes, and JSONB goal/completion config.
   - Category links are required and must reference the same user.

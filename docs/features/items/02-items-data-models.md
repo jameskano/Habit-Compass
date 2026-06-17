@@ -48,9 +48,10 @@ Categories are customizable labels for any user-defined grouping.
 
 Do not add a category `type` field.
 
-Every user has protected default categories: Health, Learning, and Uncategorized. These use
-`defaultKey` values of `health`, `learning`, and `uncategorized`; default names and deletion are
-blocked. Custom categories have `defaultKey = null`.
+Every user has protected default categories: Wellbeing, Family, Relationships, Career, Learning,
+Finance, Home, Projects, Creativity, Leisure, Growth, Reflection, Community, Meaning, and
+Uncategorized. These use stable `defaultKey` values; default names and deletion are blocked. Custom
+categories have `defaultKey = null`.
 
 ```ts
 export interface Category {
@@ -64,7 +65,23 @@ export interface Category {
   order: number
 
   isDefault: boolean
-  defaultKey: 'health' | 'learning' | 'uncategorized' | null
+  defaultKey:
+    | 'wellbeing'
+    | 'family'
+    | 'relationships'
+    | 'career'
+    | 'learning'
+    | 'finance'
+    | 'home'
+    | 'projects'
+    | 'creativity'
+    | 'leisure'
+    | 'growth'
+    | 'reflection'
+    | 'community'
+    | 'meaning'
+    | 'uncategorized'
+    | null
 
   createdAt: string
   updatedAt: string

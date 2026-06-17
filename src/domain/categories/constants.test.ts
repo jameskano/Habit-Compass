@@ -10,12 +10,31 @@ import {
 import { isCategoryDefaultKey } from './utils'
 
 describe('category constants', () => {
+  const expectedDefaultKeys = [
+    'wellbeing',
+    'family',
+    'relationships',
+    'career',
+    'learning',
+    'finance',
+    'home',
+    'projects',
+    'creativity',
+    'leisure',
+    'growth',
+    'reflection',
+    'community',
+    'meaning',
+    'uncategorized',
+  ]
+
   it('defines exactly 24 curated colors in palette order', () => {
     expect(CATEGORY_COLOR_PALETTE).toHaveLength(24)
     expect(CATEGORY_COLOR_PALETTE.map((color) => color.token)).toEqual(categoryColorTokens)
   })
 
   it('derives default category keys and message ids from configured defaults', () => {
+    expect(categoryDefaultKeys).toEqual(expectedDefaultKeys)
     expect(categoryDefaultKeys).toEqual(CATEGORY_DEFAULTS.map((category) => category.defaultKey))
 
     for (const category of CATEGORY_DEFAULTS) {

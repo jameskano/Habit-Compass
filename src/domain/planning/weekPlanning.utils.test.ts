@@ -60,11 +60,11 @@ describe('week planning utilities', () => {
   })
 
   it('groups only selected habits by their life area with uncategorized fallback', () => {
-    const health = category('category-health', 'Health')
+    const wellbeing = category('category-wellbeing', 'Wellbeing')
     const habits = [
       createHabit(
         { trackingType: 'binary' },
-        { id: 'habit-gym', title: 'Gym', categoryId: health.id },
+        { id: 'habit-gym', title: 'Gym', categoryId: wellbeing.id },
       ),
       createHabit(
         {
@@ -73,7 +73,7 @@ describe('week planning utilities', () => {
         {
           id: 'habit-sleep',
           title: 'Sleep',
-          categoryId: health.id,
+          categoryId: wellbeing.id,
         },
       ),
       createHabit(
@@ -90,11 +90,11 @@ describe('week planning utilities', () => {
 
     const groups = groupBigRockHabitsByLifeArea({
       habits,
-      categories: [health, category('category-work', 'Work')],
+      categories: [wellbeing, category('category-work', 'Work')],
       uncategorizedLabel: 'Uncategorized',
     })
 
-    expect(groups.map((group) => group.name)).toEqual(['Health', 'Uncategorized'])
+    expect(groups.map((group) => group.name)).toEqual(['Wellbeing', 'Uncategorized'])
     expect(groups[0].habits.map((habit) => habit.title)).toEqual(['Gym', 'Sleep'])
     expect(groups[1].habits.map((habit) => habit.title)).toEqual(['Read'])
   })

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import { getHabitMinimumTargetValue } from '@/domain/habits'
 
 import { mockCategoriesRepository } from './mockCategoriesRepository'
@@ -149,7 +150,7 @@ describe('mock repositories', () => {
       description: null,
       colorToken: 'emerald',
       iconName: 'home',
-      order: 3,
+      order: CATEGORY_DEFAULTS.length,
       isDefault: false,
       defaultKey: null,
     })
@@ -183,12 +184,12 @@ describe('mock repositories', () => {
   it('blocks deleting protected default categories', async () => {
     const result = await mockCategoriesRepository.delete({
       userId: mockData.currentUserId,
-      categoryId: 'category-health',
+      categoryId: 'category-wellbeing',
     })
 
     expect(result.ok).toBe(false)
     expect(
-      getMockState().categories.find((category) => category.id === 'category-health'),
+      getMockState().categories.find((category) => category.id === 'category-wellbeing'),
     ).toBeDefined()
   })
 

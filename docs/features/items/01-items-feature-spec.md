@@ -130,8 +130,20 @@ Each stored category requires its selected icon and color so item cards can rend
 
 Protected defaults are exactly:
 
-- Health
+- Wellbeing
+- Family
+- Relationships
+- Career
 - Learning
+- Finance
+- Home
+- Projects
+- Creativity
+- Leisure
+- Growth
+- Reflection
+- Community
+- Meaning
 - Uncategorized
 
 Users can create and edit custom categories from Settings and from item create/edit forms. Contextual

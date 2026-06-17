@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import { getMockState, mockData, resetMockState } from '@/integrations/mock/mockData'
 import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
 
@@ -89,7 +90,7 @@ describe('CreateItemDialogs', () => {
       colorToken: 'emerald',
       isDefault: false,
       defaultKey: null,
-      order: 3,
+      order: CATEGORY_DEFAULTS.length,
     })
   })
 })

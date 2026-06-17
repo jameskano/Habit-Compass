@@ -123,22 +123,121 @@ export const CATEGORY_DEFAULT_CUSTOM_COLOR_TOKEN: CategoryColorToken = 'emerald'
 
 export const CATEGORY_DEFAULTS = [
   {
-    defaultKey: 'health',
-    name: 'Health',
-    nameMessageId: 'category.default.health',
+    defaultKey: 'wellbeing',
+    name: 'Wellbeing',
+    description: 'physical health, mental health, sleep, nutrition and self-care',
+    nameMessageId: 'category.default.wellbeing',
     iconName: 'heartPulse',
     colorToken: 'emerald',
   },
   {
+    defaultKey: 'family',
+    name: 'Family',
+    description: 'parents, children, siblings and family responsibilities',
+    nameMessageId: 'category.default.family',
+    iconName: 'users',
+    colorToken: 'rose',
+  },
+  {
+    defaultKey: 'relationships',
+    name: 'Relationships',
+    description: 'partner, friendships and close personal connections',
+    nameMessageId: 'category.default.relationships',
+    iconName: 'heart',
+    colorToken: 'ruby',
+  },
+  {
+    defaultKey: 'career',
+    name: 'Career',
+    description: 'employment, professional responsibilities and career development',
+    nameMessageId: 'category.default.career',
+    iconName: 'briefcase',
+    colorToken: 'blue',
+  },
+  {
     defaultKey: 'learning',
     name: 'Learning',
+    description: 'studying, reading, courses and skill development',
     nameMessageId: 'category.default.learning',
     iconName: 'bookOpen',
     colorToken: 'sky',
   },
   {
+    defaultKey: 'finance',
+    name: 'Finance',
+    description: 'saving, budgeting, investing and financial management',
+    nameMessageId: 'category.default.finance',
+    iconName: 'walletCards',
+    colorToken: 'gold',
+  },
+  {
+    defaultKey: 'home',
+    name: 'Home',
+    description: 'cleaning, maintenance, household responsibilities and life admin',
+    nameMessageId: 'category.default.home',
+    iconName: 'home',
+    colorToken: 'clay',
+  },
+  {
+    defaultKey: 'projects',
+    name: 'Projects',
+    description: 'personal projects, side projects and long-term initiatives',
+    nameMessageId: 'category.default.projects',
+    iconName: 'rocket',
+    colorToken: 'indigo',
+  },
+  {
+    defaultKey: 'creativity',
+    name: 'Creativity',
+    description: 'art, writing, music and creative expression',
+    nameMessageId: 'category.default.creativity',
+    iconName: 'palette',
+    colorToken: 'purple',
+  },
+  {
+    defaultKey: 'leisure',
+    name: 'Leisure',
+    description: 'hobbies, entertainment, rest and recreation',
+    nameMessageId: 'category.default.leisure',
+    iconName: 'gamepad',
+    colorToken: 'fuchsia',
+  },
+  {
+    defaultKey: 'growth',
+    name: 'Growth',
+    description: 'personal development, discipline and self-improvement',
+    nameMessageId: 'category.default.growth',
+    iconName: 'sprout',
+    colorToken: 'lime',
+  },
+  {
+    defaultKey: 'reflection',
+    name: 'Reflection',
+    description: 'journaling, mindfulness, planning and reviewing life',
+    nameMessageId: 'category.default.reflection',
+    iconName: 'notebookPen',
+    colorToken: 'violet',
+  },
+  {
+    defaultKey: 'community',
+    name: 'Community',
+    description: 'volunteering, helping others and community participation',
+    nameMessageId: 'category.default.community',
+    iconName: 'handshake',
+    colorToken: 'teal',
+  },
+  {
+    defaultKey: 'meaning',
+    name: 'Meaning',
+    description: 'purpose, spirituality, faith and personal philosophy',
+    nameMessageId: 'category.default.meaning',
+    iconName: 'compass',
+    colorToken: 'graphite',
+  },
+  {
     defaultKey: 'uncategorized',
     name: 'Uncategorized',
+    description: null,
     nameMessageId: 'category.default.uncategorized',
     iconName: CATEGORY_UNCATEGORIZED_ICON_KEY,
     colorToken: 'slate',
@@ -146,6 +245,7 @@ export const CATEGORY_DEFAULTS = [
 ] as const satisfies ReadonlyArray<{
   defaultKey: string
   name: string
+  description: string | null
   nameMessageId: string
   iconName: CategoryIconKey
   colorToken: CategoryColorToken
