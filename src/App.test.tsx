@@ -237,6 +237,40 @@ describe('app shell', () => {
     expect(screen.queryByRole('heading', { name: 'Default life areas' })).not.toBeInTheDocument()
   })
 
+  it('keeps the category sheet open when dismissing the discard confirmation', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/categories' })
+    })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Create category' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Create category' })
+    await user.type(within(sheet).getByLabelText('Name'), 'Temporary category')
+
+    const overlay = document.querySelector('[data-sheet-overlay]')
+    if (!(overlay instanceof HTMLElement)) {
+      throw new Error('Expected category sheet overlay')
+    }
+
+    await act(async () => {
+      fireEvent.pointerDown(overlay)
+      fireEvent.pointerUp(overlay)
+      fireEvent.click(overlay)
+    })
+
+    expect(await screen.findByRole('alertdialog', { name: 'Discard changes?' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }))
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('alertdialog', { name: 'Discard changes?' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(screen.getByRole('dialog', { name: 'Create category' })).toBeInTheDocument()
+  })
+
   it('floating add button opens the selector', async () => {
     const user = userEvent.setup()
     render(<App />)

@@ -285,7 +285,20 @@ export const CategoryFormSheet = ({
   return (
     <>
       <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && requestClose()}>
-        <SheetContent className="max-h-[92vh] overflow-y-auto">
+        <SheetContent
+          className="max-h-[92vh] animate-[habit-sheet-in_300ms_ease-out] overflow-y-auto motion-reduce:animate-none"
+          onInteractOutside={(event) => {
+            if (!showDiscardConfirm && !showDeleteConfirm && !showIconPicker) {
+              return
+            }
+            if (!(event.target instanceof Element)) {
+              return
+            }
+            if (event.target.closest('[data-category-dialog-layer], [data-dialog-overlay]')) {
+              event.preventDefault()
+            }
+          }}
+        >
           <SheetTitle className="text-xl font-semibold tracking-tight">
             {intl.formatMessage({ id: titleId })}
           </SheetTitle>
@@ -400,6 +413,7 @@ export const CategoryFormSheet = ({
 
       <Dialog open={showDiscardConfirm} onOpenChange={setShowDiscardConfirm}>
         <DialogContent
+          data-category-dialog-layer
           role="alertdialog"
           aria-modal="true"
           className="w-full max-w-sm rounded-2xl p-5"
@@ -411,7 +425,7 @@ export const CategoryFormSheet = ({
             {intl.formatMessage({ id: 'category.discard.body' })}
           </DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setShowDiscardConfirm(false)}>
+            <Button variant="outline" onClick={() => setShowDiscardConfirm(false)}>
               {intl.formatMessage({ id: 'category.discard.keepEditing' })}
             </Button>
             <Button variant="secondary" onClick={discardChanges}>
@@ -423,6 +437,7 @@ export const CategoryFormSheet = ({
 
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent
+          data-category-dialog-layer
           role="alertdialog"
           aria-modal="true"
           className="w-full max-w-sm rounded-2xl p-5"
