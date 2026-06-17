@@ -60,6 +60,8 @@ const defaultNameForCategory = (
   return intl.formatMessage({ id: CATEGORY_DEFAULT_NAME_MESSAGE_IDS[category.defaultKey] })
 }
 
+const NESTED_LAYER_CLOSE_SUPPRESSION_MS = 150
+
 const IconPicker = ({ open, selectedIcon, onBack, onSelect }: IconPickerProps) => {
   const intl = useIntl()
   const [query, setQuery] = useState('')
@@ -171,6 +173,7 @@ export const CategoryFormSheet = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showIconPicker, setShowIconPicker] = useState(false)
   const selectedColorRef = useRef<HTMLButtonElement | null>(null)
+  const suppressSheetCloseRef = useRef(false)
 
   const editingCategory = mode === 'edit' ? (category ?? null) : null
   const nameEditable = !editingCategory || canRenameCategory(editingCategory)
@@ -197,6 +200,21 @@ export const CategoryFormSheet = ({
       selectedColorRef.current?.scrollIntoView({ block: 'nearest', inline: 'center' })
     }
   }, [colorToken, open])
+
+  const nestedCategoryLayerOpen = showDiscardConfirm || showDeleteConfirm || showIconPicker
+
+  useEffect(() => {
+    if (nestedCategoryLayerOpen) {
+      suppressSheetCloseRef.current = true
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      suppressSheetCloseRef.current = false
+    }, NESTED_LAYER_CLOSE_SUPPRESSION_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [nestedCategoryLayerOpen])
 
   const dirty =
     mode === 'create'
@@ -284,17 +302,19 @@ export const CategoryFormSheet = ({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && requestClose()}>
+      <Sheet
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (nextOpen || nestedCategoryLayerOpen || suppressSheetCloseRef.current) {
+            return
+          }
+          requestClose()
+        }}
+      >
         <SheetContent
           className="max-h-[92vh] animate-[habit-sheet-in_300ms_ease-out] overflow-y-auto motion-reduce:animate-none"
           onInteractOutside={(event) => {
-            if (!showDiscardConfirm && !showDeleteConfirm && !showIconPicker) {
-              return
-            }
-            if (!(event.target instanceof Element)) {
-              return
-            }
-            if (event.target.closest('[data-category-dialog-layer], [data-dialog-overlay]')) {
+            if (nestedCategoryLayerOpen || suppressSheetCloseRef.current) {
               event.preventDefault()
             }
           }}
@@ -425,7 +445,17 @@ export const CategoryFormSheet = ({
             {intl.formatMessage({ id: 'category.discard.body' })}
           </DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowDiscardConfirm(false)}>
+            <Button
+              variant="outline"
+              onPointerDown={() => {
+                suppressSheetCloseRef.current = true
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                suppressSheetCloseRef.current = true
+                setShowDiscardConfirm(false)
+              }}
+            >
               {intl.formatMessage({ id: 'category.discard.keepEditing' })}
             </Button>
             <Button variant="secondary" onClick={discardChanges}>
@@ -449,7 +479,18 @@ export const CategoryFormSheet = ({
             {intl.formatMessage({ id: 'category.delete.body' })}
           </DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
-            <Button variant="ghost" disabled={pending} onClick={() => setShowDeleteConfirm(false)}>
+            <Button
+              variant="ghost"
+              disabled={pending}
+              onPointerDown={() => {
+                suppressSheetCloseRef.current = true
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                suppressSheetCloseRef.current = true
+                setShowDeleteConfirm(false)
+              }}
+            >
               {intl.formatMessage({ id: 'action.cancel' })}
             </Button>
             <Button
