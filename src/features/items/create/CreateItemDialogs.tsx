@@ -3,7 +3,6 @@ import { ArrowLeft, X } from 'lucide-react'
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
-import type { CreateCategoryInput } from '@/domain/categories'
 import type {
   CreateHabitInput,
   HabitGoalConfig,
@@ -12,8 +11,8 @@ import type {
 } from '@/domain/habits'
 import type { CreateRecurrentTaskInput, DayOfWeek, RecurrenceRule } from '@/domain/recurrent-tasks'
 import type { CreateTaskInput } from '@/domain/tasks'
+import { CategoryCreateButton, CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
-import { useCreateCategoryMutation } from '@/features/categories/hooks/useCategoryMutations'
 import { useCreateHabitMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'
 import { useCreateRecurrentTaskMutation } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
@@ -76,8 +75,6 @@ const frequencyKinds: FrequencyKind[] = [
   'firstWeekdayOfMonth',
 ]
 const recurrentFrequencyKinds = frequencyKinds.filter((kind) => kind !== 'timesPerPeriod')
-const colorTokens = ['emerald', 'sky'] as const
-const iconNames = ['heart', 'book-open', 'tag'] as const
 
 const todayAsISODate = () => {
   return formatISO(new Date(), { representation: 'date' })
@@ -438,38 +435,42 @@ const ActiveCategorySelect = ({
   value,
   onChange,
   required = false,
+  onCreateCategory,
 }: {
   value: string
   onChange: (value: string) => void
   required?: boolean
+  onCreateCategory?: () => void
 }) => {
   const intl = useIntl()
-  const categories =
-    useCategoriesQuery().data?.filter((category) => category.lifecycleStatus === 'active') ?? []
+  const categories = useCategoriesQuery().data ?? []
   return (
-    <label className="text-sm font-medium">
-      {intl.formatMessage({ id: 'page.items.create.details.category' })}
-      <Select
-        value={value || '__none__'}
-        onValueChange={(categoryId) => onChange(categoryId === '__none__' ? '' : categoryId)}
-      >
-        <SelectTrigger className={inputClass}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {!required ? (
-            <SelectItem value="__none__">
-              {intl.formatMessage({ id: 'page.items.create.details.noCategory' })}
-            </SelectItem>
-          ) : null}
-          {categories.map((category) => (
-            <SelectItem key={category.id} value={category.id}>
-              {category.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </label>
+    <div>
+      <label className="text-sm font-medium">
+        {intl.formatMessage({ id: 'page.items.create.details.category' })}
+        <Select
+          value={value || '__none__'}
+          onValueChange={(categoryId) => onChange(categoryId === '__none__' ? '' : categoryId)}
+        >
+          <SelectTrigger className={inputClass}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {!required ? (
+              <SelectItem value="__none__">
+                {intl.formatMessage({ id: 'page.items.create.details.noCategory' })}
+              </SelectItem>
+            ) : null}
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </label>
+      {onCreateCategory ? <CategoryCreateButton onClick={onCreateCategory} /> : null}
+    </div>
   )
 }
 
@@ -495,6 +496,8 @@ const HabitCreate = ({ onClose }: { onClose: () => void }) => {
   const [startsOn, setStartsOn] = useState(todayAsISODate)
   const [endsOn, setEndsOn] = useState('')
   const [error, setError] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const categories = useCategoriesQuery().data ?? []
 
   const buildGoal = (): HabitGoalConfig => {
     if (completionMode === 'binary') {
@@ -760,7 +763,12 @@ const HabitCreate = ({ onClose }: { onClose: () => void }) => {
                 className={inputClass}
               />
             </label>
-            <ActiveCategorySelect value={categoryId} onChange={setCategoryId} required />
+            <ActiveCategorySelect
+              value={categoryId}
+              onChange={setCategoryId}
+              required
+              onCreateCategory={() => setCreatingCategory(true)}
+            />
             <label className="text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.create.details.priority' })}
               <Select
@@ -812,6 +820,13 @@ const HabitCreate = ({ onClose }: { onClose: () => void }) => {
           </Button>
         </div>
       </div>
+      <CategoryFormSheet
+        open={creatingCategory}
+        mode="create"
+        categories={categories}
+        onCreated={(createdCategory) => setCategoryId(createdCategory.id)}
+        onOpenChange={(nextOpen) => setCreatingCategory(nextOpen)}
+      />
     </DialogFrame>
   )
 }
@@ -827,6 +842,8 @@ const TaskCreate = ({ onClose }: { onClose: () => void }) => {
   const [description, setDescription] = useState('')
   const [carryForward, setCarryForward] = useState(true)
   const [error, setError] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const categories = useCategoriesQuery().data ?? []
   const submit = () => {
     if (!title.trim() || !dueDate) {
       setError(intl.formatMessage({ id: 'page.items.create.error.details' }))
@@ -869,7 +886,11 @@ const TaskCreate = ({ onClose }: { onClose: () => void }) => {
           value={dueDate}
           onValueChange={setDueDate}
         />
-        <ActiveCategorySelect value={categoryId} onChange={setCategoryId} />
+        <ActiveCategorySelect
+          value={categoryId}
+          onChange={setCategoryId}
+          onCreateCategory={() => setCreatingCategory(true)}
+        />
         <label className="text-sm font-medium">
           {intl.formatMessage({ id: 'page.items.create.details.priority' })}
           <Select value={priority} onValueChange={(value) => setPriority(value as typeof priority)}>
@@ -905,6 +926,13 @@ const TaskCreate = ({ onClose }: { onClose: () => void }) => {
           {intl.formatMessage({ id: 'page.items.create.save' })}
         </Button>
       </div>
+      <CategoryFormSheet
+        open={creatingCategory}
+        mode="create"
+        categories={categories}
+        onCreated={(createdCategory) => setCategoryId(createdCategory.id)}
+        onOpenChange={(nextOpen) => setCreatingCategory(nextOpen)}
+      />
     </DialogFrame>
   )
 }
@@ -923,6 +951,8 @@ const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
   const [endsOn, setEndsOn] = useState('')
   const [carryForward, setCarryForward] = useState(true)
   const [error, setError] = useState('')
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const categories = useCategoriesQuery().data ?? []
   const continueFlow = () =>
     validateFrequency(frequency)
       ? setStep(2)
@@ -977,7 +1007,11 @@ const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
                 className={inputClass}
               />
             </label>
-            <ActiveCategorySelect value={categoryId} onChange={setCategoryId} />
+            <ActiveCategorySelect
+              value={categoryId}
+              onChange={setCategoryId}
+              onCreateCategory={() => setCreatingCategory(true)}
+            />
             <label className="text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.create.details.priority' })}
               <Select
@@ -1043,93 +1077,13 @@ const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
           </Button>
         </div>
       </div>
-    </DialogFrame>
-  )
-}
-
-const CategoryCreate = ({ onClose }: { onClose: () => void }) => {
-  const intl = useIntl()
-  const mutation = useCreateCategoryMutation()
-  const categories = useCategoriesQuery().data ?? []
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [iconName, setIconName] = useState<string>('tag')
-  const [colorToken, setColorToken] = useState<string>('emerald')
-  const [error, setError] = useState('')
-  const submit = () => {
-    if (!name.trim() || !iconName || !colorToken) {
-      setError(intl.formatMessage({ id: 'page.items.create.error.details' }))
-      return
-    }
-    const input: CreateCategoryInput = {
-      userId: MOCK_USER_ID,
-      name: name.trim(),
-      description: description.trim() || null,
-      iconName,
-      colorToken,
-      order: categories.length,
-      lifecycleStatus: 'active',
-      isDefault: false,
-    }
-    mutation.mutate(input, { onSuccess: onClose })
-  }
-  return (
-    <DialogFrame
-      title={intl.formatMessage({ id: 'page.items.create.category.title' })}
-      onClose={onClose}
-    >
-      <div className="flex flex-col gap-4">
-        <label className="text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.create.details.name' })}
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.create.details.description' })}
-          <Textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.create.category.icon' })}
-          <Select value={iconName} onValueChange={setIconName}>
-            <SelectTrigger className={inputClass}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {iconNames.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-        <label className="text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.create.category.color' })}
-          <Select value={colorToken} onValueChange={setColorToken}>
-            <SelectTrigger className={inputClass}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {colorTokens.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
-        {error ? <ErrorText>{error}</ErrorText> : null}
-        <Button onClick={submit} disabled={mutation.isPending}>
-          {intl.formatMessage({ id: 'page.items.create.save' })}
-        </Button>
-      </div>
+      <CategoryFormSheet
+        open={creatingCategory}
+        mode="create"
+        categories={categories}
+        onCreated={(createdCategory) => setCategoryId(createdCategory.id)}
+        onOpenChange={(nextOpen) => setCreatingCategory(nextOpen)}
+      />
     </DialogFrame>
   )
 }
@@ -1141,9 +1095,24 @@ export const CreateItemDialogs = ({
   kind: CreateKind | null
   onClose: () => void
 }) => {
+  const categories = useCategoriesQuery().data ?? []
+
   if (kind === 'habit') return <HabitCreate onClose={onClose} />
   if (kind === 'task') return <TaskCreate onClose={onClose} />
   if (kind === 'recurrentTask') return <RecurrentTaskCreate onClose={onClose} />
-  if (kind === 'category') return <CategoryCreate onClose={onClose} />
+  if (kind === 'category') {
+    return (
+      <CategoryFormSheet
+        open
+        mode="create"
+        categories={categories}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            onClose()
+          }
+        }}
+      />
+    )
+  }
   return null
 }

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Archive, RotateCcw, Trash2 } from 'lucide-react'
-import { useEffect, useId, useMemo } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 import { z } from 'zod'
@@ -18,6 +18,7 @@ import {
   type UpdateHabitInput,
 } from '@/domain/habits'
 import type { Category } from '@/domain/categories'
+import { CategoryCreateButton, CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import { habitPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -388,6 +389,7 @@ export const HabitEditTab = ({
   const minimumUnitLabel = getMinimumUnitLabel(selectedTrackingType, form.watch('unitLabel'))
   const nameInputId = useId()
   const minimumInputId = useId()
+  const [creatingCategory, setCreatingCategory] = useState(false)
 
   useEffect(() => {
     form.reset(defaultValuesForHabit(habit))
@@ -618,8 +620,8 @@ export const HabitEditTab = ({
             {intl.formatMessage({ id: 'page.items.habit.edit.optional' })}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium">
-              {intl.formatMessage({ id: 'page.items.habit.edit.category' })}
+            <div className="block text-sm font-medium">
+              <span>{intl.formatMessage({ id: 'page.items.habit.edit.category' })}</span>
               <Select
                 value={form.watch('categoryId') || noCategoryValue}
                 onValueChange={(value) =>
@@ -639,13 +641,11 @@ export const HabitEditTab = ({
                   <SelectItem value={noCategoryValue}>
                     {intl.formatMessage({ id: 'page.items.habit.category.none' })}
                   </SelectItem>
-                  {categories
-                    .filter((category) => category.lifecycleStatus === 'active')
-                    .map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {form.formState.errors.categoryId ? (
@@ -653,7 +653,8 @@ export const HabitEditTab = ({
                   {intl.formatMessage({ id: 'page.items.habit.edit.error.category' })}
                 </span>
               ) : null}
-            </label>
+              <CategoryCreateButton onClick={() => setCreatingCategory(true)} />
+            </div>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
               <Select
@@ -911,6 +912,18 @@ export const HabitEditTab = ({
           {intl.formatMessage({ id: 'page.items.habit.menu.delete' })}
         </Button>
       </section>
+      <CategoryFormSheet
+        open={creatingCategory}
+        mode="create"
+        categories={categories}
+        onCreated={(createdCategory) =>
+          form.setValue('categoryId', createdCategory.id, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        onOpenChange={(nextOpen) => setCreatingCategory(nextOpen)}
+      />
     </div>
   )
 }

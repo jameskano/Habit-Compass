@@ -6,7 +6,9 @@ Do not implement everything in one pass.
 
 Creation-flow refinement adds working global add actions without rebuilding the existing Items
 lists. Implement Habit as a three-step wizard, Task as one dated form, Recurrent task as a two-step
-wizard, and Category as one compact form. Keep legacy nullable persistence fallbacks readable.
+wizard, and Category as the shared create/edit bottom sheet. Keep legacy nullable persistence
+fallbacks readable where the domain still allows them; production habit category links are
+backfilled to Uncategorized and kept non-null.
 
 ## Phase 0 — Inspect current project
 

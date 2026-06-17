@@ -74,22 +74,22 @@ describe('CreateItemDialogs', () => {
     expect(document.querySelector('input[type="date"]')).toBeNull()
   })
 
-  it('creates categories with internal lifecycle and ordering defaults', async () => {
+  it('creates categories with visual metadata and ordering defaults', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
     renderWithAppProviders(<CreateItemDialogs kind="category" onClose={onClose} />)
 
     await user.type(screen.getByLabelText('Name'), 'Home')
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create category' }))
 
     await waitFor(() => expect(onClose).toHaveBeenCalled())
     expect(getMockState().categories.at(-1)).toMatchObject({
       name: 'Home',
-      iconName: 'tag',
+      iconName: 'general',
       colorToken: 'emerald',
-      lifecycleStatus: 'active',
       isDefault: false,
-      order: 2,
+      defaultKey: null,
+      order: 3,
     })
   })
 })

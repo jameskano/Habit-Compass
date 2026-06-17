@@ -19,7 +19,7 @@ export const AppShell = ({ children }: AppShellProps) => {
   const [headerActions, setHeaderActions] = useState<ReactNode | null>(null)
 
   const isOnboarding = pathname === '/onboarding'
-  const isSettings = pathname === '/settings'
+  const isSettings = pathname.startsWith('/settings')
   const showBottomNav = !isOnboarding
   const showAddButton = !isOnboarding && !isSettings
   const defaultTitleId =
@@ -29,6 +29,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       '/items': 'page.items.section.habits',
       '/mood': 'page.mood.title',
       '/settings': 'page.settings.title',
+      '/settings/categories': 'category.page.title',
       '/onboarding': 'page.onboarding.title',
     }[pathname] ?? 'app.name'
 

@@ -1,11 +1,17 @@
-import type { ItemEntityFields, LifecycleStatus } from '@/shared/types'
+import type { EntityId, UserId } from '@/shared/types'
 
-export type Category = ItemEntityFields & {
+import type { CategoryColorToken, CategoryDefaultKey, CategoryIconKey } from './constants'
+
+export type Category = {
+  id: EntityId
+  userId: UserId
+  createdAt: string
+  updatedAt: string
   name: string
   description?: string | null
-  colorToken: string
-  iconName: string
+  colorToken: CategoryColorToken
+  iconName: CategoryIconKey
   order: number
-  lifecycleStatus: LifecycleStatus
   isDefault: boolean
+  defaultKey: CategoryDefaultKey | null
 }

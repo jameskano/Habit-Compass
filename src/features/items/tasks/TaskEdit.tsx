@@ -7,6 +7,7 @@ import { z } from 'zod'
 
 import type { Category } from '@/domain/categories'
 import type { Task, UpdateTaskInput } from '@/domain/tasks'
+import { CategoryCreateButton, CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import {
   useArchiveTaskMutation,
   useDeleteTaskMutation,
@@ -63,6 +64,7 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
   const intl = useIntl()
   const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
   const updateMutation = useUpdateTaskMutation()
   const archiveMutation = useArchiveTaskMutation()
   const deleteMutation = useDeleteTaskMutation()
@@ -163,8 +165,8 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
                 {intl.formatMessage({ id: 'page.items.task.edit.optional' })}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm font-medium">
-                  {intl.formatMessage({ id: 'page.items.task.edit.category' })}
+                <div className="block text-sm font-medium">
+                  <span>{intl.formatMessage({ id: 'page.items.task.edit.category' })}</span>
                   <Select
                     value={form.watch('categoryId') || noCategoryValue}
                     onValueChange={(value) =>
@@ -184,16 +186,15 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
                       <SelectItem value={noCategoryValue}>
                         {intl.formatMessage({ id: 'page.items.task.category.none' })}
                       </SelectItem>
-                      {categories
-                        .filter((category) => category.lifecycleStatus === 'active')
-                        .map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </label>
+                  <CategoryCreateButton onClick={() => setCreatingCategory(true)} />
+                </div>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.task.edit.priority' })}
                   <Select
@@ -269,6 +270,18 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
           pending={pending}
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() => deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })}
+        />
+        <CategoryFormSheet
+          open={creatingCategory}
+          mode="create"
+          categories={categories}
+          onCreated={(createdCategory) =>
+            form.setValue('categoryId', createdCategory.id, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+          onOpenChange={(nextOpen) => setCreatingCategory(nextOpen)}
         />
       </DialogContent>
     </Dialog>

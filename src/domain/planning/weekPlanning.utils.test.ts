@@ -16,14 +16,13 @@ const category = (id: string, name: string): Category => ({
   userId: 'user-1',
   createdAt: '2026-05-21T08:00:00.000Z',
   updatedAt: '2026-05-21T08:00:00.000Z',
-  archivedAt: null,
   name,
   description: null,
   colorToken: 'emerald',
-  iconName: 'heart',
+  iconName: 'heartPulse',
   order: 0,
-  lifecycleStatus: 'active',
   isDefault: false,
+  defaultKey: null,
 })
 
 describe('week planning utilities', () => {
@@ -63,21 +62,30 @@ describe('week planning utilities', () => {
   it('groups only selected habits by their life area with uncategorized fallback', () => {
     const health = category('category-health', 'Health')
     const habits = [
-      createHabit({ trackingType: 'binary' }, { id: 'habit-gym', title: 'Gym', categoryId: health.id }),
-      createHabit({
-        trackingType: 'binary',
-      }, {
-        id: 'habit-sleep',
-        title: 'Sleep',
-        categoryId: health.id,
-      }),
-      createHabit({
-        trackingType: 'binary',
-      }, {
-        id: 'habit-read',
-        title: 'Read',
-        categoryId: null,
-      }),
+      createHabit(
+        { trackingType: 'binary' },
+        { id: 'habit-gym', title: 'Gym', categoryId: health.id },
+      ),
+      createHabit(
+        {
+          trackingType: 'binary',
+        },
+        {
+          id: 'habit-sleep',
+          title: 'Sleep',
+          categoryId: health.id,
+        },
+      ),
+      createHabit(
+        {
+          trackingType: 'binary',
+        },
+        {
+          id: 'habit-read',
+          title: 'Read',
+          categoryId: null,
+        },
+      ),
     ]
 
     const groups = groupBigRockHabitsByLifeArea({

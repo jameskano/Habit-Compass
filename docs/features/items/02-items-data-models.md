@@ -2,7 +2,7 @@
 
 This document defines the domain models needed for the Items feature.
 
-These models use the current project conventions: item contracts belong under `src/domain`, user-visible item names use `title`, categories retain `name`, and lifecycle is expressed as `lifecycleStatus`.
+These models use the current project conventions: item contracts belong under `src/domain`, user-visible item names use `title`, categories retain `name`, and item lifecycle is expressed as `lifecycleStatus`.
 
 ## Design principle
 
@@ -48,6 +48,10 @@ Categories are customizable labels for any user-defined grouping.
 
 Do not add a category `type` field.
 
+Every user has protected default categories: Health, Learning, and Uncategorized. These use
+`defaultKey` values of `health`, `learning`, and `uncategorized`; default names and deletion are
+blocked. Custom categories have `defaultKey = null`.
+
 ```ts
 export interface Category {
   id: string
@@ -59,7 +63,8 @@ export interface Category {
 
   order: number
 
-  lifecycleStatus: ItemLifecycleStatus
+  isDefault: boolean
+  defaultKey: 'health' | 'learning' | 'uncategorized' | null
 
   createdAt: string
   updatedAt: string
@@ -90,8 +95,9 @@ export type HabitScheduleRule =
 
 `flexiblePeriod` is only valid with an existing period-based `goalConfig`. It does not assign missed state to individual empty dates.
 
-Persisted habit categories and task due dates remain nullable for legacy and unlinking
-compatibility. New and edited habits require a category. New and edited tasks require a date.
+Habits require a category. Deleting a custom category reassigns linked habits to the protected
+Uncategorized category. Tasks and recurrent tasks keep category optional. New and edited tasks
+require a date.
 
 Frequency-summary utilities should return translation-ready message descriptors; display strings are added with the Items UI.
 

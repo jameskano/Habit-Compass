@@ -2,7 +2,7 @@
 
 ## Product context
 
-Habit Compass is a habit tracker inspired by simple apps like HabitNow and by the planning/roles/values mindset from *The 7 Habits of Highly Effective People*.
+Habit Compass is a habit tracker inspired by simple apps like HabitNow and by the planning/roles/values mindset from _The 7 Habits of Highly Effective People_.
 
 The app should be:
 
@@ -128,30 +128,31 @@ Do not include a category `type` such as `role`, `value`, or `custom`.
 
 Each stored category requires its selected icon and color so item cards can render the category as a compact icon token.
 
-Suggested default category examples:
+Protected defaults are exactly:
 
 - Health
 - Learning
-- Work
-- Relationships
-- Home
-- Finance
-- Personal Growth
+- Uncategorized
 
-Users should eventually be able to create and customize categories, but full category management can be outside the first implementation pass if not already present.
+Users can create and edit custom categories from Settings and from item create/edit forms. Contextual
+category creation must keep the interrupted habit, task, or recurrent-task form mounted and select
+the new category on success.
+
+Deleting a custom category is atomic: habits move to the protected Uncategorized category; tasks and
+recurrent tasks clear their category.
 
 ## Priorities
 
 Habits use four priorities:
 
 ```ts
-type HabitPriority = "low" | "medium" | "high" | "essential";
+type HabitPriority = 'low' | 'medium' | 'high' | 'essential'
 ```
 
 Tasks and recurrent tasks use three priorities:
 
 ```ts
-type TaskPriority = "low" | "medium" | "high";
+type TaskPriority = 'low' | 'medium' | 'high'
 ```
 
 Default priority is `medium`.
@@ -165,7 +166,7 @@ Item cards render priority as a small color-coded dot rather than visible priori
 Items only have two soft statuses:
 
 ```ts
-type ItemStatus = "active" | "archived";
+type ItemStatus = 'active' | 'archived'
 ```
 
 Deletion is real deletion, not a status.

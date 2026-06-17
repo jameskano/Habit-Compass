@@ -11,6 +11,7 @@ import { ItemsPage } from '../../features/items/ItemsPage'
 import { MoodPage } from '../../features/mood/MoodPage'
 import { OnboardingPage } from '../../features/onboarding/OnboardingPage'
 import { SettingsPage } from '../../features/settings/SettingsPage'
+import { CategoriesPage } from '../../features/categories/CategoriesPage'
 import { TodayPage } from '../../features/today/TodayPage'
 import { WeekPage } from '../../features/week/WeekPage'
 
@@ -58,6 +59,12 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 })
 
+const settingsCategoriesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/categories',
+  component: CategoriesPage,
+})
+
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
@@ -71,6 +78,7 @@ const routeTree = rootRoute.addChildren([
   itemsRoute,
   moodRoute,
   settingsRoute,
+  settingsCategoriesRoute,
   onboardingRoute,
 ])
 

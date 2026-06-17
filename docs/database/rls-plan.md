@@ -24,6 +24,11 @@ The production-ready first-deploy RLS rules are implemented in the Supabase migr
 
 - `habits`, `tasks`, `recurrent_tasks`, and `weekly_priorities`
   - Non-null `category_id` must reference the user's own category.
+- `habits`
+  - `category_id` is required on insert and update.
+- `categories`
+  - Client inserts can only create custom categories. Protected default rows are provisioned by the
+    database helper and guarded against rename/delete by triggers.
 - `habit_logs` and `habit_inactivity_periods`
   - `habit_id` must reference the user's own habit.
 - `recurrent_task_logs`
@@ -59,6 +64,8 @@ The production-ready first-deploy RLS rules are implemented in the Supabase migr
 - Weekly Big Rocks are limited to 3 active rows per weekly plan by `public.enforce_weekly_big_rock_limit()`.
 - The trigger also checks that the referenced weekly plan and habit belong to the same `user_id`.
 - Weekly review fields are constrained to the current domain enum and text length limits.
+- Category defaults are limited to one row per `(user_id, default_key)`, and custom category delete
+  reassignment is performed atomically by RPC.
 
 ## Notes For Future Supabase Work
 

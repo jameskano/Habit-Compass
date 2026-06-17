@@ -144,6 +144,12 @@ manual skip sets status skipped
 - Task creation is one screen and defaults its required date to today.
 - Recurrent-task creation has frequency and details steps and remains binary-only.
 - Category creation requires name, icon, and color without role/value/type/orientation metadata.
+- Settings exposes a Categories row that opens `/settings/categories`.
+- Category management shows custom categories before the protected default life areas.
+- Health, Learning, and Uncategorized cannot be renamed or deleted.
+- Deleting a custom category moves linked habits to Uncategorized and clears linked task/recurrent-task categories.
+- Contextual category creation in habit, task, and recurrent-task create/edit forms preserves current
+  item form values and selects the new category on success.
 
 ## Items page
 

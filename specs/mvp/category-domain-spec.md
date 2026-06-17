@@ -8,7 +8,7 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 
 - Category definitions.
 - Optional assignment from items.
-- Archive and confirmed physical delete behavior.
+- Settings-based management, contextual creation, and confirmed physical delete behavior.
 
 ## Non-Goals
 
@@ -19,35 +19,46 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
 ## Functional Requirements
 
 - Categories are customizable labels with `name`, required `iconName`, required `colorToken`, and `order`.
-- Items may reference zero or one category at rest. New and edited habits require one category;
-  tasks and recurrent tasks keep category optional.
-- Category lifecycle status is limited to `active` and `archived`.
-- Delete physically removes a category after explicit confirmation and does not delete linked items.
-- A category may remain marked as a starter/default label without imposing a category type.
+- Every user has protected defaults: `Health`, `Learning`, and `Uncategorized`.
+- Protected defaults use stable `defaultKey` values: `health`, `learning`, and `uncategorized`.
+- `isDefault` marks protected defaults. Default category names and deletion are blocked.
+- Custom categories must have `defaultKey = null` and `isDefault = false`.
+- Items may reference zero or one category at rest. Habits require one category and fall back to
+  the protected `Uncategorized` category when a custom category is deleted. Tasks and recurrent
+  tasks keep category optional.
+- Delete physically removes a custom category after explicit confirmation and does not delete linked items.
+- Category icons use app-owned Lucide icon keys; colors use the exact `CATEGORY_COLOR_PALETTE`
+  token set.
 - Category creation uses required name, icon, and color inputs plus optional description. New
-  user-created categories are active, ordered after existing categories, and not marked default.
+  user-created categories are ordered after existing categories and not marked default.
 
 ## Data Model
 
 - `Category`
-  - base item entity fields
+  - `id`
+  - `userId`
+  - `createdAt`
+  - `updatedAt`
   - `name`
   - `description`
   - `iconName`
   - `colorToken`
   - `order`
-  - `lifecycleStatus`
   - `isDefault`
+  - `defaultKey`
 
 ## Acceptance Criteria
 
 - Categories can be created without role, value, type, or orientation metadata.
 - Categories require icon and color metadata for their visual token.
-- Items can remain uncategorized.
-- Archive is reversible and delete removes the category from storage.
-- Deleting a category leaves linked items intact with no category assignment.
+- Health, Learning, and Uncategorized are provisioned for each user and cannot be renamed or deleted.
+- Custom category deletion is atomic: habits move to Uncategorized, tasks and recurrent tasks clear
+  their category, and the category row is physically removed.
+- Settings exposes category management at `/settings/categories`; item create/edit forms can open
+  contextual category creation without losing the interrupted form state.
 
 ## Test Plan
 
-- Schema tests for required icon/color customizable labels and rejection of type/orientation fields.
-- Repository tests for archive and physical delete unlinking behavior.
+- Schema tests for required icon/color/default metadata and rejection of type/orientation fields.
+- Unit tests for protected defaults, icon registry fallback/search, and the 24-color palette.
+- Repository tests for protected default blocking and custom delete reassignment behavior.

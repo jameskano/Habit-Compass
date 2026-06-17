@@ -1,6 +1,7 @@
 import { formatISO } from 'date-fns'
 
 import type { Category } from '@/domain/categories'
+import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
@@ -41,6 +42,15 @@ const buildBaseFields = (id: EntityId) => {
   }
 }
 
+const buildCategoryBaseFields = (id: EntityId) => {
+  return {
+    id,
+    userId: MOCK_USER_ID,
+    createdAt: toIsoDateTime(fourDaysAgo),
+    updatedAt: toIsoDateTime(today),
+  }
+}
+
 export type MockDataState = {
   categories: Category[]
   habits: Habit[]
@@ -56,24 +66,34 @@ export type MockDataState = {
 const createInitialMockData = (): MockDataState => {
   const categories: Category[] = [
     {
-      ...buildBaseFields('category-health'),
-      name: 'Health',
+      ...buildCategoryBaseFields('category-health'),
+      name: CATEGORY_DEFAULTS[0].name,
       description: 'Movement and energy routines.',
-      colorToken: 'emerald',
-      iconName: 'heart',
+      colorToken: CATEGORY_DEFAULTS[0].colorToken,
+      iconName: CATEGORY_DEFAULTS[0].iconName,
       order: 0,
-      lifecycleStatus: 'active',
       isDefault: true,
+      defaultKey: 'health',
     },
     {
-      ...buildBaseFields('category-learning'),
-      name: 'Learning',
+      ...buildCategoryBaseFields('category-learning'),
+      name: CATEGORY_DEFAULTS[1].name,
       description: 'Reading and study routines.',
-      colorToken: 'sky',
-      iconName: 'book-open',
+      colorToken: CATEGORY_DEFAULTS[1].colorToken,
+      iconName: CATEGORY_DEFAULTS[1].iconName,
       order: 1,
-      lifecycleStatus: 'active',
       isDefault: true,
+      defaultKey: 'learning',
+    },
+    {
+      ...buildCategoryBaseFields('category-uncategorized'),
+      name: CATEGORY_DEFAULTS[2].name,
+      description: null,
+      colorToken: CATEGORY_DEFAULTS[2].colorToken,
+      iconName: CATEGORY_DEFAULTS[2].iconName,
+      order: 2,
+      isDefault: true,
+      defaultKey: 'uncategorized',
     },
   ]
 

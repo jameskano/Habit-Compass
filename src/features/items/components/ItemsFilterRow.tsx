@@ -74,13 +74,11 @@ export const ItemsFilterRow = ({
           <SelectItem value={allCategoriesValue}>
             {intl.formatMessage({ id: allCategoriesLabelId })}
           </SelectItem>
-          {categories
-            .filter((category) => category.lifecycleStatus === 'active')
-            .map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
+          {categories.map((category) => (
+            <SelectItem key={category.id} value={category.id}>
+              {category.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

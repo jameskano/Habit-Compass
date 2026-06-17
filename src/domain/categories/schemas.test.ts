@@ -7,14 +7,13 @@ const category = {
   userId: 'user-1',
   createdAt: '2026-05-21T08:00:00.000Z',
   updatedAt: '2026-05-21T08:00:00.000Z',
-  archivedAt: null,
   name: 'Health',
   description: null,
   colorToken: 'emerald',
-  iconName: 'heart',
+  iconName: 'heartPulse',
   order: 0,
-  lifecycleStatus: 'active',
   isDefault: false,
+  defaultKey: null,
 }
 
 describe('CategorySchema', () => {
@@ -27,10 +26,25 @@ describe('CategorySchema', () => {
     expect(CategorySchema.safeParse({ ...category, type: 'value' }).success).toBe(false)
   })
 
+  it('rejects archive lifecycle metadata', () => {
+    expect(CategorySchema.safeParse({ ...category, archivedAt: null }).success).toBe(false)
+    expect(CategorySchema.safeParse({ ...category, lifecycleStatus: 'active' }).success).toBe(false)
+  })
+
   it('requires category icon and color metadata', () => {
     expect(CategorySchema.safeParse({ ...category, iconName: null }).success).toBe(false)
     expect(CategorySchema.safeParse({ ...category, colorToken: null }).success).toBe(false)
     expect(CategorySchema.safeParse({ ...category, iconName: '' }).success).toBe(false)
     expect(CategorySchema.safeParse({ ...category, colorToken: '' }).success).toBe(false)
+  })
+
+  it('requires protected defaults to carry a default key', () => {
+    expect(CategorySchema.safeParse({ ...category, isDefault: true }).success).toBe(false)
+    expect(
+      CategorySchema.safeParse({ ...category, isDefault: true, defaultKey: 'health' }).success,
+    ).toBe(true)
+    expect(
+      CategorySchema.safeParse({ ...category, isDefault: false, defaultKey: 'health' }).success,
+    ).toBe(false)
   })
 })

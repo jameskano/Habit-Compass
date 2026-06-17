@@ -1,6 +1,14 @@
 import { err, ok, type Result } from '@/shared/utils/result'
-import { createNotFoundError } from '@/shared/utils/appError'
-import type { CategoriesRepository, Category } from '@/domain/categories'
+import { createAppError, createNotFoundError } from '@/shared/utils/appError'
+import {
+  canDeleteCategory,
+  canRenameCategory,
+  findUncategorizedCategory,
+  isCategoryColorToken,
+  isCategoryIconKey,
+  type CategoriesRepository,
+  type Category,
+} from '@/domain/categories'
 
 import { getMockState } from './mockData'
 
@@ -27,13 +35,20 @@ export const mockCategoriesRepository: CategoriesRepository = {
   },
 
   async create(input) {
+    if (input.isDefault || input.defaultKey) {
+      return err(createAppError('validation', 'Default categories cannot be created by clients.'))
+    }
+    if (!isCategoryIconKey(input.iconName) || !isCategoryColorToken(input.colorToken)) {
+      return err(createAppError('validation', 'Category icon and color must be supported.'))
+    }
     const state = getMockState()
     const category: Category = {
       ...input,
+      isDefault: false,
+      defaultKey: null,
       id: `category-${state.categories.length + 1}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      archivedAt: null,
     }
 
     state.categories.push(category)
@@ -41,20 +56,37 @@ export const mockCategoriesRepository: CategoriesRepository = {
   },
 
   async update(input) {
-    return updateCategoryInState(input.id, (category) => ({
-      ...category,
-      ...input,
-      updatedAt: new Date().toISOString(),
-    }))
-  },
+    const currentCategory = getMockState().categories.find((category) => category.id === input.id)
 
-  async archive({ categoryId }) {
-    return updateCategoryInState(categoryId, (category) => ({
-      ...category,
-      lifecycleStatus: 'archived',
-      archivedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }))
+    if (!currentCategory) {
+      return err(createNotFoundError('Category', input.id))
+    }
+    if (
+      !canRenameCategory(currentCategory) &&
+      input.name !== undefined &&
+      input.name !== currentCategory.name
+    ) {
+      return err(createAppError('validation', 'Default category names are protected.'))
+    }
+    if (input.iconName !== undefined && !isCategoryIconKey(input.iconName)) {
+      return err(createAppError('validation', 'Category icon must be supported.'))
+    }
+    if (input.colorToken !== undefined && !isCategoryColorToken(input.colorToken)) {
+      return err(createAppError('validation', 'Category color must be supported.'))
+    }
+
+    return updateCategoryInState(input.id, (category) => {
+      const nextName = canRenameCategory(category) ? input.name : undefined
+
+      return {
+        ...category,
+        ...input,
+        ...(nextName === undefined ? { name: category.name } : { name: nextName }),
+        isDefault: category.isDefault,
+        defaultKey: category.defaultKey,
+        updatedAt: new Date().toISOString(),
+      }
+    })
   },
 
   async delete({ categoryId }) {
@@ -64,10 +96,19 @@ export const mockCategoriesRepository: CategoriesRepository = {
     if (index === -1) {
       return err(createNotFoundError('Category', categoryId))
     }
+    const category = state.categories[index]
+    if (!canDeleteCategory(category)) {
+      return err(createAppError('validation', 'Default categories cannot be deleted.'))
+    }
+
+    const uncategorized = findUncategorizedCategory(state.categories)
+    if (!uncategorized) {
+      return err(createAppError('configuration', 'Uncategorized category is missing.'))
+    }
 
     state.categories.splice(index, 1)
     state.habits = state.habits.map((habit) =>
-      habit.categoryId === categoryId ? { ...habit, categoryId: null } : habit,
+      habit.categoryId === categoryId ? { ...habit, categoryId: uncategorized.id } : habit,
     )
     state.tasks = state.tasks.map((task) =>
       task.categoryId === categoryId ? { ...task, categoryId: null } : task,
@@ -77,14 +118,5 @@ export const mockCategoriesRepository: CategoriesRepository = {
     )
 
     return ok(null)
-  },
-
-  async restore({ categoryId }) {
-    return updateCategoryInState(categoryId, (category) => ({
-      ...category,
-      lifecycleStatus: 'active',
-      archivedAt: null,
-      updatedAt: new Date().toISOString(),
-    }))
   },
 }
