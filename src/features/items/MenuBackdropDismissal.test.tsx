@@ -33,6 +33,9 @@ describe('Items menu backdrop dismissal', () => {
         onOpenDetail={vi.fn()}
         onArchive={vi.fn()}
         onReactivate={vi.fn()}
+        onReset={vi.fn()}
+        onDelete={vi.fn()}
+        pending={false}
       />,
     )
 

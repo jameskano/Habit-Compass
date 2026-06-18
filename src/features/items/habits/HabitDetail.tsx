@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
@@ -29,7 +29,6 @@ type HabitDetailProps = {
   habit: Habit
   categories: Category[]
   initialTab: HabitDetailTab
-  initialDangerAction?: HabitDangerAction
   today: ISODateString
   onClose: () => void
   onArchived: (habit: Habit) => void
@@ -42,7 +41,6 @@ export const HabitDetail = ({
   habit,
   categories,
   initialTab,
-  initialDangerAction,
   today,
   onClose,
   onArchived,
@@ -51,10 +49,7 @@ export const HabitDetail = ({
   const intl = useIntl()
   const appToast = useAppToast()
   const [activeTab, setActiveTab] = useState(initialTab)
-  const [confirmation, setConfirmation] = useState<HabitDangerAction | null>(
-    initialDangerAction ?? null,
-  )
-  const initialDangerActionRef = useRef<HabitDangerAction | undefined>(initialDangerAction)
+  const [confirmation, setConfirmation] = useState<HabitDangerAction | null>(null)
   const logsQuery = useHabitLogsRangeQuery({ from: habit.startsOn, to: today })
   const updateMutation = useUpdateHabitMutation()
   const archiveMutation = useArchiveHabitMutation()
@@ -194,13 +189,7 @@ export const HabitDetail = ({
           habit={habit}
           action={confirmation}
           pending={pending}
-          onCancel={() => {
-            setConfirmation(null)
-            if (initialDangerActionRef.current) {
-              initialDangerActionRef.current = undefined
-              onClose()
-            }
-          }}
+          onCancel={() => setConfirmation(null)}
           onConfirm={confirmAction}
         />
       </DialogContent>

@@ -16,17 +16,24 @@ type TodayActionSheetProps = {
   title: string
   open: boolean
   actions: TodayMenuAction[]
+  nestedDialogOpen?: boolean
   onClose: () => void
 }
 
-export const TodayActionSheet = ({ title, open, actions, onClose }: TodayActionSheetProps) => {
+export const TodayActionSheet = ({
+  title,
+  open,
+  actions,
+  nestedDialogOpen = false,
+  onClose,
+}: TodayActionSheetProps) => {
   const intl = useIntl()
 
   return (
     <Sheet
       open={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
+        if (!nextOpen && !nestedDialogOpen) {
           onClose()
         }
       }}
@@ -34,6 +41,11 @@ export const TodayActionSheet = ({ title, open, actions, onClose }: TodayActionS
       <SheetContent
         aria-label={intl.formatMessage({ id: 'page.today.menu.title' }, { item: title })}
         aria-describedby={undefined}
+        onInteractOutside={(event) => {
+          if (nestedDialogOpen) {
+            event.preventDefault()
+          }
+        }}
         className="animate-[habit-sheet-in_300ms_ease-out] w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl motion-reduce:animate-none md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
       >
         <div className="mb-4 flex items-start justify-between gap-4">

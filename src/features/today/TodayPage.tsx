@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
-import { getHabitAmountInputMetadata, getHabitLogAmount } from '@/domain/habits'
+import { getHabitAmountInputMetadata, getHabitLogAmount, type Habit } from '@/domain/habits'
 import { getTodayDateMode, type TodayFilterState } from '@/domain/today'
 import { HabitAmountInputSheet } from '@/features/items/habits/HabitAmountInputSheet'
+import {
+  HabitConfirmationDialog,
+  type HabitDangerAction,
+} from '@/features/items/habits/HabitConfirmationDialog'
 import { HabitDetail } from '@/features/items/habits/HabitDetail'
 import { RecurrentTaskEdit } from '@/features/items/recurrent-tasks/RecurrentTaskEdit'
 import { TaskEdit } from '@/features/items/tasks/TaskEdit'
+import { useResetHabitProgressMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -31,6 +36,7 @@ import { useTodayShellActions } from './useTodayShellActions'
 export const TodayPage = () => {
   const intl = useIntl()
   const appToast = useAppToast()
+  const resetHabitMutation = useResetHabitProgressMutation()
   const actualToday = todayAsISODate()
   const [selectedDate, setSelectedDate] = useState<ISODateString>(actualToday)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
@@ -45,6 +51,10 @@ export const TodayPage = () => {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [selectedRecurrentTaskId, setSelectedRecurrentTaskId] = useState<string | null>(null)
   const [amountHabitId, setAmountHabitId] = useState<string | null>(null)
+  const [habitConfirmation, setHabitConfirmation] = useState<{
+    habit: Habit
+    action: HabitDangerAction
+  } | null>(null)
   const dateMode = getTodayDateMode(selectedDate, actualToday)
   const completionEnabled = canModifyTodayDate(dateMode)
 
@@ -73,10 +83,13 @@ export const TodayPage = () => {
     openAmountInput: setAmountHabitId,
   })
 
-  const closeMenu = () => setSelectedMenuItemId(null)
-  const openHabitDetail: TodayOpenHabitDetail = (habit, tab, dangerAction) => {
+  const closeMenu = () => {
+    setSelectedMenuItemId(null)
+    setHabitConfirmation(null)
+  }
+  const openHabitDetail: TodayOpenHabitDetail = (habit, tab) => {
     closeMenu()
-    setDetailSelection({ habitId: habit.id, tab, dangerAction })
+    setDetailSelection({ habitId: habit.id, tab })
   }
   const { menuActionsForItem } = useTodayMenuActions({
     dateMode,
@@ -84,6 +97,7 @@ export const TodayPage = () => {
     completionActions,
     openAmountInput: setAmountHabitId,
     openHabitDetail,
+    requestHabitDangerAction: (habit, action) => setHabitConfirmation({ habit, action }),
     openTaskEdit: setSelectedTaskId,
     openRecurrentTaskEdit: setSelectedRecurrentTaskId,
   })
@@ -149,8 +163,28 @@ export const TodayPage = () => {
         title={todayData.selectedMenuItem?.title ?? ''}
         open={Boolean(todayData.selectedMenuItem)}
         actions={menuActionsForItem(todayData.selectedMenuItem)}
+        nestedDialogOpen={Boolean(habitConfirmation)}
         onClose={closeMenu}
       />
+
+      {habitConfirmation ? (
+        <HabitConfirmationDialog
+          habit={habitConfirmation.habit}
+          action={habitConfirmation.action}
+          pending={resetHabitMutation.isPending}
+          onCancel={() => setHabitConfirmation(null)}
+          onConfirm={() => {
+            if (habitConfirmation.action === 'reset') {
+              resetHabitMutation.mutate(habitConfirmation.habit.id, {
+                onSuccess: () => {
+                  setHabitConfirmation(null)
+                  appToast.success({ id: 'page.items.habit.detail.progressReset' })
+                },
+              })
+            }
+          }}
+        />
+      ) : null}
 
       {todayData.selectedHabitForAmount ? (
         <HabitAmountInputSheet
@@ -183,11 +217,10 @@ export const TodayPage = () => {
 
       {todayData.detailHabit && detailSelection ? (
         <HabitDetail
-          key={`${todayData.detailHabit.id}:${detailSelection.tab}:${detailSelection.dangerAction ?? ''}`}
+          key={`${todayData.detailHabit.id}:${detailSelection.tab}`}
           habit={todayData.detailHabit}
           categories={todayData.categories}
           initialTab={detailSelection.tab}
-          initialDangerAction={detailSelection.dangerAction}
           today={actualToday}
           onClose={() => setDetailSelection(null)}
           onArchived={(habit) => {

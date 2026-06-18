@@ -30,7 +30,7 @@ export const RecurrentTaskConfirmationDialog = ({
       <DialogContent
         role="alertdialog"
         aria-modal="true"
-        className="w-full max-w-sm rounded-2xl p-5"
+        className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
       >
         <DialogTitle className="text-lg">
           {intl.formatMessage({ id: 'page.items.recurrent.confirm.delete.title' })}
@@ -42,7 +42,7 @@ export const RecurrentTaskConfirmationDialog = ({
           )}
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" disabled={pending} onClick={onCancel}>
+          <Button variant="secondary" disabled={pending} onClick={onCancel}>
             {intl.formatMessage({ id: 'action.cancel' })}
           </Button>
           <Button

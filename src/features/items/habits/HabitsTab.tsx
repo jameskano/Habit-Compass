@@ -5,7 +5,9 @@ import type { Habit } from '@/domain/habits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useArchiveHabitMutation } from '@/features/habits/hooks/useArchiveHabitMutation'
 import {
+  useDeleteHabitMutation,
   useReorderHabitsMutation,
+  useResetHabitProgressMutation,
   useRestoreHabitMutation,
 } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
@@ -18,7 +20,6 @@ import { SortableItemsList } from '../components/SortableItemsList'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { HabitCard } from './HabitCard'
 import { HabitDetail, type HabitDetailTab } from './HabitDetail'
-import type { HabitDangerAction } from './HabitConfirmationDialog'
 import { HabitOptionsSheet } from './HabitOptionsSheet'
 
 type HabitsTabProps = {
@@ -30,7 +31,6 @@ type HabitsTabProps = {
 type DetailSelection = {
   habitId: string
   tab: HabitDetailTab
-  dangerAction?: HabitDangerAction
 }
 
 const asISODate = (value: Date) => {
@@ -49,6 +49,8 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
   const logsQuery = useHabitLogsRangeQuery({ from, to: today })
   const archiveMutation = useArchiveHabitMutation()
   const reorderMutation = useReorderHabitsMutation()
+  const resetMutation = useResetHabitProgressMutation()
+  const deleteMutation = useDeleteHabitMutation()
   const restoreMutation = useRestoreHabitMutation()
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null)
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
@@ -88,9 +90,15 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
     reorderMutation.mutate(orderedHabitIds)
   }
 
-  const openDetail = (habit: Habit, tab: HabitDetailTab, dangerAction?: HabitDangerAction) => {
+  const optionsPending =
+    archiveMutation.isPending ||
+    restoreMutation.isPending ||
+    resetMutation.isPending ||
+    deleteMutation.isPending
+
+  const openDetail = (habit: Habit, tab: HabitDetailTab) => {
     setSelectedHabitId(null)
-    setDetailSelection({ habitId: habit.id, tab, dangerAction })
+    setDetailSelection({ habitId: habit.id, tab })
   }
 
   const archiveHabit = (habit: Habit) => {
@@ -123,6 +131,25 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
     setSelectedHabitId(null)
     setDetailSelection(null)
     appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
+  }
+
+  const resetHabitProgress = (habit: Habit, onSuccess: () => void) => {
+    resetMutation.mutate(habit.id, {
+      onSuccess: () => {
+        onSuccess()
+        appToast.success({ id: 'page.items.habit.detail.progressReset' })
+      },
+    })
+  }
+
+  const deleteHabit = (habit: Habit) => {
+    deleteMutation.mutate(habit.id, {
+      onSuccess: () => {
+        setSelectedHabitId(null)
+        setDetailSelection(null)
+        appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
+      },
+    })
   }
 
   return (
@@ -187,18 +214,20 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
       <HabitOptionsSheet
         habit={selectedHabit}
         archived={showingArchived}
+        pending={optionsPending}
         onClose={() => setSelectedHabitId(null)}
         onOpenDetail={openDetail}
         onArchive={archiveHabit}
         onReactivate={reactivateHabit}
+        onReset={resetHabitProgress}
+        onDelete={deleteHabit}
       />
       {detailHabit && detailSelection ? (
         <HabitDetail
-          key={`${detailHabit.id}:${detailSelection.tab}:${detailSelection.dangerAction ?? ''}`}
+          key={`${detailHabit.id}:${detailSelection.tab}`}
           habit={detailHabit}
           categories={categoriesQuery.data ?? []}
           initialTab={detailSelection.tab}
-          initialDangerAction={detailSelection.dangerAction}
           today={today}
           onClose={() => setDetailSelection(null)}
           onArchived={handleArchived}

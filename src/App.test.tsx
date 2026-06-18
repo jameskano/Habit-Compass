@@ -145,6 +145,42 @@ describe('app shell', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('confirms Today habit reset without opening habit detail', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const habitCard = await screen.findByRole('button', {
+      name: 'Complete or edit Move for 20 minutes',
+    })
+    fireEvent.contextMenu(habitCard)
+
+    expect(
+      screen.getByRole('dialog', { name: 'Actions for Move for 20 minutes' }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
+    const resetDialog = screen.getByRole('alertdialog', { name: 'Reset progress?' })
+    expect(
+      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(within(resetDialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('menuitem', { name: 'Reset progress' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
+    await user.click(
+      within(screen.getByRole('alertdialog', { name: 'Reset progress?' })).getByRole('button', {
+        name: 'Reset progress',
+      }),
+    )
+
+    expect(
+      await screen.findByText('Progress reset. The habit remains available.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('opens measurable habit amount entry with the shared bottom-sheet animation', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -780,7 +816,7 @@ describe('app shell', () => {
     })
   })
 
-  it('confirms reset progress and permanent deletion from habit detail', async () => {
+  it('confirms reset progress and permanent deletion from habit options without opening detail', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/items' })
@@ -790,10 +826,16 @@ describe('app shell', () => {
     await user.click(await screen.findByRole('button', { name: 'Options for Read before bed' }))
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
     const resetDialog = screen.getByRole('alertdialog', { name: 'Reset progress?' })
+    expect(resetDialog).toHaveClass('w-[calc(100%-2rem)]')
+    expect(resetDialog).not.toHaveClass('w-full')
+    expect(
+      screen.queryByRole('dialog', { name: 'Habit detail for Read before bed' }),
+    ).not.toBeInTheDocument()
     await user.click(within(resetDialog).getByRole('button', { name: 'Reset progress' }))
     expect(
       await screen.findByText('Progress reset. The habit remains available.'),
     ).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Reset progress' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Close' }))
     expect(
       screen.getByRole('button', { name: 'Open options for Read before bed' }),
@@ -802,11 +844,11 @@ describe('app shell', () => {
     await user.click(screen.getByRole('button', { name: 'Options for Drink water after lunch' }))
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }))
     const deleteDialog = screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })
-    await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
     expect(
-      screen.getByRole('button', { name: 'Open options for Drink water after lunch' }),
-    ).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Options for Drink water after lunch' }))
+      screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
+    ).not.toBeInTheDocument()
+    await user.click(within(deleteDialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: 'Delete' }))
     await user.click(
       within(screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })).getByRole(

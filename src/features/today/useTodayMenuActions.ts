@@ -6,6 +6,7 @@ import {
   type TodayDateMode,
   type TodayItem,
 } from '@/domain/today'
+import type { HabitDangerAction } from '@/features/items/habits/HabitConfirmationDialog'
 
 import type { TodayMenuAction } from './TodayActionSheet'
 import type { TodayCompletionActions, TodayOpenHabitDetail } from './today.types'
@@ -16,6 +17,10 @@ type UseTodayMenuActionsInput = {
   completionActions: TodayCompletionActions
   openAmountInput: (habitId: string) => void
   openHabitDetail: TodayOpenHabitDetail
+  requestHabitDangerAction: (
+    habit: Extract<TodayItem, { type: 'habit' }>['habit'],
+    action: HabitDangerAction,
+  ) => void
   openTaskEdit: (taskId: string) => void
   openRecurrentTaskEdit: (taskId: string) => void
 }
@@ -27,6 +32,7 @@ export const useTodayMenuActions = (input: UseTodayMenuActionsInput) => {
     completionActions,
     openAmountInput,
     openHabitDetail,
+    requestHabitDangerAction,
     openTaskEdit,
     openRecurrentTaskEdit,
   } = input
@@ -60,7 +66,7 @@ export const useTodayMenuActions = (input: UseTodayMenuActionsInput) => {
         {
           labelId: 'page.items.habit.menu.reset',
           icon: RotateCcw,
-          onSelect: () => openHabitDetail(habit, 'edit', 'reset'),
+          onSelect: () => requestHabitDangerAction(habit, 'reset'),
         },
       ]
 

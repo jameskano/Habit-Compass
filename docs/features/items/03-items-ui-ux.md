@@ -126,6 +126,8 @@ Closing an open nested dropdown by tapping its trigger again must close only the
 parent create/edit screen.
 
 Destructive actions require confirmation.
+When Reset progress or Delete is launched from a habit options/action sheet, the confirmation
+appears over that sheet and must not open the habit detail or edit screen.
 
 Reset progress should preserve the habit but clear logs/history after confirmation, unless the project has a soft reset policy already defined.
 

@@ -436,7 +436,7 @@ export const CategoryFormSheet = ({
           data-category-dialog-layer
           role="alertdialog"
           aria-modal="true"
-          className="w-full max-w-sm rounded-2xl p-5"
+          className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
         >
           <DialogTitle className="text-lg">
             {intl.formatMessage({ id: 'category.discard.title' })}
@@ -470,7 +470,7 @@ export const CategoryFormSheet = ({
           data-category-dialog-layer
           role="alertdialog"
           aria-modal="true"
-          className="w-full max-w-sm rounded-2xl p-5"
+          className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
         >
           <DialogTitle className="text-lg">
             {intl.formatMessage({ id: 'category.delete.title' })}
@@ -480,7 +480,7 @@ export const CategoryFormSheet = ({
           </DialogDescription>
           <div className="mt-5 flex justify-end gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               disabled={pending}
               onPointerDown={() => {
                 suppressSheetCloseRef.current = true
