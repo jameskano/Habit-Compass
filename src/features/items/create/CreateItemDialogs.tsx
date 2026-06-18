@@ -809,7 +809,7 @@ const HabitCreate = ({ onClose }: { onClose: () => void }) => {
               onClick={() => setStep((current) => current - 1)}
             >
               <ArrowLeft aria-hidden="true" size={16} className="mr-2" />
-              {intl.formatMessage({ id: 'page.items.create.back' })}
+              {intl.formatMessage({ id: 'action.back' })}
             </Button>
           ) : null}
           <Button
@@ -1067,7 +1067,7 @@ const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
           {step === 2 ? (
             <Button variant="secondary" onClick={() => setStep(1)}>
               <ArrowLeft aria-hidden="true" size={16} className="mr-2" />
-              {intl.formatMessage({ id: 'page.items.create.back' })}
+              {intl.formatMessage({ id: 'action.back' })}
             </Button>
           ) : null}
           <Button
