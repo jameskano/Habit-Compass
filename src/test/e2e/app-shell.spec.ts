@@ -88,7 +88,7 @@ test('items header search focuses each active tab filter', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Habits' })).toBeVisible()
   await expect(page.getByText('Active items')).toHaveCount(0)
   await expect(page.getByRole('textbox', { name: 'Search habits' })).toHaveCount(0)
-  await expect(page.getByLabel('Health').first()).toBeVisible()
+  await expect(page.getByLabel('Wellbeing').first()).toBeVisible()
   await expect(page.getByLabel('Priority: Medium').first()).toBeVisible()
   await page.getByRole('button', { name: 'Show archived Habits' }).click()
   await expect(page.getByRole('button', { name: 'Show active Habits' })).toHaveAttribute(

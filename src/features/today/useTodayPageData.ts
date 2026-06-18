@@ -87,10 +87,7 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
   )
-  const activeCategories = useMemo(
-    () => categories.filter((category) => category.lifecycleStatus === 'active'),
-    [categories],
-  )
+  const activeCategories = categories
   const selectedMenuItem = useMemo(
     () => orderedItems.find((item) => item.id === selectedMenuItemId) ?? null,
     [orderedItems, selectedMenuItemId],

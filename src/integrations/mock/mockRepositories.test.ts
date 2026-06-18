@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import { getHabitMinimumTargetValue } from '@/domain/habits'
 
 import { mockCategoriesRepository } from './mockCategoriesRepository'
@@ -61,13 +62,7 @@ describe('mock repositories', () => {
       'archivedAt',
       'carryForward',
     )
-    const categoryInput = omitFields(
-      state.categories[0],
-      'id',
-      'createdAt',
-      'updatedAt',
-      'archivedAt',
-    )
+    const categoryInput = omitFields(state.categories[0], 'id', 'createdAt', 'updatedAt')
 
     const habit = await mockHabitsRepository.create({ ...habitInput, title: 'Created habit' })
     const createdTask = await mockTasksRepository.create({
@@ -82,6 +77,7 @@ describe('mock repositories', () => {
       ...categoryInput,
       name: 'Created category',
       isDefault: false,
+      defaultKey: null,
     })
 
     expect(habit.ok && habit.data.title).toBe('Created habit')
@@ -136,30 +132,6 @@ describe('mock repositories', () => {
     }
   })
 
-  it('archives categories without removing them from state permanently', async () => {
-    const archiveResult = await mockCategoriesRepository.archive({
-      userId: mockData.currentUserId,
-      categoryId: 'category-health',
-    })
-
-    expect(archiveResult.ok).toBe(true)
-
-    const listResult = await mockCategoriesRepository.listForUser({
-      userId: mockData.currentUserId,
-    })
-
-    expect(listResult.ok).toBe(true)
-
-    if (listResult.ok) {
-      expect(listResult.data.find((category) => category.id === 'category-health')).toBeDefined()
-      expect(
-        listResult.data.every(
-          (category) => category.iconName.length > 0 && category.colorToken.length > 0,
-        ),
-      ).toBe(true)
-    }
-  })
-
   it('physically deletes a habit and its completion logs', async () => {
     const result = await mockHabitsRepository.delete({
       userId: mockData.currentUserId,
@@ -171,21 +143,54 @@ describe('mock repositories', () => {
     expect(getMockState().habitLogs.find((log) => log.habitId === 'habit-move')).toBeUndefined()
   })
 
-  it('physically deletes a category without deleting linked items', async () => {
+  it('physically deletes a custom category without deleting linked items', async () => {
+    const created = await mockCategoriesRepository.create({
+      userId: mockData.currentUserId,
+      name: 'Home',
+      description: null,
+      colorToken: 'emerald',
+      iconName: 'home',
+      order: CATEGORY_DEFAULTS.length,
+      isDefault: false,
+      defaultKey: null,
+    })
+
+    if (!created.ok) {
+      throw new Error('Expected category creation to succeed')
+    }
+
+    getMockState().habits[0].categoryId = created.data.id
+    getMockState().tasks[2].categoryId = created.data.id
+    getMockState().recurrentTasks[1].categoryId = created.data.id
+
     const result = await mockCategoriesRepository.delete({
       userId: mockData.currentUserId,
-      categoryId: 'category-health',
+      categoryId: created.data.id,
     })
 
     expect(result.ok).toBe(true)
     expect(
-      getMockState().categories.find((category) => category.id === 'category-health'),
+      getMockState().categories.find((category) => category.id === created.data.id),
     ).toBeUndefined()
-    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')?.categoryId).toBeNull()
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-move')?.categoryId).toBe(
+      'category-uncategorized',
+    )
     expect(getMockState().tasks.find((task) => task.id === 'task-groceries')?.categoryId).toBeNull()
     expect(
       getMockState().recurrentTasks.find((task) => task.id === 'recurrent-plants')?.categoryId,
     ).toBeNull()
+  })
+
+  it('blocks deleting protected default categories', async () => {
+    const result = await mockCategoriesRepository.delete({
+      userId: mockData.currentUserId,
+      categoryId: 'category-wellbeing',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(
+      getMockState().categories.find((category) => category.id === 'category-wellbeing'),
+    ).toBeDefined()
   })
 
   it('stores completed and skipped habit logs, removes them, and resets only after confirmation', async () => {
@@ -497,10 +502,12 @@ describe('mock repositories', () => {
     expect(getMockState().habits.find((habit) => habit.id === 'habit-move')).toEqual(beforeHabit)
     expect(getMockState().weeklyBigRocks).toEqual(beforeBigRocks)
     expect(
-      (await mockPlanningRepository.getForWeek({
-        userId: mockData.currentUserId,
-        weekStartDate: '2026-05-18',
-      })).ok,
+      (
+        await mockPlanningRepository.getForWeek({
+          userId: mockData.currentUserId,
+          weekStartDate: '2026-05-18',
+        })
+      ).ok,
     ).toBe(true)
   })
 

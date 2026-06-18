@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Archive, RotateCcw, Trash2 } from 'lucide-react'
-import { useEffect, useId, useMemo } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 import { z } from 'zod'
@@ -18,6 +18,7 @@ import {
   type UpdateHabitInput,
 } from '@/domain/habits'
 import type { Category } from '@/domain/categories'
+import { CategoryCreateButton, CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import { habitPriorities } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -378,6 +379,8 @@ export const HabitEditTab = ({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValuesForHabit(habit),
   })
+  void form.formState.dirtyFields
+  const previousHabitIdRef = useRef(habit.id)
   const scheduleKind = form.watch('scheduleKind')
   const selectedDays = form.watch('daysOfWeek')
   const selectedPriority = form.watch('priority')
@@ -388,10 +391,59 @@ export const HabitEditTab = ({
   const minimumUnitLabel = getMinimumUnitLabel(selectedTrackingType, form.watch('unitLabel'))
   const nameInputId = useId()
   const minimumInputId = useId()
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [categorySelection, setCategorySelection] = useState<string | null>(null)
+  const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
+  const createCategoryRequestRef = useRef(false)
+  const categoryCreatedFromSheetRef = useRef(false)
+  const previousCategoryIdsRef = useRef(new Set(categories.map((category) => category.id)))
+
+  const selectCategoryForForm = useCallback(
+    (createdCategory: Category) => {
+      setCategorySelection(createdCategory.id)
+      setCreatedCategorySelection(createdCategory)
+      form.reset(
+        { ...form.getValues(), categoryId: createdCategory.id },
+        { keepDirty: true, keepDirtyValues: true },
+      )
+      form.setValue('categoryId', createdCategory.id, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    },
+    [form],
+  )
 
   useEffect(() => {
-    form.reset(defaultValuesForHabit(habit))
+    form.register('categoryId')
+  }, [form])
+
+  useEffect(() => {
+    const sameHabit = previousHabitIdRef.current === habit.id
+    if (!sameHabit) {
+      setCategorySelection(null)
+      setCreatedCategorySelection(null)
+    }
+    form.reset(
+      sameHabit
+        ? { ...defaultValuesForHabit(habit), ...form.getValues() }
+        : defaultValuesForHabit(habit),
+      sameHabit ? { keepDirtyValues: true } : undefined,
+    )
+    previousHabitIdRef.current = habit.id
   }, [form, habit])
+
+  useEffect(() => {
+    const previousCategoryIds = previousCategoryIdsRef.current
+    const createdCategory = categories.find((category) => !previousCategoryIds.has(category.id))
+
+    if (createCategoryRequestRef.current && !creatingCategory && createdCategory) {
+      createCategoryRequestRef.current = false
+      selectCategoryForForm(createdCategory)
+    }
+
+    previousCategoryIdsRef.current = new Set(categories.map((category) => category.id))
+  }, [categories, creatingCategory, selectCategoryForForm])
 
   const toggleDay = (day: HabitDayOfWeek) => {
     form.setValue(
@@ -405,6 +457,7 @@ export const HabitEditTab = ({
 
   const submit = form.handleSubmit((values) => {
     const minimumConfigured = hasConfiguredMinimum(values)
+    const categoryId = createdCategorySelection?.id ?? categorySelection ?? values.categoryId
 
     onSave(
       {
@@ -412,7 +465,7 @@ export const HabitEditTab = ({
         title: values.title.trim(),
         description: values.description.trim() || null,
         notes: values.notes.trim() || null,
-        categoryId: values.categoryId || null,
+        categoryId: categoryId || null,
         priority: values.priority,
         goalConfig: buildGoalConfig(values),
         scheduleRule: buildSchedule(values),
@@ -426,7 +479,19 @@ export const HabitEditTab = ({
     )
   })
 
+  const selectCreatedCategory = (createdCategory: Category) => {
+    categoryCreatedFromSheetRef.current = true
+    selectCategoryForForm(createdCategory)
+  }
+
   const inputClass = 'mt-1.5 rounded-xl border-border/75'
+  const selectedCategoryId =
+    createdCategorySelection?.id ?? categorySelection ?? form.watch('categoryId')
+  const categoryOptions =
+    createdCategorySelection &&
+    !categories.some((category) => category.id === createdCategorySelection.id)
+      ? [...categories, createdCategorySelection]
+      : categories
   const minimumError = form.formState.errors.minimumAmount?.message
 
   return (
@@ -618,16 +683,28 @@ export const HabitEditTab = ({
             {intl.formatMessage({ id: 'page.items.habit.edit.optional' })}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium">
-              {intl.formatMessage({ id: 'page.items.habit.edit.category' })}
+            <div className="block text-sm font-medium">
+              <span>{intl.formatMessage({ id: 'page.items.habit.edit.category' })}</span>
               <Select
-                value={form.watch('categoryId') || noCategoryValue}
-                onValueChange={(value) =>
-                  form.setValue('categoryId', value === noCategoryValue ? '' : value, {
+                value={selectedCategoryId || noCategoryValue}
+                onValueChange={(value) => {
+                  if (
+                    value === noCategoryValue &&
+                    createdCategorySelection &&
+                    selectedCategoryId === createdCategorySelection.id
+                  ) {
+                    return
+                  }
+                  const nextCategoryId = value === noCategoryValue ? '' : value
+                  setCategorySelection(nextCategoryId)
+                  if (nextCategoryId !== createdCategorySelection?.id) {
+                    setCreatedCategorySelection(null)
+                  }
+                  form.setValue('categoryId', nextCategoryId, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
-                }
+                }}
               >
                 <SelectTrigger
                   aria-label={intl.formatMessage({ id: 'page.items.habit.edit.category' })}
@@ -639,13 +716,11 @@ export const HabitEditTab = ({
                   <SelectItem value={noCategoryValue}>
                     {intl.formatMessage({ id: 'page.items.habit.category.none' })}
                   </SelectItem>
-                  {categories
-                    .filter((category) => category.lifecycleStatus === 'active')
-                    .map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {form.formState.errors.categoryId ? (
@@ -653,7 +728,14 @@ export const HabitEditTab = ({
                   {intl.formatMessage({ id: 'page.items.habit.edit.error.category' })}
                 </span>
               ) : null}
-            </label>
+              <CategoryCreateButton
+                onClick={() => {
+                  createCategoryRequestRef.current = true
+                  categoryCreatedFromSheetRef.current = false
+                  setCreatingCategory(true)
+                }}
+              />
+            </div>
             <label className="block text-sm font-medium">
               {intl.formatMessage({ id: 'page.items.habit.edit.priority' })}
               <Select
@@ -911,6 +993,21 @@ export const HabitEditTab = ({
           {intl.formatMessage({ id: 'page.items.habit.menu.delete' })}
         </Button>
       </section>
+      <CategoryFormSheet
+        open={creatingCategory}
+        mode="create"
+        categories={categories}
+        onCreated={selectCreatedCategory}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            if (!categoryCreatedFromSheetRef.current) {
+              createCategoryRequestRef.current = false
+            }
+            categoryCreatedFromSheetRef.current = false
+          }
+          setCreatingCategory(nextOpen)
+        }}
+      />
     </div>
   )
 }

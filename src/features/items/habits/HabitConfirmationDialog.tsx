@@ -32,7 +32,7 @@ export const HabitConfirmationDialog = ({
       <DialogContent
         role="alertdialog"
         aria-modal="true"
-        className="w-full max-w-sm rounded-2xl p-5"
+        className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
       >
         <DialogTitle className="text-lg">
           {intl.formatMessage({ id: `page.items.habit.confirm.${action}.title` })}
@@ -44,7 +44,7 @@ export const HabitConfirmationDialog = ({
           )}
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" disabled={pending} onClick={onCancel}>
+          <Button variant="secondary" disabled={pending} onClick={onCancel}>
             {intl.formatMessage({ id: 'action.cancel' })}
           </Button>
           <Button

@@ -1,6 +1,7 @@
 import { formatISO } from 'date-fns'
 
 import type { Category } from '@/domain/categories'
+import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
@@ -41,6 +42,15 @@ const buildBaseFields = (id: EntityId) => {
   }
 }
 
+const buildCategoryBaseFields = (id: EntityId) => {
+  return {
+    id,
+    userId: MOCK_USER_ID,
+    createdAt: toIsoDateTime(fourDaysAgo),
+    updatedAt: toIsoDateTime(today),
+  }
+}
+
 export type MockDataState = {
   categories: Category[]
   habits: Habit[]
@@ -54,28 +64,16 @@ export type MockDataState = {
 }
 
 const createInitialMockData = (): MockDataState => {
-  const categories: Category[] = [
-    {
-      ...buildBaseFields('category-health'),
-      name: 'Health',
-      description: 'Movement and energy routines.',
-      colorToken: 'emerald',
-      iconName: 'heart',
-      order: 0,
-      lifecycleStatus: 'active',
-      isDefault: true,
-    },
-    {
-      ...buildBaseFields('category-learning'),
-      name: 'Learning',
-      description: 'Reading and study routines.',
-      colorToken: 'sky',
-      iconName: 'book-open',
-      order: 1,
-      lifecycleStatus: 'active',
-      isDefault: true,
-    },
-  ]
+  const categories: Category[] = CATEGORY_DEFAULTS.map((category, index) => ({
+    ...buildCategoryBaseFields(`category-${category.defaultKey}`),
+    name: category.name,
+    description: category.description,
+    colorToken: category.colorToken,
+    iconName: category.iconName,
+    order: index,
+    isDefault: true,
+    defaultKey: category.defaultKey,
+  }))
 
   const habits: Habit[] = [
     {
@@ -84,7 +82,7 @@ const createInitialMockData = (): MockDataState => {
       description: 'Three lightweight movement sessions each week.',
       notes: 'Kept intentionally lightweight.',
       lifecycleStatus: 'active',
-      categoryId: 'category-health',
+      categoryId: 'category-wellbeing',
       priority: 'medium',
       startsOn: toIsoDate(fourDaysAgo),
       endsOn: null,
@@ -132,7 +130,7 @@ const createInitialMockData = (): MockDataState => {
       description: 'A stable midday hydration cue.',
       notes: 'Simple binary support.',
       lifecycleStatus: 'active',
-      categoryId: 'category-health',
+      categoryId: 'category-wellbeing',
       priority: 'high',
       startsOn: toIsoDate(fourDaysAgo),
       endsOn: null,
@@ -241,7 +239,7 @@ const createInitialMockData = (): MockDataState => {
       notes: 'A regular one-off task that still belongs on Today.',
       dueDate: toIsoDate(today),
       completedAt: toIsoDateTime(today),
-      categoryId: 'category-health',
+      categoryId: 'category-wellbeing',
       priority: 'medium',
       carryForward: true,
       order: 2,
@@ -284,7 +282,7 @@ const createInitialMockData = (): MockDataState => {
       title: 'Water the plants',
       description: 'Keep balcony plants watered.',
       notes: 'A responsibility that stays actionable when overdue.',
-      categoryId: 'category-health',
+      categoryId: 'category-wellbeing',
       priority: 'low',
       carryForward: false,
       order: 1,

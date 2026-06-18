@@ -16,14 +16,13 @@ const category = (id: string, name: string): Category => ({
   userId: 'user-1',
   createdAt: '2026-05-21T08:00:00.000Z',
   updatedAt: '2026-05-21T08:00:00.000Z',
-  archivedAt: null,
   name,
   description: null,
   colorToken: 'emerald',
-  iconName: 'heart',
+  iconName: 'heartPulse',
   order: 0,
-  lifecycleStatus: 'active',
   isDefault: false,
+  defaultKey: null,
 })
 
 describe('week planning utilities', () => {
@@ -61,32 +60,41 @@ describe('week planning utilities', () => {
   })
 
   it('groups only selected habits by their life area with uncategorized fallback', () => {
-    const health = category('category-health', 'Health')
+    const wellbeing = category('category-wellbeing', 'Wellbeing')
     const habits = [
-      createHabit({ trackingType: 'binary' }, { id: 'habit-gym', title: 'Gym', categoryId: health.id }),
-      createHabit({
-        trackingType: 'binary',
-      }, {
-        id: 'habit-sleep',
-        title: 'Sleep',
-        categoryId: health.id,
-      }),
-      createHabit({
-        trackingType: 'binary',
-      }, {
-        id: 'habit-read',
-        title: 'Read',
-        categoryId: null,
-      }),
+      createHabit(
+        { trackingType: 'binary' },
+        { id: 'habit-gym', title: 'Gym', categoryId: wellbeing.id },
+      ),
+      createHabit(
+        {
+          trackingType: 'binary',
+        },
+        {
+          id: 'habit-sleep',
+          title: 'Sleep',
+          categoryId: wellbeing.id,
+        },
+      ),
+      createHabit(
+        {
+          trackingType: 'binary',
+        },
+        {
+          id: 'habit-read',
+          title: 'Read',
+          categoryId: null,
+        },
+      ),
     ]
 
     const groups = groupBigRockHabitsByLifeArea({
       habits,
-      categories: [health, category('category-work', 'Work')],
+      categories: [wellbeing, category('category-work', 'Work')],
       uncategorizedLabel: 'Uncategorized',
     })
 
-    expect(groups.map((group) => group.name)).toEqual(['Health', 'Uncategorized'])
+    expect(groups.map((group) => group.name)).toEqual(['Wellbeing', 'Uncategorized'])
     expect(groups[0].habits.map((habit) => habit.title)).toEqual(['Gym', 'Sleep'])
     expect(groups[1].habits.map((habit) => habit.title)).toEqual(['Read'])
   })

@@ -5,6 +5,7 @@ The first Supabase schema for Habit Compass is defined across:
 - [0001_initial_schema.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0001_initial_schema.sql>)
 - [0002_habit_inactivity_periods.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0002_habit_inactivity_periods.sql>)
 - [0003_weekly_planning.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0003_weekly_planning.sql>)
+- [0004_categories_management.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0004_categories_management.sql>)
 
 ## Principles
 
@@ -21,10 +22,14 @@ The first Supabase schema for Habit Compass is defined across:
   - Stores app-level preferences: locale, theme, week start, timezone, onboarding completion timestamp, and feature flags.
 - `categories`
   - Optional grouping for items and weekly priorities.
-  - Stores customizable label name, required icon/color visual metadata, sort order, starter-label marker, and archive state.
+  - Stores customizable label name, required app-owned icon/color visual metadata, sort order,
+    protected default marker, and protected default key.
+  - Protected defaults are unique per user: Wellbeing, Family, Relationships, Career, Learning,
+    Finance, Home, Projects, Creativity, Leisure, Growth, Reflection, Community, Meaning, and
+    Uncategorized.
 - `habits`
   - Stores habit definitions, category link, priority, ordering, schedule, tracking type, optional descriptions/notes, and JSONB goal/completion config.
-  - Category links are nullable for legacy/unlinked rows but must reference the same user when present.
+  - Category links are required and must reference the same user.
 - `habit_logs`
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
   - Stores log date, logged timestamp, completion level, optional numeric progress fields, unit label, and note.
@@ -64,7 +69,9 @@ The first Supabase schema for Habit Compass is defined across:
 
 - Every user-owned table carries either `id = auth.users.id` (`profiles`) or `user_id = auth.users.id`.
 - RLS policies validate own-row access and same-user parent ownership on writes.
-- Optional links may remain null, but non-null category, habit, mood-log, weekly-plan, and Big Rock habit links must belong to the same authenticated user.
+- Optional category links may remain null for tasks and recurrent tasks, but habits require a
+  category. Non-null category, habit, mood-log, weekly-plan, and Big Rock habit links must belong to
+  the same authenticated user.
 - All foreign key columns used for joins, cascades, or RLS parent lookups are indexed.
 
 ## JSONB Fields
@@ -82,13 +89,15 @@ The first Supabase schema for Habit Compass is defined across:
 
 ## Delete And Archive
 
-- `archived_at` is used where the product expects a reversible inactive state.
+- `archived_at` is used where the product expects a reversible inactive state. Categories do not use archive state.
 - Habits additionally keep normalized inactivity periods so repeated archive/reactivation cycles can be excluded from stats.
 - Items do not use `deleted_at`; confirmed deletion physically removes an item.
 - `deleted_at` remains available only for base-entity non-item records whose lifecycle may need soft deletion, such as reflections and weekly Big Rocks.
+- Custom category deletion happens through `delete_category_with_reassignment(category_id)`: linked
+  habits move to the user's protected Uncategorized category; linked tasks and recurrent tasks clear
+  `category_id`; protected defaults cannot be deleted.
 
 ## Default Data
 
-- Default categories are not globally seeded.
-- Category bootstrap should happen per authenticated user during onboarding or profile setup.
+- Default categories are provisioned per authenticated user by `ensure_default_categories_for_user()`.
 - `supabase/seed.sql` contains commented examples only, because user-specific data depends on real auth user ids.

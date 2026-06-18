@@ -35,7 +35,11 @@ Creation flows:
 - Habit: completion setup, frequency, details.
 - Task: one dated form.
 - Recurrent task: executable frequency, details.
-- Category: one compact form.
+- Category: create/edit bottom sheet with name, icon picker, and horizontal color palette.
+
+Habit, task, and recurrent-task create/edit forms show `Create category` below their category
+selector. Opening it must not unmount or reset the interrupted item form, and successful creation
+selects the new category.
 
 ---
 
@@ -122,6 +126,8 @@ Closing an open nested dropdown by tapping its trigger again must close only the
 parent create/edit screen.
 
 Destructive actions require confirmation.
+When Reset progress or Delete is launched from a habit options/action sheet, the confirmation
+appears over that sheet and must not open the habit detail or edit screen.
 
 Reset progress should preserve the habit but clear logs/history after confirmation, unless the project has a soft reset policy already defined.
 

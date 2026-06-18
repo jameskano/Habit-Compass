@@ -1,4 +1,5 @@
 import { FormattedMessage, useIntl } from 'react-intl'
+import { Tags } from 'lucide-react'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { Button } from '@/shared/ui/button'
@@ -136,6 +137,23 @@ export const SettingsPage = () => {
           />
         ))}
       </div>
+
+      <a
+        href="/settings/categories"
+        className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
+          <Tags aria-hidden="true" size={19} />
+        </span>
+        <span className="flex flex-col gap-1">
+          <span className="font-semibold">
+            <FormattedMessage id="settings.categories.title" />
+          </span>
+          <span className="text-sm text-muted-foreground">
+            <FormattedMessage id="settings.categories.description" />
+          </span>
+        </span>
+      </a>
 
       <Card className="space-y-4 rounded-2xl border-rose-200/50 bg-rose-50/70 p-5 dark:border-rose-900/40 dark:bg-rose-950/20">
         <div className="space-y-1">

@@ -43,8 +43,9 @@ Users need a habit model that works for the simplest possible case, while still 
   - `totalQuantityPerPeriod`
 - Period-based goals must support `day`, `week`, `month`, `year`, and `custom`.
 - Habit creation uses a three-step flow: completion setup, frequency, then details.
-- New and edited habits require a category selection. Persisted `categoryId` remains nullable so
-  legacy habits and habits unlinked by category deletion remain readable until edited.
+- New and edited habits require a category selection. Production storage backfills and preserves a
+  non-null category by moving orphaned/custom-deleted habit links to the user's protected
+  Uncategorized category.
 - A habit always supports standard completion; minimum completion exists only when configured for that habit.
 - Binary habits use manual minimum/standard completion. Standard and minimum descriptions are
   optional text; minimum is offered only when a non-empty minimum description is configured.

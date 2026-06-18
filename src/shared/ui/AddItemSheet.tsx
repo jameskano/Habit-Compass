@@ -4,6 +4,8 @@ import { FormattedMessage, useIntl } from 'react-intl'
 
 import { Button } from './button'
 import { CreateItemDialogs } from '@/features/items/create/CreateItemDialogs'
+import { CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
+import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 
 type AddItemSheetProps = {
   open: boolean
@@ -19,6 +21,7 @@ const options = [
 
 export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
   const intl = useIntl()
+  const categoriesQuery = useCategoriesQuery()
   const [createKind, setCreateKind] = useState<(typeof options)[number]['kind'] | null>(null)
 
   useEffect(() => {
@@ -44,6 +47,22 @@ export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
     if (event.key === 'Escape') {
       onClose()
     }
+  }
+
+  if (createKind === 'category') {
+    return (
+      <CategoryFormSheet
+        open
+        mode="create"
+        categories={categoriesQuery.data ?? []}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setCreateKind(null)
+            onClose()
+          }
+        }}
+      />
+    )
   }
 
   return createKind ? (

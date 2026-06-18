@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Archive, Trash2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 import { z } from 'zod'
 
 import type { Category } from '@/domain/categories'
 import type { Task, UpdateTaskInput } from '@/domain/tasks'
+import { CategoryCreateButton, CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import {
   useArchiveTaskMutation,
   useDeleteTaskMutation,
@@ -63,6 +64,9 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
   const intl = useIntl()
   const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [creatingCategory, setCreatingCategory] = useState(false)
+  const [categorySelection, setCategorySelection] = useState<string | null>(null)
+  const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
   const updateMutation = useUpdateTaskMutation()
   const archiveMutation = useArchiveTaskMutation()
   const deleteMutation = useDeleteTaskMutation()
@@ -71,18 +75,66 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
     resolver: zodResolver(TaskEditValuesSchema),
     defaultValues: valuesForTask(task),
   })
+  void form.formState.dirtyFields
+  const previousTaskIdRef = useRef(task.id)
+  const createCategoryRequestRef = useRef(false)
+  const categoryCreatedFromSheetRef = useRef(false)
+  const previousCategoryIdsRef = useRef(new Set(categories.map((category) => category.id)))
   const selectedPriority = form.watch('priority')
 
+  const selectCategoryForForm = useCallback(
+    (createdCategory: Category) => {
+      setCategorySelection(createdCategory.id)
+      setCreatedCategorySelection(createdCategory)
+      form.reset(
+        { ...form.getValues(), categoryId: createdCategory.id },
+        { keepDirty: true, keepDirtyValues: true },
+      )
+      form.setValue('categoryId', createdCategory.id, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    },
+    [form],
+  )
+
   useEffect(() => {
-    form.reset(valuesForTask(task))
+    form.register('categoryId')
+  }, [form])
+
+  useEffect(() => {
+    const sameTask = previousTaskIdRef.current === task.id
+    const nextValues = sameTask
+      ? { ...valuesForTask(task), ...form.getValues() }
+      : valuesForTask(task)
+
+    if (!sameTask) {
+      setCategorySelection(null)
+      setCreatedCategorySelection(null)
+    }
+    form.reset(nextValues, sameTask ? { keepDirtyValues: true } : undefined)
+    previousTaskIdRef.current = task.id
   }, [form, task])
 
+  useEffect(() => {
+    const previousCategoryIds = previousCategoryIdsRef.current
+    const createdCategory = categories.find((category) => !previousCategoryIds.has(category.id))
+
+    if (createCategoryRequestRef.current && !creatingCategory && createdCategory) {
+      createCategoryRequestRef.current = false
+      selectCategoryForForm(createdCategory)
+    }
+
+    previousCategoryIdsRef.current = new Set(categories.map((category) => category.id))
+  }, [categories, creatingCategory, selectCategoryForForm])
+
   const submit = form.handleSubmit((values) => {
+    const categoryId = createdCategorySelection?.id ?? categorySelection ?? values.categoryId
     const input: UpdateTaskInput = {
       id: task.id,
       title: values.title.trim(),
       dueDate: values.dueDate || null,
-      categoryId: values.categoryId || null,
+      categoryId: categoryId || null,
       priority: values.priority,
       carryForward: values.carryForward,
       description: values.description.trim() || null,
@@ -94,7 +146,19 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
     })
   })
 
+  const selectCreatedCategory = (createdCategory: Category) => {
+    categoryCreatedFromSheetRef.current = true
+    selectCategoryForForm(createdCategory)
+  }
+
   const inputClass = 'mt-1.5 rounded-xl border-border/75'
+  const selectedCategoryId =
+    createdCategorySelection?.id ?? categorySelection ?? form.watch('categoryId')
+  const categoryOptions =
+    createdCategorySelection &&
+    !categories.some((category) => category.id === createdCategorySelection.id)
+      ? [...categories, createdCategorySelection]
+      : categories
 
   return (
     <Dialog
@@ -163,16 +227,28 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
                 {intl.formatMessage({ id: 'page.items.task.edit.optional' })}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm font-medium">
-                  {intl.formatMessage({ id: 'page.items.task.edit.category' })}
+                <div className="block text-sm font-medium">
+                  <span>{intl.formatMessage({ id: 'page.items.task.edit.category' })}</span>
                   <Select
-                    value={form.watch('categoryId') || noCategoryValue}
-                    onValueChange={(value) =>
-                      form.setValue('categoryId', value === noCategoryValue ? '' : value, {
+                    value={selectedCategoryId || noCategoryValue}
+                    onValueChange={(value) => {
+                      if (
+                        value === noCategoryValue &&
+                        createdCategorySelection &&
+                        selectedCategoryId === createdCategorySelection.id
+                      ) {
+                        return
+                      }
+                      const nextCategoryId = value === noCategoryValue ? '' : value
+                      setCategorySelection(nextCategoryId)
+                      if (nextCategoryId !== createdCategorySelection?.id) {
+                        setCreatedCategorySelection(null)
+                      }
+                      form.setValue('categoryId', nextCategoryId, {
                         shouldDirty: true,
                         shouldValidate: true,
                       })
-                    }
+                    }}
                   >
                     <SelectTrigger
                       aria-label={intl.formatMessage({ id: 'page.items.task.edit.category' })}
@@ -184,16 +260,21 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
                       <SelectItem value={noCategoryValue}>
                         {intl.formatMessage({ id: 'page.items.task.category.none' })}
                       </SelectItem>
-                      {categories
-                        .filter((category) => category.lifecycleStatus === 'active')
-                        .map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </label>
+                  <CategoryCreateButton
+                    onClick={() => {
+                      createCategoryRequestRef.current = true
+                      categoryCreatedFromSheetRef.current = false
+                      setCreatingCategory(true)
+                    }}
+                  />
+                </div>
                 <label className="block text-sm font-medium">
                   {intl.formatMessage({ id: 'page.items.task.edit.priority' })}
                   <Select
@@ -269,6 +350,21 @@ export const TaskEdit = ({ task, categories, onClose, onArchived, onDeleted }: T
           pending={pending}
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() => deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })}
+        />
+        <CategoryFormSheet
+          open={creatingCategory}
+          mode="create"
+          categories={categories}
+          onCreated={selectCreatedCategory}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              if (!categoryCreatedFromSheetRef.current) {
+                createCategoryRequestRef.current = false
+              }
+              categoryCreatedFromSheetRef.current = false
+            }
+            setCreatingCategory(nextOpen)
+          }}
         />
       </DialogContent>
     </Dialog>
