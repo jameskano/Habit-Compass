@@ -70,6 +70,7 @@
   "category.delete.confirm": "Eliminar",
   "category.iconPicker.title": "Elegir icono",
   "category.iconPicker.search": "Buscar iconos",
+  "category.iconPicker.searchPlaceholder": "Buscar iconos",
   "category.iconPicker.grid": "Opciones de icono de categoria",
   "category.iconPicker.selected": "{label} seleccionado",
   "category.color.tomato": "Tomate",

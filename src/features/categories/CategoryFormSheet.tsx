@@ -103,18 +103,23 @@ const IconPicker = ({ open, selectedIcon, onBack, onSelect }: IconPickerProps) =
           </DialogTitle>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-5">
-          <label className="block text-sm font-medium">
-            {intl.formatMessage({ id: 'category.iconPicker.search' })}
-            <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border/75 bg-background px-3">
-              <Search aria-hidden="true" className="size-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="border-0 px-0 shadow-none focus-visible:ring-0"
-              />
-            </div>
-          </label>
+          <div className="relative">
+            <label htmlFor="icon-search" className="sr-only">
+              {intl.formatMessage({ id: 'category.iconPicker.search' })}
+            </label>
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              id="icon-search"
+              ref={searchInputRef}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              className="pl-9"
+              placeholder={intl.formatMessage({ id: 'category.iconPicker.searchPlaceholder' })}
+            />
+          </div>
           <div
             className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-3"
             aria-label={intl.formatMessage({ id: 'category.iconPicker.grid' })}

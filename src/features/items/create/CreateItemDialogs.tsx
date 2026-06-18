@@ -803,8 +803,12 @@ const HabitCreate = ({ onClose }: { onClose: () => void }) => {
         {error ? <ErrorText>{error}</ErrorText> : null}
         <div className="flex gap-3">
           {step > 1 ? (
-            <Button type="button" variant="ghost" onClick={() => setStep((current) => current - 1)}>
-              <ArrowLeft aria-hidden="true" size={16} />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep((current) => current - 1)}
+            >
+              <ArrowLeft aria-hidden="true" size={16} className="mr-2" />
               {intl.formatMessage({ id: 'page.items.create.back' })}
             </Button>
           ) : null}
@@ -1061,8 +1065,8 @@ const RecurrentTaskCreate = ({ onClose }: { onClose: () => void }) => {
         {error ? <ErrorText>{error}</ErrorText> : null}
         <div className="flex gap-3">
           {step === 2 ? (
-            <Button variant="ghost" onClick={() => setStep(1)}>
-              <ArrowLeft aria-hidden="true" size={16} />
+            <Button variant="secondary" onClick={() => setStep(1)}>
+              <ArrowLeft aria-hidden="true" size={16} className="mr-2" />
               {intl.formatMessage({ id: 'page.items.create.back' })}
             </Button>
           ) : null}
