@@ -243,7 +243,24 @@ describe('app shell', () => {
     expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
     expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create category' })).toBeInTheDocument()
+    const infoButton = screen.getByRole('button', { name: 'Information about categories' })
+    const createButton = screen.getByRole('button', { name: 'Create category' })
+    expect(infoButton).toBeInTheDocument()
+    expect(createButton).toBeInTheDocument()
+    expect(
+      Boolean(infoButton.compareDocumentPosition(createButton) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    await user.click(infoButton)
+    expect(
+      screen.getByText(
+        'Categories help you organize habits and tasks around what matters in your life. They can represent life areas, roles, or values.',
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Examples: Health, Career, Parent, Growth, Discipline, Connection, Creativity.',
+      ),
+    ).toBeInTheDocument()
 
     const searchInput = await screen.findByRole('searchbox', { name: 'Search categories' })
     expect(await screen.findByRole('button', { name: 'Edit Wellbeing' })).toBeInTheDocument()
@@ -271,6 +288,9 @@ describe('app shell', () => {
     expect(screen.getByText('No matching categories.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Your categories' })).not.toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Default life areas' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Create category' }))
+    expect(screen.getByRole('dialog', { name: 'Create category' })).toBeInTheDocument()
   })
 
   it('keeps the category sheet open when dismissing the discard confirmation', async () => {

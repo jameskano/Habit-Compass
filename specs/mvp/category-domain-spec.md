@@ -60,6 +60,8 @@ Users need lightweight optional labels for organizing habits, tasks, and recurre
   their category, and the category row is physically removed.
 - Settings exposes category management at `/settings/categories`; item create/edit forms can open
   contextual category creation without losing the interrupted form state.
+- Category management includes brief contextual help explaining that categories can represent life
+  areas, roles, or values without adding category type metadata.
 
 ## Test Plan
 

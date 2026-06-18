@@ -1,4 +1,4 @@
-import { ArrowLeft, Plus, Search } from 'lucide-react'
+import { ArrowLeft, Info, Plus, Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { useNavigate } from '@tanstack/react-router'
@@ -13,9 +13,11 @@ import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useShellActions } from '@/shared/ui/useShellActions'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
+import { cn } from '@/shared/utils/cn'
 
 import { CategoryCard } from './CategoryCard'
 import { CategoryFormSheet } from './CategoryFormSheet'
@@ -40,6 +42,7 @@ export const CategoriesPage = () => {
   const navigate = useNavigate()
   const categoriesQuery = useCategoriesQuery()
   const [sheetState, setSheetState] = useState<SheetState>(null)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
   useShellTitle('category.page.title')
 
@@ -67,16 +70,38 @@ export const CategoriesPage = () => {
 
   const shellActions = useMemo(
     () => (
-      <Button
-        variant="ghost"
-        className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
-        aria-label={intl.formatMessage({ id: 'category.page.add' })}
-        onClick={openCreateSheet}
-      >
-        <Plus aria-hidden="true" size={20} />
-      </Button>
+      <>
+        <Popover open={infoOpen} onOpenChange={setInfoOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className={cn(
+                'size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground',
+                infoOpen && 'border-primary bg-primary/15 text-primary',
+              )}
+              aria-label={intl.formatMessage({ id: 'category.page.info.open' })}
+            >
+              <Info aria-hidden="true" size={20} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-72 text-sm leading-relaxed">
+            <p>{intl.formatMessage({ id: 'category.page.info.body' })}</p>
+            <p className="mt-3 font-medium text-foreground">
+              {intl.formatMessage({ id: 'category.page.info.examples' })}
+            </p>
+          </PopoverContent>
+        </Popover>
+        <Button
+          variant="ghost"
+          className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
+          aria-label={intl.formatMessage({ id: 'category.page.add' })}
+          onClick={openCreateSheet}
+        >
+          <Plus aria-hidden="true" size={20} />
+        </Button>
+      </>
     ),
-    [intl, openCreateSheet],
+    [infoOpen, intl, openCreateSheet],
   )
 
   useShellLeading(shellLeading)
