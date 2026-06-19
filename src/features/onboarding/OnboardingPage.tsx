@@ -151,7 +151,7 @@ export const OnboardingPage = () => {
               <FormattedMessage id="settings.locale.title" />
             </p>
             <div className="flex flex-wrap gap-2">
-              {(['en', 'es'] as const).map((option) => (
+              {(['system', 'en', 'es'] as const).map((option) => (
                 <button
                   key={option}
                   type="button"

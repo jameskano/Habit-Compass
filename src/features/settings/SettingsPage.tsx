@@ -1,178 +1,342 @@
+import {
+  CalendarDays,
+  Check,
+  ChevronRight,
+  Crown,
+  Database,
+  Languages,
+  LifeBuoy,
+  LogOut,
+  Palette,
+  Tags,
+  Trash2,
+  X,
+} from 'lucide-react'
+import { type ComponentType, type ReactNode, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
-import { Tags } from 'lucide-react'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import { Button } from '@/shared/ui/button'
+import type { AppLocale, AppSettings, ThemePreference } from '@/domain/settings'
 import { Card } from '@/shared/ui/card'
-import { FeatureToggle } from '@/shared/ui/FeatureToggle'
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet'
+import { cn } from '@/shared/utils/cn'
 
-const themeOptions = [
-  { value: 'light', labelId: 'settings.theme.light' },
-  { value: 'dark', labelId: 'settings.theme.dark' },
-  { value: 'system', labelId: 'settings.theme.system' },
-] as const
+type SettingsIcon = ComponentType<{ className?: string; size?: number; 'aria-hidden'?: boolean }>
 
-const localeOptions = [
+type SettingsRowProps = {
+  icon: SettingsIcon
+  labelId: string
+  ariaLabelId?: string
+  descriptionId?: string
+  valueId?: string
+  to?: '/settings/categories'
+  onClick?: () => void
+  disabled?: boolean
+  destructive?: boolean
+}
+
+type PreferenceSheet = 'language' | 'theme' | 'weekStartsOn'
+
+type PreferenceOption<Value extends string | number> = {
+  value: Value
+  labelId: string
+}
+
+const currentYear = new Date().getFullYear()
+
+const appVersion = import.meta.env.VITE_APP_VERSION ?? 'dev'
+const appBuildNumber = import.meta.env.VITE_APP_BUILD_NUMBER
+
+const languageOptions: PreferenceOption<AppLocale>[] = [
+  { value: 'system', labelId: 'settings.locale.system' },
   { value: 'en', labelId: 'settings.locale.en' },
   { value: 'es', labelId: 'settings.locale.es' },
-] as const
+]
 
-const toggleItems = [
-  {
-    key: 'mood',
-    labelId: 'settings.toggle.mood',
-    descriptionId: 'settings.toggle.moodDescription',
-  },
-  {
-    key: 'weeklyPlanning',
-    labelId: 'settings.toggle.weeklyPlanning',
-    descriptionId: 'settings.toggle.weeklyPlanningDescription',
-  },
-  {
-    key: 'suggestions',
-    labelId: 'settings.toggle.suggestions',
-    descriptionId: 'settings.toggle.suggestionsDescription',
-  },
-  {
-    key: 'habitCompletionLevels',
-    labelId: 'settings.toggle.habitCompletionLevels',
-    descriptionId: 'settings.toggle.habitCompletionLevelsDescription',
-  },
-  {
-    key: 'reflections',
-    labelId: 'settings.toggle.reflections',
-    descriptionId: 'settings.toggle.reflectionsDescription',
-  },
-  {
-    key: 'categories',
-    labelId: 'settings.toggle.categories',
-    descriptionId: 'settings.toggle.categoriesDescription',
-  },
-] as const
+const themeOptions: PreferenceOption<ThemePreference>[] = [
+  { value: 'system', labelId: 'settings.theme.system' },
+  { value: 'light', labelId: 'settings.theme.light' },
+  { value: 'dark', labelId: 'settings.theme.dark' },
+]
+
+const weekStartsOnOptions: PreferenceOption<AppSettings['weekStartsOn']>[] = [
+  { value: 1, labelId: 'settings.weekStartsOn.1' },
+  { value: 0, labelId: 'settings.weekStartsOn.0' },
+]
+
+const SettingsRow = ({
+  ariaLabelId,
+  descriptionId,
+  destructive = false,
+  disabled = false,
+  icon: Icon,
+  labelId,
+  onClick,
+  to,
+  valueId,
+}: SettingsRowProps) => {
+  const intl = useIntl()
+  const content = (
+    <>
+      <span
+        className={cn(
+          'grid size-10 shrink-0 place-items-center rounded-lg',
+          destructive ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary',
+        )}
+      >
+        <Icon aria-hidden size={18} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={cn('block font-medium', destructive ? 'text-destructive' : null)}>
+          <FormattedMessage id={labelId} />
+        </span>
+        {descriptionId ? (
+          <span className="mt-0.5 block text-sm text-muted-foreground">
+            <FormattedMessage id={descriptionId} />
+          </span>
+        ) : null}
+      </span>
+      {valueId ? (
+        <span className="shrink-0 text-sm text-muted-foreground">
+          <FormattedMessage id={valueId} />
+        </span>
+      ) : null}
+      {to || onClick ? (
+        <ChevronRight aria-hidden className="shrink-0 text-muted-foreground" size={18} />
+      ) : null}
+    </>
+  )
+
+  const className = cn(
+    'flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors',
+    to || onClick
+      ? 'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      : '',
+    disabled ? 'cursor-not-allowed opacity-60' : '',
+  )
+
+  if (to) {
+    return (
+      <a
+        aria-label={ariaLabelId ? intl.formatMessage({ id: ariaLabelId }) : undefined}
+        className={className}
+        href={to}
+      >
+        {content}
+      </a>
+    )
+  }
+
+  if (onClick) {
+    return (
+      <button className={className} disabled={disabled} type="button" onClick={onClick}>
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <div aria-disabled={disabled || undefined} className={className}>
+      {content}
+    </div>
+  )
+}
+
+type SettingsSectionProps = {
+  titleId: string
+  children: ReactNode
+}
+
+const SettingsSection = ({ children, titleId }: SettingsSectionProps) => (
+  <Card className="space-y-2 p-3">
+    <h2 className="px-3 pt-1 text-sm font-semibold uppercase tracking-normal text-muted-foreground">
+      <FormattedMessage id={titleId} />
+    </h2>
+    <div className="space-y-1">{children}</div>
+  </Card>
+)
+
+type PreferenceSheetContentProps<Value extends string | number> = {
+  titleId: string
+  descriptionId: string
+  options: PreferenceOption<Value>[]
+  value: Value
+  onSelect: (value: Value) => void
+}
+
+const PreferenceSheetContent = <Value extends string | number>({
+  descriptionId,
+  onSelect,
+  options,
+  titleId,
+  value,
+}: PreferenceSheetContentProps<Value>) => (
+  <div className="space-y-4">
+    <div className="flex items-start justify-between gap-3">
+      <div className="space-y-2">
+        <SheetTitle className="text-lg font-semibold">
+          <FormattedMessage id={titleId} />
+        </SheetTitle>
+        <SheetDescription className="text-sm leading-6 text-muted-foreground">
+          <FormattedMessage id={descriptionId} />
+        </SheetDescription>
+      </div>
+      <SheetClose className="grid size-10 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <X aria-hidden size={18} />
+        <span className="sr-only">
+          <FormattedMessage id="action.close" />
+        </span>
+      </SheetClose>
+    </div>
+    <div className="space-y-2">
+      {options.map((option) => {
+        const selected = option.value === value
+
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onSelect(option.value)}
+            className={cn(
+              'flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-colors',
+              selected
+                ? 'border-primary bg-primary/10 text-foreground'
+                : 'border-border/70 bg-card text-foreground hover:bg-muted',
+            )}
+          >
+            <FormattedMessage id={option.labelId} />
+            {selected ? <Check aria-hidden className="text-primary" size={18} /> : null}
+          </button>
+        )
+      })}
+    </div>
+  </div>
+)
 
 export const SettingsPage = () => {
   const intl = useIntl()
+  const [activeSheet, setActiveSheet] = useState<PreferenceSheet | null>(null)
   const theme = useAppPreferencesStore((state) => state.theme)
   const locale = useAppPreferencesStore((state) => state.locale)
-  const featureToggles = useAppPreferencesStore((state) => state.featureToggles)
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const setTheme = useAppPreferencesStore((state) => state.setTheme)
   const setLocale = useAppPreferencesStore((state) => state.setLocale)
-  const setFeatureToggle = useAppPreferencesStore((state) => state.setFeatureToggle)
+  const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
+
+  const themeValueId = `settings.theme.${theme}`
+  const localeValueId = `settings.locale.${locale}`
+  const weekStartsOnValueId = `settings.weekStartsOn.${weekStartsOn}`
+  const footerVersion = appBuildNumber
+    ? intl.formatMessage(
+        { id: 'settings.footer.versionWithBuild' },
+        { version: appVersion, build: appBuildNumber },
+      )
+    : intl.formatMessage({ id: 'settings.footer.version' }, { version: appVersion })
 
   return (
-    <section className="space-y-6">
-      <Card className="space-y-4 rounded-2xl p-5">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.theme.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.theme.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {themeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={theme === option.value}
-              onClick={() => setTheme(option.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                theme === option.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border/70 bg-card text-foreground hover:bg-muted'
-              }`}
-            >
-              {intl.formatMessage({ id: option.labelId })}
-            </button>
-          ))}
-        </div>
-      </Card>
+    <section className="space-y-4">
+      <SettingsRow
+        ariaLabelId="settings.categories.accessibilityLabel"
+        descriptionId="settings.categories.description"
+        icon={Tags}
+        labelId="settings.categories.title"
+        to="/settings/categories"
+      />
 
-      <Card className="space-y-4 rounded-2xl p-5">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.locale.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.locale.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {localeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={locale === option.value}
-              onClick={() => setLocale(option.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                locale === option.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border/70 bg-card text-foreground hover:bg-muted'
-              }`}
-            >
-              {intl.formatMessage({ id: option.labelId })}
-            </button>
-          ))}
-        </div>
-      </Card>
+      <SettingsSection titleId="settings.preferences.title">
+        <SettingsRow
+          icon={Languages}
+          labelId="settings.locale.title"
+          onClick={() => setActiveSheet('language')}
+          valueId={localeValueId}
+        />
+        <SettingsRow
+          icon={Palette}
+          labelId="settings.theme.title"
+          onClick={() => setActiveSheet('theme')}
+          valueId={themeValueId}
+        />
+        <SettingsRow
+          icon={CalendarDays}
+          labelId="settings.weekStartsOn.title"
+          onClick={() => setActiveSheet('weekStartsOn')}
+          valueId={weekStartsOnValueId}
+        />
+      </SettingsSection>
 
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.toggles.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.toggles.description" />
-          </p>
-        </div>
-        {toggleItems.map((toggle) => (
-          <FeatureToggle
-            key={toggle.key}
-            id={`toggle-${toggle.key}`}
-            labelId={toggle.labelId}
-            descriptionId={toggle.descriptionId}
-            checked={featureToggles[toggle.key]}
-            onChange={(checked) => setFeatureToggle(toggle.key, checked)}
-          />
-        ))}
-      </div>
+      <SettingsSection titleId="settings.dataPrivacy.title">
+        <SettingsRow disabled icon={Database} labelId="settings.dataPrivacy.title" />
+      </SettingsSection>
 
-      <a
-        href="/settings/categories"
-        className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
-          <Tags aria-hidden="true" size={19} />
-        </span>
-        <span className="flex flex-col gap-1">
-          <span className="font-semibold">
-            <FormattedMessage id="settings.categories.title" />
-          </span>
-          <span className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.categories.description" />
-          </span>
-        </span>
-      </a>
+      <SettingsSection titleId="settings.premium.sectionTitle">
+        <SettingsRow
+          disabled
+          descriptionId="settings.premium.status"
+          icon={Crown}
+          labelId="settings.premium.title"
+        />
+      </SettingsSection>
 
-      <Card className="space-y-4 rounded-2xl border-rose-200/50 bg-rose-50/70 p-5 dark:border-rose-900/40 dark:bg-rose-950/20">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.reset.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.reset.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" className="rounded-full" disabled>
-            <FormattedMessage id="settings.reset.soft" />
-          </Button>
-          <Button className="rounded-full opacity-80" disabled>
-            <FormattedMessage id="settings.reset.hard" />
-          </Button>
-        </div>
-      </Card>
+      <SettingsSection titleId="settings.support.title">
+        <SettingsRow disabled icon={LifeBuoy} labelId="settings.support.feedback" />
+      </SettingsSection>
+
+      <SettingsSection titleId="settings.account.title">
+        <SettingsRow disabled icon={LogOut} labelId="settings.account.signOut" />
+        <SettingsRow destructive disabled icon={Trash2} labelId="settings.account.delete" />
+      </SettingsSection>
+
+      <footer className="space-y-1 px-2 pb-2 pt-1 text-center text-xs text-muted-foreground">
+        <p>{footerVersion}</p>
+        <p>
+          <FormattedMessage id="settings.footer.copyright" values={{ year: currentYear }} />
+        </p>
+        <p>
+          <FormattedMessage id="settings.footer.tagline" />
+        </p>
+      </footer>
+
+      <Sheet open={activeSheet !== null} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent>
+          {activeSheet === 'language' ? (
+            <PreferenceSheetContent
+              descriptionId="settings.locale.description"
+              options={languageOptions}
+              titleId="settings.locale.title"
+              value={locale}
+              onSelect={(nextLocale) => {
+                setLocale(nextLocale)
+                setActiveSheet(null)
+              }}
+            />
+          ) : null}
+          {activeSheet === 'theme' ? (
+            <PreferenceSheetContent
+              descriptionId="settings.theme.description"
+              options={themeOptions}
+              titleId="settings.theme.title"
+              value={theme}
+              onSelect={(nextTheme) => {
+                setTheme(nextTheme)
+                setActiveSheet(null)
+              }}
+            />
+          ) : null}
+          {activeSheet === 'weekStartsOn' ? (
+            <PreferenceSheetContent
+              descriptionId="settings.weekStartsOn.description"
+              options={weekStartsOnOptions}
+              titleId="settings.weekStartsOn.title"
+              value={weekStartsOn}
+              onSelect={(nextWeekStartsOn) => {
+                setWeekStartsOn(nextWeekStartsOn)
+                setActiveSheet(null)
+              }}
+            />
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </section>
   )
 }

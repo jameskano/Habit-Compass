@@ -14,6 +14,7 @@ files, backend work, tests, security review, and definitions of done. It does no
 - [Account lifecycle spec](../../../specs/mvp/account-lifecycle-spec.md)
 - [Legal documents spec](../../../specs/mvp/legal-documents-spec.md)
 - [Settings test plan](test-plan.md)
+- [Step-by-step development plan](development-plan.md)
 
 ## Phase 1: Documentation And Model Confirmation
 

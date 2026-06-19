@@ -1086,12 +1086,68 @@ describe('app shell', () => {
     expect(screen.getByText('Weekly review was permanently deleted.')).toBeInTheDocument()
   })
 
-  it('settings toggles render', () => {
+  it('renders the Settings IA shell in the final MVP order and updates preferences immediately', async () => {
+    const user = userEvent.setup()
     renderWithAppProviders(<SettingsPage />)
 
-    expect(screen.getByRole('checkbox', { name: /Mood/ })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /Weekly planning/ })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /Suggestions/ })).toBeInTheDocument()
+    const categories = screen.getByRole('link', { name: 'Categories. Manage categories.' })
+    const preferences = screen.getByRole('heading', { name: 'Preferences' })
+    const dataPrivacy = screen.getByRole('heading', { name: 'Data and privacy' })
+    const premium = screen.getByRole('heading', { name: 'Habit Compass Premium' })
+    const support = screen.getByRole('heading', { name: 'Support and feedback' })
+    const account = screen.getByRole('heading', { name: 'Account actions' })
+
+    expect(categories).toHaveAttribute('href', '/settings/categories')
+    expect(screen.getByText('Coming soon')).toBeInTheDocument()
+    expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
+    expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
+    expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
+    expect(screen.queryByText('Optional depth')).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+
+    expect(
+      Boolean(categories.compareDocumentPosition(preferences) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(preferences.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(dataPrivacy.compareDocumentPosition(premium) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(premium.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(support.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: /Theme/ }))
+    expect(screen.getByRole('dialog', { name: 'Theme' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Dark' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Theme' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().theme).toBe('dark')
+    expect(document.documentElement).toHaveClass('dark')
+
+    await user.click(screen.getByRole('button', { name: /Week starts on/ }))
+    expect(screen.getByRole('dialog', { name: 'Week starts on' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Sunday' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Week starts on' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().weekStartsOn).toBe(0)
+    expect(screen.getByRole('button', { name: /Week starts on/ })).toHaveTextContent('Sunday')
+
+    await user.click(screen.getByRole('button', { name: /Language/ }))
+    expect(screen.getByRole('dialog', { name: 'Language' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Espanol' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Language' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().locale).toBe('es')
+    expect(document.documentElement).toHaveAttribute('lang', 'es')
+    expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
   })
 
   it('onboarding has max 3 steps', async () => {

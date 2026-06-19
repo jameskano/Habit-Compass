@@ -1,4 +1,5 @@
-export { featureToggleKeys, locales, themePreferences } from './constants'
+export { featureToggleKeys, locales, supportedLocales, themePreferences } from './constants'
+export { getDeviceLocale, resolveAppLocale, resolveThemePreference } from './preferences.utils'
 export {
   AppLocaleSchema,
   AppSettingsSchema,
@@ -11,5 +12,7 @@ export type {
   AppSettings,
   FeatureToggleKey,
   FeatureToggles,
+  ResolvedAppLocale,
+  ResolvedThemePreference,
   ThemePreference,
 } from './types'
