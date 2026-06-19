@@ -38,14 +38,23 @@
 
 html {
   min-width: 320px;
+  overflow-x: hidden;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
+}
+
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 :focus-visible {

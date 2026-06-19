@@ -130,6 +130,43 @@ test('item swipe tracks the pointer and the header title uses calm motion', asyn
   )
 })
 
+test('task swipe completion keeps the mobile viewport and toast contained', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/items')
+
+  await page.getByRole('tab', { name: 'Tasks', exact: true }).click()
+  const taskCard = page.getByRole('button', { name: 'Edit Call the clinic' })
+  await expect(taskCard).toBeVisible()
+
+  const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth)
+  const taskBounds = await taskCard.boundingBox()
+  if (!taskBounds) {
+    throw new Error('Expected the task card to be visible.')
+  }
+
+  await page.mouse.move(taskBounds.x + 24, taskBounds.y + taskBounds.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(taskBounds.x + 120, taskBounds.y + taskBounds.height / 2)
+
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+    .toBeLessThanOrEqual(viewportWidth)
+
+  await page.mouse.up()
+  await expect(page.getByText('Call the clinic was completed.')).toBeVisible()
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+    .toBeLessThanOrEqual(viewportWidth)
+
+  const toastBounds = await page.locator('[data-sonner-toast]').first().boundingBox()
+  if (!toastBounds) {
+    throw new Error('Expected the completion toast to be visible.')
+  }
+
+  expect(toastBounds.x).toBeGreaterThanOrEqual(0)
+  expect(toastBounds.x + toastBounds.width).toBeLessThanOrEqual(viewportWidth)
+})
+
 test('habit overlay, legend, and stats periods use the revised presentation', async ({ page }) => {
   await page.goto('/items')
 
