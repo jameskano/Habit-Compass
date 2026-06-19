@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import type { Category } from '@/domain/categories'
 import {
   buildTodayItems,
@@ -47,6 +48,7 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
   )
   const setOrderForDate = useTodayOrderStore((state) => state.setOrderForDate)
   const pruneOrderForDate = useTodayOrderStore((state) => state.pruneOrderForDate)
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const categoriesQuery = useCategoriesQuery()
   const habitsQuery = useTodayHabitsQuery(undefined, selectedDate)
   const tasksQuery = useTodayTasksQuery(undefined, selectedDate)
@@ -63,6 +65,7 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
         recurrentOccurrences: recurrentQuery.data?.occurrences ?? [],
         selectedDate,
         today,
+        weekStartsOn,
       }),
     [
       habitLogs,
@@ -72,6 +75,7 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
       selectedDate,
       tasksQuery.data?.tasks,
       today,
+      weekStartsOn,
     ],
   )
   const orderedItems = useMemo(

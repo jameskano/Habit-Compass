@@ -125,6 +125,7 @@ export const evaluateHabitCompletion = (input: HabitProgressInput): HabitComplet
           date: input.periodStart,
           today: input.today ?? input.periodEnd,
           logs: relevantLogs,
+          weekStartsOn: input.weekStartsOn,
         })
       : null
   const hasMissed = singleDayState === 'missed'

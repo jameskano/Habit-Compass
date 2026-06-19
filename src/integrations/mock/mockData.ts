@@ -2,6 +2,7 @@ import { formatISO } from 'date-fns'
 
 import type { Category } from '@/domain/categories'
 import { CATEGORY_DEFAULTS } from '@/domain/categories'
+import type { FeedbackAttachment, FeedbackSubmission } from '@/domain/feedback'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
@@ -61,6 +62,8 @@ export type MockDataState = {
   recurrentTasks: RecurrentTask[]
   recurrentTaskOccurrences: RecurrentTaskOccurrence[]
   moodLogs: MoodLog[]
+  feedbackSubmissions: FeedbackSubmission[]
+  feedbackAttachments: FeedbackAttachment[]
 }
 
 const createInitialMockData = (): MockDataState => {
@@ -346,6 +349,8 @@ const createInitialMockData = (): MockDataState => {
     recurrentTasks,
     recurrentTaskOccurrences,
     moodLogs,
+    feedbackSubmissions: [],
+    feedbackAttachments: [],
   }
 }
 

@@ -5,6 +5,7 @@ import {
   evaluateHabitCompletionForLogs,
   getHabitLogProgressValue,
   hasHabitProgressOnDate,
+  type WeekStartsOn,
 } from './habitCompletionRules'
 import { isHabitScheduledOnDate } from './habitSchedule'
 import { filterEligibleHabitLogs, isHabitInactiveOnDate } from './habitInactivity'
@@ -25,6 +26,7 @@ type DeriveHabitDayStateInput = {
   today: ISODateString
   habit: Habit
   logs: HabitLog[]
+  weekStartsOn?: WeekStartsOn
 }
 
 export const deriveHabitDayState = ({
@@ -32,6 +34,7 @@ export const deriveHabitDayState = ({
   today,
   habit,
   logs,
+  weekStartsOn = 1,
 }: DeriveHabitDayStateInput): HabitDayState => {
   if (date > today) {
     return 'future'
@@ -53,7 +56,12 @@ export const deriveHabitDayState = ({
       (entry) => entry.loggedForDate === date && getHabitLogProgressValue(habit, entry) > 0,
     )
   ) {
-    const completion = evaluateHabitCompletionForLogs({ habit, logs: eligibleLogs, date })
+    const completion = evaluateHabitCompletionForLogs({
+      habit,
+      logs: eligibleLogs,
+      date,
+      weekStartsOn,
+    })
     if (completion.derivedCompletionLevel === 'standard') {
       return 'completed_standard'
     }

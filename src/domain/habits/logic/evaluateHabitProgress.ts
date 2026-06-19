@@ -9,6 +9,7 @@ import {
   evaluateHabitCompletionForLogs,
   getHabitStandardTargetValue,
   getHabitTargetScope,
+  type WeekStartsOn,
 } from './habitCompletionRules'
 import { enumerateHabitScheduledDates, isHabitScheduledOnDate } from './habitSchedule'
 
@@ -18,6 +19,7 @@ export type HabitProgressInput = {
   periodStart: ISODateString
   periodEnd: ISODateString
   today?: ISODateString
+  weekStartsOn?: WeekStartsOn
 }
 
 export type HabitProgressEvaluation = PeriodProgress & {
@@ -66,6 +68,7 @@ export const evaluateHabitProgress = ({
   logs,
   periodStart,
   periodEnd,
+  weekStartsOn = 1,
 }: HabitProgressInput): HabitProgressEvaluation => {
   const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
@@ -74,6 +77,7 @@ export const evaluateHabitProgress = ({
     habit,
     logs: relevantLogs,
     date: periodStart,
+    weekStartsOn,
   })
   const completionFields = {
     rawProgressValue: completion.rawProgressValue,

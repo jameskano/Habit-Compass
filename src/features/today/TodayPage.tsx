@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { getHabitAmountInputMetadata, getHabitLogAmount, type Habit } from '@/domain/habits'
 import { getTodayDateMode, type TodayFilterState } from '@/domain/today'
 import { HabitAmountInputSheet } from '@/features/items/habits/HabitAmountInputSheet'
@@ -36,6 +37,7 @@ import { useTodayShellActions } from './useTodayShellActions'
 export const TodayPage = () => {
   const intl = useIntl()
   const appToast = useAppToast()
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const resetHabitMutation = useResetHabitProgressMutation()
   const actualToday = todayAsISODate()
   const [selectedDate, setSelectedDate] = useState<ISODateString>(actualToday)
@@ -204,6 +206,7 @@ export const TodayPage = () => {
             todayData.selectedHabitForAmount,
             todayData.habitLogs,
             selectedDate,
+            weekStartsOn,
           )}
           pending={completionActions.isHabitAmountPending}
           onClose={() => setAmountHabitId(null)}

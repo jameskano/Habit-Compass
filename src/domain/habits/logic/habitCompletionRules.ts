@@ -2,6 +2,8 @@ import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitCompletionLevel, HabitLog } from '../types'
 
+export type WeekStartsOn = 0 | 1
+
 export type HabitTargetScope = 'binary' | 'session' | 'period'
 
 export type HabitCompletionRuleEvaluation = {
@@ -34,15 +36,15 @@ const addDays = (date: ISODateString, amount: number) => {
   return toISODate(current)
 }
 
-const startOfWeek = (date: ISODateString) => {
+const startOfWeek = (date: ISODateString, weekStartsOn: WeekStartsOn) => {
   const current = toUtcDate(date)
-  const offset = (current.getUTCDay() + 6) % 7
+  const offset = (current.getUTCDay() - weekStartsOn + 7) % 7
   current.setUTCDate(current.getUTCDate() - offset)
   return toISODate(current)
 }
 
-const endOfWeek = (date: ISODateString) => {
-  return addDays(startOfWeek(date), 6)
+const endOfWeek = (date: ISODateString, weekStartsOn: WeekStartsOn) => {
+  return addDays(startOfWeek(date, weekStartsOn), 6)
 }
 
 const startOfMonth = (date: ISODateString) => {
@@ -130,7 +132,11 @@ export const getHabitMinimumTargetValue = (habit: Habit): number | null => {
   }
 }
 
-export const getHabitPeriodBounds = (habit: Habit, date: ISODateString) => {
+export const getHabitPeriodBounds = (
+  habit: Habit,
+  date: ISODateString,
+  weekStartsOn: WeekStartsOn = 1,
+) => {
   if (!('period' in habit.goalConfig)) {
     return { periodStart: date, periodEnd: date }
   }
@@ -140,7 +146,10 @@ export const getHabitPeriodBounds = (habit: Habit, date: ISODateString) => {
   }
 
   if (habit.goalConfig.period === 'week') {
-    return { periodStart: startOfWeek(date), periodEnd: endOfWeek(date) }
+    return {
+      periodStart: startOfWeek(date, weekStartsOn),
+      periodEnd: endOfWeek(date, weekStartsOn),
+    }
   }
 
   if (habit.goalConfig.period === 'month') {
@@ -220,12 +229,13 @@ export const evaluateHabitCompletionForLogs = (input: {
   habit: Habit
   logs: HabitLog[]
   date: ISODateString
+  weekStartsOn?: WeekStartsOn
 }): HabitCompletionRuleEvaluation => {
-  const { habit, date } = input
+  const { habit, date, weekStartsOn = 1 } = input
   const targetScope = getHabitTargetScope(habit)
   const { periodStart, periodEnd } =
     targetScope === 'period'
-      ? getHabitPeriodBounds(habit, date)
+      ? getHabitPeriodBounds(habit, date, weekStartsOn)
       : { periodStart: date, periodEnd: date }
   const relevantLogs = input.logs.filter(
     (log) =>

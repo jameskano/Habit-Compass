@@ -1,5 +1,5 @@
 import type { Category } from '@/domain/categories'
-import type { Habit, HabitLog } from '@/domain/habits'
+import type { Habit, HabitLog, WeekStartsOn } from '@/domain/habits'
 import type { DerivedRecurrentOccurrence, RecurrentTask } from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
 import type { HabitPriority, ISODateString, ItemPriority } from '@/shared/types'
@@ -79,6 +79,7 @@ export type BuildTodayItemsInput = {
   recurrentOccurrences: DerivedRecurrentOccurrence[]
   selectedDate: ISODateString
   today: ISODateString
+  weekStartsOn?: WeekStartsOn
 }
 
 export type TodayItemCategoryLookup = Map<string, Category>

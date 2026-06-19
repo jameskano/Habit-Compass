@@ -84,7 +84,11 @@ export {
   getHabitTargetScope,
   hasHabitProgressOnDate,
 } from './logic/habitCompletionRules'
-export type { HabitCompletionRuleEvaluation, HabitTargetScope } from './logic/habitCompletionRules'
+export type {
+  HabitCompletionRuleEvaluation,
+  HabitTargetScope,
+  WeekStartsOn,
+} from './logic/habitCompletionRules'
 export type { HabitStats } from './logic/habitStats'
 export { calculateHabitDetailStats, createHabitCompletionBars } from './logic/habitDetailStats'
 export type {

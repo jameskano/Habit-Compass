@@ -12,6 +12,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { type ComponentType, type ReactNode, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
@@ -29,7 +30,7 @@ type SettingsRowProps = {
   ariaLabelId?: string
   descriptionId?: string
   valueId?: string
-  to?: '/settings/categories'
+  to?: '/settings/categories' | '/settings/data-privacy' | '/settings/support'
   onClick?: () => void
   disabled?: boolean
   destructive?: boolean
@@ -117,13 +118,13 @@ const SettingsRow = ({
 
   if (to) {
     return (
-      <a
+      <Link
+        to={to}
         aria-label={ariaLabelId ? intl.formatMessage({ id: ariaLabelId }) : undefined}
         className={className}
-        href={to}
       >
         {content}
-      </a>
+      </Link>
     )
   }
 
@@ -266,7 +267,12 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       <SettingsSection titleId="settings.dataPrivacy.title">
-        <SettingsRow disabled icon={Database} labelId="settings.dataPrivacy.title" />
+        <SettingsRow
+          descriptionId="settings.dataPrivacy.description"
+          icon={Database}
+          labelId="settings.dataPrivacy.title"
+          to="/settings/data-privacy"
+        />
       </SettingsSection>
 
       <SettingsSection titleId="settings.premium.sectionTitle">
@@ -279,7 +285,12 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       <SettingsSection titleId="settings.support.title">
-        <SettingsRow disabled icon={LifeBuoy} labelId="settings.support.feedback" />
+        <SettingsRow
+          descriptionId="settings.support.description"
+          icon={LifeBuoy}
+          labelId="settings.support.feedback"
+          to="/settings/support"
+        />
       </SettingsSection>
 
       <SettingsSection titleId="settings.account.title">

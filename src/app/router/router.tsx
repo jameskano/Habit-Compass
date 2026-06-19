@@ -11,6 +11,9 @@ import { ItemsPage } from '../../features/items/ItemsPage'
 import { MoodPage } from '../../features/mood/MoodPage'
 import { OnboardingPage } from '../../features/onboarding/OnboardingPage'
 import { SettingsPage } from '../../features/settings/SettingsPage'
+import { DataPrivacyPage } from '../../features/settings/data-privacy/DataPrivacyPage'
+import { LegalDocumentPage } from '../../features/settings/data-privacy/LegalDocumentPage'
+import { SupportPage } from '../../features/settings/support/SupportPage'
 import { CategoriesPage } from '../../features/categories/CategoriesPage'
 import { TodayPage } from '../../features/today/TodayPage'
 import { WeekPage } from '../../features/week/WeekPage'
@@ -65,6 +68,30 @@ const settingsCategoriesRoute = createRoute({
   component: CategoriesPage,
 })
 
+const settingsDataPrivacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy',
+  component: DataPrivacyPage,
+})
+
+const settingsPrivacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy/privacy-policy',
+  component: () => <LegalDocumentPage kind="privacyPolicy" />,
+})
+
+const settingsTermsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy/terms',
+  component: () => <LegalDocumentPage kind="termsOfService" />,
+})
+
+const settingsSupportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/support',
+  component: SupportPage,
+})
+
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
@@ -79,6 +106,10 @@ const routeTree = rootRoute.addChildren([
   moodRoute,
   settingsRoute,
   settingsCategoriesRoute,
+  settingsDataPrivacyRoute,
+  settingsPrivacyPolicyRoute,
+  settingsTermsRoute,
+  settingsSupportRoute,
   onboardingRoute,
 ])
 

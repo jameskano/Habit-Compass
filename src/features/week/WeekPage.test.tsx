@@ -200,6 +200,48 @@ describe('WeekPage', () => {
     })
   })
 
+  it('preserves saved weekly records when the week-start preference changes', async () => {
+    seedPastWeeklyPlan()
+    const state = getMockState()
+    const savedPlan = state.weeklyPlans.find((plan) => plan.id === 'weekly-plan-past')
+    if (!savedPlan) {
+      throw new Error('Expected seeded weekly plan')
+    }
+    const savedBigRock = state.weeklyBigRocks[0]
+    if (!savedBigRock) {
+      throw new Error('Expected seeded weekly Big Rock')
+    }
+    savedPlan.reviewOverallFeeling = 'good'
+    savedPlan.reviewReflections = 'Saved under the original interval.'
+    const originalPlan = { ...savedPlan }
+    const originalBigRock = { ...savedBigRock }
+
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Week', level: 1 })
+    act(() => {
+      useAppPreferencesStore.setState({ weekStartsOn: 0 })
+    })
+
+    await waitFor(() => {
+      expect(useAppPreferencesStore.getState().weekStartsOn).toBe(0)
+    })
+
+    const updatedState = cloneMockState()
+    const preservedPlan = updatedState.weeklyPlans.find((plan) => plan.id === originalPlan.id)
+    const preservedBigRock = updatedState.weeklyBigRocks.find(
+      (bigRock) => bigRock.id === originalBigRock.id,
+    )
+
+    expect(preservedPlan?.weekStartDate).toBe(originalPlan.weekStartDate)
+    expect(preservedPlan?.focusText).toBe(originalPlan.focusText)
+    expect(preservedPlan?.reviewOverallFeeling).toBe(originalPlan.reviewOverallFeeling)
+    expect(preservedPlan?.reviewReflections).toBe(originalPlan.reviewReflections)
+    expect(preservedBigRock?.weeklyPlanId).toBe(originalPlan.id)
+    expect(preservedBigRock?.habitId).toBe(originalBigRock.habitId)
+    expect(updatedState.weeklyPlans).toHaveLength(1)
+  })
+
   it('does not show the empty-map add path for past weeks', async () => {
     const user = userEvent.setup()
     render(<App />)

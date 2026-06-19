@@ -32,6 +32,10 @@ export const AppShell = ({ children }: AppShellProps) => {
       '/mood': 'page.mood.title',
       '/settings': 'page.settings.title',
       '/settings/categories': 'category.page.title',
+      '/settings/data-privacy': 'settings.dataPrivacy.title',
+      '/settings/data-privacy/privacy-policy': 'settings.legal.privacy.title',
+      '/settings/data-privacy/terms': 'settings.legal.terms.title',
+      '/settings/support': 'settings.support.title',
       '/onboarding': 'page.onboarding.title',
     }[pathname] ?? 'app.name'
 

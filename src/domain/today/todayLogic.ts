@@ -4,6 +4,7 @@ import {
   isHabitScheduledOnDate,
   type Habit,
   type HabitLog,
+  type WeekStartsOn,
 } from '@/domain/habits'
 import { isRecurrentTaskScheduledOnDate, type RecurrentTask } from '@/domain/recurrent-tasks'
 import type { Task } from '@/domain/tasks'
@@ -70,8 +71,9 @@ export const deriveHabitTodayState = (input: {
   logs: HabitLog[]
   selectedDate: ISODateString
   today: ISODateString
+  weekStartsOn?: WeekStartsOn
 }): HabitTodayState => {
-  const { habit, logs, selectedDate, today } = input
+  const { habit, logs, selectedDate, today, weekStartsOn = 1 } = input
   if (getTodayDateMode(selectedDate, today) === 'future') {
     return 'futureDisabled'
   }
@@ -84,7 +86,12 @@ export const deriveHabitTodayState = (input: {
     return 'skipped'
   }
 
-  const completion = evaluateHabitCompletionForLogs({ habit, logs, date: selectedDate })
+  const completion = evaluateHabitCompletionForLogs({
+    habit,
+    logs,
+    date: selectedDate,
+    weekStartsOn,
+  })
 
   if (habit.goalConfig.trackingType === 'binary') {
     if (selectedLog?.status !== 'completed') {
@@ -150,8 +157,16 @@ export const shouldShowRecurrentTaskOnToday = (
 }
 
 export const buildTodayItems = (input: BuildTodayItemsInput): TodayItem[] => {
-  const { habits, habitLogs, tasks, recurrentTasks, recurrentOccurrences, selectedDate, today } =
-    input
+  const {
+    habits,
+    habitLogs,
+    tasks,
+    recurrentTasks,
+    recurrentOccurrences,
+    selectedDate,
+    today,
+    weekStartsOn = 1,
+  } = input
   const occurrenceByTaskId = new Map(
     recurrentOccurrences.map((occurrence) => [occurrence.recurrentTaskId, occurrence]),
   )
@@ -174,7 +189,13 @@ export const buildTodayItems = (input: BuildTodayItemsInput): TodayItem[] => {
           createdAt: habit.createdAt,
           habit,
           log: log ?? null,
-          state: deriveHabitTodayState({ habit, logs: habitLogs, selectedDate, today }),
+          state: deriveHabitTodayState({
+            habit,
+            logs: habitLogs,
+            selectedDate,
+            today,
+            weekStartsOn,
+          }),
           amount: log ? getHabitLogAmount(habit, log) : null,
         }
       }),

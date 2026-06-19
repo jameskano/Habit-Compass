@@ -3,11 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import App from './App'
-import { SettingsPage } from './features/settings/SettingsPage'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
-import { renderWithAppProviders } from './test/utils/renderWithAppProviders'
 
 const chooseSelectOption = async (
   user: ReturnType<typeof userEvent.setup>,
@@ -32,6 +30,10 @@ describe('app shell', () => {
         categories: true,
         reflections: true,
       },
+    })
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
     })
 
     await act(async () => {
@@ -1088,8 +1090,12 @@ describe('app shell', () => {
 
   it('renders the Settings IA shell in the final MVP order and updates preferences immediately', async () => {
     const user = userEvent.setup()
-    renderWithAppProviders(<SettingsPage />)
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
 
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
     const categories = screen.getByRole('link', { name: 'Categories. Manage categories.' })
     const preferences = screen.getByRole('heading', { name: 'Preferences' })
     const dataPrivacy = screen.getByRole('heading', { name: 'Data and privacy' })
@@ -1098,6 +1104,14 @@ describe('app shell', () => {
     const account = screen.getByRole('heading', { name: 'Account actions' })
 
     expect(categories).toHaveAttribute('href', '/settings/categories')
+    expect(screen.getByRole('link', { name: /Data and privacy/ })).toHaveAttribute(
+      'href',
+      '/settings/data-privacy',
+    )
+    expect(screen.getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
+      'href',
+      '/settings/support',
+    )
     expect(screen.getByText('Coming soon')).toBeInTheDocument()
     expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
     expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
@@ -1148,6 +1162,153 @@ describe('app shell', () => {
     expect(useAppPreferencesStore.getState().locale).toBe('es')
     expect(document.documentElement).toHaveAttribute('lang', 'es')
     expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
+  })
+
+  it('opens Data and privacy, marks export unavailable, and links to legal documents', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Data and privacy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Export data/ })).toHaveTextContent(
+      'Not available yet',
+    )
+    expect(screen.getByRole('link', { name: /Privacy Policy/ })).toHaveAttribute(
+      'href',
+      '/settings/data-privacy/privacy-policy',
+    )
+    expect(screen.getByRole('link', { name: /Terms of Service/ })).toHaveAttribute(
+      'href',
+      '/settings/data-privacy/terms',
+    )
+
+    await user.click(screen.getByRole('button', { name: /Export data/ }))
+    const exportDialog = screen.getByRole('dialog', { name: 'Export data' })
+    expect(
+      within(exportDialog).getByText(/Data export is not available in this build yet/),
+    ).toBeInTheDocument()
+  })
+
+  it('renders Privacy Policy and Terms from local legal drafts', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('link', { name: /Privacy Policy/ }))
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Habit Compass Privacy Policy')).toBeInTheDocument()
+    expect(screen.getByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
+    expect(screen.getByText('[EFFECTIVE DATE]')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Public hosted URLs are still release placeholders/),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
+
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy/terms' })
+    })
+    expect(
+      await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Habit Compass Terms of Service')).toBeInTheDocument()
+    expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
+    expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
+  })
+
+  it('opens Support and feedback with the rating fallback and validates required feedback', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Support and feedback', level: 1 }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Rate Habit Compass/ }))
+    expect(screen.getByRole('dialog', { name: 'Rate Habit Compass' })).toHaveTextContent(
+      'Ratings are not available in this development build',
+    )
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+    expect(await screen.findByText('Message is required.')).toBeInTheDocument()
+  })
+
+  it('submits feedback with optional reply email cleared and opt-in technical details', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Problem' }))
+    await user.type(screen.getByLabelText('Message'), 'The support screen works well.')
+    const replyEmail = screen.getByLabelText('Reply email')
+    await user.type(replyEmail, 'person@example.com')
+    await user.clear(replyEmail)
+    await user.click(screen.getByRole('checkbox', { name: /Include technical details/ }))
+    expect(screen.getByText(/Will include version dev/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Thanks - your feedback was sent.')).toBeInTheDocument()
+    const state = getMockState()
+    expect(state.feedbackSubmissions).toHaveLength(1)
+    expect(state.feedbackSubmissions[0].type).toBe('problem')
+    expect(state.feedbackSubmissions[0].replyEmail).toBeNull()
+    expect(state.feedbackSubmissions[0].technicalDetails?.screenId).toBe('/settings/support')
+  })
+
+  it('keeps feedback form content when offline and shows repository errors', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: false,
+    })
+    await user.type(await screen.findByLabelText('Message'), 'Please save this while offline.')
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText(/You appear to be offline/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Message')).toHaveValue('Please save this while offline.')
+
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
+    })
+    for (let index = 0; index < 5; index += 1) {
+      getMockState().feedbackSubmissions.push({
+        id: `existing-feedback-${index}`,
+        userId: 'mock-user-1',
+        type: 'suggestion',
+        message: `Existing ${index}`,
+        replyEmail: null,
+        technicalDetails: null,
+        screenId: '/settings/support',
+        status: 'new',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      })
+    }
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(
+      await screen.findByText('Feedback could not be sent. Please try again.'),
+    ).toBeInTheDocument()
   })
 
   it('onboarding has max 3 steps', async () => {
