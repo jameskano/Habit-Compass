@@ -7,6 +7,7 @@ This folder contains the unapplied first-deploy Supabase schema for Habit Compas
 - `migrations/0001_initial_schema.sql`: base MVP schema, constraints, indexes, triggers, grants, and authenticated-only RLS policies.
 - `migrations/0002_habit_inactivity_periods.sql`: durable habit archive/pause-compatible intervals with RLS and current-archive backfill.
 - `migrations/0003_weekly_planning.sql`: weekly focus/review fields, habit-only Big Rocks, Big Rock count enforcement, and Big Rock RLS.
+- `migrations/0004_categories_management.sql`: protected default categories, custom-category constraints, and delete-with-reassignment behavior.
 - `seed.sql`: commented example seed statements for a local authenticated user.
 
 ## Scope
@@ -30,6 +31,11 @@ It does not include:
 - AI features
 - calendar sync
 - notifications
+- Settings feedback/support tables
+- account-deletion pending-state fields and cleanup jobs
+- data-export Edge Functions or temporary export storage
+- legal document version/acceptance metadata
+- public external account-deletion page
 
 ## Design Notes
 
@@ -40,6 +46,16 @@ It does not include:
 - Weekly Big Rocks are limited to 3 active rows per weekly plan by a database trigger and can reference habits only.
 - Habit and recurrence variability is stored in JSONB config columns so the TypeScript domain contracts can evolve without forcing an early schema explosion.
 - Default categories are intentionally not seeded globally. They should be created during onboarding or profile bootstrap after a real user exists.
+- Settings, account lifecycle, legal, data export, and feedback requirements are specified for future
+  migrations in [Settings Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/settings-spec.md>),
+  [Authentication Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/authentication-spec.md>),
+  [Data Export Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/data-export-spec.md>),
+  [Feedback Support Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/feedback-support-spec.md>),
+  [Account Lifecycle Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/account-lifecycle-spec.md>),
+  and the database plans under `docs/database/`.
+- Before shipping user-controlled week-start changes, weekly planning records should keep existing
+  `week_start` and add future `period_end` so historical plans keep the interval under which they
+  were created.
 
 ## Local Workflow
 

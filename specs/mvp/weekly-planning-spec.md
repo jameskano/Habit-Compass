@@ -12,7 +12,8 @@ Some users want a weekly planning surface, but planning depth must stay optional
 
 ## Scope
 
-- A week date range based on the stored week-start preference, defaulting to Monday until Settings or onboarding can configure it.
+- A week date range based on the stored week-start preference, defaulting to Monday until Settings
+  or onboarding can configure it.
 - Optional weekly focus text.
 - Up to 3 selected Big Rock habits per week.
 - Weekly map for selected Big Rock habits using existing habit completion logs.
@@ -42,8 +43,19 @@ Some users want a weekly planning surface, but planning depth must stay optional
 ## Functional Requirements
 
 - Weekly planning must be optional behind the existing weekly planning feature toggle.
-- A weekly plan must reference a `weekStartDate`.
-- `weekStartDate` must represent the start of the viewed week according to the stored `weekStartsOn` preference.
+- A weekly plan must preserve an explicit date interval.
+- The existing start-date fields keep their current names: database `weekly_plans.week_start` and
+  TypeScript `weekStartDate`.
+- The end date is not currently persisted. A future migration must add the new stored end-date field
+  `period_end` in the database and `periodEnd` in TypeScript.
+- For current and future weekly records, the interval is created from the active `weekStartsOn`
+  preference at the time the record is created.
+- Historical weekly records preserve their stored interval even if the user later changes
+  `weekStartsOn`.
+- Previously saved weekly focus, Big Rocks, mood, and review answers must not be silently moved,
+  merged, duplicated, or deleted when the week-start preference changes.
+- Derived weekly analytics may regroup completion logs using the current `weekStartsOn` preference,
+  but saved weekly-planning records remain tied to their explicit interval.
 - The current default `weekStartsOn` value is Monday (`1`); future Settings or onboarding work may set it from the user's account or locale defaults.
 - A weekly plan may contain `focusText`.
 - Weekly focus and Big Rock selection are editable only for the current week and future weeks.
@@ -76,6 +88,7 @@ Some users want a weekly planning surface, but planning depth must stay optional
 - `WeeklyPlan`
   - base entity fields
   - `weekStartDate`
+  - `periodEnd` (future field, not currently implemented)
   - `focusText`
   - `reviewOverallFeeling`
   - `reviewWentWell`
@@ -115,10 +128,15 @@ Some users want a weekly planning surface, but planning depth must stay optional
 - Review answers are stored per week.
 - Overall feeling and reflections are stored per week as part of Weekly Review.
 - Past week focus and Big Rock controls are unavailable, while past weekly review remains editable.
+- Changing `weekStartsOn` preserves existing weekly-plan intervals and their associated focus,
+  Big Rocks, mood, and review answers.
 
 ## Test Plan
 
-- Schema tests for minimal weekly plans, valid review feeling values, reflections, and valid Big Rock references.
-- Unit tests for Monday-start and Sunday-start week range generation, max Big Rock count, and life-area grouping.
+- Schema tests for minimal weekly plans, existing `weekStartDate`, future `periodEnd` once added,
+  valid review feeling values, reflections, and valid Big Rock references.
+- Unit tests for Monday-start and Sunday-start week range generation, historical interval
+  preservation, max Big Rock count, and life-area grouping.
 - Repository tests for focus/review updates, add/remove Big Rocks, duplicate rejection, and max-count enforcement.
-- Component tests for Week date navigation, habit-only selector, Weekly Map scoping, read-only map cells, Life Areas scoping, and disabled future completion cells.
+- Component tests for Week date navigation, week-start switching, habit-only selector, Weekly Map
+  scoping, read-only map cells, Life Areas scoping, and disabled future completion cells.

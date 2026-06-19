@@ -19,7 +19,13 @@ The first Supabase schema for Habit Compass is defined across:
 
 - `profiles`
   - One row per authenticated user.
-  - Stores app-level preferences: locale, theme, week start, timezone, onboarding completion timestamp, and feature flags.
+  - Stores app-level preferences: `language`, `theme_preference`, `first_day_of_week`,
+    `timezone`, `onboarding_completed_at`, and `feature_flags`.
+  - Planned Settings/account lifecycle additions are documented in
+    [Settings Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/settings-spec.md>),
+    [Authentication Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/authentication-spec.md>), and
+    [Account Lifecycle Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/account-lifecycle-spec.md>).
+    They include legal document version fields, privacy notice presentation fields, and pending deletion fields.
 - `categories`
   - Optional grouping for items and weekly priorities.
   - Stores customizable label name, required app-owned icon/color visual metadata, sort order,
@@ -51,9 +57,13 @@ The first Supabase schema for Habit Compass is defined across:
 - `reflections`
   - Optional user-authored reflections with `daily` or `weekly` kind, required content, matching date field, optional mood-log link, optional prompt key, archive state, and soft-delete timestamp.
 - `weekly_plans`
-  - Optional weekly planning records keyed by `week_start`.
+  - Optional weekly planning records currently keyed by `week_start`.
   - Stores optional focus text, weekly review feeling, three review answers, and reflections with database length/value checks.
   - Unique per user and week start.
+  - A future Settings migration must keep `week_start` as the existing start-date field and add
+    `period_end` before user-facing week-start changes ship. Persisted weekly records preserve the
+    interval under which they were created; derived analytics may regroup logs by the current
+    week-start preference.
 - `weekly_big_rocks`
   - Habit-only Big Rock references attached to a weekly plan.
   - Stores sort order plus archive/soft-delete timestamps from the shared base entity contract.
@@ -64,6 +74,73 @@ The first Supabase schema for Habit Compass is defined across:
 - `suggestion_events`
   - Rule-based MVP suggestion records with type, trigger, status, message IDs, optional habit/category/date targets, and applied/dismissed timestamps.
   - AI-generated suggestions remain out of scope.
+
+## Planned Settings Tables And Fields
+
+These fields and tables are required by the Settings documentation set but are not implemented by the
+current migration set.
+
+- `profiles.language`
+  - Type: stable locale identifier such as `system`, `en`, or `es`.
+  - Current default: `en`.
+  - Future default after System default support: `system`.
+  - Nullability: not null after migration/backfill.
+  - Source of truth: user profile row; React Intl resolves future `system` at runtime.
+  - Extensibility: add locale codes without changing the storage shape.
+- `profiles.theme_preference`
+  - Type: stable theme identifier such as `system`, `light`, or `dark`.
+  - Default: `system`.
+  - Source of truth: user profile row with local app-state mirroring for immediate UI response.
+- `profiles.first_day_of_week`
+  - Type: integer weekday or equivalent stable enum, not a boolean.
+  - Default: Monday.
+  - Allowed MVP values: Monday and Sunday.
+  - Extensibility: additional weekdays may be added later without changing the storage shape.
+- `profiles.timezone`
+  - Type: IANA timezone string when available.
+  - Source of truth: app/platform detection, persisted for date-boundary consistency where needed.
+- `profiles.account_status`
+  - Type: enum-like text such as `active` or `pending_deletion`.
+  - Default: `active`.
+  - Owner: server-controlled for deletion lifecycle transitions.
+- `profiles.deletion_requested_at`, `profiles.deletion_scheduled_for`, `profiles.deletion_cancelled_at`
+  - Type: timezone-aware timestamps.
+  - Owner: server-controlled deletion request/cancellation/finalization paths.
+  - Validation: scheduled deletion is seven days after request unless a future legal/product spec changes it.
+- `profiles.terms_version_accepted`, `profiles.terms_accepted_at`
+  - Records the Terms version accepted by the user, if Terms acceptance is required during registration.
+- `profiles.privacy_notice_version_presented`, `profiles.privacy_notice_presented_at`
+  - Records that privacy information was presented; this is not blanket consent.
+- `weekly_plans.week_start`, future `weekly_plans.period_end`
+  - Type: local dates.
+  - Validation: `week_start <= period_end`, unique interval per user where appropriate, and no silent
+    mutation of historical records when `first_day_of_week` changes.
+  - Migration consideration: preserve existing `week_start` data by deriving `period_end` during
+    backfill. Do not rename `week_start` unless a separate migration/spec deliberately does so.
+- `feedback_submissions`
+  - User-owned feedback records with type (`suggestion`, `problem`, `other`), required message, optional
+    reply email, optional technical details, status, timestamps, and account-deletion behavior.
+  - Anonymous submission is deferred unless a separate abuse-prevention design is approved.
+- `feedback_attachments`
+  - User-owned metadata for optional screenshots stored in a private Supabase Storage bucket.
+  - Requires file type, size, storage path, upload status, and retention/deletion timestamps.
+- Private Storage bucket for feedback screenshots
+  - Stores only user-submitted screenshots. The app must not silently capture screen contents.
+- Optional private Storage bucket for temporary data exports
+  - Used only if export generation cannot stream directly to the app.
+  - Requires expiration metadata and cleanup by scheduled server-side job.
+- `legal_document_versions` or equivalent config source
+  - Stores active Privacy Policy and Terms versions, effective dates, locales, and public URLs if the app
+    needs server-driven legal document metadata.
+
+## Data Export Shape
+
+The export format is specified in
+[Data Export Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/data-export-spec.md>).
+Exports include user-created application data and archived records, but exclude passwords, OAuth tokens,
+sessions, account-security metadata, and Settings preferences. Weekly exports must carry explicit stored
+intervals using existing `week_start` plus future `period_end` rather than deriving historical weekly
+records from the current `first_day_of_week` value.
 
 ## Ownership And Integrity
 

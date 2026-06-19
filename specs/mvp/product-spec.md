@@ -23,6 +23,9 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Rule-based suggestions can appear when simple patterns are detected.
 - Today summary item cards show category, priority, schedule/due metadata, and completion state
   while keeping item management behavior in Items.
+- Settings includes Categories, Preferences, Data and privacy, Support and feedback, account actions,
+  and a Premium Coming Soon placeholder. Security and sign-in appears only for eligible
+  email/password accounts.
 
 ## Items Navigation
 
@@ -52,3 +55,6 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Google Calendar integration.
 - Advanced collections, routines, projects, and systems.
 - Native platform initialization.
+- Notifications controls.
+- Premium purchase flow.
+- Account linking or OAuth provider management.
