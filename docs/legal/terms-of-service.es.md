@@ -87,10 +87,9 @@ no significa que consientas todos los posibles tratamientos de datos.
 
 ## 8. Exportacion De Datos
 
-Habit Compass planea ofrecer opciones de exportacion CSV en ZIP y JSON desde Ajustes. Las
-exportaciones estan pensadas para ayudarte a conservar una copia de tus datos de la app. Las
-exportaciones no incluyen contrasenas, tokens OAuth, sesiones ni metadatos internos de seguridad de
-cuenta.
+Habit Compass ofrece opciones de exportacion CSV en ZIP y JSON desde Ajustes. Las exportaciones
+estan pensadas para ayudarte a conservar una copia de tus datos de la app. Las exportaciones no
+incluyen contrasenas, tokens OAuth, sesiones ni metadatos internos de seguridad de cuenta.
 
 Eres responsable de proteger los archivos despues de exportarlos.
 

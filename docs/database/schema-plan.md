@@ -6,6 +6,10 @@ The first Supabase schema for Habit Compass is defined across:
 - [0002_habit_inactivity_periods.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0002_habit_inactivity_periods.sql>)
 - [0003_weekly_planning.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0003_weekly_planning.sql>)
 - [0004_categories_management.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0004_categories_management.sql>)
+- [0005_remove_category_archive_state.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0005_remove_category_archive_state.sql>)
+- [0006_update_default_categories.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0006_update_default_categories.sql>)
+- [0007_feedback_support.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0007_feedback_support.sql>)
+- [0008_account_lifecycle.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0008_account_lifecycle.sql>)
 
 ## Principles
 
@@ -21,11 +25,12 @@ The first Supabase schema for Habit Compass is defined across:
   - One row per authenticated user.
   - Stores app-level preferences: `language`, `theme_preference`, `first_day_of_week`,
     `timezone`, `onboarding_completed_at`, and `feature_flags`.
-  - Planned Settings/account lifecycle additions are documented in
-    [Settings Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/settings-spec.md>),
-    [Authentication Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/authentication-spec.md>), and
-    [Account Lifecycle Spec](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/specs/mvp/account-lifecycle-spec.md>).
-    They include legal document version fields, privacy notice presentation fields, and pending deletion fields.
+  - Stores server-controlled account deletion lifecycle fields: `account_status`,
+    `deletion_requested_at`, `deletion_scheduled_for`, `deletion_cancelled_at`,
+    `deletion_request_source`, `deletion_finalization_started_at`,
+    `deletion_finalization_attempts`, and `deletion_finalization_error`.
+  - Account lifecycle fields are changed only by privileged server paths and guarded from direct
+    client mutation by database trigger.
 - `categories`
   - Optional grouping for items and weekly priorities.
   - Stores customizable label name, required app-owned icon/color visual metadata, sort order,
@@ -74,11 +79,15 @@ The first Supabase schema for Habit Compass is defined across:
 - `suggestion_events`
   - Rule-based MVP suggestion records with type, trigger, status, message IDs, optional habit/category/date targets, and applied/dismissed timestamps.
   - AI-generated suggestions remain out of scope.
+- `external_account_deletion_requests`
+  - Minimal operational log for public deletion-link requests.
+  - Stores hashed email/IP values, locale, status, and creation time.
+  - Does not expose readable rows to anonymous or authenticated clients.
 
-## Planned Settings Tables And Fields
+## Settings Tables And Fields
 
-These fields and tables are required by the Settings documentation set but are not implemented by the
-current migration set.
+These fields and tables are required by the Settings documentation set. Items marked as implemented
+are present in the current migration set; remaining items stay planned until their release step.
 
 - `profiles.language`
   - Type: stable locale identifier such as `system`, `en`, or `es`.
@@ -103,10 +112,20 @@ current migration set.
   - Type: enum-like text such as `active` or `pending_deletion`.
   - Default: `active`.
   - Owner: server-controlled for deletion lifecycle transitions.
+  - Implemented by `0008_account_lifecycle.sql`.
 - `profiles.deletion_requested_at`, `profiles.deletion_scheduled_for`, `profiles.deletion_cancelled_at`
   - Type: timezone-aware timestamps.
   - Owner: server-controlled deletion request/cancellation/finalization paths.
   - Validation: scheduled deletion is seven days after request unless a future legal/product spec changes it.
+  - Implemented by `0008_account_lifecycle.sql`.
+- `profiles.deletion_request_source`
+  - Type: enum-like text: `in_app`, `external_web`, or `admin`.
+  - Owner: server-controlled deletion lifecycle paths.
+  - Implemented by `0008_account_lifecycle.sql`.
+- `profiles.deletion_finalization_started_at`, `profiles.deletion_finalization_attempts`, `profiles.deletion_finalization_error`
+  - Minimal retry state for the scheduled final-deletion job.
+  - These fields must not retain unnecessary personal data.
+  - Implemented by `0008_account_lifecycle.sql`.
 - `profiles.terms_version_accepted`, `profiles.terms_accepted_at`
   - Records the Terms version accepted by the user, if Terms acceptance is required during registration.
 - `profiles.privacy_notice_version_presented`, `profiles.privacy_notice_presented_at`
@@ -124,6 +143,9 @@ current migration set.
 - `feedback_attachments`
   - User-owned metadata for optional screenshots stored in a private Supabase Storage bucket.
   - Requires file type, size, storage path, upload status, and retention/deletion timestamps.
+- `external_account_deletion_requests`
+  - Implemented by `0008_account_lifecycle.sql`.
+  - Stores only hashed request identifiers and status metadata for anti-abuse and operational review.
 - Private Storage bucket for feedback screenshots
   - Stores only user-submitted screenshots. The app must not silently capture screen contents.
 - Optional private Storage bucket for temporary data exports

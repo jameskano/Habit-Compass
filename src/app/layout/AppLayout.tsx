@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 
+import { AccountLifecycleGate } from '@/features/account/AccountLifecycleGate'
 import { AppShell } from '@/shared/ui/AppShell'
 
 type AppLayoutProps = {
@@ -7,5 +8,9 @@ type AppLayoutProps = {
 }
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
-  return <AppShell>{children}</AppShell>
+  return (
+    <AppShell>
+      <AccountLifecycleGate>{children}</AccountLifecycleGate>
+    </AppShell>
+  )
 }

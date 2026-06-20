@@ -7,12 +7,16 @@ import {
 } from '@tanstack/react-router'
 
 import { AppLayout } from '../layout/AppLayout'
+import { ExternalAccountDeletionPage } from '../../features/account/ExternalAccountDeletionPage'
+import { PendingDeletionPage } from '../../features/account/PendingDeletionPage'
+import { SignedOutPage } from '../../features/auth/SignedOutPage'
 import { ItemsPage } from '../../features/items/ItemsPage'
 import { MoodPage } from '../../features/mood/MoodPage'
 import { OnboardingPage } from '../../features/onboarding/OnboardingPage'
 import { SettingsPage } from '../../features/settings/SettingsPage'
 import { DataPrivacyPage } from '../../features/settings/data-privacy/DataPrivacyPage'
 import { LegalDocumentPage } from '../../features/settings/data-privacy/LegalDocumentPage'
+import { SecurityPage } from '../../features/settings/security/SecurityPage'
 import { SupportPage } from '../../features/settings/support/SupportPage'
 import { CategoriesPage } from '../../features/categories/CategoriesPage'
 import { TodayPage } from '../../features/today/TodayPage'
@@ -74,6 +78,12 @@ const settingsDataPrivacyRoute = createRoute({
   component: DataPrivacyPage,
 })
 
+const settingsSecurityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/security',
+  component: SecurityPage,
+})
+
 const settingsPrivacyPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings/data-privacy/privacy-policy',
@@ -98,6 +108,24 @@ const onboardingRoute = createRoute({
   component: OnboardingPage,
 })
 
+const signedOutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/signed-out',
+  component: SignedOutPage,
+})
+
+const pendingDeletionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/pending-deletion',
+  component: PendingDeletionPage,
+})
+
+const externalAccountDeletionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/delete',
+  component: ExternalAccountDeletionPage,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   todayRoute,
@@ -106,11 +134,15 @@ const routeTree = rootRoute.addChildren([
   moodRoute,
   settingsRoute,
   settingsCategoriesRoute,
+  settingsSecurityRoute,
   settingsDataPrivacyRoute,
   settingsPrivacyPolicyRoute,
   settingsTermsRoute,
   settingsSupportRoute,
   onboardingRoute,
+  signedOutRoute,
+  pendingDeletionRoute,
+  externalAccountDeletionRoute,
 ])
 
 export const router = createRouter({ routeTree })

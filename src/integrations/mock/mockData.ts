@@ -1,7 +1,10 @@
 import { formatISO } from 'date-fns'
 
+import type { AccountProviderClassification } from '@/domain/auth'
 import type { Category } from '@/domain/categories'
 import { CATEGORY_DEFAULTS } from '@/domain/categories'
+import type { AccountLifecycleState, DeletionRequestSource } from '@/domain/accountLifecycle'
+import type { ExportFormat } from '@/domain/export'
 import type { FeedbackAttachment, FeedbackSubmission } from '@/domain/feedback'
 import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
@@ -53,6 +56,21 @@ const buildCategoryBaseFields = (id: EntityId) => {
 }
 
 export type MockDataState = {
+  authSession: {
+    currentEmail: string
+    currentPassword: string
+    emailChangeRequests: string[]
+    passwordResetRequests: string[]
+    passwordUpdateRequests: string[]
+    providerClassification: AccountProviderClassification
+    signedIn: boolean
+    signOutScopes: string[]
+  }
+  accountLifecycle: AccountLifecycleState & {
+    cancellationRequests: string[]
+    deletionRequests: DeletionRequestSource[]
+    externalDeletionRequests: string[]
+  }
   categories: Category[]
   habits: Habit[]
   habitLogs: HabitLog[]
@@ -64,6 +82,7 @@ export type MockDataState = {
   moodLogs: MoodLog[]
   feedbackSubmissions: FeedbackSubmission[]
   feedbackAttachments: FeedbackAttachment[]
+  dataExportRequests: ExportFormat[]
 }
 
 const createInitialMockData = (): MockDataState => {
@@ -340,6 +359,27 @@ const createInitialMockData = (): MockDataState => {
   ]
 
   return {
+    authSession: {
+      currentEmail: 'person@example.com',
+      currentPassword: 'current-password',
+      emailChangeRequests: [],
+      passwordResetRequests: [],
+      passwordUpdateRequests: [],
+      providerClassification: 'email_password',
+      signedIn: true,
+      signOutScopes: [],
+    },
+    accountLifecycle: {
+      userId: MOCK_USER_ID,
+      accountStatus: 'active',
+      deletionRequestedAt: null,
+      deletionScheduledFor: null,
+      deletionCancelledAt: null,
+      deletionRequestSource: null,
+      cancellationRequests: [],
+      deletionRequests: [],
+      externalDeletionRequests: [],
+    },
     categories,
     habits,
     habitLogs,
@@ -351,6 +391,7 @@ const createInitialMockData = (): MockDataState => {
     moodLogs,
     feedbackSubmissions: [],
     feedbackAttachments: [],
+    dataExportRequests: [],
   }
 }
 

@@ -2,8 +2,10 @@
 
 ## Status
 
-Future Settings dependency. This spec documents export behavior only. No export code, migration, or
-Edge Function is implemented in this phase.
+Partially implemented for Settings MVP. CSV ZIP and JSON export transformations and download flows
+exist for the current app data model. Production release still requires validating the Supabase
+server-side export path, authorization behavior, Android save/share behavior, and any temporary
+Storage cleanup if persistence is introduced.
 
 ## Related Documents
 

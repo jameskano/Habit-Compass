@@ -2,9 +2,10 @@
 
 ## Status
 
-Future Settings, authentication, Play release, and public-web dependency. This spec documents legal
-document requirements, versioning, acceptance, and Play Console consistency. Legal drafts live under
-`docs/legal/`.
+Partially implemented for Settings MVP. Legal drafts render in-app from Settings > Data and privacy,
+and compliance tracking lives under `docs/legal/`. Public-hosted legal URLs, confirmed controller
+details, retention periods, legal bases, processor details, Terms acceptance storage, and Play
+Console declarations remain release blockers.
 
 ## Related Documents
 

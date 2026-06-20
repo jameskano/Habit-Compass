@@ -8,19 +8,37 @@ import {
   LifeBuoy,
   LogOut,
   Palette,
+  Shield,
   Tags,
   Trash2,
   X,
 } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { type ComponentType, type ReactNode, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
+import { calculateDeletionScheduledFor } from '@/domain/accountLifecycle'
+import { canShowSecurityAndSignIn } from '@/domain/auth'
+import { useRequestAccountDeletionMutation } from '@/features/account/useAccountLifecycleMutations'
 import type { AppLocale, AppSettings, ThemePreference } from '@/domain/settings'
+import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Label } from '@/shared/ui/label'
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet'
 import { cn } from '@/shared/utils/cn'
+
+import { useAccountProviderClassificationQuery } from './useAccountProviderClassificationQuery'
+import { useSignOutMutation } from './useSignOutMutation'
 
 type SettingsIcon = ComponentType<{ className?: string; size?: number; 'aria-hidden'?: boolean }>
 
@@ -30,13 +48,19 @@ type SettingsRowProps = {
   ariaLabelId?: string
   descriptionId?: string
   valueId?: string
-  to?: '/settings/categories' | '/settings/data-privacy' | '/settings/support'
+  to?:
+    | '/settings/categories'
+    | '/settings/security'
+    | '/settings/data-privacy'
+    | '/settings/support'
   onClick?: () => void
   disabled?: boolean
   destructive?: boolean
 }
 
 type PreferenceSheet = 'language' | 'theme' | 'weekStartsOn'
+
+type DeleteAccountStep = 'intent' | 'reauth' | 'schedule'
 
 type PreferenceOption<Value extends string | number> = {
   value: Value
@@ -217,17 +241,35 @@ const PreferenceSheetContent = <Value extends string | number>({
 
 export const SettingsPage = () => {
   const intl = useIntl()
+  const navigate = useNavigate()
   const [activeSheet, setActiveSheet] = useState<PreferenceSheet | null>(null)
+  const [signOutDialogOpen, setSignOutDialogOpen] = useState(false)
+  const [signOutError, setSignOutError] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<DeleteAccountStep>('intent')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState(false)
   const theme = useAppPreferencesStore((state) => state.theme)
   const locale = useAppPreferencesStore((state) => state.locale)
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const setTheme = useAppPreferencesStore((state) => state.setTheme)
   const setLocale = useAppPreferencesStore((state) => state.setLocale)
   const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
+  const providerClassification = useAccountProviderClassificationQuery()
+  const signOutMutation = useSignOutMutation()
+  const requestAccountDeletion = useRequestAccountDeletionMutation()
 
   const themeValueId = `settings.theme.${theme}`
   const localeValueId = `settings.locale.${locale}`
   const weekStartsOnValueId = `settings.weekStartsOn.${weekStartsOn}`
+  const showSecurityAndSignIn = canShowSecurityAndSignIn(providerClassification.data)
+  const deleteRequiresPassword =
+    providerClassification.data === 'email_password' || providerClassification.data === 'mixed'
+  const deletionPreviewDate = calculateDeletionScheduledFor(new Date())
+  const deletionPreviewLabel = intl.formatDate(deletionPreviewDate, {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  })
   const footerVersion = appBuildNumber
     ? intl.formatMessage(
         { id: 'settings.footer.versionWithBuild' },
@@ -266,6 +308,17 @@ export const SettingsPage = () => {
         />
       </SettingsSection>
 
+      {showSecurityAndSignIn ? (
+        <SettingsSection titleId="settings.security.title">
+          <SettingsRow
+            descriptionId="settings.security.description"
+            icon={Shield}
+            labelId="settings.security.title"
+            to="/settings/security"
+          />
+        </SettingsSection>
+      ) : null}
+
       <SettingsSection titleId="settings.dataPrivacy.title">
         <SettingsRow
           descriptionId="settings.dataPrivacy.description"
@@ -294,8 +347,25 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       <SettingsSection titleId="settings.account.title">
-        <SettingsRow disabled icon={LogOut} labelId="settings.account.signOut" />
-        <SettingsRow destructive disabled icon={Trash2} labelId="settings.account.delete" />
+        <SettingsRow
+          icon={LogOut}
+          labelId="settings.account.signOut"
+          onClick={() => {
+            setSignOutError(false)
+            setSignOutDialogOpen(true)
+          }}
+        />
+        <SettingsRow
+          destructive
+          icon={Trash2}
+          labelId="settings.account.delete"
+          onClick={() => {
+            setDeleteStep('intent')
+            setDeletePassword('')
+            setDeleteError(false)
+            setDeleteDialogOpen(true)
+          }}
+        />
       </SettingsSection>
 
       <footer className="space-y-1 px-2 pb-2 pt-1 text-center text-xs text-muted-foreground">
@@ -348,6 +418,179 @@ export const SettingsPage = () => {
           ) : null}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={signOutDialogOpen} onOpenChange={setSignOutDialogOpen}>
+        <DialogContent aria-describedby="settings-sign-out-description">
+          <DialogHeader>
+            <DialogTitle>
+              <FormattedMessage id="settings.account.signOut.confirmTitle" />
+            </DialogTitle>
+            <DialogDescription id="settings-sign-out-description">
+              <FormattedMessage id="settings.account.signOut.confirmDescription" />
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 p-4 sm:px-6">
+            {signOutError ? (
+              <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <FormattedMessage id="settings.account.signOut.error" />
+              </p>
+            ) : null}
+            <div className="flex justify-end gap-2">
+              <DialogClose asChild>
+                <Button variant="secondary">
+                  <FormattedMessage id="action.cancel" />
+                </Button>
+              </DialogClose>
+              <Button
+                disabled={signOutMutation.isPending}
+                onClick={() =>
+                  signOutMutation.mutate(undefined, {
+                    onSuccess: () => {
+                      setSignOutDialogOpen(false)
+                      navigate({ to: '/signed-out' })
+                    },
+                    onError: () => setSignOutError(true),
+                  })
+                }
+              >
+                <FormattedMessage id="settings.account.signOut" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open)
+          if (!open) {
+            setDeleteStep('intent')
+            setDeletePassword('')
+            setDeleteError(false)
+          }
+        }}
+      >
+        <DialogContent aria-describedby={`settings-delete-account-${deleteStep}-description`}>
+          {deleteStep === 'intent' ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  <FormattedMessage id="settings.account.delete.intentTitle" />
+                </DialogTitle>
+                <DialogDescription id="settings-delete-account-intent-description">
+                  <FormattedMessage id="settings.account.delete.intentDescription" />
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-2 p-4 sm:px-6">
+                <DialogClose asChild>
+                  <Button variant="secondary">
+                    <FormattedMessage id="action.cancel" />
+                  </Button>
+                </DialogClose>
+                <Button
+                  onClick={() => setDeleteStep(deleteRequiresPassword ? 'reauth' : 'schedule')}
+                >
+                  <FormattedMessage id="action.continue" />
+                </Button>
+              </div>
+            </>
+          ) : null}
+
+          {deleteStep === 'reauth' ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  <FormattedMessage id="settings.account.delete.reauthTitle" />
+                </DialogTitle>
+                <DialogDescription id="settings-delete-account-reauth-description">
+                  <FormattedMessage id="settings.account.delete.reauthDescription" />
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 p-4 sm:px-6">
+                <div className="space-y-2">
+                  <Label htmlFor="delete-account-current-password">
+                    <FormattedMessage id="settings.account.delete.currentPassword" />
+                  </Label>
+                  <Input
+                    id="delete-account-current-password"
+                    autoComplete="current-password"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(event) => {
+                      setDeleteError(false)
+                      setDeletePassword(event.currentTarget.value)
+                    }}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" onClick={() => setDeleteStep('intent')}>
+                    <FormattedMessage id="action.back" />
+                  </Button>
+                  <Button
+                    disabled={deletePassword.trim().length === 0}
+                    onClick={() => setDeleteStep('schedule')}
+                  >
+                    <FormattedMessage id="action.continue" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : null}
+
+          {deleteStep === 'schedule' ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  <FormattedMessage id="settings.account.delete.scheduleTitle" />
+                </DialogTitle>
+                <DialogDescription id="settings-delete-account-schedule-description">
+                  <FormattedMessage
+                    id="settings.account.delete.scheduleDescription"
+                    values={{ date: deletionPreviewLabel }}
+                  />
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 p-4 sm:px-6">
+                {deleteError ? (
+                  <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                    <FormattedMessage id="settings.account.delete.error" />
+                  </p>
+                ) : null}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setDeleteStep(deleteRequiresPassword ? 'reauth' : 'intent')}
+                  >
+                    <FormattedMessage id="action.back" />
+                  </Button>
+                  <Button
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={requestAccountDeletion.isPending}
+                    onClick={() =>
+                      requestAccountDeletion.mutate(
+                        {
+                          currentPassword: deleteRequiresPassword ? deletePassword : undefined,
+                          source: 'in_app',
+                        },
+                        {
+                          onSuccess: () => {
+                            setDeleteDialogOpen(false)
+                            navigate({ to: '/account/pending-deletion' })
+                          },
+                          onError: () => setDeleteError(true),
+                        },
+                      )
+                    }
+                  >
+                    <FormattedMessage id="settings.account.delete" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

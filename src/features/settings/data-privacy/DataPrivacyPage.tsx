@@ -1,21 +1,17 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ChevronRight, Download, FileText, ScrollText } from 'lucide-react'
+import { ArrowLeft, ChevronRight, FileArchive, FileJson, FileText, ScrollText } from 'lucide-react'
 import { useCallback, useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
+import type { ExportFormat } from '@/domain/export'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 import { cn } from '@/shared/utils/cn'
+
+import { downloadExportFile } from './downloadExportFile'
+import { useExportDataMutation } from './useExportDataMutation'
 
 type DataPrivacyIcon = ComponentType<{ className?: string; size?: number; 'aria-hidden'?: boolean }>
 
@@ -24,6 +20,7 @@ type DataPrivacyRowProps = {
   labelId: string
   descriptionId?: string
   badgeId?: string
+  disabled?: boolean
   to?: '/settings/data-privacy/privacy-policy' | '/settings/data-privacy/terms'
   onClick?: () => void
 }
@@ -31,6 +28,7 @@ type DataPrivacyRowProps = {
 const DataPrivacyRow = ({
   badgeId,
   descriptionId,
+  disabled = false,
   icon: Icon,
   labelId,
   onClick,
@@ -63,6 +61,7 @@ const DataPrivacyRow = ({
   )
   const className = cn(
     'flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    disabled && 'cursor-not-allowed opacity-60 hover:bg-transparent',
   )
 
   if (to) {
@@ -74,7 +73,7 @@ const DataPrivacyRow = ({
   }
 
   return (
-    <button type="button" className={className} onClick={onClick}>
+    <button type="button" className={className} disabled={disabled} onClick={onClick}>
       {content}
     </button>
   )
@@ -95,7 +94,8 @@ const BackButton = ({ children, onBack }: { children: ReactNode; onBack: () => v
 export const DataPrivacyPage = () => {
   const intl = useIntl()
   const navigate = useNavigate()
-  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const exportMutation = useExportDataMutation()
+  const [exportStatus, setExportStatus] = useState<'idle' | 'offline' | 'success' | 'error'>('idle')
   useShellTitle('settings.dataPrivacy.title')
 
   const handleBack = useCallback(() => {
@@ -107,6 +107,27 @@ export const DataPrivacyPage = () => {
   )
   useShellLeading(shellLeading)
 
+  const handleExport = useCallback(
+    (format: ExportFormat) => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        setExportStatus('offline')
+        return
+      }
+
+      setExportStatus('idle')
+      exportMutation.mutate(format, {
+        onError: () => {
+          setExportStatus('error')
+        },
+        onSuccess: (file) => {
+          downloadExportFile(file)
+          setExportStatus('success')
+        },
+      })
+    },
+    [exportMutation],
+  )
+
   return (
     <section className="space-y-4">
       <Card className="space-y-2 p-3">
@@ -115,11 +136,18 @@ export const DataPrivacyPage = () => {
         </h2>
         <div className="space-y-1">
           <DataPrivacyRow
-            badgeId="settings.dataPrivacy.unavailable"
-            descriptionId="settings.dataPrivacy.export.description"
-            icon={Download}
-            labelId="settings.dataPrivacy.export.title"
-            onClick={() => setExportDialogOpen(true)}
+            descriptionId="settings.dataPrivacy.export.csv.description"
+            disabled={exportMutation.isPending}
+            icon={FileArchive}
+            labelId="settings.dataPrivacy.export.csv.title"
+            onClick={() => handleExport('csv')}
+          />
+          <DataPrivacyRow
+            descriptionId="settings.dataPrivacy.export.json.description"
+            disabled={exportMutation.isPending}
+            icon={FileJson}
+            labelId="settings.dataPrivacy.export.json.title"
+            onClick={() => handleExport('json')}
           />
           <DataPrivacyRow
             descriptionId="settings.legal.privacy.description"
@@ -136,25 +164,19 @@ export const DataPrivacyPage = () => {
         </div>
       </Card>
 
-      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <DialogContent aria-describedby="export-unavailable-description">
-          <DialogHeader>
-            <DialogTitle>
-              <FormattedMessage id="settings.dataPrivacy.export.title" />
-            </DialogTitle>
-            <DialogDescription id="export-unavailable-description">
-              <FormattedMessage id="settings.dataPrivacy.export.unavailableDescription" />
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end p-4 sm:px-6">
-            <DialogClose asChild>
-              <Button variant="secondary">
-                <FormattedMessage id="action.close" />
-              </Button>
-            </DialogClose>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {exportStatus !== 'idle' ? (
+        <p
+          className={cn(
+            'rounded-lg border px-4 py-3 text-sm',
+            exportStatus === 'success'
+              ? 'border-primary/20 bg-primary/10 text-primary'
+              : 'border-destructive/20 bg-destructive/10 text-destructive',
+          )}
+          role="status"
+        >
+          <FormattedMessage id={`settings.dataPrivacy.export.status.${exportStatus}`} />
+        </p>
+      ) : null}
     </section>
   )
 }

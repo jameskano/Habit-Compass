@@ -58,11 +58,12 @@ The production-ready first-deploy RLS rules are implemented in the Supabase migr
 - `weekly_priorities`
 - `weekly_big_rocks`
 - `suggestion_events`
+- `feedback_submissions`
+- `feedback_attachments`
+- `external_account_deletion_requests`
 
 Settings-related tables that are specified but not yet implemented must follow the same owner-only pattern:
 
-- `feedback_submissions`
-- `feedback_attachments`
 - any temporary export metadata table
 - any legal document acceptance table, unless represented on `profiles`
 
@@ -89,6 +90,11 @@ Settings-related tables that are specified but not yet implemented must follow t
 - Account deletion state must be server-controlled. Clients may request or cancel deletion only through
   verified flows that require recent authentication; final deletion, Auth user removal, Storage cleanup, and
   external-service cleanup must run through Edge Functions, Cron, or equivalent server-side jobs.
+- `profiles` account lifecycle fields are protected from direct authenticated-client mutation by
+  `public.prevent_client_account_lifecycle_mutation()`. Service-role Edge Functions are the intended
+  mutation path for request, cancellation, and finalization.
+- `external_account_deletion_requests` stores only hashed request identifiers and has no direct
+  anonymous/authenticated grants. The public deletion page writes through an Edge Function.
 - Pending-deletion accounts must not retain ordinary write access to app data. Future policies or RPC/Edge
   Function guards must allow only the documented pending-deletion actions: cancel deletion, export data, and
   sign out.

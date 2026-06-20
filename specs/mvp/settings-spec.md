@@ -41,8 +41,6 @@ turning Settings into a feature maze.
 
 ## Non-Goals
 
-- Production code, UI components, tests, migrations, Edge Functions, or native platform setup in
-  this documentation phase.
 - Notifications in MVP.
 - Preferred sign-in method controls.
 - OAuth provider linking, unlinking, or provider management.
@@ -328,12 +326,12 @@ Requirements:
 
 ## Data Model Summary
 
-Settings-related future fields are documented in
+Settings-related fields are documented in
 [settings implementation plan](../../docs/features/settings/implementation-plan.md) and
-[schema-plan.md](../../docs/database/schema-plan.md). No schema changes are made by this
-documentation phase.
+[schema-plan.md](../../docs/database/schema-plan.md). Existing field names must be preserved for
+existing data, and new field names are used only for new fields.
 
-Planned fields include:
+Settings-related fields include:
 
 - Language preference on existing `profiles.language` / `locale`: `system | en | es | future_locale_code`.
 - Theme preference on existing `profiles.theme_preference` / `theme`: `system | light | dark`.

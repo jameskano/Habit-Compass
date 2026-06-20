@@ -85,9 +85,9 @@ every possible data processing activity.
 
 ## 8. Data Export
 
-Habit Compass plans to provide CSV ZIP and JSON export options from Settings. Exports are intended
-to help you keep a copy of your app data. Exports do not include passwords, OAuth tokens, sessions,
-or internal account-security metadata.
+Habit Compass provides CSV ZIP and JSON export options from Settings. Exports are intended to help
+you keep a copy of your app data. Exports do not include passwords, OAuth tokens, sessions, or
+internal account-security metadata.
 
 You are responsible for protecting files after you export them.
 

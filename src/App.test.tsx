@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 import { router } from './app/router/router'
@@ -1098,6 +1098,7 @@ describe('app shell', () => {
     expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
     const categories = screen.getByRole('link', { name: 'Categories. Manage categories.' })
     const preferences = screen.getByRole('heading', { name: 'Preferences' })
+    const security = await screen.findByRole('heading', { name: 'Security and sign-in' })
     const dataPrivacy = screen.getByRole('heading', { name: 'Data and privacy' })
     const premium = screen.getByRole('heading', { name: 'Habit Compass Premium' })
     const support = screen.getByRole('heading', { name: 'Support and feedback' })
@@ -1107,6 +1108,10 @@ describe('app shell', () => {
     expect(screen.getByRole('link', { name: /Data and privacy/ })).toHaveAttribute(
       'href',
       '/settings/data-privacy',
+    )
+    expect(screen.getByRole('link', { name: /Security and sign-in/ })).toHaveAttribute(
+      'href',
+      '/settings/security',
     )
     expect(screen.getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
       'href',
@@ -1123,7 +1128,10 @@ describe('app shell', () => {
       Boolean(categories.compareDocumentPosition(preferences) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
     expect(
-      Boolean(preferences.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
+      Boolean(preferences.compareDocumentPosition(security) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(security.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
     expect(
       Boolean(dataPrivacy.compareDocumentPosition(premium) & Node.DOCUMENT_POSITION_FOLLOWING),
@@ -1164,8 +1172,319 @@ describe('app shell', () => {
     expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
   })
 
-  it('opens Data and privacy, marks export unavailable, and links to legal documents', async () => {
+  it('hides Security and sign-in for OAuth-only and unknown accounts', async () => {
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    getMockState().authSession.providerClassification = 'oauth_only'
+    const { unmount } = render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Security and sign-in' }),
+      ).not.toBeInTheDocument()
+    })
+
+    unmount()
+    getMockState().authSession.providerClassification = 'unknown'
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Security and sign-in' }),
+      ).not.toBeInTheDocument()
+    })
+  })
+
+  it('opens the Security and sign-in shell without provider-management UI', async () => {
     const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('link', { name: /Security and sign-in/ }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Change email address')).toBeInTheDocument()
+    expect(screen.getByText('Change password')).toBeInTheDocument()
+    expect(screen.getByText('Request a secure email change.')).toBeInTheDocument()
+    expect(screen.getByText('Update the password for this account.')).toBeInTheDocument()
+    expect(screen.queryByText(/Google/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/connected provider/i)).not.toBeInTheDocument()
+  })
+
+  it('requests a secure email change with validation and pending confirmation', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change email address/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change email address' })
+    expect(within(dialog).getByLabelText('Current email')).toHaveValue('person@example.com')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+    expect(await within(dialog).findByText('Enter a valid email address.')).toBeInTheDocument()
+
+    await user.type(within(dialog).getByLabelText('New email'), 'person@example.com')
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+    expect(await within(dialog).findByText('Enter a different email address.')).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('New email'))
+    await user.type(within(dialog).getByLabelText('New email'), 'new@example.com')
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+
+    expect(
+      await within(dialog).findByText(
+        'Check your current and new email addresses to confirm the change.',
+      ),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.emailChangeRequests).toEqual(['new@example.com'])
+  })
+
+  it('updates password with local validation and sanitized authentication errors', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change password/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+
+    await user.type(within(dialog).getByLabelText('Current password'), 'wrong-password')
+    await user.type(within(dialog).getByLabelText('New password'), 'new-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'new-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(
+      await within(dialog).findByText(
+        'Password could not be updated. Check your current password and try again.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(dialog).queryByText(/No signed-in user/i)).not.toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('Current password'))
+    await user.clear(within(dialog).getByLabelText('New password'))
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('Current password'), 'current-password')
+    await user.type(within(dialog).getByLabelText('New password'), 'current-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'current-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(
+      await within(dialog).findByText(
+        'Choose a password that is different from your current password.',
+      ),
+    ).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('New password'))
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('New password'), 'new-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'other-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(await within(dialog).findByText('Passwords do not match.')).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'new-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+
+    expect(await within(dialog).findByText('Password updated.')).toBeInTheDocument()
+    expect(getMockState().authSession.passwordUpdateRequests).toEqual(['new-password'])
+    expect(within(dialog).getByLabelText('Current password')).toHaveValue('')
+  })
+
+  it('starts forgot-password reset and hides Security controls for ineligible direct routes', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    const { unmount } = render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change password/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    await user.click(within(dialog).getByRole('button', { name: 'Forgot your current password?' }))
+    expect(
+      await within(dialog).findByText('Check your email for password reset instructions.'),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.passwordResetRequests).toEqual(['person@example.com'])
+
+    unmount()
+    getMockState().authSession.providerClassification = 'oauth_only'
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByText('Security controls are not available for this account.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Change password/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Change email address/ })).not.toBeInTheDocument()
+  })
+
+  it('confirms sign out, uses local current-session scope, and routes to signed out', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+    const dialog = screen.getByRole('dialog', { name: 'Sign out?' })
+    expect(dialog).toHaveTextContent("You'll need to sign in again to access your data.")
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(getMockState().authSession.signedIn).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Sign out?' })).getByRole('button', {
+        name: 'Sign out',
+      }),
+    )
+
+    expect(await screen.findAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+    expect(getMockState().authSession.signedIn).toBe(false)
+    expect(getMockState().authSession.signOutScopes).toEqual(['local'])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('schedules account deletion from Settings and routes to the pending-deletion screen', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete account' }))
+    const intentDialog = screen.getByRole('dialog', { name: 'Delete your account?' })
+    expect(intentDialog).toHaveTextContent('7-day waiting period')
+
+    await user.click(within(intentDialog).getByRole('button', { name: 'Continue' }))
+    const reauthDialog = screen.getByRole('dialog', { name: 'Confirm it is you' })
+    await user.type(within(reauthDialog).getByLabelText('Current password'), 'current-password')
+    await user.click(within(reauthDialog).getByRole('button', { name: 'Continue' }))
+
+    const scheduleDialog = screen.getByRole('dialog', { name: 'Schedule account deletion?' })
+    expect(scheduleDialog).toHaveTextContent(
+      'Until then, the app will only allow export, sign out, or cancellation.',
+    )
+    await user.click(within(scheduleDialog).getByRole('button', { name: 'Delete account' }))
+
+    expect(
+      await screen.findByRole('button', { name: 'Cancel account deletion' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
+    ).toBeGreaterThan(0)
+    const state = getMockState()
+    expect(state.accountLifecycle.accountStatus).toBe('pending_deletion')
+    expect(state.accountLifecycle.deletionRequestSource).toBe('in_app')
+    expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
+  })
+
+  it('routes pending-deletion accounts away from normal app screens', async () => {
+    const state = getMockState()
+    const requestedAt = new Date()
+    state.accountLifecycle.accountStatus = 'pending_deletion'
+    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
+    state.accountLifecycle.deletionScheduledFor = new Date(
+      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString()
+    state.accountLifecycle.deletionRequestSource = 'in_app'
+
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Cancel account deletion' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
+    ).toBeGreaterThan(0)
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('cancels account deletion and restores normal app access', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    const requestedAt = new Date()
+    state.accountLifecycle.accountStatus = 'pending_deletion'
+    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
+    state.accountLifecycle.deletionScheduledFor = new Date(
+      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString()
+    state.accountLifecycle.deletionRequestSource = 'in_app'
+
+    await act(async () => {
+      await router.navigate({ to: '/account/pending-deletion' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Cancel account deletion' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(state.accountLifecycle.accountStatus).toBe('active')
+    expect(state.accountLifecycle.deletionRequestedAt).toBeNull()
+    expect(state.accountLifecycle.deletionScheduledFor).toBeNull()
+    expect(state.accountLifecycle.cancellationRequests).toHaveLength(1)
+    expect(await screen.findByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('supports the public external account deletion request path', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/account/delete' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete account', level: 1 }),
+    ).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
+    await user.click(screen.getByRole('button', { name: 'Request deletion link' }))
+
+    expect(
+      await screen.findByText(
+        'If that email matches an account, a verification link has been sent.',
+      ),
+    ).toBeInTheDocument()
+    expect(getMockState().accountLifecycle.externalDeletionRequests).toEqual(['person@example.com'])
+
+    await user.click(screen.getByRole('button', { name: 'Schedule after verification' }))
+    expect(
+      await screen.findAllByRole('heading', { name: 'Account deletion scheduled' }),
+    ).toHaveLength(2)
+    expect(getMockState().accountLifecycle.deletionRequestSource).toBe('external_web')
+  })
+
+  it('opens Data and privacy, exports CSV and JSON, and links to legal documents', async () => {
+    const user = userEvent.setup()
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined)
+    const originalCreateObjectURL = URL.createObjectURL
+    const originalRevokeObjectURL = URL.revokeObjectURL
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:habit-compass-export'),
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    })
     await act(async () => {
       await router.navigate({ to: '/settings/data-privacy' })
     })
@@ -1174,9 +1493,8 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Data and privacy', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Export data/ })).toHaveTextContent(
-      'Not available yet',
-    )
+    expect(screen.getByRole('button', { name: /Export as CSV/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Export as JSON/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Privacy Policy/ })).toHaveAttribute(
       'href',
       '/settings/data-privacy/privacy-policy',
@@ -1186,11 +1504,25 @@ describe('app shell', () => {
       '/settings/data-privacy/terms',
     )
 
-    await user.click(screen.getByRole('button', { name: /Export data/ }))
-    const exportDialog = screen.getByRole('dialog', { name: 'Export data' })
-    expect(
-      within(exportDialog).getByText(/Data export is not available in this build yet/),
-    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Export as CSV/ }))
+    expect(await screen.findByText(/Export ready/)).toBeInTheDocument()
+    expect(getMockState().dataExportRequests).toEqual(['csv'])
+    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+
+    await user.click(screen.getByRole('button', { name: /Export as JSON/ }))
+    await waitFor(() => {
+      expect(getMockState().dataExportRequests).toEqual(['csv', 'json'])
+    })
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: originalCreateObjectURL,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: originalRevokeObjectURL,
+    })
+    clickSpy.mockRestore()
   })
 
   it('renders Privacy Policy and Terms from local legal drafts', async () => {

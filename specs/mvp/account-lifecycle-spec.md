@@ -2,9 +2,10 @@
 
 ## Status
 
-Future Settings and authentication dependency. This spec documents account status, sign-out,
-account-deletion request, pending-deletion screen, final deletion, and external deletion-page
-requirements. No code, migration, Edge Function, or scheduled job is implemented in this phase.
+Partially implemented for Settings MVP. The app has local/current-session sign-out,
+account-deletion request scheduling, pending-deletion routing, cancellation, a server-side finalizer
+Edge Function, and a public deletion-request route. Production deployment still requires configuring
+the external public URL, email templates, function secrets, and the scheduled Cron invocation.
 
 ## Related Documents
 
@@ -32,25 +33,32 @@ requirements. No code, migration, Edge Function, or scheduled job is implemented
 
 ## Data Model
 
-Suggested `profiles` fields:
+Implemented `profiles` fields:
 
 - `account_status text not null default 'active'`
   - Allowed values: `active`, `pending_deletion`.
 - `deletion_requested_at timestamptz null`
 - `deletion_scheduled_for timestamptz null`
 
-Suggested audit/minimal processing fields:
+Implemented audit/minimal processing fields:
 
 - `deletion_cancelled_at timestamptz null`
 - `deletion_request_source text null`
   - Allowed values: `in_app`, `external_web`, `admin`.
-- `legal_terms_accepted_version text null`
-- `legal_terms_accepted_at timestamptz null`
-- `privacy_notice_presented_version text null`
+- `deletion_finalization_started_at timestamptz null`
+- `deletion_finalization_attempts integer not null default 0`
+- `deletion_finalization_error text null`
+
+Planned legal fields remain separate from account deletion:
+
+- `terms_version_accepted text null`
+- `terms_accepted_at timestamptz null`
+- `privacy_notice_version_presented text null`
 - `privacy_notice_presented_at timestamptz null`
 
-Do not add these fields during this documentation phase. Future migrations must update
-[schema-plan.md](../../docs/database/schema-plan.md) and RLS docs.
+The migration and RLS notes are tracked in
+[schema-plan.md](../../docs/database/schema-plan.md) and
+[rls-plan.md](../../docs/database/rls-plan.md).
 
 ## Sign Out
 
@@ -97,14 +105,14 @@ For OAuth-only users:
 First confirmation:
 
 - Title: `Delete your account?`
-- Body: `Your account will be scheduled for permanent deletion in 7 days. During this period, you can cancel the deletion or export your data.`
+- Body: `This starts a 7-day waiting period. You can export your data or cancel deletion before the scheduled date.`
 - Actions: `Cancel`, `Continue`
 
 Final confirmation after successful reauthentication:
 
 - Title: `Schedule account deletion?`
-- Body: `Your account and all Habit Compass data will be permanently deleted on [DATE]. This cannot be undone after that date.`
-- Actions: `Cancel`, `Delete account`
+- Body: `Your account will be permanently deleted after [DATE]. Until then, the app will only allow export, sign out, or cancellation.`
+- Actions: `Back`, `Delete account`
 
 Do not require typing `DELETE` in MVP unless future usability testing proves it is needed.
 
@@ -134,10 +142,11 @@ Route pending-deletion users to a dedicated screen. The normal application inter
 Suggested content:
 
 - Title: `Account deletion scheduled`
-- Body: `Your account and app data will be permanently deleted on [DATE].`
+- Body: `Your account is scheduled for permanent deletion after [DATE]. You can export your data or cancel deletion before then.`
 - Actions:
   - `Cancel account deletion`
-  - `Export data`
+  - `Export JSON`
+  - `Export CSV`
   - `Sign out`
 
 Requirements:
@@ -214,13 +223,16 @@ from active app data, and disclosed in the Privacy Policy. Do not invent a reten
 
 ## External Web Deletion Page
 
-Future public page requirement:
+Public page requirement:
 
 - A public web resource must allow users to request account deletion without reinstalling the
   Android app.
 - The page must not merely redirect users back to the app.
 - The Play Console account-deletion URL must point to this public resource once accounts are
   supported.
+- The repo route `/account/delete` provides the app-side public deletion request page; production
+  release still requires stable public hosting, email-template configuration, and Play Console URL
+  entry.
 
 Allowed secure flows:
 
