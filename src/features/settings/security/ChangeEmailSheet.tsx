@@ -91,9 +91,6 @@ export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEma
               aria-describedby="security-current-email-help"
               className="rounded-xl border-border/75"
             />
-            <p id="security-current-email-help" className="text-xs text-muted-foreground">
-              <FormattedMessage id="settings.security.changeEmail.currentEmailHelp" />
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -114,9 +111,7 @@ export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEma
             <p className="text-xs text-muted-foreground">
               {newEmailError ? (
                 <FormattedMessage id={getEmailErrorId(newEmailError.message)} />
-              ) : (
-                <FormattedMessage id="settings.security.changeEmail.newEmailHelp" />
-              )}
+              ) : null}
             </p>
           </div>
 

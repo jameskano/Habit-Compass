@@ -9,6 +9,7 @@ import {
   LogOut,
   Palette,
   Shield,
+  Star,
   Tags,
   Trash2,
   X,
@@ -185,7 +186,7 @@ const SettingsSection = ({ children, titleId }: SettingsSectionProps) => (
 
 type PreferenceSheetContentProps<Value extends string | number> = {
   titleId: string
-  descriptionId: string
+  descriptionId?: string
   options: PreferenceOption<Value>[]
   value: Value
   onSelect: (value: Value) => void
@@ -204,9 +205,11 @@ const PreferenceSheetContent = <Value extends string | number>({
         <SheetTitle className="text-lg font-semibold">
           <FormattedMessage id={titleId} />
         </SheetTitle>
-        <SheetDescription className="text-sm leading-6 text-muted-foreground">
-          <FormattedMessage id={descriptionId} />
-        </SheetDescription>
+        {descriptionId && (
+          <SheetDescription className="text-sm leading-6 text-muted-foreground">
+            <FormattedMessage id={descriptionId} />
+          </SheetDescription>
+        )}
       </div>
       <SheetClose className="grid size-10 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <X aria-hidden size={18} />
@@ -245,6 +248,7 @@ export const SettingsPage = () => {
   const intl = useIntl()
   const navigate = useNavigate()
   const [activeSheet, setActiveSheet] = useState<PreferenceSheet | null>(null)
+  const [rateDialogOpen, setRateDialogOpen] = useState(false)
   const [signOutDialogOpen, setSignOutDialogOpen] = useState(false)
   const [signOutError, setSignOutError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -281,13 +285,15 @@ export const SettingsPage = () => {
 
   return (
     <section className="space-y-4">
-      <SettingsRow
-        ariaLabelId="settings.categories.accessibilityLabel"
-        descriptionId="settings.categories.description"
-        icon={Tags}
-        labelId="settings.categories.title"
-        to="/settings/categories"
-      />
+      <SettingsSection>
+        <SettingsRow
+          ariaLabelId="settings.categories.accessibilityLabel"
+          descriptionId="settings.categories.description"
+          icon={Tags}
+          labelId="settings.categories.title"
+          to="/settings/categories"
+        />
+      </SettingsSection>
 
       <SettingsSection titleId="settings.preferences.title">
         <SettingsRow
@@ -340,6 +346,12 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       <SettingsSection titleId="settings.support.title">
+        <SettingsRow
+          descriptionId="settings.support.rate.description"
+          icon={Star}
+          labelId="settings.support.rate.title"
+          onClick={() => setRateDialogOpen(true)}
+        />
         <SettingsRow icon={LifeBuoy} labelId="settings.support.feedback" to="/settings/support" />
       </SettingsSection>
 
@@ -376,10 +388,9 @@ export const SettingsPage = () => {
       </footer>
 
       <Sheet open={activeSheet !== null} onOpenChange={(open) => !open && setActiveSheet(null)}>
-        <SheetContent>
+        <SheetContent className="animate-[habit-sheet-in_300ms_ease-out] motion-reduce:animate-none">
           {activeSheet === 'language' ? (
             <PreferenceSheetContent
-              descriptionId="settings.locale.description"
               options={languageOptions}
               titleId="settings.locale.title"
               value={locale}
@@ -391,7 +402,6 @@ export const SettingsPage = () => {
           ) : null}
           {activeSheet === 'theme' ? (
             <PreferenceSheetContent
-              descriptionId="settings.theme.description"
               options={themeOptions}
               titleId="settings.theme.title"
               value={theme}
@@ -403,7 +413,6 @@ export const SettingsPage = () => {
           ) : null}
           {activeSheet === 'weekStartsOn' ? (
             <PreferenceSheetContent
-              descriptionId="settings.weekStartsOn.description"
               options={weekStartsOnOptions}
               titleId="settings.weekStartsOn.title"
               value={weekStartsOn}
@@ -415,6 +424,26 @@ export const SettingsPage = () => {
           ) : null}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={rateDialogOpen} onOpenChange={setRateDialogOpen}>
+        <DialogContent aria-describedby="rate-app-description">
+          <DialogHeader>
+            <DialogTitle>
+              <FormattedMessage id="settings.support.rate.title" />
+            </DialogTitle>
+            <DialogDescription id="rate-app-description">
+              <FormattedMessage id="settings.support.rate.unavailable" />
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end p-4 sm:px-6">
+            <DialogClose asChild>
+              <Button variant="secondary">
+                <FormattedMessage id="action.close" />
+              </Button>
+            </DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={signOutDialogOpen} onOpenChange={setSignOutDialogOpen}>
         <DialogContent aria-describedby="settings-sign-out-description">

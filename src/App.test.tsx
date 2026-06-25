@@ -1096,27 +1096,40 @@ describe('app shell', () => {
     await act(async () => {
       await router.navigate({ to: '/settings' })
     })
+    getMockState().authSession.providerClassification = 'email_password'
     render(<App />)
 
     expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
     const categories = screen.getByRole('link', { name: 'Categories. Manage categories.' })
     const preferences = screen.getByRole('heading', { name: 'Preferences' })
-    const security = await screen.findByRole('heading', { name: 'Security and sign-in' })
-    const dataPrivacy = screen.getByRole('heading', { name: 'Data and privacy' })
-    const premium = screen.getByRole('heading', { name: 'Habit Compass Premium' })
+    const security = screen.queryByRole('heading', { name: 'Security and sign-in' })
+    const dataPrivacy = screen.getByRole('link', { name: /Data and privacy/ })
+    const premium = screen.getByText('Habit Compass Premium')
     const support = screen.getByRole('heading', { name: 'Support and feedback' })
     const account = screen.getByRole('heading', { name: 'Account actions' })
+    const categoriesCard = categories.closest('.bg-card')
+    const supportCard = support.closest('.bg-card')
 
     expect(categories).toHaveAttribute('href', '/settings/categories')
-    expect(screen.getByRole('link', { name: /Data and privacy/ })).toHaveAttribute(
-      'href',
-      '/settings/data-privacy',
-    )
-    expect(screen.getByRole('link', { name: /Security and sign-in/ })).toHaveAttribute(
-      'href',
-      '/settings/security',
-    )
+    expect(categoriesCard).toHaveClass('rounded-lg', 'border', 'bg-card')
+    expect(dataPrivacy).toHaveAttribute('href', '/settings/data-privacy')
+    if (security) {
+      expect(screen.getByRole('link', { name: /Security and sign-in/ })).toHaveAttribute(
+        'href',
+        '/settings/security',
+      )
+    }
     expect(screen.getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
+      'href',
+      '/settings/support',
+    )
+    if (!(supportCard instanceof HTMLElement)) {
+      throw new Error('Expected Support and feedback card')
+    }
+    expect(
+      within(supportCard).getByRole('button', { name: /Rate Habit Compass/ }),
+    ).toBeInTheDocument()
+    expect(within(supportCard).getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
       'href',
       '/settings/support',
     )
@@ -1130,12 +1143,20 @@ describe('app shell', () => {
     expect(
       Boolean(categories.compareDocumentPosition(preferences) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
-    expect(
-      Boolean(preferences.compareDocumentPosition(security) & Node.DOCUMENT_POSITION_FOLLOWING),
-    ).toBe(true)
-    expect(
-      Boolean(security.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
-    ).toBe(true)
+    if (security) {
+      expect(
+        Boolean(preferences.compareDocumentPosition(security) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true)
+      expect(
+        Boolean(security.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true)
+    } else {
+      expect(
+        Boolean(
+          preferences.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true)
+    }
     expect(
       Boolean(dataPrivacy.compareDocumentPosition(premium) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
@@ -1146,8 +1167,15 @@ describe('app shell', () => {
       Boolean(support.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING),
     ).toBe(true)
 
+    await user.click(within(supportCard).getByRole('button', { name: /Rate Habit Compass/ }))
+    expect(screen.getByRole('dialog', { name: 'Rate Habit Compass' })).toHaveTextContent(
+      'Ratings are not available in this development build',
+    )
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
     await user.click(screen.getByRole('button', { name: /Theme/ }))
-    expect(screen.getByRole('dialog', { name: 'Theme' })).toBeInTheDocument()
+    const themeDialog = screen.getByRole('dialog', { name: 'Theme' })
+    expect(themeDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
     await user.click(screen.getByRole('button', { name: 'Dark' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Theme' })).not.toBeInTheDocument()
@@ -1156,7 +1184,8 @@ describe('app shell', () => {
     expect(document.documentElement).toHaveClass('dark')
 
     await user.click(screen.getByRole('button', { name: /Week starts on/ }))
-    expect(screen.getByRole('dialog', { name: 'Week starts on' })).toBeInTheDocument()
+    const weekStartsOnDialog = screen.getByRole('dialog', { name: 'Week starts on' })
+    expect(weekStartsOnDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
     await user.click(screen.getByRole('button', { name: 'Sunday' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Week starts on' })).not.toBeInTheDocument()
@@ -1165,7 +1194,8 @@ describe('app shell', () => {
     expect(screen.getByRole('button', { name: /Week starts on/ })).toHaveTextContent('Sunday')
 
     await user.click(screen.getByRole('button', { name: /Language/ }))
-    expect(screen.getByRole('dialog', { name: 'Language' })).toBeInTheDocument()
+    const languageDialog = screen.getByRole('dialog', { name: 'Language' })
+    expect(languageDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
     await user.click(screen.getByRole('button', { name: 'Espanol' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Language' })).not.toBeInTheDocument()
@@ -1215,7 +1245,7 @@ describe('app shell', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('Change email address')).toBeInTheDocument()
     expect(await screen.findByText('Change password')).toBeInTheDocument()
-    expect(await screen.findByText('Request a secure email change.')).toBeInTheDocument()
+    expect(await screen.findByText('Request an email change.')).toBeInTheDocument()
     expect(await screen.findByText('Update the password for this account.')).toBeInTheDocument()
     expect(screen.queryByText(/Google/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/connected provider/i)).not.toBeInTheDocument()
@@ -1560,21 +1590,26 @@ describe('app shell', () => {
     expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
   })
 
-  it('opens Support and feedback with the rating fallback and validates required feedback', async () => {
+  it('opens the rating fallback from Settings and validates required feedback on Support', async () => {
     const user = userEvent.setup()
     await act(async () => {
-      await router.navigate({ to: '/settings/support' })
+      await router.navigate({ to: '/settings' })
     })
     render(<App />)
 
-    expect(
-      await screen.findByRole('heading', { name: 'Support and feedback', level: 1 }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Rate Habit Compass/ }))
     expect(screen.getByRole('dialog', { name: 'Rate Habit Compass' })).toHaveTextContent(
       'Ratings are not available in this development build',
     )
     await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    await user.click(screen.getByRole('link', { name: /Feedback and support/ }))
+    expect(
+      await screen.findByRole('heading', { name: 'Support and feedback', level: 1 }),
+    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Feedback and support' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Rate Habit Compass/ })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Send feedback' }))
     expect(await screen.findByText('Message is required.')).toBeInTheDocument()
