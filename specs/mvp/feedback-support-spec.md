@@ -65,7 +65,7 @@ Fields:
 - Message, required.
 - Reply email, optional.
 - Screenshot, optional.
-- Include technical details, opt-in.
+- Technical details, included automatically.
 
 Behavior:
 
@@ -75,7 +75,8 @@ Behavior:
 - The app must not silently capture screen contents.
 - The app must not automatically attach personal habit, task, reflection, or completion content.
 - Screenshot upload is explicit and optional.
-- Technical details are explained before submission and included only when selected.
+- Technical details are limited to the permitted non-sensitive diagnostics listed below and are
+  included automatically with feedback submissions.
 
 Permitted technical details:
 
@@ -166,7 +167,7 @@ Edge Function or secure server-side notification:
   retained only under a documented legal basis. The MVP default requirement is deletion or
   anonymization unless a release owner confirms a retention obligation.
 - Privacy Policy must disclose feedback message, optional reply email, optional screenshots, and
-  optional technical details.
+  technical details.
 
 ## Offline And Error States
 
@@ -198,11 +199,10 @@ Edge Function or secure server-side notification:
 ## Acceptance Criteria
 
 - Given an authenticated user opens Feedback and support, then message, type, reply email,
-  screenshot, and technical details controls are available.
+  and screenshot controls are available.
 - Given the message is empty, when the user submits, then submission is blocked.
 - Given reply email is removed, when feedback is submitted, then submission can still succeed.
-- Given technical details is off, then no technical details are included.
-- Given technical details is on, then only permitted non-sensitive details are included.
+- Given feedback is submitted, then permitted non-sensitive technical details are included.
 - Given a screenshot is attached, then upload uses private Storage and is linked to the feedback
   submission.
 - Given upload fails, then the user can retry or submit without the screenshot.
@@ -215,6 +215,6 @@ Edge Function or secure server-side notification:
 - Integration tests for feedback insert RLS, attachment upload policies, rate limiting, and server
   notification path.
 - E2E tests for Rate Habit Compass fallback, feedback success, required message, optional reply
-  email, optional screenshot, technical details toggle, offline state, and error state.
+  email, optional screenshot, automatic technical details, offline state, and error state.
 - Accessibility tests for form labels, focus order, TalkBack output, validation announcements, and
   touch targets.

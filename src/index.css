@@ -13,6 +13,8 @@
   --card-foreground: 216 24% 16%;
   --primary: 171 63% 29%;
   --primary-foreground: 0 0% 100%;
+  --destructive: 0 72% 42%;
+  --destructive-foreground: 0 0% 100%;
   --ring: 171 63% 29%;
   --radius: 1rem;
   font-family: 'Aptos', 'Segoe UI', system-ui, sans-serif;
@@ -29,6 +31,8 @@
   --card-foreground: 40 30% 94%;
   --primary: 171 54% 46%;
   --primary-foreground: 218 28% 9%;
+  --destructive: 0 72% 62%;
+  --destructive-foreground: 0 0% 100%;
   --ring: 171 54% 46%;
 }
 

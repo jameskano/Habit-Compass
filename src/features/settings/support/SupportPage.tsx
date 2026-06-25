@@ -40,7 +40,6 @@ const FeedbackFormSchema = z.object({
   type: FeedbackTypeSchema,
   message: z.string().trim().min(1).max(FEEDBACK_MESSAGE_MAX_LENGTH),
   replyEmail: z.preprocess(normalizeOptionalString, z.email().nullable().optional()),
-  includeTechnicalDetails: z.boolean(),
 })
 
 type FeedbackFormValues = z.infer<typeof FeedbackFormSchema>
@@ -119,7 +118,6 @@ export const SupportPage = () => {
       type: 'suggestion',
       message: '',
       replyEmail: null,
-      includeTechnicalDetails: false,
     },
   })
   const selectedType = form.watch('type')
@@ -162,17 +160,13 @@ export const SupportPage = () => {
       return
     }
 
-    const technicalDetails = values.includeTechnicalDetails
-      ? buildTechnicalDetails(locale, pathname)
-      : null
-
     submitFeedback.mutate(
       {
         userId: MOCK_USER_ID,
         type: values.type,
         message: values.message,
         replyEmail: values.replyEmail ?? null,
-        technicalDetails,
+        technicalDetails: buildTechnicalDetails(locale, pathname),
         screenId: pathname,
         screenshotAttachment: buildAttachmentInput(selectedFile),
       },
@@ -246,13 +240,13 @@ export const SupportPage = () => {
               aria-invalid={Boolean(form.formState.errors.message)}
               {...form.register('message')}
             />
-            <div className="flex items-start justify-between gap-3 text-xs text-muted-foreground">
-              <span>
+            <div className="flex items-start justify-between gap-3 text-xs">
+              <span className="text-destructive">
                 {form.formState.errors.message && (
                   <FormattedMessage id="settings.support.feedback.message.error" />
                 )}
               </span>
-              <span>
+              <span className="text-muted-foreground">
                 <FormattedMessage
                   id="settings.support.feedback.characterLimit"
                   values={{ count: message.length, max: FEEDBACK_MESSAGE_MAX_LENGTH }}
@@ -275,7 +269,12 @@ export const SupportPage = () => {
               aria-invalid={Boolean(form.formState.errors.replyEmail)}
               {...form.register('replyEmail')}
             />
-            <p className="text-xs text-muted-foreground">
+            <p
+              className={cn(
+                'text-xs',
+                form.formState.errors.replyEmail ? 'text-destructive' : 'text-muted-foreground',
+              )}
+            >
               {form.formState.errors.replyEmail ? (
                 <FormattedMessage id="settings.support.feedback.replyEmail.error" />
               ) : (

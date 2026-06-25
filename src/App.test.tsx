@@ -1612,10 +1612,10 @@ describe('app shell', () => {
     expect(screen.queryByRole('button', { name: /Rate Habit Compass/ })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Send feedback' }))
-    expect(await screen.findByText('Message is required.')).toBeInTheDocument()
+    expect(await screen.findByText('Message is required.')).toHaveClass('text-destructive')
   })
 
-  it('submits feedback with optional reply email cleared and opt-in technical details', async () => {
+  it('submits feedback with optional reply email cleared and automatic technical details', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings/support' })
@@ -1627,8 +1627,9 @@ describe('app shell', () => {
     const replyEmail = screen.getByLabelText('Reply email')
     await user.type(replyEmail, 'person@example.com')
     await user.clear(replyEmail)
-    await user.click(screen.getByRole('checkbox', { name: /Include technical details/ }))
-    expect(screen.getByText(/Will include version dev/)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('checkbox', { name: /Include technical details/ }),
+    ).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Send feedback' }))
 
@@ -1638,6 +1639,26 @@ describe('app shell', () => {
     expect(state.feedbackSubmissions[0].type).toBe('problem')
     expect(state.feedbackSubmissions[0].replyEmail).toBeNull()
     expect(state.feedbackSubmissions[0].technicalDetails?.screenId).toBe('/settings/support')
+  })
+
+  it('marks invalid reply email feedback validation as destructive', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    expect(await screen.findByText('Leave it blank if you do not want a reply.')).toHaveClass(
+      'text-muted-foreground',
+    )
+
+    await user.type(screen.getByLabelText('Message'), 'Please check this reply address.')
+    await user.type(screen.getByLabelText('Reply email'), 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Enter a valid email address or leave it blank.')).toHaveClass(
+      'text-destructive',
+    )
   })
 
   it('keeps feedback form content when offline and shows repository errors', async () => {
