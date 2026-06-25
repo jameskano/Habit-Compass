@@ -1,21 +1,16 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { getHabitAmountInputMetadata, getHabitLogAmount, type Habit } from '@/domain/habits'
 import { getTodayDateMode, type TodayFilterState } from '@/domain/today'
 import { HabitAmountInputSheet } from '@/features/items/habits/HabitAmountInputSheet'
-import {
-  HabitConfirmationDialog,
-  type HabitDangerAction,
-} from '@/features/items/habits/HabitConfirmationDialog'
-import { HabitDetail } from '@/features/items/habits/HabitDetail'
-import { RecurrentTaskEdit } from '@/features/items/recurrent-tasks/RecurrentTaskEdit'
-import { TaskEdit } from '@/features/items/tasks/TaskEdit'
+import type { HabitDangerAction } from '@/features/items/habits/HabitConfirmationDialog'
 import { useResetHabitProgressMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 
 import { TodayActionSheet } from './TodayActionSheet'
 import { TodayDateNavigator } from './TodayDateNavigator'
@@ -33,6 +28,25 @@ import { useTodayCompletionActions } from './useTodayCompletionActions'
 import { useTodayMenuActions } from './useTodayMenuActions'
 import { useTodayPageData } from './useTodayPageData'
 import { useTodayShellActions } from './useTodayShellActions'
+
+const HabitConfirmationDialog = lazy(() =>
+  import('@/features/items/habits/HabitConfirmationDialog').then((module) => ({
+    default: module.HabitConfirmationDialog,
+  })),
+)
+const HabitDetail = lazy(() =>
+  import('@/features/items/habits/HabitDetail').then((module) => ({
+    default: module.HabitDetail,
+  })),
+)
+const RecurrentTaskEdit = lazy(() =>
+  import('@/features/items/recurrent-tasks/RecurrentTaskEdit').then((module) => ({
+    default: module.RecurrentTaskEdit,
+  })),
+)
+const TaskEdit = lazy(() =>
+  import('@/features/items/tasks/TaskEdit').then((module) => ({ default: module.TaskEdit })),
+)
 
 export const TodayPage = () => {
   const intl = useIntl()
@@ -170,22 +184,24 @@ export const TodayPage = () => {
       />
 
       {habitConfirmation ? (
-        <HabitConfirmationDialog
-          habit={habitConfirmation.habit}
-          action={habitConfirmation.action}
-          pending={resetHabitMutation.isPending}
-          onCancel={() => setHabitConfirmation(null)}
-          onConfirm={() => {
-            if (habitConfirmation.action === 'reset') {
-              resetHabitMutation.mutate(habitConfirmation.habit.id, {
-                onSuccess: () => {
-                  setHabitConfirmation(null)
-                  appToast.success({ id: 'page.items.habit.detail.progressReset' })
-                },
-              })
-            }
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <HabitConfirmationDialog
+            habit={habitConfirmation.habit}
+            action={habitConfirmation.action}
+            pending={resetHabitMutation.isPending}
+            onCancel={() => setHabitConfirmation(null)}
+            onConfirm={() => {
+              if (habitConfirmation.action === 'reset') {
+                resetHabitMutation.mutate(habitConfirmation.habit.id, {
+                  onSuccess: () => {
+                    setHabitConfirmation(null)
+                    appToast.success({ id: 'page.items.habit.detail.progressReset' })
+                  },
+                })
+              }
+            }}
+          />
+        </Suspense>
       ) : null}
 
       {todayData.selectedHabitForAmount ? (
@@ -219,55 +235,64 @@ export const TodayPage = () => {
       ) : null}
 
       {todayData.detailHabit && detailSelection ? (
-        <HabitDetail
-          key={`${todayData.detailHabit.id}:${detailSelection.tab}`}
-          habit={todayData.detailHabit}
-          categories={todayData.categories}
-          initialTab={detailSelection.tab}
-          today={actualToday}
-          onClose={() => setDetailSelection(null)}
-          onArchived={(habit) => {
-            setDetailSelection(null)
-            appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
-          }}
-          onDeleted={(habit) => {
-            setDetailSelection(null)
-            appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <HabitDetail
+            key={`${todayData.detailHabit.id}:${detailSelection.tab}`}
+            habit={todayData.detailHabit}
+            categories={todayData.categories}
+            initialTab={detailSelection.tab}
+            today={actualToday}
+            onClose={() => setDetailSelection(null)}
+            onArchived={(habit) => {
+              setDetailSelection(null)
+              appToast.success({ id: 'page.items.habit.archived', values: { habit: habit.title } })
+            }}
+            onDeleted={(habit) => {
+              setDetailSelection(null)
+              appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
 
       {todayData.selectedTask ? (
-        <TaskEdit
-          task={todayData.selectedTask}
-          categories={todayData.categories}
-          onClose={() => setSelectedTaskId(null)}
-          onArchived={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
-          }}
-          onDeleted={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <TaskEdit
+            task={todayData.selectedTask}
+            categories={todayData.categories}
+            onClose={() => setSelectedTaskId(null)}
+            onArchived={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
+            }}
+            onDeleted={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
 
       {todayData.selectedRecurrentTask ? (
-        <RecurrentTaskEdit
-          task={todayData.selectedRecurrentTask}
-          categories={todayData.categories}
-          today={actualToday}
-          onClose={() => setSelectedRecurrentTaskId(null)}
-          onArchived={(task) => {
-            setSelectedRecurrentTaskId(null)
-            appToast.success({ id: 'page.items.recurrent.archived', values: { task: task.title } })
-          }}
-          onDeleted={(task) => {
-            setSelectedRecurrentTaskId(null)
-            appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <RecurrentTaskEdit
+            task={todayData.selectedRecurrentTask}
+            categories={todayData.categories}
+            today={actualToday}
+            onClose={() => setSelectedRecurrentTaskId(null)}
+            onArchived={(task) => {
+              setSelectedRecurrentTaskId(null)
+              appToast.success({
+                id: 'page.items.recurrent.archived',
+                values: { task: task.title },
+              })
+            }}
+            onDeleted={(task) => {
+              setSelectedRecurrentTaskId(null)
+              appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
 
       {todayData.hasFilters ? (

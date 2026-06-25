@@ -1,5 +1,4 @@
 import type { DataExportRepository } from '@/domain/export'
-import { buildExportBlob, buildExportData, buildExportFilename } from '@/domain/export'
 import { createAppError } from '@/shared/utils/appError'
 import { err, ok } from '@/shared/utils/result'
 
@@ -7,6 +6,8 @@ import { getMockState } from './mockData'
 
 export const mockDataExportRepository: DataExportRepository = {
   async exportData({ format, generatedAt = new Date(), userId }) {
+    const { buildExportBlob, buildExportData, buildExportFilename } =
+      await import('@/domain/export/transform')
     const state = getMockState()
 
     if (!state.authSession.signedIn) {

@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { Button } from '@/shared/ui/button'
-import { Calendar } from '@/shared/ui/calendar'
+import { LazyCalendar } from '@/shared/ui/LazyCalendar'
 import {
   Dialog,
   DialogContent,
@@ -88,7 +88,7 @@ export const DatePickerField = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto">
-          <Calendar
+          <LazyCalendar
             mode="single"
             selected={selectedDate}
             defaultMonth={selectedDate}
@@ -159,7 +159,7 @@ export const GuardedEndDateField = ({
           </Button>
         </PopoverAnchor>
         <PopoverContent align="start" className="w-auto">
-          <Calendar
+          <LazyCalendar
             mode="single"
             selected={isoDateToCalendarDate(value)}
             defaultMonth={isoDateToCalendarDate(value)}

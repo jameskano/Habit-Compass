@@ -1,5 +1,5 @@
 import { formatISO } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 
 import {
   deriveRecurrentOccurrences,
@@ -15,12 +15,16 @@ import { useRecurrentTaskOccurrencesQuery } from '@/features/recurrent-tasks/hoo
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { RecurrentTaskCard } from './RecurrentTaskCard'
-import { RecurrentTaskEdit } from './RecurrentTaskEdit'
+
+const RecurrentTaskEdit = lazy(() =>
+  import('./RecurrentTaskEdit').then((module) => ({ default: module.RecurrentTaskEdit })),
+)
 
 type RecurrentTasksTabProps = {
   tasks: RecurrentTask[]
@@ -192,20 +196,25 @@ export const RecurrentTasksTab = ({
         </SortableItemsList>
       )}
       {selectedTask ? (
-        <RecurrentTaskEdit
-          task={selectedTask}
-          categories={categoriesQuery.data ?? []}
-          today={today}
-          onClose={() => setSelectedTaskId(null)}
-          onArchived={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.recurrent.archived', values: { task: task.title } })
-          }}
-          onDeleted={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <RecurrentTaskEdit
+            task={selectedTask}
+            categories={categoriesQuery.data ?? []}
+            today={today}
+            onClose={() => setSelectedTaskId(null)}
+            onArchived={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({
+                id: 'page.items.recurrent.archived',
+                values: { task: task.title },
+              })
+            }}
+            onDeleted={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({ id: 'page.items.recurrent.deleted', values: { task: task.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
     </>
   )

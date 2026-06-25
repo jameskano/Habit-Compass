@@ -85,3 +85,7 @@ export const LegalDocumentPage = ({ kind }: LegalDocumentPageProps) => {
     </section>
   )
 }
+
+export const PrivacyPolicyPage = () => <LegalDocumentPage kind="privacyPolicy" />
+
+export const TermsOfServicePage = () => <LegalDocumentPage kind="termsOfService" />

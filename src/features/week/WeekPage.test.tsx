@@ -163,7 +163,7 @@ describe('WeekPage', () => {
     ])
 
     await user.click(screen.getByRole('button', { name: 'Choose week' }))
-    const calendar = screen.getByRole('grid')
+    const calendar = await screen.findByRole('grid')
     expect(
       within(calendar)
         .getAllByRole('columnheader', { hidden: true })

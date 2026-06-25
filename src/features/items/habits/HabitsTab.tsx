@@ -1,5 +1,5 @@
 import { formatISO, parseISO, subDays } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 
 import type { Habit } from '@/domain/habits'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
@@ -14,13 +14,18 @@ import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRang
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { HabitCard } from './HabitCard'
-import { HabitDetail, type HabitDetailTab } from './HabitDetail'
+import type { HabitDetailTab } from './HabitDetail'
 import { HabitOptionsSheet } from './HabitOptionsSheet'
+
+const HabitDetail = lazy(() =>
+  import('./HabitDetail').then((module) => ({ default: module.HabitDetail })),
+)
 
 type HabitsTabProps = {
   habits: Habit[]
@@ -223,19 +228,21 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
         onDelete={deleteHabit}
       />
       {detailHabit && detailSelection ? (
-        <HabitDetail
-          key={`${detailHabit.id}:${detailSelection.tab}`}
-          habit={detailHabit}
-          categories={categoriesQuery.data ?? []}
-          initialTab={detailSelection.tab}
-          today={today}
-          onClose={() => setDetailSelection(null)}
-          onArchived={handleArchived}
-          onDeleted={(habit) => {
-            setDetailSelection(null)
-            appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <HabitDetail
+            key={`${detailHabit.id}:${detailSelection.tab}`}
+            habit={detailHabit}
+            categories={categoriesQuery.data ?? []}
+            initialTab={detailSelection.tab}
+            today={today}
+            onClose={() => setDetailSelection(null)}
+            onArchived={handleArchived}
+            onDeleted={(habit) => {
+              setDetailSelection(null)
+              appToast.success({ id: 'page.items.habit.deleted', values: { habit: habit.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
     </>
   )

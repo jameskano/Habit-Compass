@@ -9,8 +9,8 @@ import {
 } from '@/features/items/components/datePickerUtils'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
-import { Calendar } from '@/shared/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { LazyCalendar } from '@/shared/ui/LazyCalendar'
 import { useShellActions } from '@/shared/ui/useShellActions'
 import { cn } from '@/shared/utils/cn'
 
@@ -73,7 +73,7 @@ export const useWeekShellActions = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-auto">
-            <Calendar
+            <LazyCalendar
               mode="single"
               weekStartsOn={weekStartsOn}
               selected={isoDateToCalendarDate(selectedWeekStart)}

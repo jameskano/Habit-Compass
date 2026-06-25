@@ -102,7 +102,7 @@ describe('app shell', () => {
     expect(await screen.findByText('Ready for today')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Choose date' }))
-    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(await screen.findByRole('grid')).toBeInTheDocument()
     expect(screen.queryByDisplayValue(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument()
   })
 
@@ -160,7 +160,7 @@ describe('app shell', () => {
       screen.getByRole('dialog', { name: 'Actions for Move for 20 minutes' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
-    const resetDialog = screen.getByRole('alertdialog', { name: 'Reset progress?' })
+    const resetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     expect(
       screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
     ).not.toBeInTheDocument()
@@ -169,8 +169,9 @@ describe('app shell', () => {
     expect(screen.getByRole('menuitem', { name: 'Reset progress' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
+    const confirmResetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     await user.click(
-      within(screen.getByRole('alertdialog', { name: 'Reset progress?' })).getByRole('button', {
+      within(confirmResetDialog).getByRole('button', {
         name: 'Reset progress',
       }),
     )
@@ -452,7 +453,7 @@ describe('app shell', () => {
     await user.click(recentActivity)
     expect(screen.queryByRole('dialog', { name: /Options for/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Calendar for Move for 20 minutes' }))
-    const calendarDetail = screen.getByRole('dialog', {
+    const calendarDetail = await screen.findByRole('dialog', {
       name: 'Habit detail for Move for 20 minutes',
     })
     expect(within(calendarDetail).getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
@@ -460,7 +461,7 @@ describe('app shell', () => {
       'true',
     )
     expect(
-      within(calendarDetail).getByLabelText('Calendar for Move for 20 minutes'),
+      await within(calendarDetail).findByLabelText('Calendar for Move for 20 minutes'),
     ).toBeInTheDocument()
     expect(within(calendarDetail).queryByText('Habit detail')).not.toBeInTheDocument()
     const legend = within(calendarDetail).getByLabelText('Calendar state legend')
@@ -509,7 +510,7 @@ describe('app shell', () => {
     })
     fireEvent.pointerDown(editCard, { clientX: 110, clientY: 20 })
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
-    const editDetail = screen.getByRole('dialog', {
+    const editDetail = await screen.findByRole('dialog', {
       name: 'Habit detail for Read before bed',
     })
     expect(within(editDetail).getByRole('tab', { name: 'Edit' })).toHaveAttribute(
@@ -934,7 +935,7 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Tasks' }))
     await user.click(await screen.findByRole('button', { name: 'Edit Start laundry' }))
-    let editDialog = screen.getByRole('dialog', { name: 'Edit task Start laundry' })
+    let editDialog = await screen.findByRole('dialog', { name: 'Edit task Start laundry' })
     expect(within(editDialog).queryByText('Task details')).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
     expect(editDialog.querySelector('input[type="date"]')).toBeNull()
@@ -1031,7 +1032,9 @@ describe('app shell', () => {
     })
     fireEvent.pointerDown(editCard, { clientX: 110, clientY: 20 })
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
-    const editDialog = screen.getByRole('dialog', { name: 'Edit recurrent task Water the plants' })
+    const editDialog = await screen.findByRole('dialog', {
+      name: 'Edit recurrent task Water the plants',
+    })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeDisabled()
     expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
@@ -1210,10 +1213,10 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Change email address')).toBeInTheDocument()
-    expect(screen.getByText('Change password')).toBeInTheDocument()
-    expect(screen.getByText('Request a secure email change.')).toBeInTheDocument()
-    expect(screen.getByText('Update the password for this account.')).toBeInTheDocument()
+    expect(await screen.findByText('Change email address')).toBeInTheDocument()
+    expect(await screen.findByText('Change password')).toBeInTheDocument()
+    expect(await screen.findByText('Request a secure email change.')).toBeInTheDocument()
+    expect(await screen.findByText('Update the password for this account.')).toBeInTheDocument()
     expect(screen.queryByText(/Google/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/connected provider/i)).not.toBeInTheDocument()
   })
@@ -1348,7 +1351,9 @@ describe('app shell', () => {
       }),
     )
 
-    expect(await screen.findAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+    await waitFor(() => {
+      expect(screen.getAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+    })
     expect(getMockState().authSession.signedIn).toBe(false)
     expect(getMockState().authSession.signOutScopes).toEqual(['local'])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
@@ -1536,9 +1541,9 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Habit Compass Privacy Policy')).toBeInTheDocument()
-    expect(screen.getByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
-    expect(screen.getByText('[EFFECTIVE DATE]')).toBeInTheDocument()
+    expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
+    expect(await screen.findByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
+    expect(await screen.findByText('[EFFECTIVE DATE]')).toBeInTheDocument()
     expect(
       screen.getByText(/Public hosted URLs are still release placeholders/),
     ).toBeInTheDocument()
@@ -1550,7 +1555,7 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Habit Compass Terms of Service')).toBeInTheDocument()
+    expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
     expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
     expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
   })
