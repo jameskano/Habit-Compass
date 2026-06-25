@@ -136,27 +136,23 @@ export const DataPrivacyPage = () => {
         </h2>
         <div className="space-y-1">
           <DataPrivacyRow
-            descriptionId="settings.dataPrivacy.export.csv.description"
             disabled={exportMutation.isPending}
             icon={FileArchive}
             labelId="settings.dataPrivacy.export.csv.title"
             onClick={() => handleExport('csv')}
           />
           <DataPrivacyRow
-            descriptionId="settings.dataPrivacy.export.json.description"
             disabled={exportMutation.isPending}
             icon={FileJson}
             labelId="settings.dataPrivacy.export.json.title"
             onClick={() => handleExport('json')}
           />
           <DataPrivacyRow
-            descriptionId="settings.legal.privacy.description"
             icon={FileText}
             labelId="settings.legal.privacy.title"
             to="/settings/data-privacy/privacy-policy"
           />
           <DataPrivacyRow
-            descriptionId="settings.legal.terms.description"
             icon={ScrollText}
             labelId="settings.legal.terms.title"
             to="/settings/data-privacy/terms"

@@ -168,15 +168,17 @@ const SettingsRow = ({
 }
 
 type SettingsSectionProps = {
-  titleId: string
+  titleId?: string
   children: ReactNode
 }
 
 const SettingsSection = ({ children, titleId }: SettingsSectionProps) => (
   <Card className="space-y-2 p-3">
-    <h2 className="px-3 pt-1 text-sm font-semibold uppercase tracking-normal text-muted-foreground">
-      <FormattedMessage id={titleId} />
-    </h2>
+    {titleId && (
+      <h2 className="px-3 pt-1 text-sm font-semibold uppercase tracking-normal text-muted-foreground">
+        <FormattedMessage id={titleId} />
+      </h2>
+    )}
     <div className="space-y-1">{children}</div>
   </Card>
 )
@@ -309,7 +311,7 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       {showSecurityAndSignIn ? (
-        <SettingsSection titleId="settings.security.title">
+        <SettingsSection>
           <SettingsRow
             descriptionId="settings.security.description"
             icon={Shield}
@@ -319,7 +321,7 @@ export const SettingsPage = () => {
         </SettingsSection>
       ) : null}
 
-      <SettingsSection titleId="settings.dataPrivacy.title">
+      <SettingsSection>
         <SettingsRow
           descriptionId="settings.dataPrivacy.description"
           icon={Database}
@@ -328,7 +330,7 @@ export const SettingsPage = () => {
         />
       </SettingsSection>
 
-      <SettingsSection titleId="settings.premium.sectionTitle">
+      <SettingsSection>
         <SettingsRow
           disabled
           descriptionId="settings.premium.status"
@@ -338,12 +340,7 @@ export const SettingsPage = () => {
       </SettingsSection>
 
       <SettingsSection titleId="settings.support.title">
-        <SettingsRow
-          descriptionId="settings.support.description"
-          icon={LifeBuoy}
-          labelId="settings.support.feedback"
-          to="/settings/support"
-        />
+        <SettingsRow icon={LifeBuoy} labelId="settings.support.feedback" to="/settings/support" />
       </SettingsSection>
 
       <SettingsSection titleId="settings.account.title">
@@ -368,7 +365,7 @@ export const SettingsPage = () => {
         />
       </SettingsSection>
 
-      <footer className="space-y-1 px-2 pb-2 pt-1 text-center text-xs text-muted-foreground">
+      <footer className="space-y-1 px-2 pb-2 pt-4 text-center text-xs text-muted-foreground">
         <p>{footerVersion}</p>
         <p>
           <FormattedMessage id="settings.footer.copyright" values={{ year: currentYear }} />

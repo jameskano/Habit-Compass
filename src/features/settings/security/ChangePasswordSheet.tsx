@@ -8,7 +8,7 @@ import { ChangePasswordSchema, type ChangePasswordValues } from '@/domain/auth/s
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet'
+import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
 import { AppError } from '@/shared/utils/appError'
 
 import { useSendPasswordResetMutation, useUpdatePasswordMutation } from './useSecurityMutations'
@@ -175,9 +175,6 @@ export const ChangePasswordSheet = ({ open, onOpenChange }: ChangePasswordSheetP
         <SheetTitle className="text-xl font-semibold tracking-tight">
           <FormattedMessage id="settings.security.changePassword.title" />
         </SheetTitle>
-        <SheetDescription className="mt-2 text-sm leading-6 text-muted-foreground">
-          <FormattedMessage id="settings.security.changePassword.explanation" />
-        </SheetDescription>
 
         <form noValidate className="mt-5 space-y-4" onSubmit={submit}>
           <PasswordInput
