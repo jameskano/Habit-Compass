@@ -29,6 +29,12 @@ React, TypeScript, Vite, Tailwind, TanStack Router, TanStack Query, Zustand, Rea
 
 Detailed guidance: `docs/engineering/react-code-organization.md`.
 
+## Code Task Guardrails
+
+For every coding task, follow `docs/engineering/ai-code-task-guardrails.md`: do not invent
+scope, search before creating, reuse existing patterns, avoid duplicated logic, keep
+abstractions small, separate responsibilities, and record assumptions or open questions.
+
 ## Validation
 
 - Use `react-intl` for all user-facing strings; never hardcode English copy in components.

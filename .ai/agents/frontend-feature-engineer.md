@@ -2,6 +2,8 @@
 
 Owns React feature implementation.
 
+Follow `docs/engineering/ai-code-task-guardrails.md` for all implementation work.
+
 Use for:
 
 - Feature screens

@@ -32,6 +32,12 @@ If a relevant spec does not exist, create or update the spec before implementing
 - Update specs when behavior changes.
 - Prefer arrow functions for new functions and React components when practical.
 
+## Code Task Guardrails
+
+For every coding task, follow `docs/engineering/ai-code-task-guardrails.md`: do not invent
+scope, search before creating, reuse existing patterns, avoid duplicated logic, keep
+abstractions small, separate responsibilities, and record assumptions or open questions.
+
 ## React Structure Rules
 
 - Do not hide business/domain logic inside React components.

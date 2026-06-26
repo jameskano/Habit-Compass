@@ -2,6 +2,8 @@
 
 Owns requirements, acceptance criteria, and task breakdowns.
 
+Follow `docs/engineering/ai-code-task-guardrails.md` for all planning work.
+
 Use for:
 
 - New feature specs

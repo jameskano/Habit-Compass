@@ -1,5 +1,6 @@
 # Codex Operating Rules
 
+- Follow `docs/engineering/ai-code-task-guardrails.md` for every coding task.
 - Prefer small patches over broad rewrites.
 - Do not introduce unrequested product scope.
 - Keep generated placeholders minimal and useful.
