@@ -1,92 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { ChangePasswordSchema, type ChangePasswordValues } from '@/domain/auth/securityForms'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
 import { AppError } from '@/shared/utils/appError'
 
+import { PasswordInput } from './PasswordInput'
+import type { PasswordFieldName } from './securityFormMessages'
 import { useSendPasswordResetMutation, useUpdatePasswordMutation } from './useSecurityMutations'
 
 type ChangePasswordSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-type PasswordFieldName = keyof ChangePasswordValues
-
-const getPasswordErrorId = (field: PasswordFieldName, message?: string) => {
-  if (message === 'mismatch') {
-    return 'settings.security.changePassword.error.mismatch'
-  }
-
-  if (message === 'same_as_current') {
-    return 'settings.security.changePassword.error.sameAsCurrent'
-  }
-
-  return field === 'currentPassword'
-    ? 'settings.security.changePassword.error.currentRequired'
-    : 'settings.security.changePassword.error.newRequired'
-}
-
-const PasswordInput = ({
-  autoComplete,
-  errorMessage,
-  fieldName,
-  labelId,
-  register,
-  reveal,
-  toggleReveal,
-  toggleRevealLabel,
-}: {
-  autoComplete: string
-  errorMessage?: string
-  fieldName: PasswordFieldName
-  labelId: string
-  register: ReturnType<typeof useForm<ChangePasswordValues>>['register']
-  reveal: boolean
-  toggleReveal: () => void
-  toggleRevealLabel: string
-}) => {
-  const inputId = `security-${fieldName}`
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={inputId}>
-        <FormattedMessage id={labelId} />
-      </Label>
-      <div className="flex gap-2">
-        <Input
-          id={inputId}
-          type={reveal ? 'text' : 'password'}
-          autoComplete={autoComplete}
-          aria-invalid={Boolean(errorMessage)}
-          className="rounded-xl border-border/75"
-          {...register(fieldName)}
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          aria-pressed={reveal}
-          aria-label={toggleRevealLabel}
-          className="size-10 shrink-0 rounded-xl border border-border/70 p-0"
-          onClick={toggleReveal}
-        >
-          {reveal ? <EyeOff aria-hidden size={17} /> : <Eye aria-hidden size={17} />}
-        </Button>
-      </div>
-      {errorMessage ? (
-        <p className="text-xs text-destructive">
-          <FormattedMessage id={getPasswordErrorId(fieldName, errorMessage)} />
-        </p>
-      ) : null}
-    </div>
-  )
 }
 
 export const ChangePasswordSheet = ({ open, onOpenChange }: ChangePasswordSheetProps) => {

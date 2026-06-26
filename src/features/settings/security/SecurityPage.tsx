@@ -1,78 +1,25 @@
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, ChevronRight, KeyRound, Mail } from 'lucide-react'
-import { useCallback, useMemo, useState, type ComponentType, type ReactNode } from 'react'
-import { FormattedMessage, useIntl } from 'react-intl'
+import { KeyRound, Mail } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { FormattedMessage } from 'react-intl'
 
 import { canShowSecurityAndSignIn } from '@/domain/auth'
-import { Button } from '@/shared/ui/button'
+import { BackButton } from '@/shared/ui/BackButton'
 import { Card } from '@/shared/ui/card'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 
+import { SettingsRow } from '../components/SettingsRow'
 import { ChangeEmailSheet } from './ChangeEmailSheet'
 import { ChangePasswordSheet } from './ChangePasswordSheet'
 import { useSecurityProfileQuery } from './useSecurityProfileQuery'
 
-type SecurityIcon = ComponentType<{ className?: string; size?: number; 'aria-hidden'?: boolean }>
-
-const BackButton = ({ children, onBack }: { children: ReactNode; onBack: () => void }) => (
-  <Button
-    variant="ghost"
-    className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
-    aria-label={String(children)}
-    onClick={onBack}
-  >
-    <ArrowLeft aria-hidden size={20} />
-    <span className="sr-only">{children}</span>
-  </Button>
-)
-
-const SecurityRow = ({
-  descriptionId,
-  icon: Icon,
-  labelId,
-  onClick,
-}: {
-  descriptionId: string
-  icon: SecurityIcon
-  labelId: string
-  onClick: () => void
-}) => (
-  <button
-    type="button"
-    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    onClick={onClick}
-  >
-    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-      <Icon aria-hidden size={18} />
-    </span>
-    <span className="min-w-0 flex-1">
-      <span className="block font-medium">
-        <FormattedMessage id={labelId} />
-      </span>
-      <span className="mt-0.5 block text-sm text-muted-foreground">
-        <FormattedMessage id={descriptionId} />
-      </span>
-    </span>
-    <ChevronRight aria-hidden className="shrink-0 text-muted-foreground" size={18} />
-  </button>
-)
-
 export const SecurityPage = () => {
-  const intl = useIntl()
-  const navigate = useNavigate()
   const securityProfile = useSecurityProfileQuery()
   const [emailSheetOpen, setEmailSheetOpen] = useState(false)
   const [passwordSheetOpen, setPasswordSheetOpen] = useState(false)
   useShellTitle('settings.security.title')
 
-  const handleBack = useCallback(() => {
-    navigate({ to: '/settings' })
-  }, [navigate])
-  const shellLeading = useMemo(
-    () => <BackButton onBack={handleBack}>{intl.formatMessage({ id: 'action.back' })}</BackButton>,
-    [handleBack, intl],
-  )
+  const shellLeading = useMemo(() => <BackButton to="/settings" />, [])
   useShellLeading(shellLeading)
 
   const showSecurityControls = canShowSecurityAndSignIn(
@@ -98,13 +45,13 @@ export const SecurityPage = () => {
           ) : null}
           {showSecurityControls ? (
             <div className="space-y-1">
-              <SecurityRow
+              <SettingsRow
                 descriptionId="settings.security.changeEmail.description"
                 icon={Mail}
                 labelId="settings.security.changeEmail.title"
                 onClick={() => setEmailSheetOpen(true)}
               />
-              <SecurityRow
+              <SettingsRow
                 descriptionId="settings.security.changePassword.description"
                 icon={KeyRound}
                 labelId="settings.security.changePassword.title"

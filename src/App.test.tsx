@@ -245,7 +245,7 @@ describe('app shell', () => {
     expect(await screen.findByRole('heading', { name: 'Categories', level: 1 })).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
     expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/settings')
     const infoButton = screen.getByRole('button', { name: 'Information about categories' })
     const createButton = screen.getByRole('button', { name: 'Create category' })
     expect(infoButton).toBeInTheDocument()

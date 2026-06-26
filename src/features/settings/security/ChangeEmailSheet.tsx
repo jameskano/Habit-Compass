@@ -9,20 +9,13 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/shared/ui/sheet'
 
+import { getEmailErrorId } from './securityFormMessages'
 import { useRequestEmailChangeMutation } from './useSecurityMutations'
 
 type ChangeEmailSheetProps = {
   currentEmail: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-const getEmailErrorId = (message?: string) => {
-  if (message === 'unchanged') {
-    return 'settings.security.changeEmail.error.unchanged'
-  }
-
-  return 'settings.security.changeEmail.error.invalid'
 }
 
 export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEmailSheetProps) => {

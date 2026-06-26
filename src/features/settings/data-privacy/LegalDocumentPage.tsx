@@ -1,13 +1,12 @@
-import { useNavigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
-import { Button } from '@/shared/ui/button'
+import { BackButton } from '@/shared/ui/BackButton'
 import { Card } from '@/shared/ui/card'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 
+import { getLegalDocumentMetadataValue } from './legalDocumentMetadata'
 import { getLegalDocument, type LegalDocumentKind } from './legalDocuments'
 import { MarkdownDocument } from './MarkdownDocument'
 
@@ -15,46 +14,17 @@ type LegalDocumentPageProps = {
   kind: LegalDocumentKind
 }
 
-const metadataValue = (body: string, labels: string[]) => {
-  const lines = body.split(/\r?\n/)
-
-  for (const label of labels) {
-    const line = lines.find((entry) => entry.startsWith(`${label}:`))
-    if (line) {
-      return line.slice(label.length + 1).trim()
-    }
-  }
-
-  return null
-}
-
 export const LegalDocumentPage = ({ kind }: LegalDocumentPageProps) => {
   const intl = useIntl()
-  const navigate = useNavigate()
   const document = getLegalDocument(kind, intl.locale)
-  const version = metadataValue(document.body, ['Version'])
-  const effectiveDate = metadataValue(document.body, [
+  const version = getLegalDocumentMetadataValue(document.body, ['Version'])
+  const effectiveDate = getLegalDocumentMetadataValue(document.body, [
     'Effective date',
     'Fecha de entrada en vigor',
   ])
   useShellTitle(document.titleMessageId)
 
-  const handleBack = useCallback(() => {
-    navigate({ to: '/settings/data-privacy' })
-  }, [navigate])
-  const shellLeading = useMemo(
-    () => (
-      <Button
-        variant="ghost"
-        className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
-        aria-label={intl.formatMessage({ id: 'action.back' })}
-        onClick={handleBack}
-      >
-        <ArrowLeft aria-hidden size={20} />
-      </Button>
-    ),
-    [handleBack, intl],
-  )
+  const shellLeading = useMemo(() => <BackButton to="/settings/data-privacy" />, [])
   useShellLeading(shellLeading)
 
   return (

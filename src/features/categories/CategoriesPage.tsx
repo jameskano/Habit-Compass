@@ -1,7 +1,6 @@
-import { ArrowLeft, Info, Plus, Search } from 'lucide-react'
+import { Info, Plus, Search } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { useNavigate } from '@tanstack/react-router'
 
 import {
   CATEGORY_DEFAULT_NAME_MESSAGE_IDS,
@@ -9,6 +8,7 @@ import {
   type Category,
 } from '@/domain/categories'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
+import { BackButton } from '@/shared/ui/BackButton'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -39,7 +39,6 @@ const categoryDisplayName = (intl: ReturnType<typeof useIntl>, category: Categor
 
 export const CategoriesPage = () => {
   const intl = useIntl()
-  const navigate = useNavigate()
   const categoriesQuery = useCategoriesQuery()
   const [sheetState, setSheetState] = useState<SheetState>(null)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -50,23 +49,7 @@ export const CategoriesPage = () => {
     setSheetState({ mode: 'create', category: null })
   }, [])
 
-  const handleBack = useCallback(() => {
-    navigate({ to: '/settings' })
-  }, [navigate])
-
-  const shellLeading = useMemo(
-    () => (
-      <Button
-        variant="ghost"
-        className="size-10 rounded-full border border-border/70 bg-card/90 p-0 text-foreground"
-        aria-label={intl.formatMessage({ id: 'action.back' })}
-        onClick={handleBack}
-      >
-        <ArrowLeft aria-hidden="true" size={20} />
-      </Button>
-    ),
-    [handleBack, intl],
-  )
+  const shellLeading = useMemo(() => <BackButton to="/settings" />, [])
 
   const shellActions = useMemo(
     () => (
