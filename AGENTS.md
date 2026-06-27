@@ -65,6 +65,7 @@ Detailed guidance: `docs/engineering/react-code-organization.md`.
 - Keep this file concise and always-on.
 - Put detailed engineering guidance in `docs/engineering/`.
 - Use `.ai/skills/` for task-specific workflows that should load only when relevant.
+- See `docs/engineering/ai-code-task-guardrails.md` for Related Skills and Agents routing.
 - See `docs/engineering/ai-instruction-system.md`.
 
 ## Verification

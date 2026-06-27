@@ -5,6 +5,15 @@ refactors, bug fixes, reviews, migrations, test work, and UI changes. They exten
 `AGENTS.md`, `.github/copilot-instructions.md`, the relevant specs, and the existing
 engineering docs.
 
+## Related Skills And Agents
+
+- Use `.ai/skills/ai-context-maintenance` when specs, docs, prompts, or agent
+  instructions drift from implementation.
+- Use `.ai/skills/react-component-architecture` when creating, reviewing, or refactoring
+  React components.
+- Use `.ai/agents/reviewer-gatekeeper.md` for code review, regression risk, i18n,
+  accessibility, scope creep, and verification checks.
+
 ## Do Not Invent Scope
 
 - Do not invent requirements, APIs, components, hooks, utilities, models, environment
