@@ -35,10 +35,7 @@ export const SettingsSupportSection = ({ onOpenRateDialog }: SettingsSupportSect
   </SettingsSection>
 )
 
-export const RateAppUnavailableDialog = ({
-  onOpenChange,
-  open,
-}: RateAppUnavailableDialogProps) => (
+export const RateAppUnavailableDialog = ({ onOpenChange, open }: RateAppUnavailableDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent aria-describedby="rate-app-description">
       <DialogHeader>

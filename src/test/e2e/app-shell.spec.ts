@@ -64,6 +64,7 @@ test('re-clicking an open item-form dropdown keeps its creation screen open', as
     .getByRole('dialog', { name: 'Choose what to create' })
     .getByRole('button', { name: 'Task', exact: true })
     .click()
+  await expect(page.locator('[role="status"].fixed.inset-0')).toHaveCount(0)
 
   const prioritySelect = page.getByRole('combobox', { name: 'Priority' })
   const triggerBounds = await prioritySelect.boundingBox()

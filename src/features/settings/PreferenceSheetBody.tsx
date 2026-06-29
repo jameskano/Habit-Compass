@@ -1,11 +1,7 @@
 import type { AppLocale, ThemePreference } from '@/domain/settings'
 
 import { PreferenceSheetContent } from './PreferenceSheetContent'
-import {
-  languageOptions,
-  themeOptions,
-  weekStartsOnOptions,
-} from './settings.constants'
+import { languageOptions, themeOptions, weekStartsOnOptions } from './settings.constants'
 import type { PreferenceSheet, WeekStartsOnPreference } from './settings.types'
 
 type PreferenceSheetBodyProps = {

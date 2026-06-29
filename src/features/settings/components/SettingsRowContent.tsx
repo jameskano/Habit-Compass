@@ -2,10 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { FormattedMessage } from 'react-intl'
 
 import type { SettingsRowContentProps } from './settingsRow.types'
-import {
-  getSettingsRowIconClassName,
-  getSettingsRowLabelClassName,
-} from './settingsRow.utils'
+import { getSettingsRowIconClassName, getSettingsRowLabelClassName } from './settingsRow.utils'
 
 export const SettingsRowContent = ({
   badgeId,

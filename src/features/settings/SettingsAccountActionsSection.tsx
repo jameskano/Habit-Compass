@@ -15,21 +15,13 @@ type SettingsAccountActionsSectionProps = {
 export const SettingsAccountActionsSection = ({
   providerClassification,
 }: SettingsAccountActionsSectionProps) => {
-  const {
-    deleteAccountDialog,
-    openDeleteAccountDialog,
-    openSignOutDialog,
-    signOutDialog,
-  } = useSettingsAccountActions(providerClassification)
+  const { deleteAccountDialog, openDeleteAccountDialog, openSignOutDialog, signOutDialog } =
+    useSettingsAccountActions(providerClassification)
 
   return (
     <>
       <SettingsSection titleId="settings.account.title">
-        <SettingsRow
-          icon={LogOut}
-          labelId="settings.account.signOut"
-          onClick={openSignOutDialog}
-        />
+        <SettingsRow icon={LogOut} labelId="settings.account.signOut" onClick={openSignOutDialog} />
         <SettingsRow
           destructive
           icon={Trash2}

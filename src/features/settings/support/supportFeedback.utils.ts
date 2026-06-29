@@ -27,9 +27,7 @@ export const buildTechnicalDetails = (
   appLanguage: locale,
   screenId,
   submittedAt: (options.now ?? new Date()).toISOString(),
-  userAgent:
-    options.userAgent ??
-    (typeof navigator === 'undefined' ? null : navigator.userAgent),
+  userAgent: options.userAgent ?? (typeof navigator === 'undefined' ? null : navigator.userAgent),
 })
 
 export const buildAttachmentInput = (file: File | null): FeedbackAttachmentInput | null => {

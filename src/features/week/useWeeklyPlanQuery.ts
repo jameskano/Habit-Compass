@@ -20,7 +20,8 @@ export const weeklyBigRocksQueryKey = (userId: string, weeklyPlanId: string | nu
 export const useWeeklyPlanQuery = (weekStartDate: ISODateString, userId = MOCK_USER_ID) => {
   return useQuery({
     queryKey: weeklyPlanQueryKey(userId, weekStartDate),
-    queryFn: async () => unwrapResult(await planningRepository.getForWeek({ userId, weekStartDate })),
+    queryFn: async () =>
+      unwrapResult(await planningRepository.getForWeek({ userId, weekStartDate })),
   })
 }
 

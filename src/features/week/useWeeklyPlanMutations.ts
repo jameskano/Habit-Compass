@@ -27,7 +27,9 @@ export const useWeeklyPlanMutations = (userId = MOCK_USER_ID) => {
   const { mutationError } = useAppToast()
 
   const ensureWeeklyPlan = async (weekStartDate: ISODateString) => {
-    const existingPlan = unwrapResult(await planningRepository.getForWeek({ userId, weekStartDate }))
+    const existingPlan = unwrapResult(
+      await planningRepository.getForWeek({ userId, weekStartDate }),
+    )
     if (existingPlan) {
       return existingPlan
     }

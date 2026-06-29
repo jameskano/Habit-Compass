@@ -11,10 +11,7 @@ type FeedbackTypeSelectorProps = {
   onSelect: (type: FeedbackType) => void
 }
 
-export const FeedbackTypeSelector = ({
-  onSelect,
-  selectedType,
-}: FeedbackTypeSelectorProps) => (
+export const FeedbackTypeSelector = ({ onSelect, selectedType }: FeedbackTypeSelectorProps) => (
   <fieldset className="space-y-2">
     <legend className="text-sm font-medium">
       <FormattedMessage id="settings.support.feedback.type.label" />

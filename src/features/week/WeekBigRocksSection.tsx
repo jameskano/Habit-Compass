@@ -71,9 +71,7 @@ export const WeekBigRocksSection = ({
               onClick={() => onSelectorOpenChange(true)}
             >
               <Plus aria-hidden="true" size={17} />
-              <span className="ml-1.5">
-                {intl.formatMessage({ id: 'page.week.bigRocks.add' })}
-              </span>
+              <span className="ml-1.5">{intl.formatMessage({ id: 'page.week.bigRocks.add' })}</span>
             </Button>
           )}
         </div>

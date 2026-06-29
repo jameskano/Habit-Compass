@@ -10,8 +10,4 @@ export type {
   RequestExternalAccountDeletionInput,
   RequestExternalAccountDeletionResult,
 } from './types'
-export {
-  calculateDeletionScheduledFor,
-  canUseNormalAppRoutes,
-  isPendingDeletion,
-} from './utils'
+export { calculateDeletionScheduledFor, canUseNormalAppRoutes, isPendingDeletion } from './utils'

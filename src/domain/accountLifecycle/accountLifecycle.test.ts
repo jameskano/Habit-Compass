@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  calculateDeletionScheduledFor,
-  canUseNormalAppRoutes,
-  isPendingDeletion,
-} from './utils'
+import { calculateDeletionScheduledFor, canUseNormalAppRoutes, isPendingDeletion } from './utils'
 
 describe('account lifecycle', () => {
   it('schedules deletion seven days after the server request time', () => {
