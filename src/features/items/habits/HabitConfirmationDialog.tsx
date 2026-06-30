@@ -35,9 +35,7 @@ export const HabitConfirmationDialog = ({
         role="alertdialog"
         aria-modal="true"
         overlayClassName={nestedInDialog ? 'z-[60]' : undefined}
-        className={`w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5 ${
-          nestedInDialog ? 'z-[70]' : ''
-        }`}
+        className={`w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5 ${nestedInDialog ? 'z-[70]' : ''}`}
       >
         <DialogTitle className="text-lg">
           {intl.formatMessage({ id: `page.items.habit.confirm.${action}.title` })}
