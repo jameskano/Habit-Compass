@@ -77,7 +77,7 @@ export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-item-sheet-title"
-        className="w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
+        className="animate-[habit-sheet-in_300ms_ease-out] w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl motion-reduce:animate-none md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={handleContainerKeyDown}
       >

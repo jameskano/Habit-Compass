@@ -76,7 +76,10 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => (
   <div
-    className={cn('border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6', className)}
+    className={cn(
+      'rounded-t-[1.7rem] border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6',
+      className,
+    )}
     {...props}
   />
 )

@@ -1,11 +1,8 @@
 import { useIntl } from 'react-intl'
-
-import type { Task } from '@/domain/tasks'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 
 type TaskConfirmationDialogProps = {
-  task: Task
   open: boolean
   pending: boolean
   onCancel: () => void
@@ -13,7 +10,6 @@ type TaskConfirmationDialogProps = {
 }
 
 export const TaskConfirmationDialog = ({
-  task,
   open,
   pending,
   onCancel,
@@ -36,10 +32,7 @@ export const TaskConfirmationDialog = ({
           {intl.formatMessage({ id: 'page.items.task.confirm.delete.title' })}
         </DialogTitle>
         <DialogDescription className="mt-2">
-          {intl.formatMessage(
-            { id: 'page.items.task.confirm.delete.description' },
-            { task: task.title },
-          )}
+          {intl.formatMessage({ id: 'page.items.task.confirm.delete.description' })}
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="secondary" disabled={pending} onClick={onCancel}>

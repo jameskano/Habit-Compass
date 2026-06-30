@@ -38,7 +38,7 @@ export const WeekHabitSelectorSheet = ({
       <SheetContent
         aria-label={intl.formatMessage({ id: 'page.week.bigRocks.selectorTitle' })}
         aria-describedby={undefined}
-        className="max-h-[88vh] overflow-y-auto"
+        className="max-h-[88vh] animate-[habit-sheet-in_300ms_ease-out] overflow-y-auto motion-reduce:animate-none"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>

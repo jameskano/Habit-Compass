@@ -28,7 +28,8 @@ Each tab has one control row directly below the tabs:
 If the app already has a global floating add button, use it. Do not create a second competing add pattern.
 
 The global creation sheet contains exactly Habit, Task, Recurrent task, and Category. It does not
-show Reflection, Quick capture, or placeholder action text.
+show Reflection, Quick capture, or placeholder action text. It uses the shared short upward motion
+and fade for bottom sheets, while honoring reduced-motion preferences.
 
 Creation flows:
 

@@ -75,6 +75,8 @@ Some users want a weekly planning surface, but planning depth must stay optional
 - Weekly Map habit cells are read-only status indicators; they must not open completion, skip, undo, or amount-input interactions.
 - Past weekly plans must remain viewable, but their focus and Big Rock selection controls must be read-only.
 - Past weekly review fields remain editable.
+- The Big Rock habit selector uses the shared short upward bottom-sheet motion while honoring
+  reduced-motion preferences.
 
 ## Non-Functional Requirements
 
