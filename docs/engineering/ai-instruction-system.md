@@ -10,7 +10,8 @@ Habit Compass keeps always-on AI instructions short and pushes detailed guidance
 - `specs/`: behavior contracts. Product behavior changes require an existing or updated relevant spec.
 - `docs/engineering/`: detailed engineering guidance that should be linked from always-on files instead of copied into them.
 - `.ai/skills/`: task-specific workflows loaded only when relevant, such as React component architecture or feature-spec writing.
-- `.ai/prompts/` and `.ai/workflows/`: reusable task prompts and process checklists for larger planned work.
+- `.ai/prompts/`: reusable task prompts for common request types.
+- `.ai/workflows/`: minimal process checklists. `sdd-workflow.md` is the normal feature workflow, and `review-gates.md` is the final review checklist.
 
 ## Placement Rules
 
@@ -19,6 +20,7 @@ Habit Compass keeps always-on AI instructions short and pushes detailed guidance
 - Put task-triggered procedures in `.ai/skills/`.
 - Put product behavior in `specs/`, not only in prompts or agent instructions.
 - Avoid copying long rule sets across files; link to the deeper source instead.
+- Avoid adding new workflow files unless they introduce a materially different process from `sdd-workflow.md` or `review-gates.md`.
 
 ## Maintenance
 

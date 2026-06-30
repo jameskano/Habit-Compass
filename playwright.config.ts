@@ -1,9 +1,15 @@
 import { defineConfig, devices } from '@playwright/test'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+const outputDir = process.env.CI
+  ? './test-results'
+  : join(tmpdir(), `habit-compass-playwright-${process.pid}`)
 
 export default defineConfig({
   testDir: './src/test/e2e',
+  outputDir,
   fullyParallel: true,
   workers: 1,
   reporter: 'html',

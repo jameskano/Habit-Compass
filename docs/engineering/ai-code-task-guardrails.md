@@ -13,6 +13,7 @@ engineering docs.
   React components.
 - Use `.ai/agents/reviewer-gatekeeper.md` for code review, regression risk, i18n,
   accessibility, scope creep, and verification checks.
+- Use `docs/engineering/accessibility-checklist.md` for UI specs, implementation, and review.
 
 ## Do Not Invent Scope
 
@@ -90,6 +91,9 @@ See `docs/engineering/react-code-organization.md` for detailed React extraction 
 ## Verification
 
 - Add or preserve focused tests for extracted pure utilities and behavior changes.
+- For UI changes, apply `docs/engineering/accessibility-checklist.md` and run
+  `pnpm test:a11y` when the changed flow affects accessible structure, keyboard behavior,
+  focus, labels, forms, overlays, or visual state.
 - Run the narrowest useful check first, then broader verification when practical.
 - Use `pnpm verify` as the broad verification command unless the environment prevents it.
 - If a command cannot run, report the blocker and the verification that was skipped.
