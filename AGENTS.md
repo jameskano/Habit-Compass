@@ -70,7 +70,12 @@ Detailed guidance: `docs/engineering/react-code-organization.md`.
 
 ## Verification
 
-Run the narrowest useful command during development, then run the broad verification command when practical:
+Default to targeted verification. Run the narrowest relevant tests and checks for the
+files and behavior changed. Do not run broad verification after every modification by
+default; reserve it for broad-risk changes, pre-PR/final validation when requested, or
+when targeted checks are insufficient.
+
+Use this as the broad verification command when it is justified:
 
 ```sh
 pnpm verify

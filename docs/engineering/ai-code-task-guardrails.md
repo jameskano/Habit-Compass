@@ -91,9 +91,19 @@ See `docs/engineering/react-code-organization.md` for detailed React extraction 
 ## Verification
 
 - Add or preserve focused tests for extracted pure utilities and behavior changes.
+- Default to targeted verification for each code change.
+- Run the narrowest useful checks that cover the changed files and behavior.
+- Prefer focused Vitest files, focused Playwright specs, file-scoped ESLint, and
+  `pnpm typecheck` only when TypeScript contracts may be affected.
 - For UI changes, apply `docs/engineering/accessibility-checklist.md` and run
   `pnpm test:a11y` when the changed flow affects accessible structure, keyboard behavior,
   focus, labels, forms, overlays, or visual state.
-- Run the narrowest useful check first, then broader verification when practical.
-- Use `pnpm verify` as the broad verification command unless the environment prevents it.
+- Run `pnpm verify` only when the user asks for broad verification, when preparing
+  final PR/release validation, when changing shared infrastructure, providers, routing,
+  schemas, repositories, build config, core UI primitives, or when targeted checks pass
+  but integration risk remains meaningful.
+- When skipping broad verification, report which targeted checks ran and why broader
+  verification was not necessary.
+- Use `pnpm verify` as the broad verification command when broad verification is
+  justified unless the environment prevents it.
 - If a command cannot run, report the blocker and the verification that was skipped.
