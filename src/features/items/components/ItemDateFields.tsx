@@ -189,7 +189,11 @@ export const GuardedEndDateField = ({
       {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
 
       <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
-        <DialogContent aria-describedby={undefined} className="p-0">
+        <DialogContent
+          aria-describedby={undefined}
+          overlayClassName="z-[60]"
+          className="z-[70] p-0"
+        >
           <DialogHeader>
             <DialogTitle>{intl.formatMessage({ id: warningTitleId })}</DialogTitle>
             <DialogDescription>

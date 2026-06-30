@@ -125,6 +125,9 @@ Place a thin divider between Edit and Archive. The sheet opens with a short upwa
 Tapping the backdrop closes habit option sheets, habit completion sheets, and task editor dialogs when no nested confirmation is active.
 Closing an open nested dropdown by tapping its trigger again must close only the dropdown, not its
 parent create/edit screen.
+Destructive confirmations and end-date warnings opened inside habit, task, or recurrent-task edit
+screens display a backdrop above the parent edit dialog. Habit reset/delete confirmations opened
+from the habit options bottom sheet keep the standard bottom-sheet confirmation stacking.
 
 Destructive actions require confirmation.
 When Reset progress or Delete is launched from a habit options/action sheet, the confirmation

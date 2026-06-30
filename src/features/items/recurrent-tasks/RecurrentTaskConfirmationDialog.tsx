@@ -26,7 +26,8 @@ export const RecurrentTaskConfirmationDialog = ({
       <DialogContent
         role="alertdialog"
         aria-modal="true"
-        className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
+        overlayClassName="z-[60]"
+        className="z-[70] w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
       >
         <DialogTitle className="text-lg">
           {intl.formatMessage({ id: 'page.items.task.confirm.delete.title' })}

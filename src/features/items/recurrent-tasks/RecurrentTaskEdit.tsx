@@ -75,7 +75,6 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
           />
         </div>
         <RecurrentTaskConfirmationDialog
-          task={task}
           open={taskEdit.confirmingDelete}
           pending={taskEdit.pending}
           onCancel={() => taskEdit.setConfirmingDelete(false)}
