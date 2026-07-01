@@ -26,10 +26,7 @@ export interface PlanningRepository {
   }): Promise<Result<WeeklyPlan | null>>
   create(input: CreateWeeklyPlanInput): Promise<Result<WeeklyPlan>>
   update(input: UpdateWeeklyPlanInput): Promise<Result<WeeklyPlan>>
-  listBigRocks(input: {
-    userId: UserId
-    weeklyPlanId: EntityId
-  }): Promise<Result<WeeklyBigRock[]>>
+  listBigRocks(input: { userId: UserId; weeklyPlanId: EntityId }): Promise<Result<WeeklyBigRock[]>>
   addBigRock(input: AddWeeklyBigRockInput): Promise<Result<WeeklyBigRock>>
   removeBigRock(input: {
     userId: UserId

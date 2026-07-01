@@ -1,10 +1,18 @@
+import { mockAuthRepository } from './mock/mockAuthRepository'
+import { mockAccountLifecycleRepository } from './mock/mockAccountLifecycleRepository'
 import { mockCategoriesRepository } from './mock/mockCategoriesRepository'
+import { mockDataExportRepository } from './mock/mockDataExportRepository'
+import { mockFeedbackRepository } from './mock/mockFeedbackRepository'
 import { mockHabitsRepository } from './mock/mockHabitsRepository'
 import { mockMoodRepository } from './mock/mockMoodRepository'
 import { mockPlanningRepository } from './mock/mockPlanningRepository'
 import { mockRecurrentTasksRepository } from './mock/mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mock/mockTasksRepository'
+import { supabaseAuthRepository } from './supabase/repositories/authRepository'
+import { supabaseAccountLifecycleRepository } from './supabase/repositories/accountLifecycleRepository'
 import { supabaseCategoriesRepository } from './supabase/repositories/categoriesRepository'
+import { supabaseDataExportRepository } from './supabase/repositories/dataExportRepository'
+import { supabaseFeedbackRepository } from './supabase/repositories/feedbackRepository'
 import { supabaseHabitsRepository } from './supabase/repositories/habitsRepository'
 import { supabaseMoodRepository } from './supabase/repositories/moodRepository'
 import { supabasePlanningRepository } from './supabase/repositories/planningRepository'
@@ -25,5 +33,15 @@ export const planningRepository =
   repositorySource === 'supabase' ? supabasePlanningRepository : mockPlanningRepository
 export const recurrentTasksRepository =
   repositorySource === 'supabase' ? supabaseRecurrentTasksRepository : mockRecurrentTasksRepository
+export const feedbackRepository =
+  repositorySource === 'supabase' ? supabaseFeedbackRepository : mockFeedbackRepository
+export const dataExportRepository =
+  repositorySource === 'supabase' ? supabaseDataExportRepository : mockDataExportRepository
+export const authRepository =
+  repositorySource === 'supabase' ? supabaseAuthRepository : mockAuthRepository
+export const accountLifecycleRepository =
+  repositorySource === 'supabase'
+    ? supabaseAccountLifecycleRepository
+    : mockAccountLifecycleRepository
 
 export const activeRepositorySource = repositorySource

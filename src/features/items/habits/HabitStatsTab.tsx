@@ -2,6 +2,7 @@ import { parseISO } from 'date-fns'
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import {
   calculateHabitDetailStats,
   createHabitCompletionBars,
@@ -22,14 +23,16 @@ const periods: HabitChartPeriod[] = ['week', 'month', 'year']
 
 export const HabitStatsTab = ({ habit, logs, today }: HabitStatsTabProps) => {
   const intl = useIntl()
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const [chartPeriod, setChartPeriod] = useState<HabitChartPeriod>('week')
-  const summary = calculateHabitDetailStats({ habit, logs, today })
+  const summary = calculateHabitDetailStats({ habit, logs, today, weekStartsOn })
   const bars = createHabitCompletionBars({
     habit,
     logs,
     period: chartPeriod,
     today,
     startsOn: habit.startsOn,
+    weekStartsOn,
   })
   const maxValue = Math.max(...bars.map((bar) => bar.completionEvents), 1)
   const shortDate = new Intl.DateTimeFormat(intl.locale, {

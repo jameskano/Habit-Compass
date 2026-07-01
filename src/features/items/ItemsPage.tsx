@@ -107,7 +107,6 @@ export const ItemsPage = () => {
           {itemTabs.map((tab) => (
             <TabsTrigger
               key={tab.key}
-              id={`items-tab-${tab.key}`}
               value={tab.key}
               className={cn(
                 'shrink-0 rounded-full border border-border/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted data-[state=active]:bg-primary data-[state=active]:text-primary-foreground',
@@ -118,13 +117,7 @@ export const ItemsPage = () => {
           ))}
         </TabsList>
 
-        <TabsContent
-          id={`items-panel-${activeTabConfig.key}`}
-          value={activeTabConfig.key}
-          aria-labelledby={`items-tab-${activeTabConfig.key}`}
-        >
-          {renderCards()}
-        </TabsContent>
+        <TabsContent value={activeTabConfig.key}>{renderCards()}</TabsContent>
       </Tabs>
     </section>
   )

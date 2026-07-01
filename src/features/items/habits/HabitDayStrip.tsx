@@ -1,7 +1,7 @@
 import { parseISO } from 'date-fns'
 import { useIntl } from 'react-intl'
 
-import { deriveHabitDayState, type Habit, type HabitLog } from '@/domain/habits'
+import { deriveHabitDayState, type Habit, type HabitLog, type WeekStartsOn } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
 import { cn } from '@/shared/utils/cn'
 import { habitDayStateClasses } from '@/styles/itemVisualTokens'
@@ -14,9 +14,16 @@ type HabitDayStripProps = {
   logs: HabitLog[]
   dates: ISODateString[]
   today: ISODateString
+  weekStartsOn?: WeekStartsOn
 }
 
-export const HabitDayStrip = ({ habit, logs, dates, today }: HabitDayStripProps) => {
+export const HabitDayStrip = ({
+  habit,
+  logs,
+  dates,
+  today,
+  weekStartsOn = 1,
+}: HabitDayStripProps) => {
   const intl = useIntl()
   const weekdayFormatter = new Intl.DateTimeFormat(intl.locale, { weekday: 'narrow' })
   const dateFormatter = new Intl.DateTimeFormat(intl.locale, { month: 'short', day: 'numeric' })
@@ -36,7 +43,7 @@ export const HabitDayStrip = ({ habit, logs, dates, today }: HabitDayStripProps)
           )}
         >
           {dates.map((date) => {
-            const state = deriveHabitDayState({ habit, date, today, logs })
+            const state = deriveHabitDayState({ habit, date, today, logs, weekStartsOn })
             const parsedDate = parseISO(date)
             const stateLabel = intl.formatMessage({ id: `page.items.habit.dayState.${state}` })
 

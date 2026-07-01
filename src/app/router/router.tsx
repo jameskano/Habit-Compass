@@ -2,18 +2,62 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   Navigate,
   Outlet,
 } from '@tanstack/react-router'
 
 import { AppLayout } from '../layout/AppLayout'
-import { ItemsPage } from '../../features/items/ItemsPage'
-import { MoodPage } from '../../features/mood/MoodPage'
-import { OnboardingPage } from '../../features/onboarding/OnboardingPage'
-import { SettingsPage } from '../../features/settings/SettingsPage'
-import { CategoriesPage } from '../../features/categories/CategoriesPage'
 import { TodayPage } from '../../features/today/TodayPage'
-import { WeekPage } from '../../features/week/WeekPage'
+import { RoutePendingState } from '../../shared/ui/LazyLoadingFallbacks'
+
+const WeekPage = lazyRouteComponent(() => import('../../features/week/WeekPage'), 'WeekPage')
+const ItemsPage = lazyRouteComponent(() => import('../../features/items/ItemsPage'), 'ItemsPage')
+const MoodPage = lazyRouteComponent(() => import('../../features/mood/MoodPage'), 'MoodPage')
+const SettingsPage = lazyRouteComponent(
+  () => import('../../features/settings/SettingsPage'),
+  'SettingsPage',
+)
+const CategoriesPage = lazyRouteComponent(
+  () => import('../../features/categories/CategoriesPage'),
+  'CategoriesPage',
+)
+const DataPrivacyPage = lazyRouteComponent(
+  () => import('../../features/settings/data-privacy/DataPrivacyPage'),
+  'DataPrivacyPage',
+)
+const SecurityPage = lazyRouteComponent(
+  () => import('../../features/settings/security/SecurityPage'),
+  'SecurityPage',
+)
+const PrivacyPolicyPage = lazyRouteComponent(
+  () => import('../../features/settings/data-privacy/LegalDocumentPage'),
+  'PrivacyPolicyPage',
+)
+const TermsOfServicePage = lazyRouteComponent(
+  () => import('../../features/settings/data-privacy/LegalDocumentPage'),
+  'TermsOfServicePage',
+)
+const SupportPage = lazyRouteComponent(
+  () => import('../../features/settings/support/SupportPage'),
+  'SupportPage',
+)
+const OnboardingPage = lazyRouteComponent(
+  () => import('../../features/onboarding/OnboardingPage'),
+  'OnboardingPage',
+)
+const SignedOutPage = lazyRouteComponent(
+  () => import('../../features/auth/SignedOutPage'),
+  'SignedOutPage',
+)
+const PendingDeletionPage = lazyRouteComponent(
+  () => import('../../features/account/PendingDeletionPage'),
+  'PendingDeletionPage',
+)
+const ExternalAccountDeletionPage = lazyRouteComponent(
+  () => import('../../features/account/ExternalAccountDeletionPage'),
+  'ExternalAccountDeletionPage',
+)
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -65,10 +109,58 @@ const settingsCategoriesRoute = createRoute({
   component: CategoriesPage,
 })
 
+const settingsDataPrivacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy',
+  component: DataPrivacyPage,
+})
+
+const settingsSecurityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/security',
+  component: SecurityPage,
+})
+
+const settingsPrivacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy/privacy-policy',
+  component: PrivacyPolicyPage,
+})
+
+const settingsTermsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/data-privacy/terms',
+  component: TermsOfServicePage,
+})
+
+const settingsSupportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings/support',
+  component: SupportPage,
+})
+
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
   component: OnboardingPage,
+})
+
+const signedOutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/signed-out',
+  component: SignedOutPage,
+})
+
+const pendingDeletionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/pending-deletion',
+  component: PendingDeletionPage,
+})
+
+const externalAccountDeletionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/delete',
+  component: ExternalAccountDeletionPage,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -79,10 +171,22 @@ const routeTree = rootRoute.addChildren([
   moodRoute,
   settingsRoute,
   settingsCategoriesRoute,
+  settingsSecurityRoute,
+  settingsDataPrivacyRoute,
+  settingsPrivacyPolicyRoute,
+  settingsTermsRoute,
+  settingsSupportRoute,
   onboardingRoute,
+  signedOutRoute,
+  pendingDeletionRoute,
+  externalAccountDeletionRoute,
 ])
 
-export const router = createRouter({ routeTree })
+export const router = createRouter({
+  routeTree,
+  defaultPendingComponent: RoutePendingState,
+  defaultPreload: import.meta.env.MODE === 'test' ? false : 'intent',
+})
 
 declare module '@tanstack/react-router' {
   interface Register {

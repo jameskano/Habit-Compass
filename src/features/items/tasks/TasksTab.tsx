@@ -1,5 +1,5 @@
 import { formatISO, parseISO } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { sortTasks, type Task } from '@/domain/tasks'
@@ -8,12 +8,14 @@ import { useCompleteTaskMutation } from '@/features/tasks/hooks/useTaskMutations
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { ItemWaterfallReveal } from '../components/ItemWaterfallReveal'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
 import { TaskCard } from './TaskCard'
-import { TaskEdit } from './TaskEdit'
+
+const TaskEdit = lazy(() => import('./TaskEdit').then((module) => ({ default: module.TaskEdit })))
 
 type TasksTabProps = {
   tasks: Task[]
@@ -207,19 +209,21 @@ export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabPr
         </div>
       )}
       {selectedTask ? (
-        <TaskEdit
-          task={selectedTask}
-          categories={categoriesQuery.data ?? []}
-          onClose={() => setSelectedTaskId(null)}
-          onArchived={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
-          }}
-          onDeleted={(task) => {
-            setSelectedTaskId(null)
-            appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
-          }}
-        />
+        <Suspense fallback={<OverlayPendingState />}>
+          <TaskEdit
+            task={selectedTask}
+            categories={categoriesQuery.data ?? []}
+            onClose={() => setSelectedTaskId(null)}
+            onArchived={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({ id: 'page.items.task.archived', values: { task: task.title } })
+            }}
+            onDeleted={(task) => {
+              setSelectedTaskId(null)
+              appToast.success({ id: 'page.items.task.deleted', values: { task: task.title } })
+            }}
+          />
+        </Suspense>
       ) : null}
     </>
   )

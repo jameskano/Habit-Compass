@@ -179,4 +179,39 @@ describe('calculateHabitStats', () => {
     expect(result.expectedScore).toBe(0)
     expect(result.completionPercentage).toBe(0)
   })
+
+  it('regroups flexible weekly scoring at year boundaries from the selected week start', () => {
+    const habit = createHabit({
+      trackingType: 'timesPerPeriod',
+      period: 'week',
+      targetCount: 2,
+    })
+    const logs = [
+      createHabitLog({ id: 'sunday', loggedForDate: '2026-12-27' }),
+      createHabitLog({ id: 'friday', loggedForDate: '2027-01-01' }),
+    ]
+
+    const mondayStart = calculateHabitStats({
+      habit,
+      logs,
+      from: '2026-12-27',
+      to: '2027-01-02',
+      today: '2027-01-01',
+      weekStartsOn: 1,
+    })
+    const sundayStart = calculateHabitStats({
+      habit,
+      logs,
+      from: '2026-12-27',
+      to: '2027-01-02',
+      today: '2027-01-01',
+      weekStartsOn: 0,
+    })
+
+    expect(mondayStart.completionScore).toBe(0)
+    expect(mondayStart.expectedScore).toBe(2)
+    expect(sundayStart.completionScore).toBe(1)
+    expect(sundayStart.expectedScore).toBe(1)
+    expect(sundayStart.completionPercentage).toBe(100)
+  })
 })

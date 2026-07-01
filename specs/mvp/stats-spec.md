@@ -32,6 +32,14 @@ Users need useful progress context, but the app should not turn into a heavy ana
 - Completion summaries must support `day`, `week`, and `month` windows.
 - Stats must be representable in today, week, item-detail, or category context.
 - The domain may support lightweight label/value cards.
+- Weekly summaries, weekly charts, and flexible weekly habit scoring must respect the user's current
+  `weekStartsOn` preference.
+- Completion logs remain stored by explicit local date; changing `weekStartsOn` must not move or
+  mutate logs.
+- Derived historical weekly analytics may be recalculated under the currently selected week-start
+  preference.
+- Persisted historical weekly-planning records are not derived analytics and must preserve their
+  stored intervals. See [weekly-planning-spec.md](weekly-planning-spec.md).
 
 ## Non-Functional Requirements
 
@@ -65,15 +73,21 @@ Users need useful progress context, but the app should not turn into a heavy ana
 - Zero total items must not produce invalid completion rates.
 - Stats should tolerate missing optional domains such as mood or reflections.
 - Reactivated habits may contain multiple historical inactivity periods.
+- Switching week start near month or year boundaries must produce valid local-date weekly windows.
 
 ## Acceptance Criteria
 
 - A completion summary can be represented for day, week, and month.
 - Stats remain contextual and do not require a dedicated analytics page.
 - Zero totals are handled safely.
+- Weekly stats and charts use the active week-start preference.
+- Changing week start recalculates derived weekly stats without changing stored completion logs.
 
 ## Test Plan
 
 - Unit tests for completion-rate math.
 - Schema tests for stat windows and contexts.
 - Unit tests for zero-total scenarios.
+- Unit tests for Sunday-start and Monday-start weekly summaries, weekly charts, and weekly
+  period-goal scoring.
+- Unit tests for week-start switches around month and year boundaries.

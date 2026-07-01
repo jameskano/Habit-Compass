@@ -2,6 +2,8 @@
 
 Review this change as a gatekeeper.
 
+Apply `docs/engineering/ai-code-task-guardrails.md` while reviewing.
+
 Focus on:
 
 - Behavior regressions.

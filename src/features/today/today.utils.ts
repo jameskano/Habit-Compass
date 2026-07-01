@@ -8,6 +8,7 @@ import {
   type Habit,
   type HabitDayOfWeek,
   type HabitLog,
+  type WeekStartsOn,
 } from '@/domain/habits'
 import { getTodayDateMode, type TodayDateMode, type TodayItem } from '@/domain/today'
 import {
@@ -199,8 +200,14 @@ export const amountHelperLines = (
   habit: Habit,
   logs: HabitLog[],
   selectedDate: ISODateString,
+  weekStartsOn: WeekStartsOn = 1,
 ) => {
-  const completion = evaluateHabitCompletionForLogs({ habit, logs, date: selectedDate })
+  const completion = evaluateHabitCompletionForLogs({
+    habit,
+    logs,
+    date: selectedDate,
+    weekStartsOn,
+  })
   const labelId =
     'period' in habit.goalConfig && habit.goalConfig.period !== 'day'
       ? `page.today.amount.period.${habit.goalConfig.period}`

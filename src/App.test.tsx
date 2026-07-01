@@ -1,13 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
-import { SettingsPage } from './features/settings/SettingsPage'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
-import { renderWithAppProviders } from './test/utils/renderWithAppProviders'
 
 const chooseSelectOption = async (
   user: ReturnType<typeof userEvent.setup>,
@@ -32,6 +30,10 @@ describe('app shell', () => {
         categories: true,
         reflections: true,
       },
+    })
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
     })
 
     await act(async () => {
@@ -100,7 +102,7 @@ describe('app shell', () => {
     expect(await screen.findByText('Ready for today')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Choose date' }))
-    expect(screen.getByRole('grid')).toBeInTheDocument()
+    expect(await screen.findByRole('grid', undefined, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByDisplayValue(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument()
   })
 
@@ -158,7 +160,7 @@ describe('app shell', () => {
       screen.getByRole('dialog', { name: 'Actions for Move for 20 minutes' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
-    const resetDialog = screen.getByRole('alertdialog', { name: 'Reset progress?' })
+    const resetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     expect(
       screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
     ).not.toBeInTheDocument()
@@ -167,9 +169,10 @@ describe('app shell', () => {
     expect(screen.getByRole('menuitem', { name: 'Reset progress' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
+    const confirmResetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     await user.click(
-      within(screen.getByRole('alertdialog', { name: 'Reset progress?' })).getByRole('button', {
-        name: 'Reset progress',
+      within(confirmResetDialog).getByRole('button', {
+        name: 'Reset',
       }),
     )
 
@@ -242,7 +245,7 @@ describe('app shell', () => {
     expect(await screen.findByRole('heading', { name: 'Categories', level: 1 })).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
     expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/settings')
     const infoButton = screen.getByRole('button', { name: 'Information about categories' })
     const createButton = screen.getByRole('button', { name: 'Create category' })
     expect(infoButton).toBeInTheDocument()
@@ -450,7 +453,7 @@ describe('app shell', () => {
     await user.click(recentActivity)
     expect(screen.queryByRole('dialog', { name: /Options for/ })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Calendar for Move for 20 minutes' }))
-    const calendarDetail = screen.getByRole('dialog', {
+    const calendarDetail = await screen.findByRole('dialog', {
       name: 'Habit detail for Move for 20 minutes',
     })
     expect(within(calendarDetail).getByRole('tab', { name: 'Calendar' })).toHaveAttribute(
@@ -458,7 +461,7 @@ describe('app shell', () => {
       'true',
     )
     expect(
-      within(calendarDetail).getByLabelText('Calendar for Move for 20 minutes'),
+      await within(calendarDetail).findByLabelText('Calendar for Move for 20 minutes'),
     ).toBeInTheDocument()
     expect(within(calendarDetail).queryByText('Habit detail')).not.toBeInTheDocument()
     const legend = within(calendarDetail).getByLabelText('Calendar state legend')
@@ -507,7 +510,7 @@ describe('app shell', () => {
     })
     fireEvent.pointerDown(editCard, { clientX: 110, clientY: 20 })
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
-    const editDetail = screen.getByRole('dialog', {
+    const editDetail = await screen.findByRole('dialog', {
       name: 'Habit detail for Read before bed',
     })
     expect(within(editDetail).getByRole('tab', { name: 'Edit' })).toHaveAttribute(
@@ -851,7 +854,7 @@ describe('app shell', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Habit detail for Read before bed' }),
     ).not.toBeInTheDocument()
-    await user.click(within(resetDialog).getByRole('button', { name: 'Reset progress' }))
+    await user.click(within(resetDialog).getByRole('button', { name: 'Reset' }))
     expect(
       await screen.findByText('Progress reset. The habit remains available.'),
     ).toBeInTheDocument()
@@ -873,7 +876,7 @@ describe('app shell', () => {
     await user.click(
       within(screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })).getByRole(
         'button',
-        { name: 'Delete permanently' },
+        { name: 'Delete' },
       ),
     )
 
@@ -932,7 +935,7 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('tab', { name: 'Tasks' }))
     await user.click(await screen.findByRole('button', { name: 'Edit Start laundry' }))
-    let editDialog = screen.getByRole('dialog', { name: 'Edit task Start laundry' })
+    let editDialog = await screen.findByRole('dialog', { name: 'Edit task Start laundry' })
     expect(within(editDialog).queryByText('Task details')).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeInTheDocument()
     expect(editDialog.querySelector('input[type="date"]')).toBeNull()
@@ -1029,7 +1032,9 @@ describe('app shell', () => {
     })
     fireEvent.pointerDown(editCard, { clientX: 110, clientY: 20 })
     fireEvent.pointerUp(editCard, { clientX: 20, clientY: 20 })
-    const editDialog = screen.getByRole('dialog', { name: 'Edit recurrent task Water the plants' })
+    const editDialog = await screen.findByRole('dialog', {
+      name: 'Edit recurrent task Water the plants',
+    })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeDisabled()
     expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
@@ -1075,7 +1080,7 @@ describe('app shell', () => {
     })
     await user.click(within(deleteEditDialog).getByRole('button', { name: 'Delete' }))
     const deleteDialog = screen.getByRole('alertdialog', {
-      name: 'Delete recurrent task permanently?',
+      name: 'Delete task permanently?',
     })
     await user.click(within(deleteDialog).getByRole('button', { name: 'Delete permanently' }))
     await waitFor(() => {
@@ -1086,12 +1091,617 @@ describe('app shell', () => {
     expect(screen.getByText('Weekly review was permanently deleted.')).toBeInTheDocument()
   })
 
-  it('settings toggles render', () => {
-    renderWithAppProviders(<SettingsPage />)
+  it('renders the Settings IA shell in the final MVP order and updates preferences immediately', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    getMockState().authSession.providerClassification = 'email_password'
+    render(<App />)
 
-    expect(screen.getByRole('checkbox', { name: /Mood/ })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /Weekly planning/ })).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: /Suggestions/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    const categories = screen.getByRole('link', { name: 'Categories. Manage categories.' })
+    const preferences = screen.getByRole('heading', { name: 'Preferences' })
+    const security = screen.queryByRole('heading', { name: 'Security and sign-in' })
+    const dataPrivacy = screen.getByRole('link', { name: /Data and privacy/ })
+    const premium = screen.getByText('Habit Compass Premium')
+    const support = screen.getByRole('heading', { name: 'Support and feedback' })
+    const account = screen.getByRole('heading', { name: 'Account actions' })
+    const categoriesCard = categories.closest('.bg-card')
+    const supportCard = support.closest('.bg-card')
+
+    expect(categories).toHaveAttribute('href', '/settings/categories')
+    expect(categoriesCard).toHaveClass('rounded-lg', 'border', 'bg-card')
+    expect(dataPrivacy).toHaveAttribute('href', '/settings/data-privacy')
+    if (security) {
+      expect(screen.getByRole('link', { name: /Security and sign-in/ })).toHaveAttribute(
+        'href',
+        '/settings/security',
+      )
+    }
+    expect(screen.getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
+      'href',
+      '/settings/support',
+    )
+    if (!(supportCard instanceof HTMLElement)) {
+      throw new Error('Expected Support and feedback card')
+    }
+    expect(
+      within(supportCard).getByRole('button', { name: /Rate Habit Compass/ }),
+    ).toBeInTheDocument()
+    expect(within(supportCard).getByRole('link', { name: /Feedback and support/ })).toHaveAttribute(
+      'href',
+      '/settings/support',
+    )
+    expect(screen.getByText('Coming soon')).toBeInTheDocument()
+    expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
+    expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
+    expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
+    expect(screen.queryByText('Optional depth')).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+
+    expect(
+      Boolean(categories.compareDocumentPosition(preferences) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    if (security) {
+      expect(
+        Boolean(preferences.compareDocumentPosition(security) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true)
+      expect(
+        Boolean(security.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ).toBe(true)
+    } else {
+      expect(
+        Boolean(
+          preferences.compareDocumentPosition(dataPrivacy) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+      ).toBe(true)
+    }
+    expect(
+      Boolean(dataPrivacy.compareDocumentPosition(premium) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(premium.compareDocumentPosition(support) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+    expect(
+      Boolean(support.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
+
+    await user.click(within(supportCard).getByRole('button', { name: /Rate Habit Compass/ }))
+    expect(screen.getByRole('dialog', { name: 'Rate Habit Compass' })).toHaveTextContent(
+      'Ratings are not available in this development build',
+    )
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    await user.click(screen.getByRole('button', { name: /Theme/ }))
+    const themeDialog = screen.getByRole('dialog', { name: 'Theme' })
+    expect(themeDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
+    await user.click(screen.getByRole('button', { name: 'Dark' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Theme' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().theme).toBe('dark')
+    expect(document.documentElement).toHaveClass('dark')
+
+    await user.click(screen.getByRole('button', { name: /Week starts on/ }))
+    const weekStartsOnDialog = screen.getByRole('dialog', { name: 'Week starts on' })
+    expect(weekStartsOnDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
+    await user.click(screen.getByRole('button', { name: 'Sunday' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Week starts on' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().weekStartsOn).toBe(0)
+    expect(screen.getByRole('button', { name: /Week starts on/ })).toHaveTextContent('Sunday')
+
+    await user.click(screen.getByRole('button', { name: /Language/ }))
+    const languageDialog = screen.getByRole('dialog', { name: 'Language' })
+    expect(languageDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
+    await user.click(screen.getByRole('button', { name: 'Espanol' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Language' })).not.toBeInTheDocument()
+    })
+    expect(useAppPreferencesStore.getState().locale).toBe('es')
+    expect(document.documentElement).toHaveAttribute('lang', 'es')
+    expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
+  })
+
+  it('hides Security and sign-in for OAuth-only and unknown accounts', async () => {
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    getMockState().authSession.providerClassification = 'oauth_only'
+    const { unmount } = render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Security and sign-in' }),
+      ).not.toBeInTheDocument()
+    })
+
+    unmount()
+    getMockState().authSession.providerClassification = 'unknown'
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { name: 'Security and sign-in' }),
+      ).not.toBeInTheDocument()
+    })
+  })
+
+  it('opens the Security and sign-in shell without provider-management UI', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('link', { name: /Security and sign-in/ }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Change email address')).toBeInTheDocument()
+    expect(await screen.findByText('Change password')).toBeInTheDocument()
+    expect(await screen.findByText('Request an email change.')).toBeInTheDocument()
+    expect(await screen.findByText('Update the password for this account.')).toBeInTheDocument()
+    expect(screen.queryByText(/Google/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/connected provider/i)).not.toBeInTheDocument()
+  })
+
+  it('requests a secure email change with validation and pending confirmation', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change email address/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change email address' })
+    expect(within(dialog).getByLabelText('Current email')).toHaveValue('person@example.com')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+    expect(await within(dialog).findByText('Enter a valid email address.')).toBeInTheDocument()
+
+    await user.type(within(dialog).getByLabelText('New email'), 'person@example.com')
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+    expect(await within(dialog).findByText('Enter a different email address.')).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('New email'))
+    await user.type(within(dialog).getByLabelText('New email'), 'new@example.com')
+    await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
+
+    expect(
+      await within(dialog).findByText(
+        'Check your current and new email addresses to confirm the change.',
+      ),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.emailChangeRequests).toEqual(['new@example.com'])
+  })
+
+  it('updates password with local validation and sanitized authentication errors', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change password/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+
+    await user.type(within(dialog).getByLabelText('Current password'), 'wrong-password')
+    await user.type(within(dialog).getByLabelText('New password'), 'new-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'new-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(
+      await within(dialog).findByText(
+        'Password could not be updated. Check your current password and try again.',
+      ),
+    ).toBeInTheDocument()
+    expect(within(dialog).queryByText(/No signed-in user/i)).not.toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('Current password'))
+    await user.clear(within(dialog).getByLabelText('New password'))
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('Current password'), 'current-password')
+    await user.type(within(dialog).getByLabelText('New password'), 'current-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'current-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(
+      await within(dialog).findByText(
+        'Choose a password that is different from your current password.',
+      ),
+    ).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('New password'))
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('New password'), 'new-password')
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'other-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+    expect(await within(dialog).findByText('Passwords do not match.')).toBeInTheDocument()
+
+    await user.clear(within(dialog).getByLabelText('Confirm new password'))
+    await user.type(within(dialog).getByLabelText('Confirm new password'), 'new-password')
+    await user.click(within(dialog).getByRole('button', { name: 'Update password' }))
+
+    expect(await within(dialog).findByText('Password updated.')).toBeInTheDocument()
+    expect(getMockState().authSession.passwordUpdateRequests).toEqual(['new-password'])
+    expect(within(dialog).getByLabelText('Current password')).toHaveValue('')
+  })
+
+  it('starts forgot-password reset and hides Security controls for ineligible direct routes', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    const { unmount } = render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: /Change password/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    await user.click(within(dialog).getByRole('button', { name: 'Forgot your current password?' }))
+    expect(
+      await within(dialog).findByText('Check your email for password reset instructions.'),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.passwordResetRequests).toEqual(['person@example.com'])
+
+    unmount()
+    getMockState().authSession.providerClassification = 'oauth_only'
+    await act(async () => {
+      await router.navigate({ to: '/settings/security' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByText('Security controls are not available for this account.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Change password/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Change email address/ })).not.toBeInTheDocument()
+  })
+
+  it('confirms sign out, uses local current-session scope, and routes to signed out', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+    const dialog = screen.getByRole('dialog', { name: 'Sign out?' })
+    expect(dialog).toHaveTextContent("You'll need to sign in again to access your data.")
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(getMockState().authSession.signedIn).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Sign out?' })).getByRole('button', {
+        name: 'Sign out',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+    })
+    expect(getMockState().authSession.signedIn).toBe(false)
+    expect(getMockState().authSession.signOutScopes).toEqual(['local'])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('schedules account deletion from Settings and routes to the pending-deletion screen', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete account' }))
+    const intentDialog = screen.getByRole('dialog', { name: 'Delete your account?' })
+    expect(intentDialog).toHaveTextContent('7-day waiting period')
+
+    await user.click(within(intentDialog).getByRole('button', { name: 'Continue' }))
+    const reauthDialog = screen.getByRole('dialog', { name: 'Confirm it is you' })
+    await user.type(within(reauthDialog).getByLabelText('Current password'), 'current-password')
+    await user.click(within(reauthDialog).getByRole('button', { name: 'Continue' }))
+
+    const scheduleDialog = screen.getByRole('dialog', { name: 'Schedule account deletion?' })
+    expect(scheduleDialog).toHaveTextContent(
+      'Until then, the app will only allow export, sign out, or cancellation.',
+    )
+    await user.click(within(scheduleDialog).getByRole('button', { name: 'Delete account' }))
+
+    expect(
+      await screen.findByRole('button', { name: 'Cancel account deletion' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
+    ).toBeGreaterThan(0)
+    const state = getMockState()
+    expect(state.accountLifecycle.accountStatus).toBe('pending_deletion')
+    expect(state.accountLifecycle.deletionRequestSource).toBe('in_app')
+    expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
+  })
+
+  it('routes pending-deletion accounts away from normal app screens', async () => {
+    const state = getMockState()
+    const requestedAt = new Date()
+    state.accountLifecycle.accountStatus = 'pending_deletion'
+    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
+    state.accountLifecycle.deletionScheduledFor = new Date(
+      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString()
+    state.accountLifecycle.deletionRequestSource = 'in_app'
+
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Cancel account deletion' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
+    ).toBeGreaterThan(0)
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('cancels account deletion and restores normal app access', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    const requestedAt = new Date()
+    state.accountLifecycle.accountStatus = 'pending_deletion'
+    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
+    state.accountLifecycle.deletionScheduledFor = new Date(
+      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString()
+    state.accountLifecycle.deletionRequestSource = 'in_app'
+
+    await act(async () => {
+      await router.navigate({ to: '/account/pending-deletion' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Cancel account deletion' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(state.accountLifecycle.accountStatus).toBe('active')
+    expect(state.accountLifecycle.deletionRequestedAt).toBeNull()
+    expect(state.accountLifecycle.deletionScheduledFor).toBeNull()
+    expect(state.accountLifecycle.cancellationRequests).toHaveLength(1)
+    expect(await screen.findByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('supports the public external account deletion request path', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/account/delete' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete account', level: 1 }),
+    ).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
+    await user.click(screen.getByRole('button', { name: 'Request deletion link' }))
+
+    expect(
+      await screen.findByText(
+        'If that email matches an account, a verification link has been sent.',
+      ),
+    ).toBeInTheDocument()
+    expect(getMockState().accountLifecycle.externalDeletionRequests).toEqual(['person@example.com'])
+
+    await user.click(screen.getByRole('button', { name: 'Schedule after verification' }))
+    expect(
+      await screen.findAllByRole('heading', { name: 'Account deletion scheduled' }),
+    ).toHaveLength(2)
+    expect(getMockState().accountLifecycle.deletionRequestSource).toBe('external_web')
+  })
+
+  it('opens Data and privacy, exports CSV and JSON, and links to legal documents', async () => {
+    const user = userEvent.setup()
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined)
+    const originalCreateObjectURL = URL.createObjectURL
+    const originalRevokeObjectURL = URL.revokeObjectURL
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:habit-compass-export'),
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    })
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Data and privacy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Export as CSV/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Export as JSON/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Privacy Policy/ })).toHaveAttribute(
+      'href',
+      '/settings/data-privacy/privacy-policy',
+    )
+    expect(screen.getByRole('link', { name: /Terms of Service/ })).toHaveAttribute(
+      'href',
+      '/settings/data-privacy/terms',
+    )
+
+    await user.click(screen.getByRole('button', { name: /Export as CSV/ }))
+    expect(await screen.findByText(/Export ready/)).toBeInTheDocument()
+    expect(getMockState().dataExportRequests).toEqual(['csv'])
+    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
+
+    await user.click(screen.getByRole('button', { name: /Export as JSON/ }))
+    await waitFor(() => {
+      expect(getMockState().dataExportRequests).toEqual(['csv', 'json'])
+    })
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: originalCreateObjectURL,
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: originalRevokeObjectURL,
+    })
+    clickSpy.mockRestore()
+  })
+
+  it('renders Privacy Policy and Terms from local legal drafts', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('link', { name: /Privacy Policy/ }))
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
+    expect(await screen.findByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
+    expect(await screen.findByText('[EFFECTIVE DATE]')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Public hosted URLs are still release placeholders/),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
+
+    await act(async () => {
+      await router.navigate({ to: '/settings/data-privacy/terms' })
+    })
+    expect(
+      await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
+    ).toBeInTheDocument()
+    expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
+    expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
+    expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
+  })
+
+  it('opens the rating fallback from Settings and validates required feedback on Support', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Rate Habit Compass/ }))
+    expect(screen.getByRole('dialog', { name: 'Rate Habit Compass' })).toHaveTextContent(
+      'Ratings are not available in this development build',
+    )
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+
+    await user.click(screen.getByRole('link', { name: /Feedback and support/ }))
+    expect(
+      await screen.findByRole('heading', { name: 'Support and feedback', level: 1 }),
+    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Feedback and support' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Rate Habit Compass/ })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+    expect(await screen.findByText('Message is required.')).toHaveClass('text-destructive')
+  })
+
+  it('submits feedback with optional reply email cleared and automatic technical details', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Problem' }))
+    await user.type(screen.getByLabelText('Message'), 'The support screen works well.')
+    const replyEmail = screen.getByLabelText('Reply email')
+    await user.type(replyEmail, 'person@example.com')
+    await user.clear(replyEmail)
+    expect(
+      screen.queryByRole('checkbox', { name: /Include technical details/ }),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Thanks - your feedback was sent.')).toBeInTheDocument()
+    const state = getMockState()
+    expect(state.feedbackSubmissions).toHaveLength(1)
+    expect(state.feedbackSubmissions[0].type).toBe('problem')
+    expect(state.feedbackSubmissions[0].replyEmail).toBeNull()
+    expect(state.feedbackSubmissions[0].technicalDetails?.screenId).toBe('/settings/support')
+  })
+
+  it('marks invalid reply email feedback validation as destructive', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    expect(await screen.findByText('Leave it blank if you do not want a reply.')).toHaveClass(
+      'text-muted-foreground',
+    )
+
+    await user.type(screen.getByLabelText('Message'), 'Please check this reply address.')
+    await user.type(screen.getByLabelText('Reply email'), 'not-an-email')
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText('Enter a valid email address or leave it blank.')).toHaveClass(
+      'text-destructive',
+    )
+  })
+
+  it('keeps feedback form content when offline and shows repository errors', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/settings/support' })
+    })
+    render(<App />)
+
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: false,
+    })
+    await user.type(await screen.findByLabelText('Message'), 'Please save this while offline.')
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(await screen.findByText(/You appear to be offline/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Message')).toHaveValue('Please save this while offline.')
+
+    Object.defineProperty(window.navigator, 'onLine', {
+      configurable: true,
+      value: true,
+    })
+    for (let index = 0; index < 5; index += 1) {
+      getMockState().feedbackSubmissions.push({
+        id: `existing-feedback-${index}`,
+        userId: 'mock-user-1',
+        type: 'suggestion',
+        message: `Existing ${index}`,
+        replyEmail: null,
+        technicalDetails: null,
+        screenId: '/settings/support',
+        status: 'new',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+      })
+    }
+    await user.click(screen.getByRole('button', { name: 'Send feedback' }))
+
+    expect(
+      await screen.findByText('Feedback could not be sent. Please try again.'),
+    ).toBeInTheDocument()
   })
 
   it('onboarding has max 3 steps', async () => {

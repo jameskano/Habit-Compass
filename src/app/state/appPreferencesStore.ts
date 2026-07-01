@@ -21,7 +21,7 @@ type AppPreferencesState = {
 
 export const useAppPreferencesStore = create<AppPreferencesState>((set) => ({
   theme: 'system',
-  locale: 'en',
+  locale: 'system',
   weekStartsOn: 1,
   featureToggles: {
     mood: true,

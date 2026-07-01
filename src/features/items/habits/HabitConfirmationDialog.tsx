@@ -9,6 +9,7 @@ export type HabitDangerAction = 'reset' | 'delete'
 type HabitConfirmationDialogProps = {
   action: HabitDangerAction | null
   habit: Habit
+  nestedInDialog?: boolean
   pending: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -17,6 +18,7 @@ type HabitConfirmationDialogProps = {
 export const HabitConfirmationDialog = ({
   action,
   habit,
+  nestedInDialog = false,
   pending,
   onCancel,
   onConfirm,
@@ -32,7 +34,8 @@ export const HabitConfirmationDialog = ({
       <DialogContent
         role="alertdialog"
         aria-modal="true"
-        className="w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5"
+        overlayClassName={nestedInDialog ? 'z-[60]' : undefined}
+        className={`w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5 ${nestedInDialog ? 'z-[70]' : ''}`}
       >
         <DialogTitle className="text-lg">
           {intl.formatMessage({ id: `page.items.habit.confirm.${action}.title` })}

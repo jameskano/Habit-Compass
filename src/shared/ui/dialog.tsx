@@ -56,10 +56,10 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = forwardRef<
   ElementRef<typeof DialogPrimitive.Content>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { overlayClassName?: string }
+>(({ className, children, overlayClassName, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
@@ -76,7 +76,10 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 
 const DialogHeader = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => (
   <div
-    className={cn('border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6', className)}
+    className={cn(
+      'rounded-t-[1.7rem] border-b border-border/70 bg-card/70 px-4 pb-4 pt-5 sm:px-6',
+      className,
+    )}
     {...props}
   />
 )

@@ -81,6 +81,52 @@ describe('habit detail stats', () => {
     expect(yearlyBars[2].completionEvents).toBe(2)
   })
 
+  it('uses the selected week start for this-week counts and weekly chart bars', () => {
+    const habit = createHabit({ trackingType: 'binary' }, { startsOn: '2026-12-01' })
+    const logs = [
+      createHabitLog({ id: 'sunday', loggedForDate: '2026-12-27' }),
+      createHabitLog({ id: 'friday', loggedForDate: '2027-01-01' }),
+    ]
+
+    expect(
+      calculateHabitDetailStats({
+        habit,
+        logs,
+        today: '2027-01-01',
+        weekStartsOn: 1,
+      }).completionsThisWeek,
+    ).toBe(1)
+    expect(
+      calculateHabitDetailStats({
+        habit,
+        logs,
+        today: '2027-01-01',
+        weekStartsOn: 0,
+      }).completionsThisWeek,
+    ).toBe(2)
+
+    const mondayBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'week',
+      today: '2027-01-01',
+      startsOn: habit.startsOn,
+      weekStartsOn: 1,
+    })
+    const sundayBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'week',
+      today: '2027-01-01',
+      startsOn: habit.startsOn,
+      weekStartsOn: 0,
+    })
+
+    expect(mondayBars[0].from).toBe('2026-12-28')
+    expect(sundayBars[0].from).toBe('2026-12-27')
+    expect(sundayBars[0].completionEvents).toBe(1)
+  })
+
   it('excludes completion logs recorded while inactive from tiles and chart bars', () => {
     const habit = createHabit(
       { trackingType: 'binary' },

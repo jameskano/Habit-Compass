@@ -188,6 +188,7 @@ export const HabitDetail = ({
         <HabitConfirmationDialog
           habit={habit}
           action={confirmation}
+          nestedInDialog
           pending={pending}
           onCancel={() => setConfirmation(null)}
           onConfirm={confirmAction}

@@ -14,4 +14,5 @@ List loading, empty, error, and success states.
 
 ## Accessibility
 
-List keyboard, focus, label, and semantic requirements.
+List keyboard, focus, label, and semantic requirements using
+`docs/engineering/accessibility-checklist.md`.

@@ -1,178 +1,126 @@
+import { Crown, Database, Shield, Tags } from 'lucide-react'
+import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
-import { Tags } from 'lucide-react'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import { Button } from '@/shared/ui/button'
-import { Card } from '@/shared/ui/card'
-import { FeatureToggle } from '@/shared/ui/FeatureToggle'
+import { canShowSecurityAndSignIn } from '@/domain/auth'
+import { Sheet, SheetContent } from '@/shared/ui/sheet'
 
-const themeOptions = [
-  { value: 'light', labelId: 'settings.theme.light' },
-  { value: 'dark', labelId: 'settings.theme.dark' },
-  { value: 'system', labelId: 'settings.theme.system' },
-] as const
-
-const localeOptions = [
-  { value: 'en', labelId: 'settings.locale.en' },
-  { value: 'es', labelId: 'settings.locale.es' },
-] as const
-
-const toggleItems = [
-  {
-    key: 'mood',
-    labelId: 'settings.toggle.mood',
-    descriptionId: 'settings.toggle.moodDescription',
-  },
-  {
-    key: 'weeklyPlanning',
-    labelId: 'settings.toggle.weeklyPlanning',
-    descriptionId: 'settings.toggle.weeklyPlanningDescription',
-  },
-  {
-    key: 'suggestions',
-    labelId: 'settings.toggle.suggestions',
-    descriptionId: 'settings.toggle.suggestionsDescription',
-  },
-  {
-    key: 'habitCompletionLevels',
-    labelId: 'settings.toggle.habitCompletionLevels',
-    descriptionId: 'settings.toggle.habitCompletionLevelsDescription',
-  },
-  {
-    key: 'reflections',
-    labelId: 'settings.toggle.reflections',
-    descriptionId: 'settings.toggle.reflectionsDescription',
-  },
-  {
-    key: 'categories',
-    labelId: 'settings.toggle.categories',
-    descriptionId: 'settings.toggle.categoriesDescription',
-  },
-] as const
+import { PreferenceSheetBody } from './PreferenceSheetBody'
+import { SettingsAccountActionsSection } from './SettingsAccountActionsSection'
+import { SettingsPreferencesSection } from './SettingsPreferencesSection'
+import { RateAppUnavailableDialog, SettingsSupportSection } from './SettingsSupportSection'
+import { SettingsRow } from './components/SettingsRow'
+import { SettingsSection } from './components/SettingsSection'
+import { appBuildNumber, appVersion, currentYear } from './settings.constants'
+import type { PreferenceSheet } from './settings.types'
+import { useAccountProviderClassificationQuery } from './useAccountProviderClassificationQuery'
 
 export const SettingsPage = () => {
   const intl = useIntl()
+  const [activeSheet, setActiveSheet] = useState<PreferenceSheet | null>(null)
+  const [rateDialogOpen, setRateDialogOpen] = useState(false)
   const theme = useAppPreferencesStore((state) => state.theme)
   const locale = useAppPreferencesStore((state) => state.locale)
-  const featureToggles = useAppPreferencesStore((state) => state.featureToggles)
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const setTheme = useAppPreferencesStore((state) => state.setTheme)
   const setLocale = useAppPreferencesStore((state) => state.setLocale)
-  const setFeatureToggle = useAppPreferencesStore((state) => state.setFeatureToggle)
+  const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
+  const providerClassification = useAccountProviderClassificationQuery()
+  const showSecurityAndSignIn = canShowSecurityAndSignIn(providerClassification.data)
+  const footerVersion = appBuildNumber
+    ? intl.formatMessage(
+        { id: 'settings.footer.versionWithBuild' },
+        { version: appVersion, build: appBuildNumber },
+      )
+    : intl.formatMessage({ id: 'settings.footer.version' }, { version: appVersion })
 
   return (
-    <section className="space-y-6">
-      <Card className="space-y-4 rounded-2xl p-5">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.theme.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.theme.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {themeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={theme === option.value}
-              onClick={() => setTheme(option.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                theme === option.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border/70 bg-card text-foreground hover:bg-muted'
-              }`}
-            >
-              {intl.formatMessage({ id: option.labelId })}
-            </button>
-          ))}
-        </div>
-      </Card>
+    <section className="space-y-4">
+      <SettingsSection>
+        <SettingsRow
+          ariaLabelId="settings.categories.accessibilityLabel"
+          descriptionId="settings.categories.description"
+          icon={Tags}
+          labelId="settings.categories.title"
+          to="/settings/categories"
+        />
+      </SettingsSection>
 
-      <Card className="space-y-4 rounded-2xl p-5">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.locale.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.locale.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {localeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={locale === option.value}
-              onClick={() => setLocale(option.value)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                locale === option.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border/70 bg-card text-foreground hover:bg-muted'
-              }`}
-            >
-              {intl.formatMessage({ id: option.labelId })}
-            </button>
-          ))}
-        </div>
-      </Card>
+      <SettingsPreferencesSection
+        locale={locale}
+        theme={theme}
+        weekStartsOn={weekStartsOn}
+        onOpenSheet={setActiveSheet}
+      />
 
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.toggles.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.toggles.description" />
-          </p>
-        </div>
-        {toggleItems.map((toggle) => (
-          <FeatureToggle
-            key={toggle.key}
-            id={`toggle-${toggle.key}`}
-            labelId={toggle.labelId}
-            descriptionId={toggle.descriptionId}
-            checked={featureToggles[toggle.key]}
-            onChange={(checked) => setFeatureToggle(toggle.key, checked)}
+      {showSecurityAndSignIn ? (
+        <SettingsSection>
+          <SettingsRow
+            descriptionId="settings.security.description"
+            icon={Shield}
+            labelId="settings.security.title"
+            to="/settings/security"
           />
-        ))}
-      </div>
+        </SettingsSection>
+      ) : null}
 
-      <a
-        href="/settings/categories"
-        className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-5 text-left transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
-          <Tags aria-hidden="true" size={19} />
-        </span>
-        <span className="flex flex-col gap-1">
-          <span className="font-semibold">
-            <FormattedMessage id="settings.categories.title" />
-          </span>
-          <span className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.categories.description" />
-          </span>
-        </span>
-      </a>
+      <SettingsSection>
+        <SettingsRow
+          descriptionId="settings.dataPrivacy.description"
+          icon={Database}
+          labelId="settings.dataPrivacy.title"
+          to="/settings/data-privacy"
+        />
+      </SettingsSection>
 
-      <Card className="space-y-4 rounded-2xl border-rose-200/50 bg-rose-50/70 p-5 dark:border-rose-900/40 dark:bg-rose-950/20">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">
-            <FormattedMessage id="settings.reset.title" />
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage id="settings.reset.description" />
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" className="rounded-full" disabled>
-            <FormattedMessage id="settings.reset.soft" />
-          </Button>
-          <Button className="rounded-full opacity-80" disabled>
-            <FormattedMessage id="settings.reset.hard" />
-          </Button>
-        </div>
-      </Card>
+      <SettingsSection>
+        <SettingsRow
+          disabled
+          descriptionId="settings.premium.status"
+          icon={Crown}
+          labelId="settings.premium.title"
+        />
+      </SettingsSection>
+
+      <SettingsSupportSection onOpenRateDialog={() => setRateDialogOpen(true)} />
+
+      <SettingsAccountActionsSection providerClassification={providerClassification.data} />
+
+      <footer className="space-y-1 px-2 pb-2 pt-4 text-center text-xs text-muted-foreground">
+        <p>{footerVersion}</p>
+        <p>
+          <FormattedMessage id="settings.footer.copyright" values={{ year: currentYear }} />
+        </p>
+        <p>
+          <FormattedMessage id="settings.footer.tagline" />
+        </p>
+      </footer>
+
+      <Sheet open={activeSheet !== null} onOpenChange={(open) => !open && setActiveSheet(null)}>
+        <SheetContent className="animate-[habit-sheet-in_300ms_ease-out] motion-reduce:animate-none">
+          <PreferenceSheetBody
+            activeSheet={activeSheet}
+            locale={locale}
+            theme={theme}
+            weekStartsOn={weekStartsOn}
+            onLocaleSelect={(nextLocale) => {
+              setLocale(nextLocale)
+              setActiveSheet(null)
+            }}
+            onThemeSelect={(nextTheme) => {
+              setTheme(nextTheme)
+              setActiveSheet(null)
+            }}
+            onWeekStartsOnSelect={(nextWeekStartsOn) => {
+              setWeekStartsOn(nextWeekStartsOn)
+              setActiveSheet(null)
+            }}
+          />
+        </SheetContent>
+      </Sheet>
+
+      <RateAppUnavailableDialog open={rateDialogOpen} onOpenChange={setRateDialogOpen} />
     </section>
   )
 }

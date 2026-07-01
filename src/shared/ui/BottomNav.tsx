@@ -27,9 +27,9 @@ export const BottomNav = () => {
               activeOptions={{ exact: true }}
               activeProps={{
                 className:
-                  'bg-primary text-primary-foreground shadow-sm md:bg-primary/15 md:text-primary',
+                  'bg-primary text-primary-foreground shadow-sm md:bg-primary/15 md:text-foreground',
               }}
-              className="flex min-w-[72px] flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted md:min-w-0 md:flex-row md:px-4"
+              className="flex min-w-[72px] flex-col items-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium text-muted-foreground transition-colors [@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted md:min-w-0 md:flex-row md:px-4"
             >
               <Icon aria-hidden="true" size={18} />
               <span>

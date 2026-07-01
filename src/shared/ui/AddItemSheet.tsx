@@ -1,11 +1,21 @@
 import { X } from 'lucide-react'
-import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  type KeyboardEvent as ReactKeyboardEvent,
+  useEffect,
+  useState,
+} from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { Button } from './button'
-import { CreateItemDialogs } from '@/features/items/create/CreateItemDialogs'
-import { CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
-import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
+import { OverlayPendingState } from './LazyLoadingFallbacks'
+
+const CreateItemDialogs = lazy(() =>
+  import('@/features/items/create/CreateItemDialogs').then((module) => ({
+    default: module.CreateItemDialogs,
+  })),
+)
 
 type AddItemSheetProps = {
   open: boolean
@@ -21,7 +31,6 @@ const options = [
 
 export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
   const intl = useIntl()
-  const categoriesQuery = useCategoriesQuery()
   const [createKind, setCreateKind] = useState<(typeof options)[number]['kind'] | null>(null)
 
   useEffect(() => {
@@ -49,30 +58,16 @@ export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
     }
   }
 
-  if (createKind === 'category') {
-    return (
-      <CategoryFormSheet
-        open
-        mode="create"
-        categories={categoriesQuery.data ?? []}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setCreateKind(null)
-            onClose()
-          }
+  return createKind ? (
+    <Suspense fallback={<OverlayPendingState />}>
+      <CreateItemDialogs
+        kind={createKind}
+        onClose={() => {
+          setCreateKind(null)
+          onClose()
         }}
       />
-    )
-  }
-
-  return createKind ? (
-    <CreateItemDialogs
-      kind={createKind}
-      onClose={() => {
-        setCreateKind(null)
-        onClose()
-      }}
-    />
+    </Suspense>
   ) : (
     <div
       className="fixed inset-0 z-40 flex items-end bg-foreground/35 backdrop-blur-sm"
@@ -82,7 +77,7 @@ export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-item-sheet-title"
-        className="w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
+        className="animate-[habit-sheet-in_300ms_ease-out] w-full rounded-t-[2rem] border border-border/70 bg-background p-5 shadow-2xl motion-reduce:animate-none md:mx-auto md:mb-8 md:max-w-lg md:rounded-[2rem]"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={handleContainerKeyDown}
       >

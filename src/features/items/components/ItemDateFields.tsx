@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { Button } from '@/shared/ui/button'
-import { Calendar } from '@/shared/ui/calendar'
+import { LazyCalendar } from '@/shared/ui/LazyCalendar'
 import {
   Dialog,
   DialogContent,
@@ -88,7 +88,7 @@ export const DatePickerField = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto">
-          <Calendar
+          <LazyCalendar
             mode="single"
             selected={selectedDate}
             defaultMonth={selectedDate}
@@ -159,7 +159,7 @@ export const GuardedEndDateField = ({
           </Button>
         </PopoverAnchor>
         <PopoverContent align="start" className="w-auto">
-          <Calendar
+          <LazyCalendar
             mode="single"
             selected={isoDateToCalendarDate(value)}
             defaultMonth={isoDateToCalendarDate(value)}
@@ -189,7 +189,11 @@ export const GuardedEndDateField = ({
       {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
 
       <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
-        <DialogContent aria-describedby={undefined} className="p-0">
+        <DialogContent
+          aria-describedby={undefined}
+          overlayClassName="z-[60]"
+          className="z-[70] p-0"
+        >
           <DialogHeader>
             <DialogTitle>{intl.formatMessage({ id: warningTitleId })}</DialogTitle>
             <DialogDescription>

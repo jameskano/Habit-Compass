@@ -2,6 +2,7 @@ import { CalendarDays, MoreHorizontal } from 'lucide-react'
 import { type KeyboardEvent } from 'react'
 import { type IntlShape, useIntl } from 'react-intl'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import {
   calculateHabitStats,
   getHabitFrequencySummary,
@@ -104,7 +105,8 @@ export const HabitCard = ({
   onSwipeArchive,
 }: HabitCardProps) => {
   const intl = useIntl()
-  const stats = calculateHabitStats({ habit, logs, from, to: today, today })
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
+  const stats = calculateHabitStats({ habit, logs, from, to: today, today, weekStartsOn })
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${habit.priority}` })}`
 
@@ -188,7 +190,13 @@ export const HabitCard = ({
           </div>
         </header>
 
-        <HabitDayStrip habit={habit} logs={logs} dates={dates} today={today} />
+        <HabitDayStrip
+          habit={habit}
+          logs={logs}
+          dates={dates}
+          today={today}
+          weekStartsOn={weekStartsOn}
+        />
 
         <footer className="flex items-center justify-between gap-4 border-t border-border/60 pt-2">
           <div className="flex gap-4">

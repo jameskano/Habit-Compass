@@ -106,4 +106,21 @@ describe('habit scheduling', () => {
       periodEnd: '2026-12-31',
     })
   })
+
+  it('uses the configured week-start preference for weekly period bounds', () => {
+    const habit = createHabit({
+      trackingType: 'timesPerPeriod',
+      period: 'week',
+      targetCount: 3,
+    })
+
+    expect(getHabitPeriodBounds(habit, '2027-01-01', 1)).toEqual({
+      periodStart: '2026-12-28',
+      periodEnd: '2027-01-03',
+    })
+    expect(getHabitPeriodBounds(habit, '2027-01-01', 0)).toEqual({
+      periodStart: '2026-12-27',
+      periodEnd: '2027-01-02',
+    })
+  })
 })

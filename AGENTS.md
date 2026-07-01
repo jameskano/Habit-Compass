@@ -32,6 +32,12 @@ If a relevant spec does not exist, create or update the spec before implementing
 - Update specs when behavior changes.
 - Prefer arrow functions for new functions and React components when practical.
 
+## Code Task Guardrails
+
+For every coding task, follow `docs/engineering/ai-code-task-guardrails.md`: do not invent
+scope, search before creating, reuse existing patterns, avoid duplicated logic, keep
+abstractions small, separate responsibilities, and record assumptions or open questions.
+
 ## React Structure Rules
 
 - Do not hide business/domain logic inside React components.
@@ -59,11 +65,17 @@ Detailed guidance: `docs/engineering/react-code-organization.md`.
 - Keep this file concise and always-on.
 - Put detailed engineering guidance in `docs/engineering/`.
 - Use `.ai/skills/` for task-specific workflows that should load only when relevant.
+- See `docs/engineering/ai-code-task-guardrails.md` for Related Skills and Agents routing.
 - See `docs/engineering/ai-instruction-system.md`.
 
 ## Verification
 
-Run the narrowest useful command during development, then run the broad verification command when practical:
+Default to targeted verification. Run the narrowest relevant tests and checks for the
+files and behavior changed. Do not run broad verification after every modification by
+default; reserve it for broad-risk changes, pre-PR/final validation when requested, or
+when targeted checks are insufficient.
+
+Use this as the broad verification command when it is justified:
 
 ```sh
 pnpm verify

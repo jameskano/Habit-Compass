@@ -37,7 +37,9 @@ const requirePlanForUser = (userId: string, weeklyPlanId: string) => {
 }
 
 const requireHabitForUser = (userId: string, habitId: string) => {
-  const habit = getMockState().habits.find((entry) => entry.userId === userId && entry.id === habitId)
+  const habit = getMockState().habits.find(
+    (entry) => entry.userId === userId && entry.id === habitId,
+  )
 
   if (!habit) {
     return err(createNotFoundError('Habit', habitId))
@@ -105,8 +107,10 @@ export const mockPlanningRepository: PlanningRepository = {
     }
 
     return ok(
-      getMockState().weeklyBigRocks
-        .filter((bigRock) => bigRock.userId === userId && bigRock.weeklyPlanId === weeklyPlanId)
+      getMockState()
+        .weeklyBigRocks.filter(
+          (bigRock) => bigRock.userId === userId && bigRock.weeklyPlanId === weeklyPlanId,
+        )
         .sort((left, right) => left.sortOrder - right.sortOrder),
     )
   },

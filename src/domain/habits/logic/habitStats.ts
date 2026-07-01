@@ -5,6 +5,7 @@ import {
   evaluateHabitCompletionForLogs,
   getHabitPeriodBounds,
   getHabitTargetScope,
+  type WeekStartsOn,
 } from './habitCompletionRules'
 import { deriveHabitDayState, type HabitDayState } from './habitDayState'
 import { enumerateHabitScheduledDates } from './habitSchedule'
@@ -66,28 +67,34 @@ export const calculateHabitStats = (input: {
   from: ISODateString
   to: ISODateString
   today: ISODateString
+  weekStartsOn?: WeekStartsOn
 }): HabitStats => {
-  const { habit, from, to, today } = input
+  const { habit, from, to, today, weekStartsOn = 1 } = input
   const logs = filterEligibleHabitLogs(habit, input.logs).filter((log) =>
     isWithinRange(log.loggedForDate, from, to),
   )
   if (getHabitTargetScope(habit) === 'period') {
     const periodStarts = new Set<ISODateString>()
     for (const log of logs) {
-      periodStarts.add(getHabitPeriodBounds(habit, log.loggedForDate).periodStart)
+      periodStarts.add(getHabitPeriodBounds(habit, log.loggedForDate, weekStartsOn).periodStart)
     }
     if (periodStarts.size === 0) {
-      periodStarts.add(getHabitPeriodBounds(habit, today).periodStart)
+      periodStarts.add(getHabitPeriodBounds(habit, today, weekStartsOn).periodStart)
     }
 
     const periodScores = [...periodStarts].flatMap((periodStart) => {
-      const { periodEnd } = getHabitPeriodBounds(habit, periodStart)
+      const { periodEnd } = getHabitPeriodBounds(habit, periodStart, weekStartsOn)
       if (doesHabitInactivityOverlapRange(habit, periodStart, periodEnd)) {
         return []
       }
       const evaluationDate = periodStart <= today ? periodStart : periodEnd
       return [
-        evaluateHabitCompletionForLogs({ habit, logs, date: evaluationDate }).validCompletionScore,
+        evaluateHabitCompletionForLogs({
+          habit,
+          logs,
+          date: evaluationDate,
+          weekStartsOn,
+        }).validCompletionScore,
       ]
     })
     const completionScore = periodScores.reduce((total, score) => total + score, 0)
@@ -115,6 +122,7 @@ export const calculateHabitStats = (input: {
       date,
       today,
       logs: scheduledLogs,
+      weekStartsOn,
     }),
   )
   const accountableStates = states.filter((state) => state !== 'today_pending')
@@ -124,6 +132,7 @@ export const calculateHabitStats = (input: {
       habit,
       logs: scheduledLogs,
       date,
+      weekStartsOn,
     }).validCompletionScore
     return total + score
   }, 0)
@@ -132,8 +141,12 @@ export const calculateHabitStats = (input: {
   return {
     completionEvents: scheduledDates.filter(
       (date) =>
-        evaluateHabitCompletionForLogs({ habit, logs: scheduledLogs, date }).validCompletionScore >
-        0,
+        evaluateHabitCompletionForLogs({
+          habit,
+          logs: scheduledLogs,
+          date,
+          weekStartsOn,
+        }).validCompletionScore > 0,
     ).length,
     completionScore,
     expectedScore,

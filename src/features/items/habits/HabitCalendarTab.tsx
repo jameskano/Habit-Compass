@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { deriveHabitDayState, type Habit, type HabitDayState, type HabitLog } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
@@ -43,17 +44,18 @@ const toISODate = (value: Date) => {
 
 export const HabitCalendarTab = ({ habit, logs, today }: HabitCalendarTabProps) => {
   const intl = useIntl()
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseISO(today)))
   const days = useMemo(
     () =>
       eachDayOfInterval({
-        start: startOfWeek(startOfMonth(visibleMonth), { weekStartsOn: 1 }),
-        end: endOfWeek(endOfMonth(visibleMonth), { weekStartsOn: 1 }),
+        start: startOfWeek(startOfMonth(visibleMonth), { weekStartsOn }),
+        end: endOfWeek(endOfMonth(visibleMonth), { weekStartsOn }),
       }),
-    [visibleMonth],
+    [visibleMonth, weekStartsOn],
   )
   const weekDayLabels = Array.from({ length: 7 }, (_, index) =>
-    intl.formatMessage({ id: `page.items.weekday.short.${(index + 1) % 7}` }),
+    intl.formatMessage({ id: `page.items.weekday.short.${(index + weekStartsOn) % 7}` }),
   )
   const monthLabel = new Intl.DateTimeFormat(intl.locale, {
     month: 'long',
@@ -104,7 +106,7 @@ export const HabitCalendarTab = ({ habit, logs, today }: HabitCalendarTabProps) 
             <ol className="mx-auto grid w-full max-w-[20.5rem] grid-cols-7 gap-2">
               {days.map((day) => {
                 const date = toISODate(day)
-                const state = deriveHabitDayState({ habit, logs, date, today })
+                const state = deriveHabitDayState({ habit, logs, date, today, weekStartsOn })
                 const stateLabel = intl.formatMessage({ id: `page.items.habit.dayState.${state}` })
                 const outsideMonth = day.getMonth() !== visibleMonth.getMonth()
 

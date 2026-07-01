@@ -3,6 +3,7 @@ import type { ISODateString } from '@/shared/types'
 import type { Habit, HabitLog } from '../types'
 import { calculateHabitStats } from './habitStats'
 import { filterEligibleHabitLogs } from './habitInactivity'
+import type { WeekStartsOn } from './habitCompletionRules'
 
 export type HabitChartPeriod = 'week' | 'month' | 'year'
 
@@ -30,9 +31,9 @@ const toISODate = (date: Date) => {
   return date.toISOString().slice(0, 10) as ISODateString
 }
 
-const startOfWeek = (date: ISODateString) => {
+const startOfWeek = (date: ISODateString, weekStartsOn: WeekStartsOn) => {
   const current = toUtcDate(date)
-  const offset = (current.getUTCDay() + 6) % 7
+  const offset = (current.getUTCDay() - weekStartsOn + 7) % 7
   current.setUTCDate(current.getUTCDate() - offset)
   return toISODate(current)
 }
@@ -67,7 +68,7 @@ const countCompletions = (logs: HabitLog[], from: ISODateString, to: ISODateStri
   ).length
 }
 
-const getFlexibleStatsStart = (habit: Habit, today: ISODateString) => {
+const getFlexibleStatsStart = (habit: Habit, today: ISODateString, weekStartsOn: WeekStartsOn) => {
   const goal = habit.goalConfig
   if (!('period' in goal)) {
     return habit.startsOn
@@ -77,7 +78,7 @@ const getFlexibleStatsStart = (habit: Habit, today: ISODateString) => {
     goal.period === 'day'
       ? today
       : goal.period === 'week'
-        ? startOfWeek(today)
+        ? startOfWeek(today, weekStartsOn)
         : goal.period === 'month'
           ? startOfMonth(today)
           : addDays(today, -Math.max((goal.customPeriodDays ?? 1) - 1, 0))
@@ -89,20 +90,28 @@ export const calculateHabitDetailStats = (input: {
   habit: Habit
   logs: HabitLog[]
   today: ISODateString
+  weekStartsOn?: WeekStartsOn
 }): HabitDetailStats => {
-  const { habit, logs, today } = input
+  const { habit, logs, today, weekStartsOn = 1 } = input
   const eligibleLogs = filterEligibleHabitLogs(habit, logs)
   const from =
     habit.scheduleRule.kind === 'flexiblePeriod'
-      ? getFlexibleStatsStart(habit, today)
+      ? getFlexibleStatsStart(habit, today, weekStartsOn)
       : habit.startsOn
-  const stats = calculateHabitStats({ habit, logs: eligibleLogs, from, to: today, today })
+  const stats = calculateHabitStats({
+    habit,
+    logs: eligibleLogs,
+    from,
+    to: today,
+    today,
+    weekStartsOn,
+  })
 
   return {
     completionPercentage: stats.completionPercentage,
     currentStreak: stats.currentStreak,
     bestStreak: stats.bestStreak,
-    completionsThisWeek: countCompletions(eligibleLogs, startOfWeek(today), today),
+    completionsThisWeek: countCompletions(eligibleLogs, startOfWeek(today, weekStartsOn), today),
     completionsThisMonth: countCompletions(eligibleLogs, startOfMonth(today), today),
     completionsThisYear: countCompletions(eligibleLogs, startOfYear(today), today),
     totalCompletions: eligibleLogs.filter((log) => log.status === 'completed').length,
@@ -115,12 +124,13 @@ export const createHabitCompletionBars = (input: {
   period: HabitChartPeriod
   today: ISODateString
   startsOn: ISODateString
+  weekStartsOn?: WeekStartsOn
 }): HabitCompletionBar[] => {
-  const { habit, period, today, startsOn } = input
+  const { habit, period, today, startsOn, weekStartsOn = 1 } = input
   const logs = filterEligibleHabitLogs(habit, input.logs)
 
   if (period === 'week') {
-    const from = startOfWeek(today)
+    const from = startOfWeek(today, weekStartsOn)
     return Array.from({ length: 7 }, (_, index) => {
       const date = addDays(from, index)
       return {

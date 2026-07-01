@@ -86,7 +86,13 @@ export const WeeklyMapSection = ({
                 >
                   <span className="truncate text-sm font-medium">{habit.title}</span>
                   {weekDates.map((date) => {
-                    const state = deriveHabitDayState({ habit, logs: habitLogs, date, today })
+                    const state = deriveHabitDayState({
+                      habit,
+                      logs: habitLogs,
+                      date,
+                      today,
+                      weekStartsOn,
+                    })
                     const stateLabel = intl.formatMessage({
                       id: `page.items.habit.dayState.${state}`,
                     })

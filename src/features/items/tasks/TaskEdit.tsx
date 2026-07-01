@@ -68,7 +68,6 @@ export const TaskEdit = (props: TaskEditProps) => {
           />
         </div>
         <TaskConfirmationDialog
-          task={task}
           open={taskEdit.confirmingDelete}
           pending={taskEdit.pending}
           onCancel={() => taskEdit.setConfirmingDelete(false)}

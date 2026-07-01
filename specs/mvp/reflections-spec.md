@@ -32,7 +32,9 @@ Some users want brief reflection space, but reflective writing must not slow dow
 - Reflections must support `daily` and `weekly` kinds.
 - A reflection must include content.
 - A reflection may reference a mood log.
-- A reflection may reference either a date or a week start date depending on kind.
+- A reflection may reference either a date or an explicit weekly period depending on kind.
+- Weekly reflections must preserve the interval under which they were created. They must not be
+  silently moved, merged, duplicated, or deleted if the user later changes the week-start preference.
 
 ## Non-Functional Requirements
 
@@ -47,8 +49,14 @@ Some users want brief reflection space, but reflective writing must not slow dow
   - `content`
   - `recordedForDate`
   - `weekStartDate`
+  - `periodEnd` (future field, not currently implemented)
   - `moodLogId`
   - `promptKey`
+
+Current database migrations store weekly reflections with `week_start_date`, and current TypeScript
+uses `weekStartDate`. Before user-facing week-start changes ship, the schema should either add
+future `period_end` / `periodEnd` or link weekly reflections to a weekly planning record that stores
+the full interval.
 
 ## UI States
 
@@ -61,15 +69,19 @@ Some users want brief reflection space, but reflective writing must not slow dow
 - A weekly reflection may exist without a daily reflection.
 - A reflection may exist without a mood log.
 - A reflection with empty content is invalid.
+- Changing Settings > Week starts on does not mutate existing weekly reflection periods.
 
 ## Acceptance Criteria
 
 - Reflections are optional.
 - Daily and weekly reflection kinds are both representable.
 - Reflections can exist independently from mood logs.
+- Weekly reflections preserve their saved period even when derived weekly analytics regroup by the
+  current week-start preference.
 
 ## Test Plan
 
 - Schema tests for daily and weekly reflection payloads.
 - Unit tests for invalid empty content.
 - Contract tests for optional mood-log linkage.
+- Contract tests for preserving weekly reflection period fields across week-start preference changes.

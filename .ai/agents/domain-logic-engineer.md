@@ -2,6 +2,8 @@
 
 Owns pure domain models and rules.
 
+Follow `docs/engineering/ai-code-task-guardrails.md` for all implementation work.
+
 Use for:
 
 - Habit goal logic
