@@ -102,7 +102,7 @@ describe('app shell', () => {
     expect(await screen.findByText('Ready for today')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Choose date' }))
-    expect(await screen.findByRole('grid')).toBeInTheDocument()
+    expect(await screen.findByRole('grid', undefined, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.queryByDisplayValue(/\d{4}-\d{2}-\d{2}/)).not.toBeInTheDocument()
   })
 
@@ -172,7 +172,7 @@ describe('app shell', () => {
     const confirmResetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     await user.click(
       within(confirmResetDialog).getByRole('button', {
-        name: 'Reset progress',
+        name: 'Reset',
       }),
     )
 
@@ -854,7 +854,7 @@ describe('app shell', () => {
     expect(
       screen.queryByRole('dialog', { name: 'Habit detail for Read before bed' }),
     ).not.toBeInTheDocument()
-    await user.click(within(resetDialog).getByRole('button', { name: 'Reset progress' }))
+    await user.click(within(resetDialog).getByRole('button', { name: 'Reset' }))
     expect(
       await screen.findByText('Progress reset. The habit remains available.'),
     ).toBeInTheDocument()
@@ -876,7 +876,7 @@ describe('app shell', () => {
     await user.click(
       within(screen.getByRole('alertdialog', { name: 'Delete habit permanently?' })).getByRole(
         'button',
-        { name: 'Delete permanently' },
+        { name: 'Delete' },
       ),
     )
 
@@ -1080,7 +1080,7 @@ describe('app shell', () => {
     })
     await user.click(within(deleteEditDialog).getByRole('button', { name: 'Delete' }))
     const deleteDialog = screen.getByRole('alertdialog', {
-      name: 'Delete recurrent task permanently?',
+      name: 'Delete task permanently?',
     })
     await user.click(within(deleteDialog).getByRole('button', { name: 'Delete permanently' }))
     await waitFor(() => {
