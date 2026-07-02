@@ -39,12 +39,15 @@ turning Settings into a feature maze.
 - Footer content.
 - Cross-feature requirements Settings depends on.
 
+Authentication, Premium/subscription, and account-deletion requirements in this file are superseded
+by `/specs/auth` where they conflict. The active auth scope includes RevenueCat, Google Play
+subscription-aware deletion, Android auth deep links, and immediate permanent account deletion.
+
 ## Non-Goals
 
 - Notifications in MVP.
 - Preferred sign-in method controls.
 - OAuth provider linking, unlinking, or provider management.
-- Premium purchase flow, RevenueCat, or subscription management in MVP.
 - Automatic crash reporting, analytics, AI, calendar sync, or extra languages in MVP.
 
 ## Information Architecture
@@ -233,22 +236,24 @@ is specified in [legal-documents-spec.md](legal-documents-spec.md) and the legal
 
 ## Habit Compass Premium
 
+This section is superseded by `/specs/auth` for auth implementation. RevenueCat and subscription
+identity are now in scope for the auth feature, and account deletion must be subscription-aware.
+
 Settings shows a row named `Habit Compass Premium`.
 
-MVP behavior:
+Auth-scope behavior:
 
-- Display a Coming Soon indicator.
-- Do not open a RevenueCat paywall.
-- Do not imply that subscriptions can be purchased.
-- Do not show fake prices, plans, or benefits.
+- RevenueCat identity must use the Supabase UUID.
+- Subscription state must not leak between accounts.
+- Any purchasable Premium UI still requires accurate product, price, legal, and Play Console
+  configuration before release.
 
 Future behavior:
 
 - The row may open a RevenueCat-backed paywall.
 - Active subscribers should see plan or management status instead of acquisition-only UI.
 - Subscription management must lead to Google Play subscription management where required.
-- Account deletion must warn active subscribers that deleting a Habit Compass account may not
-  automatically cancel a Google Play subscription. See [account-lifecycle-spec.md](account-lifecycle-spec.md).
+- Account deletion must follow `/specs/auth/06-revenuecat-and-account-deletion.md`.
 
 ## Support And Feedback
 
@@ -288,7 +293,7 @@ Delete account:
 - Uses prominent destructive styling and a destructive icon.
 - Must be at least as visually strong as deleting a habit.
 - Must have sufficient spacing to avoid accidental taps.
-- Opens the account-deletion request flow in [account-lifecycle-spec.md](account-lifecycle-spec.md).
+- Opens the immediate account-deletion flow in `/specs/auth/06-revenuecat-and-account-deletion.md`.
 
 ## Footer
 
@@ -356,11 +361,10 @@ Settings-related fields include:
   explicit date interval and associated focus, Big Rocks, mood, and review answers remain unchanged.
 - Given an OAuth-only user opens Settings, then Security and sign-in is hidden.
 - Given an email/password user opens Settings, then Security and sign-in is visible.
-- Given MVP Premium is not active, then Premium displays Coming Soon and no paywall opens.
+- Given auth implementation is active, then Premium/subscription state follows `/specs/auth`.
 - Given a user signs out, then the app signs out only the current session unless a future spec adds
   global sign-out.
-- Given a user starts account deletion, then the deletion lifecycle follows
-  [account-lifecycle-spec.md](account-lifecycle-spec.md).
+- Given a user starts account deletion, then the deletion lifecycle follows `/specs/auth`.
 
 ## Test Plan
 

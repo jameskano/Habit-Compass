@@ -45,8 +45,9 @@ account, such as:
 - Authentication provider information.
 - Password authentication state handled by Supabase Auth. We do not store your plain-text password.
 - Session identifiers handled by Supabase Auth.
-- Account status, such as active or pending deletion.
-- Deletion request and scheduled deletion timestamps.
+- Account status and immediate deletion operation metadata.
+- Deletion request, reauthentication, subscription-cancellation, RevenueCat cleanup, and deletion
+  timestamps or operation status where needed.
 - Terms acceptance and privacy-notice presentation records when required.
 
 If you sign in with Google, Habit Compass may receive basic Google OAuth information needed for
@@ -127,7 +128,7 @@ We process data for these purposes:
 - Preserve saved historical weekly records and their explicit date ranges.
 - Let you export your data.
 - Respond to feedback and support requests.
-- Schedule, cancel, and complete account deletion.
+- Complete immediate account deletion and related subscription-cancellation checks.
 - Maintain security, prevent abuse, and debug technical issues.
 - Comply with legal obligations where applicable.
 
@@ -159,8 +160,10 @@ confirmed contracts and safeguards:
 - Supabase for authentication, database, Storage, Edge Functions, and related backend services:
   `[PROCESSOR OR SUBPROCESSOR DETAILS TO CONFIRM]`.
 - Google OAuth, when you choose Google sign-in.
-- Google Play, for app distribution, ratings/reviews, and future subscription management if Premium
-  launches.
+- Google Play, for app distribution, ratings/reviews, and subscription management where Premium or
+  account deletion requires it.
+- RevenueCat, for subscription identity, entitlement state, and subscription-aware account deletion:
+  `[PROCESSOR OR SUBPROCESSOR DETAILS TO CONFIRM]`.
 - Email-delivery provider for authentication, account, deletion, and support emails:
   `[EMAIL PROVIDER TO CONFIRM]`.
 - Hosting provider for public legal documents and future external account-deletion page:
@@ -195,7 +198,8 @@ Retention criteria:
 - Feedback retention: `[FEEDBACK RETENTION TO CONFIRM]`.
 - Feedback screenshot retention: `[FEEDBACK SCREENSHOT RETENTION TO CONFIRM]`.
 - Temporary export retention: `[EXPORT TEMP FILE RETENTION TO CONFIRM]`.
-- Account-deletion pending period: seven days from the server-recorded deletion request.
+- Account-deletion operation metadata is retained only as long as needed for reliable deletion,
+  security, fraud-prevention, legal, or compliance purposes to be confirmed before release.
 - Backup retention limitations: `[BACKUP RETENTION DETAILS TO CONFIRM]`.
 
 If any data must be retained for legal, security, fraud-prevention, or compliance reasons after
@@ -211,15 +215,19 @@ also provide a public web resource where you can request deletion without reinst
 
 When you request deletion:
 
-1. Your account is scheduled for permanent deletion in seven days.
-2. During the seven-day period, you can cancel deletion, export your data, or sign out.
-3. The normal app interface is unavailable while deletion is pending.
-4. After the scheduled date, Habit Compass permanently deletes your account and app data, subject to
+1. Habit Compass warns you that deletion is permanent and cannot be undone.
+2. Habit Compass requires reauthentication.
+3. If an active Google Play auto-renewing subscription exists, Habit Compass attempts to cancel
+   future renewal before deleting the account.
+4. If required subscription cancellation cannot be confirmed, account deletion stops and can be
+   retried.
+5. After required checks and cancellation complete, Habit Compass deletes your RevenueCat customer
+   record, Habit Compass app data, legal acceptance records, and Supabase Auth account, subject to
    any confirmed legal retention requirement.
 
-Deleting your Habit Compass account does not necessarily delete data held independently by third
-parties, such as Google Play ratings or future subscription records. If Premium subscriptions launch,
-the deletion flow and this policy must explain subscription cancellation separately.
+Deleting your Habit Compass account ends app access immediately and does not automatically refund
+unused subscription time. It does not necessarily delete data held independently by third parties,
+such as Google Play ratings or records that Google Play must retain.
 
 ## 10. Your Rights
 

@@ -25,12 +25,12 @@ The first Supabase schema for Habit Compass is defined across:
   - One row per authenticated user.
   - Stores app-level preferences: `language`, `theme_preference`, `first_day_of_week`,
     `timezone`, `onboarding_completed_at`, and `feature_flags`.
-  - Stores server-controlled account deletion lifecycle fields: `account_status`,
+  - Stores legacy server-controlled scheduled deletion lifecycle fields: `account_status`,
     `deletion_requested_at`, `deletion_scheduled_for`, `deletion_cancelled_at`,
     `deletion_request_source`, `deletion_finalization_started_at`,
     `deletion_finalization_attempts`, and `deletion_finalization_error`.
-  - Account lifecycle fields are changed only by privileged server paths and guarded from direct
-    client mutation by database trigger.
+  - These scheduled-deletion fields were implemented before `/specs/auth` made immediate deletion
+    canonical. New auth work must not use them as the active deletion model.
 - `categories`
   - Optional grouping for items and weekly priorities.
   - Stores customizable label name, required app-owned icon/color visual metadata, sort order,
@@ -111,12 +111,13 @@ are present in the current migration set; remaining items stay planned until the
 - `profiles.account_status`
   - Type: enum-like text such as `active` or `pending_deletion`.
   - Default: `active`.
-  - Owner: server-controlled for deletion lifecycle transitions.
+  - Owner: legacy server-controlled scheduled deletion flow.
   - Implemented by `0008_account_lifecycle.sql`.
+  - Auth target: immediate deletion in `/specs/auth` supersedes this as active product behavior.
 - `profiles.deletion_requested_at`, `profiles.deletion_scheduled_for`, `profiles.deletion_cancelled_at`
   - Type: timezone-aware timestamps.
-  - Owner: server-controlled deletion request/cancellation/finalization paths.
-  - Validation: scheduled deletion is seven days after request unless a future legal/product spec changes it.
+  - Owner: legacy server-controlled deletion request/cancellation/finalization paths.
+  - Validation: legacy scheduled deletion fields only. `/specs/auth` changed active deletion behavior to immediate permanent deletion.
   - Implemented by `0008_account_lifecycle.sql`.
 - `profiles.deletion_request_source`
   - Type: enum-like text: `in_app`, `external_web`, or `admin`.
@@ -154,6 +155,13 @@ are present in the current migration set; remaining items stay planned until the
 - `legal_document_versions` or equivalent config source
   - Stores active Privacy Policy and Terms versions, effective dates, locales, and public URLs if the app
     needs server-driven legal document metadata.
+- `user_account_capabilities`
+  - Canonical auth-scope table specified in `/specs/auth`.
+  - Server-managed answer for password and Google account capabilities.
+  - Replaces provider-classification heuristics as the source for Security and sign-in visibility.
+- `legal_acceptances`
+  - Canonical auth-scope table specified in `/specs/auth`.
+  - Append-only legal acceptance records keyed to Supabase Auth user ID and current legal versions.
 
 ## Data Export Shape
 

@@ -35,4 +35,4 @@ Optional depth must never block core habit tracking. A user who never configures
 
 ## Future Expansion Path
 
-The product can later grow into routines, projects, systems, Google Calendar integration, AI suggestions, subscriptions, and native mobile builds. Each expansion requires its own spec and review gate.
+The product can later grow into routines, projects, systems, Google Calendar integration, AI suggestions, and broader native mobile builds. Each expansion requires its own spec and review gate. `/specs/auth` is the active review gate for RevenueCat/subscriptions, immediate account deletion, and Android authentication deep links.

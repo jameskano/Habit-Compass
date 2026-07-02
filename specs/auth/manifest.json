@@ -1,0 +1,37 @@
+{
+  "package": "Habit Compass Authentication Specifications",
+  "version": "1.0.0",
+  "date": "2026-07-02",
+  "files": [
+    "00-scope-and-decisions.md",
+    "01-user-flows-and-ui.md",
+    "02-frontend-architecture.md",
+    "03-supabase-auth-and-data.md",
+    "04-session-routing-and-deep-links.md",
+    "05-security-and-account-settings.md",
+    "06-revenuecat-and-account-deletion.md",
+    "07-legal-acceptance.md",
+    "08-errors-accessibility-and-i18n.md",
+    "09-testing-and-acceptance-criteria.md",
+    "10-implementation-plan.md",
+    "11-technical-references.md",
+    "README.md"
+  ],
+  "status": "canonical-ready-for-implementation",
+  "supersedes": [
+    "specs/mvp/authentication-spec.md",
+    "specs/mvp/account-lifecycle-spec.md",
+    "specs/mvp/legal-documents-spec.md",
+    "authentication, Premium, and account-deletion sections of specs/mvp/settings-spec.md",
+    "legacy MVP deferrals for RevenueCat, subscriptions, Android auth deep links, and immediate account deletion"
+  ],
+  "canonicalDecisions": {
+    "routing": "TanStack Router",
+    "authRequired": true,
+    "anonymousMode": false,
+    "subscriptionsInScope": true,
+    "revenueCatInScope": true,
+    "androidAuthDeepLinksInScope": true,
+    "accountDeletion": "immediate_permanent"
+  }
+}

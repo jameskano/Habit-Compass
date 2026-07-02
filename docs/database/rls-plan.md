@@ -87,17 +87,17 @@ Settings-related tables that are specified but not yet implemented must follow t
 - Feedback attachments must be stored in a private bucket. Upload, download, and delete rules must prove
   ownership through the matching `feedback_attachments` or `feedback_submissions` row, and file size/type
   validation must happen before privileged notification or processing work.
-- Account deletion state must be server-controlled. Clients may request or cancel deletion only through
-  verified flows that require recent authentication; final deletion, Auth user removal, Storage cleanup, and
-  external-service cleanup must run through Edge Functions, Cron, or equivalent server-side jobs.
+- Account deletion must be server-controlled. `/specs/auth` requires immediate deletion after
+  verified reauthentication, subscription cancellation, RevenueCat customer deletion, app-data and
+  Storage cleanup, and Auth user deletion. Do not add new user-facing pending-deletion behavior.
 - `profiles` account lifecycle fields are protected from direct authenticated-client mutation by
   `public.prevent_client_account_lifecycle_mutation()`. Service-role Edge Functions are the intended
   mutation path for request, cancellation, and finalization.
 - `external_account_deletion_requests` stores only hashed request identifiers and has no direct
   anonymous/authenticated grants. The public deletion page writes through an Edge Function.
-- Pending-deletion accounts must not retain ordinary write access to app data. Future policies or RPC/Edge
-  Function guards must allow only the documented pending-deletion actions: cancel deletion, export data, and
-  sign out.
+- The earlier pending-deletion account state is legacy. New RLS or RPC work must not depend on a
+  user-facing pending-deletion phase. During deletion, privileged Edge Functions must perform the
+  verified cleanup and Auth user deletion server-side.
 - Legal document version fields must not be freely client-mutated in ways that let a user forge acceptance
   metadata. If stored on `profiles`, writes should be constrained to the current authenticated user and, where
   possible, mediated by a server-side action that records the active legal version.
@@ -121,4 +121,4 @@ Settings-related tables that are specified but not yet implemented must follow t
 - Registered-email enumeration: authentication, feedback, deletion, and reset flows should use neutral
   messages where possible.
 - Local cache after sign-out or deletion: clear sensitive TanStack Query/Zustand/local storage state before
-  returning to authentication or pending-deletion screens.
+  returning to authentication.
