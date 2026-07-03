@@ -153,15 +153,20 @@ are present in the current migration set; remaining items stay planned until the
   - Used only if export generation cannot stream directly to the app.
   - Requires expiration metadata and cleanup by scheduled server-side job.
 - `legal_document_versions` or equivalent config source
-  - Stores active Privacy Policy and Terms versions, effective dates, locales, and public URLs if the app
-    needs server-driven legal document metadata.
+  - Implemented by `20260702154444_auth_foundation.sql`.
+  - Stores server-controlled Terms and Privacy versions with effective dates and a single current
+    row per document type.
+  - Current rows are draft development metadata dated `2026-07-02`; final legal metadata is a
+    production release blocker.
 - `user_account_capabilities`
   - Canonical auth-scope table specified in `/specs/auth`.
   - Server-managed answer for password and Google account capabilities.
   - Replaces provider-classification heuristics as the source for Security and sign-in visibility.
+  - Implemented by `20260702154444_auth_foundation.sql`.
 - `legal_acceptances`
   - Canonical auth-scope table specified in `/specs/auth`.
   - Append-only legal acceptance records keyed to Supabase Auth user ID and current legal versions.
+  - Implemented by `20260702154444_auth_foundation.sql`.
 
 ## Data Export Shape
 
@@ -207,4 +212,7 @@ records from the current `first_day_of_week` value.
 ## Default Data
 
 - Default categories are provisioned per authenticated user by `ensure_default_categories_for_user()`.
+- Auth Phase 1 adds `ensure_user_provisioned()`, which creates a missing `profiles` row, provisions
+  protected default categories, and refreshes server-managed account capability flags for the
+  current authenticated user.
 - `supabase/seed.sql` contains commented examples only, because user-specific data depends on real auth user ids.

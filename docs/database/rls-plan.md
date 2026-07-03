@@ -61,11 +61,13 @@ The production-ready first-deploy RLS rules are implemented in the Supabase migr
 - `feedback_submissions`
 - `feedback_attachments`
 - `external_account_deletion_requests`
+- `user_account_capabilities`
+- `legal_document_versions`
+- `legal_acceptances`
 
 Settings-related tables that are specified but not yet implemented must follow the same owner-only pattern:
 
 - any temporary export metadata table
-- any legal document acceptance table, unless represented on `profiles`
 
 ## Database-Enforced Limits
 
@@ -99,8 +101,14 @@ Settings-related tables that are specified but not yet implemented must follow t
   user-facing pending-deletion phase. During deletion, privileged Edge Functions must perform the
   verified cleanup and Auth user deletion server-side.
 - Legal document version fields must not be freely client-mutated in ways that let a user forge acceptance
-  metadata. If stored on `profiles`, writes should be constrained to the current authenticated user and, where
-  possible, mediated by a server-side action that records the active legal version.
+  metadata. `legal_document_versions` is server-controlled; authenticated clients can read only
+  current versions.
+- `legal_acceptances` is append-only from the client perspective. Authenticated users can select
+  their own rows, but inserts happen through `accept_current_legal_documents(p_locale text)`.
+- `user_account_capabilities` is server-managed. Authenticated users can select their own row only;
+  direct client insert, update, and delete access is intentionally absent.
+- Auth Phase 1 RPCs are security-definer functions with fixed `search_path`, explicit
+  authenticated grants, and default public execution revoked.
 
 ## Settings Threat Considerations
 

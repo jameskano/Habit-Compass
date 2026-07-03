@@ -8,6 +8,10 @@ This folder contains the unapplied first-deploy Supabase schema for Habit Compas
 - `migrations/0002_habit_inactivity_periods.sql`: durable habit archive/pause-compatible intervals with RLS and current-archive backfill.
 - `migrations/0003_weekly_planning.sql`: weekly focus/review fields, habit-only Big Rocks, Big Rock count enforcement, and Big Rock RLS.
 - `migrations/0004_categories_management.sql`: protected default categories, custom-category constraints, and delete-with-reassignment behavior.
+- `migrations/20260702154444_auth_foundation.sql`: auth foundation tables, legal document versions,
+  legal acceptances, provisioning/capability RPCs, and RLS policies for `/specs/auth`.
+- `tests/auth_foundation_test.sql`: database/RLS tests for the auth foundation.
+- `config.toml`: local Supabase configuration for auth development.
 - `seed.sql`: commented example seed statements for a local authenticated user.
 
 ## Scope
@@ -23,6 +27,7 @@ The migration set covers:
 - reflections
 - weekly plans, weekly priorities, and weekly Big Rocks
 - rule-based suggestion events
+- auth foundation legal document version, legal acceptance, and account capability metadata
 
 It does not include:
 
@@ -34,7 +39,7 @@ It does not include:
 - Settings feedback/support tables
 - account-deletion pending-state fields and cleanup jobs
 - data-export Edge Functions or temporary export storage
-- legal document version/acceptance metadata
+- production-reviewed legal document version metadata
 - public external account-deletion page
 
 ## Design Notes
@@ -66,5 +71,12 @@ Once the Supabase CLI is introduced for this repo, the expected flow is:
 3. Create a local auth user.
 4. Uncomment or adapt the example rows in `seed.sql`.
 5. Run `supabase db lint` if available.
+
+Auth Phase 1 also expects:
+
+1. Run `pnpm exec supabase db reset`.
+2. Run `pnpm exec supabase test db`.
+3. Run `pnpm exec supabase db lint`.
+4. Run `pnpm exec supabase db advisors` when local services support it.
 
 Keep schema changes additive after first deployment and update `docs/database/schema-plan.md` and `docs/database/rls-plan.md` whenever behavior or ownership rules change.
