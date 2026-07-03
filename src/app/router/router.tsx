@@ -59,17 +59,31 @@ const OnboardingPage = lazyRouteComponent(
   () => import('../../features/onboarding/OnboardingPage'),
   'OnboardingPage',
 )
-const SignInPlaceholderPage = lazyRouteComponent(
-  () => import('../../features/auth/AuthPlaceholderPage'),
-  'SignInPlaceholderPage',
+const SignInPage = lazyRouteComponent(() => import('../../features/auth/SignInPage'), 'SignInPage')
+const SignUpPage = lazyRouteComponent(() => import('../../features/auth/SignUpPage'), 'SignUpPage')
+const EmailCodePage = lazyRouteComponent(
+  () => import('../../features/auth/EmailCodePage'),
+  'EmailCodePage',
 )
-const AuthCallbackPlaceholderPage = lazyRouteComponent(
-  () => import('../../features/auth/AuthPlaceholderPage'),
-  'AuthCallbackPlaceholderPage',
+const EmailCodeVerifyPage = lazyRouteComponent(
+  () => import('../../features/auth/EmailCodeVerifyPage'),
+  'EmailCodeVerifyPage',
 )
-const ResetPasswordPlaceholderPage = lazyRouteComponent(
-  () => import('../../features/auth/AuthPlaceholderPage'),
-  'ResetPasswordPlaceholderPage',
+const VerifyEmailPage = lazyRouteComponent(
+  () => import('../../features/auth/VerifyEmailPage'),
+  'VerifyEmailPage',
+)
+const ForgotPasswordPage = lazyRouteComponent(
+  () => import('../../features/auth/ForgotPasswordPage'),
+  'ForgotPasswordPage',
+)
+const AuthCallbackPage = lazyRouteComponent(
+  () => import('../../features/auth/AuthCallbackPage'),
+  'AuthCallbackPage',
+)
+const ResetPasswordPage = lazyRouteComponent(
+  () => import('../../features/auth/ResetPasswordPage'),
+  'ResetPasswordPage',
 )
 const PendingDeletionPage = lazyRouteComponent(
   () => import('../../features/account/PendingDeletionPage'),
@@ -173,7 +187,47 @@ const signInRoute = createRoute({
   path: '/auth/sign-in',
   component: () => (
     <GuestRoute>
-      <SignInPlaceholderPage />
+      <SignInPage />
+    </GuestRoute>
+  ),
+})
+
+const signUpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/sign-up',
+  component: () => (
+    <GuestRoute>
+      <SignUpPage />
+    </GuestRoute>
+  ),
+})
+
+const emailCodeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/email-code',
+  component: () => (
+    <GuestRoute>
+      <EmailCodePage />
+    </GuestRoute>
+  ),
+})
+
+const emailCodeVerifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/email-code/verify',
+  component: () => (
+    <GuestRoute>
+      <EmailCodeVerifyPage />
+    </GuestRoute>
+  ),
+})
+
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/verify-email',
+  component: () => (
+    <GuestRoute>
+      <VerifyEmailPage />
     </GuestRoute>
   ),
 })
@@ -181,9 +235,15 @@ const signInRoute = createRoute({
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
+  component: AuthCallbackPage,
+})
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/forgot-password',
   component: () => (
     <GuestRoute>
-      <AuthCallbackPlaceholderPage />
+      <ForgotPasswordPage />
     </GuestRoute>
   ),
 })
@@ -191,11 +251,7 @@ const authCallbackRoute = createRoute({
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/reset-password',
-  component: () => (
-    <GuestRoute>
-      <ResetPasswordPlaceholderPage />
-    </GuestRoute>
-  ),
+  component: ResetPasswordPage,
 })
 
 const legalAcceptanceRoute = createRoute({
@@ -235,6 +291,11 @@ const externalAccountDeletionRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   signInRoute,
+  signUpRoute,
+  emailCodeRoute,
+  emailCodeVerifyRoute,
+  verifyEmailRoute,
+  forgotPasswordRoute,
   authCallbackRoute,
   resetPasswordRoute,
   legalAcceptanceRoute,

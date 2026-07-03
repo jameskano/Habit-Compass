@@ -63,9 +63,13 @@ export type MockDataState = {
     currentEmail: string
     currentPassword: string
     emailChangeRequests: string[]
+    emailCodeRequests: string[]
+    emailCodeVerifications: string[]
+    googleSignInRequests: string[]
     legalAcceptedAt: string | null
     passwordResetRequests: string[]
     passwordUpdateRequests: string[]
+    signUpRequests: string[]
     providerClassification: AccountProviderClassification
     signedIn: boolean
     signOutScopes: string[]
@@ -370,9 +374,13 @@ const createInitialMockData = (): MockDataState => {
       currentEmail: 'person@example.com',
       currentPassword: 'current-password',
       emailChangeRequests: [],
+      emailCodeRequests: [],
+      emailCodeVerifications: [],
+      googleSignInRequests: [],
       legalAcceptedAt: toIsoDateTime(today),
       passwordResetRequests: [],
       passwordUpdateRequests: [],
+      signUpRequests: [],
       providerClassification: 'email_password',
       signedIn: true,
       signOutScopes: [],

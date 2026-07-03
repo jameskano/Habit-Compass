@@ -56,6 +56,82 @@ export type CurrentLegalStatus = {
   acceptedAt: string | null
 }
 
+export const authErrorCodes = [
+  'INVALID_CREDENTIALS',
+  'EMAIL_NOT_CONFIRMED',
+  'EMAIL_ALREADY_IN_USE',
+  'INVALID_EMAIL',
+  'WEAK_PASSWORD',
+  'PASSWORD_MISMATCH',
+  'CURRENT_PASSWORD_INCORRECT',
+  'OTP_INVALID',
+  'OTP_EXPIRED',
+  'RATE_LIMITED',
+  'PROVIDER_UNAVAILABLE',
+  'CALLBACK_INVALID',
+  'SESSION_EXPIRED',
+  'NETWORK',
+  'PROVISIONING_FAILED',
+  'LEGAL_ACCEPTANCE_FAILED',
+  'SUBSCRIPTION_STATUS_FAILED',
+  'SUBSCRIPTION_CANCELLATION_FAILED',
+  'ACCOUNT_DELETION_FAILED',
+  'UNKNOWN',
+] as const
+
+export type AuthErrorCode = (typeof authErrorCodes)[number]
+
+export type CurrentLegalVersions = {
+  currentTermsVersion: string
+  currentPrivacyPolicyVersion: string
+}
+
+export type SignInWithPasswordInput = {
+  email: string
+  password: string
+}
+
+export type RequestEmailCodeInput = {
+  email: string
+}
+
+export type VerifyEmailCodeInput = {
+  email: string
+  token: string
+}
+
+export type SignUpWithPasswordInput = {
+  email: string
+  password: string
+  emailRedirectTo: string
+}
+
+export type SignInWithGoogleInput = {
+  redirectTo: string
+}
+
+export type ResendSignupConfirmationInput = {
+  email: string
+  emailRedirectTo: string
+}
+
+export type RequestPasswordResetInput = {
+  email: string
+  redirectTo: string
+}
+
+export type ExchangeAuthCodeInput = {
+  code: string
+}
+
+export type UpdateRecoveredPasswordInput = {
+  newPassword: string
+}
+
+export type AcceptCurrentLegalDocumentsInput = {
+  locale: 'en' | 'es'
+}
+
 export type RequestEmailChangeInput = {
   newEmail: string
 }

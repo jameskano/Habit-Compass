@@ -71,6 +71,66 @@ describe('app shell', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('signs in with password and returns through the auth decision flow', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+    render(<App />)
+
+    await user.type(await screen.findByLabelText('Email'), 'person@example.com')
+    await user.type(screen.getByLabelText('Password'), 'current-password')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.signedIn).toBe(true)
+  })
+
+  it('requests and verifies an email sign-in code', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/email-code' })
+    })
+    render(<App />)
+
+    await user.type(await screen.findByLabelText('Email'), 'person@example.com')
+    await user.click(screen.getByRole('button', { name: 'Send code' }))
+    expect(await screen.findByRole('heading', { name: 'Enter code', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.emailCodeRequests).toEqual(['person@example.com'])
+
+    await user.type(screen.getByLabelText('Six-digit code'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Verify code' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.emailCodeVerifications).toEqual(['person@example.com'])
+  })
+
+  it('requires legal acknowledgement before creating an account', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-up' })
+    })
+    render(<App />)
+
+    await user.type(await screen.findByLabelText('Email'), 'new@example.com')
+    await user.type(screen.getByLabelText('Password'), 'new-password')
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(
+      await screen.findByText('Review and accept the legal acknowledgement to continue.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Check your email', level: 1 }),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.signUpRequests).toEqual(['new@example.com'])
+  })
+
   it('redirects authenticated users without legal acceptance outside the app shell', async () => {
     getMockState().authSession.acceptedLegalDocuments = false
     await act(async () => {
@@ -317,7 +377,9 @@ describe('app shell', () => {
 
     expect(await screen.findByRole('heading', { name: 'Categories', level: 1 })).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
-    expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
+    })
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/settings')
     const infoButton = screen.getByRole('button', { name: 'Information about categories' })
     const createButton = screen.getByRole('button', { name: 'Create category' })

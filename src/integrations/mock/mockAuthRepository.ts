@@ -106,6 +106,114 @@ export const mockAuthRepository: AuthRepository = {
     })
   },
 
+  async signInWithPassword(input) {
+    const authSession = getMockState().authSession
+
+    if (input.email !== authSession.currentEmail || input.password !== authSession.currentPassword) {
+      return err(createAppError('unauthorized', 'Authentication failed.'))
+    }
+
+    authSession.signedIn = true
+    authSession.providerClassification = 'email_password'
+    authEventSubscribers.forEach((subscriber) => subscriber())
+
+    return ok(null)
+  },
+
+  async requestEmailCode(input) {
+    getMockState().authSession.emailCodeRequests.push(input.email)
+    return ok(null)
+  },
+
+  async verifyEmailCode(input) {
+    const authSession = getMockState().authSession
+
+    if (input.token !== '123456') {
+      return err(createAppError('validation', 'Authentication failed.'))
+    }
+
+    authSession.emailCodeVerifications.push(input.email)
+    authSession.currentEmail = input.email
+    authSession.signedIn = true
+    authSession.providerClassification = 'email_password'
+    authEventSubscribers.forEach((subscriber) => subscriber())
+
+    return ok(null)
+  },
+
+  async signUpWithPassword(input) {
+    const authSession = getMockState().authSession
+    authSession.signUpRequests.push(input.email)
+    authSession.currentEmail = input.email
+    authSession.currentPassword = input.password
+    authSession.signedIn = false
+    authSession.acceptedLegalDocuments = false
+
+    return ok(null)
+  },
+
+  async signInWithGoogle(input) {
+    const authSession = getMockState().authSession
+    authSession.googleSignInRequests.push(input.redirectTo)
+    authSession.signedIn = true
+    authSession.providerClassification = 'oauth_only'
+    authEventSubscribers.forEach((subscriber) => subscriber())
+
+    return ok(null)
+  },
+
+  async resendSignupConfirmation(input) {
+    getMockState().authSession.emailCodeRequests.push(input.email)
+    return ok(null)
+  },
+
+  async requestPasswordReset(input) {
+    getMockState().authSession.passwordResetRequests.push(input.email)
+    return ok(null)
+  },
+
+  async exchangeAuthCode(input) {
+    if (input.code === 'bad-code') {
+      return err(createAppError('validation', 'Authentication failed.'))
+    }
+
+    const authSession = getMockState().authSession
+    authSession.signedIn = true
+    authEventSubscribers.forEach((subscriber) => subscriber())
+
+    return ok(null)
+  },
+
+  async updateRecoveredPassword(input) {
+    const authSession = getMockState().authSession
+    authSession.currentPassword = input.newPassword
+    authSession.passwordUpdateRequests.push(input.newPassword)
+
+    return ok(null)
+  },
+
+  async getCurrentLegalVersions() {
+    const authSession = getMockState().authSession
+
+    return ok({
+      currentPrivacyPolicyVersion: authSession.currentPrivacyPolicyVersion,
+      currentTermsVersion: authSession.currentTermsVersion,
+    })
+  },
+
+  async acceptCurrentLegalDocuments(input) {
+    const authSession = getMockState().authSession
+
+    if (!['en', 'es'].includes(input.locale)) {
+      return err(createAppError('validation', 'Authentication failed.'))
+    }
+
+    authSession.acceptedLegalDocuments = true
+    authSession.legalAcceptedAt = new Date().toISOString()
+
+    return ok(null)
+  },
+
   async requestEmailChange(input) {
     const authSession = getMockState().authSession
 

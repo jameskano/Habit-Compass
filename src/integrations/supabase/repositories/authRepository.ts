@@ -6,8 +6,10 @@ import type {
   AuthSessionSnapshot,
   AuthSessionUser,
   CurrentLegalStatus,
+  CurrentLegalVersions,
 } from '@/domain/auth'
 import { classifyAccountProviders } from '@/domain/auth'
+import { createAuthAppError, mapSupabaseAuthError } from '@/domain/auth/authErrors'
 import { createAppError } from '@/shared/utils/appError'
 import { err, ok } from '@/shared/utils/result'
 
@@ -15,6 +17,9 @@ import { getSupabaseClient } from '../client'
 
 const sanitizeAuthError = (message: string, cause: unknown) =>
   createAppError('unknown', message, { cause })
+
+const authErr = (cause: unknown, fallback: Parameters<typeof createAuthAppError>[0]) =>
+  err(createAuthAppError(mapSupabaseAuthError(cause, fallback), 'Authentication failed.', cause))
 
 const toAuthEventName = (event: AuthChangeEvent): AuthEventName => {
   switch (event) {
@@ -49,6 +54,11 @@ type LegalStatusRpcRow = {
   current_terms_version: string
   current_privacy_policy_version: string
   accepted_at: string | null
+}
+
+type LegalVersionsRpcRow = {
+  current_terms_version: string
+  current_privacy_policy_version: string
 }
 
 export const supabaseAuthRepository: AuthRepository = {
@@ -169,6 +179,179 @@ export const supabaseAuthRepository: AuthRepository = {
         ? 'unknown'
         : classifyAccountProviders(identityData.identities),
     })
+  },
+
+  async signInWithPassword(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: input.email,
+      password: input.password,
+    })
+
+    if (error) {
+      return authErr(error, 'INVALID_CREDENTIALS')
+    }
+
+    return ok(null)
+  },
+
+  async requestEmailCode(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.signInWithOtp({
+      email: input.email,
+      options: {
+        shouldCreateUser: false,
+      },
+    })
+
+    if (error) {
+      const authCode = mapSupabaseAuthError(error, 'UNKNOWN')
+      return authCode === 'RATE_LIMITED' ? authErr(error, authCode) : ok(null)
+    }
+
+    return ok(null)
+  },
+
+  async verifyEmailCode(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.verifyOtp({
+      email: input.email,
+      token: input.token,
+      type: 'email',
+    })
+
+    if (error) {
+      return authErr(error, 'OTP_INVALID')
+    }
+
+    return ok(null)
+  },
+
+  async signUpWithPassword(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        emailRedirectTo: input.emailRedirectTo,
+      },
+    })
+
+    if (error) {
+      const authCode = mapSupabaseAuthError(error, 'UNKNOWN')
+      return authCode === 'EMAIL_ALREADY_IN_USE' ? ok(null) : authErr(error, authCode)
+    }
+
+    return ok(null)
+  },
+
+  async signInWithGoogle(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: input.redirectTo,
+      },
+    })
+
+    if (error) {
+      return authErr(error, 'PROVIDER_UNAVAILABLE')
+    }
+
+    return ok(null)
+  },
+
+  async resendSignupConfirmation(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.resend({
+      email: input.email,
+      type: 'signup',
+      options: {
+        emailRedirectTo: input.emailRedirectTo,
+      },
+    })
+
+    if (error) {
+      const authCode = mapSupabaseAuthError(error, 'RATE_LIMITED')
+      return authCode === 'RATE_LIMITED' ? authErr(error, authCode) : ok(null)
+    }
+
+    return ok(null)
+  },
+
+  async requestPasswordReset(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(input.email, {
+      redirectTo: input.redirectTo,
+    })
+
+    if (error) {
+      const authCode = mapSupabaseAuthError(error, 'UNKNOWN')
+      return authCode === 'RATE_LIMITED' ? authErr(error, authCode) : ok(null)
+    }
+
+    return ok(null)
+  },
+
+  async exchangeAuthCode(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(input.code)
+
+    if (error) {
+      return authErr(error, 'CALLBACK_INVALID')
+    }
+
+    return ok(null)
+  },
+
+  async updateRecoveredPassword(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.auth.updateUser({ password: input.newPassword })
+
+    if (error) {
+      return authErr(error, 'WEAK_PASSWORD')
+    }
+
+    return ok(null)
+  },
+
+  async getCurrentLegalVersions() {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase.rpc('get_current_legal_versions')
+
+    if (error) {
+      return err(
+        createAuthAppError('LEGAL_ACCEPTANCE_FAILED', 'Could not load legal versions.', error),
+      )
+    }
+
+    const row = (Array.isArray(data) ? data[0] : data) as LegalVersionsRpcRow | undefined
+
+    if (!row) {
+      return err(createAuthAppError('LEGAL_ACCEPTANCE_FAILED', 'Legal versions returned no data.'))
+    }
+
+    const versions: CurrentLegalVersions = {
+      currentPrivacyPolicyVersion: row.current_privacy_policy_version,
+      currentTermsVersion: row.current_terms_version,
+    }
+
+    return ok(versions)
+  },
+
+  async acceptCurrentLegalDocuments(input) {
+    const supabase = getSupabaseClient()
+    const { error } = await supabase.rpc('accept_current_legal_documents', {
+      p_locale: input.locale,
+    })
+
+    if (error) {
+      return err(
+        createAuthAppError('LEGAL_ACCEPTANCE_FAILED', 'Could not accept legal documents.', error),
+      )
+    }
+
+    return ok(null)
   },
 
   async requestEmailChange(input) {
