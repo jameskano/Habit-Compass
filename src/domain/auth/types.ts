@@ -16,6 +16,46 @@ export type AuthSecurityProfile = {
   providerClassification: AccountProviderClassification
 }
 
+export type AuthSessionUser = {
+  id: string
+  email: string | null
+}
+
+export type AuthSessionSnapshot = {
+  user: AuthSessionUser
+}
+
+export type AuthEventName =
+  | 'INITIAL_SESSION'
+  | 'SIGNED_IN'
+  | 'SIGNED_OUT'
+  | 'PASSWORD_RECOVERY'
+  | 'TOKEN_REFRESHED'
+  | 'USER_UPDATED'
+  | 'UNKNOWN'
+
+export type AuthStateChangeHandler = (
+  event: AuthEventName,
+  session: AuthSessionSnapshot | null,
+) => void
+
+export type AuthSubscription = {
+  unsubscribe: () => void
+}
+
+export type UserAccountCapabilities = {
+  userId: string
+  passwordEnabled: boolean
+  googleEnabled: boolean
+}
+
+export type CurrentLegalStatus = {
+  accepted: boolean
+  currentTermsVersion: string
+  currentPrivacyPolicyVersion: string
+  acceptedAt: string | null
+}
+
 export type RequestEmailChangeInput = {
   newEmail: string
 }

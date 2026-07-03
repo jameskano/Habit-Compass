@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { IntlProvider } from 'react-intl'
 
 import { getDeviceLocale, resolveAppLocale } from '@/domain/settings'
+import { AuthProvider } from '@/features/auth/AuthProvider'
 import { Toaster } from '@/shared/ui/sonner'
 
 import { useAppPreferencesStore } from '../state/appPreferencesStore'
@@ -27,10 +28,12 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
     <SentryProvider>
       <IntlProvider locale={resolvedLocale} messages={getMessages(resolvedLocale)}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </IntlProvider>
     </SentryProvider>

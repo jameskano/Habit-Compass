@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
+import { saveIntendedRoute } from './features/auth/intendedRoute'
+import { useTodayOrderStore } from './features/today/todayOrderStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 
 const chooseSelectOption = async (
@@ -19,6 +21,8 @@ const chooseSelectOption = async (
 describe('app shell', () => {
   beforeEach(async () => {
     resetMockState()
+    window.sessionStorage.clear()
+    useTodayOrderStore.getState().resetOrderStore()
     useAppPreferencesStore.setState({
       theme: 'system',
       locale: 'en',
@@ -48,6 +52,75 @@ describe('app shell', () => {
     expect(screen.getByTestId('shell-section-icon')).toBeInTheDocument()
     expect(screen.queryByText('Habit Compass')).not.toBeInTheDocument()
     expect(screen.queryByText('Simple by default, deep by choice')).not.toBeInTheDocument()
+  })
+
+  it('redirects unauthenticated protected routes to sign in outside the app shell', async () => {
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('redirects authenticated users without legal acceptance outside the app shell', async () => {
+    getMockState().authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('redirects authenticated guest routes to the intended route', async () => {
+    saveIntendedRoute('/items')
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Habits', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('renders auth callback and public legal routes outside the app shell', async () => {
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/callback' })
+    })
+    const { unmount } = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Finishing sign-in', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    unmount()
+    await act(async () => {
+      await router.navigate({ to: '/legal/privacy-policy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
@@ -1360,11 +1433,12 @@ describe('app shell', () => {
     expect(screen.queryByRole('button', { name: /Change email address/ })).not.toBeInTheDocument()
   })
 
-  it('confirms sign out, uses local current-session scope, and routes to signed out', async () => {
+  it('confirms sign out, uses local current-session scope, clears user state, and routes to sign in', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings' })
     })
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
     render(<App />)
 
     await user.click(await screen.findByRole('button', { name: 'Sign out' }))
@@ -1382,10 +1456,11 @@ describe('app shell', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+      expect(screen.getByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
     })
     expect(getMockState().authSession.signedIn).toBe(false)
     expect(getMockState().authSession.signOutScopes).toEqual(['local'])
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
@@ -1587,7 +1662,9 @@ describe('app shell', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
     expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
-    expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Before purchasable Premium subscriptions are released/i),
+    ).toBeInTheDocument()
   })
 
   it('opens the rating fallback from Settings and validates required feedback on Support', async () => {

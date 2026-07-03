@@ -57,9 +57,13 @@ const buildCategoryBaseFields = (id: EntityId) => {
 
 export type MockDataState = {
   authSession: {
+    acceptedLegalDocuments: boolean
+    currentPrivacyPolicyVersion: string
+    currentTermsVersion: string
     currentEmail: string
     currentPassword: string
     emailChangeRequests: string[]
+    legalAcceptedAt: string | null
     passwordResetRequests: string[]
     passwordUpdateRequests: string[]
     providerClassification: AccountProviderClassification
@@ -360,9 +364,13 @@ const createInitialMockData = (): MockDataState => {
 
   return {
     authSession: {
+      acceptedLegalDocuments: true,
+      currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
+      currentTermsVersion: 'terms-draft-2026-07-02',
       currentEmail: 'person@example.com',
       currentPassword: 'current-password',
       emailChangeRequests: [],
+      legalAcceptedAt: toIsoDateTime(today),
       passwordResetRequests: [],
       passwordUpdateRequests: [],
       providerClassification: 'email_password',

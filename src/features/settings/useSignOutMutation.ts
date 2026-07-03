@@ -1,15 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 
-import { authRepository } from '@/integrations/repositories'
-import { unwrapResult } from '@/shared/utils/result'
+import { useAuth } from '@/features/auth/authContext'
 
 export const useSignOutMutation = () => {
-  const queryClient = useQueryClient()
+  const { signOut } = useAuth()
 
   return useMutation({
-    mutationFn: async () => unwrapResult(await authRepository.signOutLocal()),
-    onSuccess: () => {
-      queryClient.clear()
-    },
+    mutationFn: signOut,
   })
 }

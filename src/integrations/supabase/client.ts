@@ -5,7 +5,16 @@ const supabasePublishableKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase =
-  supabaseUrl && supabasePublishableKey ? createClient(supabaseUrl, supabasePublishableKey) : null
+  supabaseUrl && supabasePublishableKey
+    ? createClient(supabaseUrl, supabasePublishableKey, {
+        auth: {
+          autoRefreshToken: true,
+          detectSessionInUrl: false,
+          flowType: 'pkce',
+          persistSession: true,
+        },
+      })
+    : null
 
 export const getSupabaseClient = () => {
   if (!supabase) {

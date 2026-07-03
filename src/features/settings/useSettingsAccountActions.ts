@@ -59,7 +59,7 @@ export const useSettingsAccountActions = (
     signOutMutation.mutate(undefined, {
       onSuccess: () => {
         setSignOutDialogOpen(false)
-        navigate({ to: '/signed-out' })
+        navigate({ to: '/auth/sign-in' })
       },
       onError: () => setSignOutError(true),
     })
