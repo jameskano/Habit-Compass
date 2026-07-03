@@ -31,7 +31,7 @@ export const VerifyEmailPage = () => {
       unwrapResult(
         await authRepository.resendSignupConfirmation({
           email,
-          emailRedirectTo: getAuthCallbackUrl(),
+          emailRedirectTo: getAuthCallbackUrl('signup'),
         }),
       )
       setSent(true)

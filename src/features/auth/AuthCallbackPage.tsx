@@ -9,37 +9,56 @@ import { unwrapResult } from '@/shared/utils/result'
 
 import { AuthAlert, AuthStatus } from './AuthFormControls'
 import { AuthShell, AuthTextLink } from './AuthShell'
+import { parseAuthCallbackSearch, type AuthCallbackSearch } from './authRedirects'
+import { useAuth } from './authContext'
 import { clearPendingAuthState, savePendingAuthState } from './pendingAuthState'
 import { useAuthFormError } from './useAuthFormError'
 import { usePostAuthNavigation } from './usePostAuthNavigation'
 
-type CallbackSearch = {
-  code?: string
-  error?: string
-  flow?: string
-}
-
 export const AuthCallbackPage = () => {
-  const search = useSearch({ strict: false }) as CallbackSearch
+  const search = useSearch({ strict: false }) as AuthCallbackSearch
   const navigate = useNavigate()
   const postAuthNavigate = usePostAuthNavigation()
+  const { refreshAccountContext } = useAuth()
   const { captureError, errorCode } = useAuthFormError()
   const [processing, setProcessing] = useState(true)
+  const {
+    code,
+    error,
+    error_code: errorCodeParam,
+    error_description: errorDescription,
+    flow,
+  } = search
 
   useEffect(() => {
     let active = true
 
     const processCallback = async () => {
       try {
-        if (search.error || !search.code) {
+        const callback = parseAuthCallbackSearch({
+          code,
+          error,
+          error_code: errorCodeParam,
+          error_description: errorDescription,
+          flow,
+        })
+
+        if (!callback.valid || callback.error || !callback.code) {
           throw createAuthAppError('CALLBACK_INVALID')
         }
 
-        unwrapResult(await authRepository.exchangeAuthCode({ code: search.code }))
+        unwrapResult(await authRepository.exchangeAuthCode({ code: callback.code }))
 
-        if (search.flow === 'recovery') {
+        if (callback.flow === 'recovery') {
           savePendingAuthState({ flow: 'recovery' })
           await navigate({ replace: true, to: '/auth/reset-password' })
+          return
+        }
+
+        if (callback.flow === 'email-change') {
+          clearPendingAuthState()
+          await refreshAccountContext()
+          await navigate({ replace: true, to: '/settings/security' })
           return
         }
 
@@ -59,7 +78,17 @@ export const AuthCallbackPage = () => {
     return () => {
       active = false
     }
-  }, [captureError, navigate, postAuthNavigate, search.code, search.error, search.flow])
+  }, [
+    captureError,
+    navigate,
+    postAuthNavigate,
+    refreshAccountContext,
+    code,
+    error,
+    errorCodeParam,
+    errorDescription,
+    flow,
+  ])
 
   return (
     <AuthShell titleId="auth.callback.title" descriptionId="auth.callback.description">

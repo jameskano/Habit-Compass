@@ -43,7 +43,7 @@ export const SignUpPage = () => {
       unwrapResult(
         await authRepository.signUpWithPassword({
           email,
-          emailRedirectTo: getAuthCallbackUrl(),
+          emailRedirectTo: getAuthCallbackUrl('signup'),
           password: values.password,
         }),
       )
@@ -64,8 +64,14 @@ export const SignUpPage = () => {
 
     try {
       const legalIntent = await prepareLegalIntent()
-      savePendingAuthState({ email: normalizeEmail(form.getValues('email')), flow: 'signup', legalIntent })
-      unwrapResult(await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl() }))
+      savePendingAuthState({
+        email: normalizeEmail(form.getValues('email')),
+        flow: 'signup',
+        legalIntent,
+      })
+      unwrapResult(
+        await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl('signup') }),
+      )
     } catch (error) {
       captureError(error)
     }

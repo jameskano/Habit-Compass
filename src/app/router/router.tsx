@@ -12,6 +12,7 @@ import {
   LegalAcceptanceRoute,
   ProtectedAppRoute,
 } from '@/features/auth/AuthRouteGuards'
+import { AuthDeepLinkHandler } from '@/features/auth/AuthDeepLinkHandler'
 import { LegalAcceptancePage } from '@/features/auth/LegalAcceptancePage'
 import { TodayPage } from '../../features/today/TodayPage'
 import { RoutePendingState } from '../../shared/ui/LazyLoadingFallbacks'
@@ -95,7 +96,12 @@ const ExternalAccountDeletionPage = lazyRouteComponent(
 )
 
 const rootRoute = createRootRoute({
-  component: () => <Outlet />,
+  component: () => (
+    <>
+      <AuthDeepLinkHandler />
+      <Outlet />
+    </>
+  ),
 })
 
 const indexRoute = createRoute({

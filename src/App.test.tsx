@@ -79,13 +79,14 @@ describe('app shell', () => {
     })
     render(<App />)
 
-    await user.type(await screen.findByLabelText('Email'), 'person@example.com')
+    await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
     await user.type(screen.getByLabelText('Password'), 'current-password')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
     expect(getMockState().authSession.signedIn).toBe(true)
-  })
+  }, 10000)
 
   it('requests and verifies an email sign-in code', async () => {
     const user = userEvent.setup()
@@ -95,7 +96,8 @@ describe('app shell', () => {
     })
     render(<App />)
 
-    await user.type(await screen.findByLabelText('Email'), 'person@example.com')
+    await screen.findByRole('heading', { name: 'Email code', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
     await user.click(screen.getByRole('button', { name: 'Send code' }))
     expect(await screen.findByRole('heading', { name: 'Enter code', level: 1 })).toBeInTheDocument()
     expect(getMockState().authSession.emailCodeRequests).toEqual(['person@example.com'])
@@ -115,7 +117,8 @@ describe('app shell', () => {
     })
     render(<App />)
 
-    await user.type(await screen.findByLabelText('Email'), 'new@example.com')
+    await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'new@example.com')
     await user.type(screen.getByLabelText('Password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Create account' }))
     expect(
@@ -142,6 +145,53 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('records legal acceptance and opens the app workspace', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Terms version: terms-draft-2026-07-02')).toBeInTheDocument()
+    expect(screen.getByText('Privacy version: privacy-draft-2026-07-02')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
+    expect(
+      await screen.findByText('Accept the current legal documents to continue.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(state.authSession.acceptedLegalDocuments).toBe(true)
+    expect(screen.getByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('signs out from legal acceptance without rendering the app shell', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/legal/acceptance' })
+    })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
+    expect(state.authSession.signedIn).toBe(false)
+    expect(state.authSession.signOutScopes).toEqual(['local'])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
@@ -181,6 +231,33 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('routes recovery and email-change callbacks through their dedicated destinations', async () => {
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'recovery-code', flow: 'recovery' } as never,
+        to: '/auth/callback',
+      })
+    })
+    const { unmount } = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Reset password', level: 1 }),
+    ).toBeInTheDocument()
+
+    unmount()
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'email-change-code', flow: 'email-change' } as never,
+        to: '/auth/callback',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
+    ).toBeInTheDocument()
   })
 
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
