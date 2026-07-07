@@ -39,3 +39,14 @@ export type CancelAccountDeletionResult = {
   accountStatus: 'active'
   deletionCancelledAt: string
 }
+
+export type DeleteAccountInput = {
+  currentPassword?: string
+  idempotencyKey: string
+  reauthProvider: 'password' | 'google'
+}
+
+export type DeleteAccountResult = {
+  deleted: true
+  operationId: string
+}

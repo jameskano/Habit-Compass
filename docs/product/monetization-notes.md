@@ -1,17 +1,19 @@
-# Monetization Notes
+# Monetization And RevenueCat Notes
 
-No subscription behavior is in MVP.
+RevenueCat and subscription identity are now in scope for the authentication feature through
+`/specs/auth`. Treat older MVP monetization deferral as superseded for auth work.
 
-Future monetization must not compromise the simple tracker experience. Keep core create, complete, and review flows usable.
+Subscription behavior must not compromise the simple tracker experience. Keep core create, complete,
+and review flows usable.
 
-MVP Settings may show `Habit Compass Premium` only as a Coming Soon row. It must not open a
-RevenueCat paywall, show fake prices, or imply purchases are available.
+Any purchasable Premium UI must use accurate product, price, renewal, cancellation, refund, Google
+Play, RevenueCat, Privacy Policy, Terms, and Play Console configuration. Do not show fake prices or
+fake plans.
 
-Before Premium launches:
+Auth implementation must:
 
-- Update the Premium product spec.
-- Update Privacy Policy, Terms of Service, and Play Console Data Safety.
-- Add accurate Google Play subscription management.
-- Add the account-deletion warning that deleting a Habit Compass account does not automatically
-  cancel a Google Play subscription.
-- Define RevenueCat customer deletion or anonymization behavior.
+- Use the Supabase UUID as the RevenueCat App User ID.
+- Prevent entitlement/customer state from leaking between accounts.
+- Cancel required Google Play auto-renewing subscriptions server-side before account deletion.
+- Delete the RevenueCat customer server-side before Supabase Auth deletion.
+- Disclose immediate access loss and no automatic refund during deletion.

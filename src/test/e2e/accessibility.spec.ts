@@ -47,7 +47,7 @@ test.describe('accessibility smoke checks', () => {
         excludedSelectors: ['[data-item-waterfall-index]'],
       },
       { path: '/settings', heading: 'Settings' },
-      { path: '/signed-out', heading: "You're signed out" },
+      { path: '/legal/privacy-policy', heading: 'Privacy Policy' },
     ]
 
     for (const route of routes) {

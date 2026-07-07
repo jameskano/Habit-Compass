@@ -2,8 +2,11 @@
 
 ## Status
 
-Future dependency. This spec preserves authentication and Security and sign-in decisions required by
-Settings. It does not authorize implementation during the Settings documentation phase.
+Superseded for implementation by `/specs/auth`.
+
+This document is historical context for earlier Settings work. Do not use it as active guidance where
+it conflicts with `/specs/auth`, especially for canonical routing, legal acceptance, account
+capabilities, RevenueCat, Android auth deep links, or account deletion.
 
 ## Related Documents
 
@@ -81,7 +84,7 @@ Behavior:
 - Password flow uses Supabase password sign-in.
 - Google OAuth flow uses Supabase Google OAuth with configured redirect allow-list.
 - Session restoration checks account status before showing normal app routes.
-- New-device sign-in must route pending-deletion accounts to the pending-deletion screen.
+- Session restoration must follow `/specs/auth` and must not route users into the retired pending-deletion screen as the target auth behavior.
 
 ## Security And Sign-In Screen
 
@@ -178,7 +181,7 @@ State machine:
 - Deep links from email-code, password recovery, and email-change flows must land on dedicated
   routes with loading, success, expired, and error states.
 - Session restoration must fetch the user and profile/account status before normal app rendering.
-- Pending-deletion users route to the pending-deletion screen, not Today.
+- Account-deletion routing is governed by `/specs/auth`; the old pending-deletion route is retired for the target implementation.
 - Session errors must avoid account enumeration.
 
 ## Accessibility
@@ -211,7 +214,7 @@ State machine:
   addresses when configured.
 - Given a user forgets the current password, then the password-reset flow starts without exposing
   whether the address exists.
-- Given an auth deep link opens on a pending-deletion account, then the pending-deletion route is shown.
+- Given an auth deep link opens during or after account deletion, then routing follows the immediate-deletion behavior in `/specs/auth`.
 
 ## Test Plan
 

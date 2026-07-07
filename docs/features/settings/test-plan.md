@@ -5,6 +5,10 @@
 This is the implementation-ready test plan for Settings and its dependencies. It maps to the
 Settings, authentication, export, feedback, account lifecycle, and legal-document specs.
 
+Auth, RevenueCat, subscription, Android auth deep-link, and account-deletion scenarios are
+superseded by `/specs/auth` where they conflict. Immediate deletion replaces the old
+scheduled/pending-deletion test scope.
+
 ## Unit Tests
 
 Preferences:
@@ -53,13 +57,13 @@ Feedback:
 - Technical details include only permitted keys.
 - Screenshot size/type validation.
 
-Account lifecycle:
+Account deletion:
 
-- Account-state transitions.
-- Seven-day deletion scheduled date uses server time input.
-- Cancellation clears deletion fields.
-- Cancellation is idempotent.
-- Pending-deletion route guard blocks normal routes.
+- Reauthentication proof is required.
+- Required Google Play auto-renewing subscriptions are cancelled before deletion.
+- RevenueCat customer deletion happens before Supabase Auth user deletion.
+- Immediate deletion removes app data and legal records.
+- Immediate deletion is idempotent across retryable partial failures.
 
 Legal:
 
@@ -112,12 +116,13 @@ Feedback:
 
 Account deletion:
 
-- Pending-deletion creation writes status and timestamps.
-- Cancellation restores active state.
-- Scheduled final deletion removes user-owned database records.
+- Immediate deletion operation validates the authenticated user and reauthentication proof.
+- Subscription cancellation failure stops deletion before RevenueCat customer or Auth user deletion.
+- RevenueCat deletion failure stops deletion before Auth user deletion.
+- Successful deletion removes user-owned database records.
 - Storage cleanup removes feedback screenshots and temporary exports.
 - Auth user deletion happens server-side.
-- Finalizer is idempotent.
+- Deletion function is idempotent.
 - External deletion request verifies identity.
 
 Legal:
@@ -169,12 +174,11 @@ Account actions:
 
 - Sign out confirmation.
 - Sign out current session.
-- Request deletion.
-- Cancel deletion.
-- Pending-deletion login.
-- Export while pending deletion.
-- Sign out while pending deletion.
-- Final deletion behavior.
+- Immediate deletion warning.
+- Password or Google reauthentication for deletion.
+- Subscription-aware deletion state.
+- Immediate deletion success routes to auth and clears local data.
+- Deletion failure keeps the account usable when safe.
 
 ## Accessibility Tests
 
@@ -195,7 +199,7 @@ Account actions:
 - Spanish Settings labels.
 - Unsupported device language falls back to English when language is System default.
 - Long Spanish strings fit rows, sheets, dialogs, footer, and legal screens.
-- Dates in pending-deletion and weekly ranges format by locale.
+- Dates in subscription/deletion messages and weekly ranges format by locale.
 - Legal document English/Spanish version IDs match.
 - Privacy Policy and Terms maintain content parity.
 
@@ -208,7 +212,7 @@ Account actions:
 - Feedback screenshots are private.
 - Malicious attachment upload is rejected.
 - Deletion request abuse is rate limited.
-- Deletion cancellation requires authenticated or verified identity.
+- Account deletion requires authenticated or verified identity and server-side privileged cleanup.
 - Service-role credentials never appear in client bundles.
 - Sensitive provider errors are sanitized.
 - Legal version fields cannot be tampered with by another user.

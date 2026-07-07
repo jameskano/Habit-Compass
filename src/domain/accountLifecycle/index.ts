@@ -5,6 +5,8 @@ export type {
   AccountLifecycleState,
   AccountStatus,
   CancelAccountDeletionResult,
+  DeleteAccountInput,
+  DeleteAccountResult,
   DeletionRequestSource,
   RequestAccountDeletionInput,
   RequestExternalAccountDeletionInput,

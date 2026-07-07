@@ -100,13 +100,18 @@ also provide a public web resource for deletion requests:
 
 When you request deletion:
 
-1. Your account is scheduled for permanent deletion in seven days.
-2. During that period, you may cancel deletion, export your data, or sign out.
-3. Normal app use is unavailable while deletion is pending.
-4. After the scheduled date, Habit Compass permanently deletes your account and app data, subject to
+1. Habit Compass warns you that deletion is permanent and cannot be undone.
+2. Habit Compass requires reauthentication before deletion continues.
+3. If an active Google Play auto-renewing subscription exists, Habit Compass attempts to cancel
+   future renewal before deleting the account.
+4. If required subscription cancellation cannot be confirmed, account deletion stops and can be
+   retried.
+5. After required checks and cancellation complete, Habit Compass deletes your RevenueCat customer
+   record, Habit Compass app data, legal acceptance records, and Supabase Auth account, subject to
    any confirmed legal retention requirement.
 
-Deletion cannot be undone after final deletion completes.
+Deletion is immediate after confirmation. Access ends immediately, unused subscription time is not
+automatically refunded, and deletion cannot be undone after it completes.
 
 ## 10. Feedback
 
@@ -134,16 +139,16 @@ These Terms do not transfer ownership of Habit Compass to you.
 
 ## 13. Premium And Subscriptions
 
-Premium subscriptions are not active in the MVP.
+Habit Compass may use RevenueCat and Google Play for Premium subscription identity, entitlement
+state, and subscription-aware account deletion.
 
-The app must not show fake prices, fake plans, or claim that subscriptions can currently be
-purchased.
+Before purchasable Premium subscriptions are released, these Terms must include accurate
+subscription, billing, renewal, cancellation, refund, Google Play, and RevenueCat terms. The app must
+not show fake prices or fake plans.
 
-Before Habit Compass Premium launches, these Terms must be updated to include accurate subscription,
-billing, renewal, cancellation, refund, Google Play, and RevenueCat terms where applicable.
-
-If Premium later uses Google Play subscriptions, the app must clearly explain how users can manage
-or cancel subscriptions through Google Play where required.
+Deleting your Habit Compass account ends app access immediately. When required, Habit Compass
+attempts to cancel future Google Play renewal before deleting the account, but deletion does not
+automatically refund unused subscription time.
 
 ## 14. Disclaimers
 

@@ -5,6 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
+import { saveIntendedRoute } from './features/auth/intendedRoute'
+import {
+  readPendingAccountDeletionState,
+  savePendingAccountDeletionState,
+} from './features/auth/pendingAccountDeletionState'
+import { useTodayOrderStore } from './features/today/todayOrderStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 
 const chooseSelectOption = async (
@@ -19,6 +25,8 @@ const chooseSelectOption = async (
 describe('app shell', () => {
   beforeEach(async () => {
     resetMockState()
+    window.sessionStorage.clear()
+    useTodayOrderStore.getState().resetOrderStore()
     useAppPreferencesStore.setState({
       theme: 'system',
       locale: 'en',
@@ -48,6 +56,239 @@ describe('app shell', () => {
     expect(screen.getByTestId('shell-section-icon')).toBeInTheDocument()
     expect(screen.queryByText('Habit Compass')).not.toBeInTheDocument()
     expect(screen.queryByText('Simple by default, deep by choice')).not.toBeInTheDocument()
+  })
+
+  it('redirects unauthenticated protected routes to sign in outside the app shell', async () => {
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('signs in with password and returns through the auth decision flow', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
+    await user.type(screen.getByLabelText('Password'), 'current-password')
+    await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.signedIn).toBe(true)
+  }, 10000)
+
+  it('requests and verifies an email sign-in code', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/email-code' })
+    })
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Email code', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'person@example.com')
+    await user.click(screen.getByRole('button', { name: 'Send code' }))
+    expect(await screen.findByRole('heading', { name: 'Enter code', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.emailCodeRequests).toEqual(['person@example.com'])
+
+    await user.type(screen.getByLabelText('Six-digit code'), '123456')
+    await user.click(screen.getByRole('button', { name: 'Verify code' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(getMockState().authSession.emailCodeVerifications).toEqual(['person@example.com'])
+  })
+
+  it('requires legal acknowledgement before creating an account', async () => {
+    const user = userEvent.setup()
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-up' })
+    })
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 })
+    await user.type(screen.getByLabelText('Email'), 'new@example.com')
+    await user.type(screen.getByLabelText('Password'), 'new-password')
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(
+      await screen.findByText('Review and accept the legal acknowledgement to continue.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: 'Create account' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Check your email', level: 1 }),
+    ).toBeInTheDocument()
+    expect(getMockState().authSession.signUpRequests).toEqual(['new@example.com'])
+  })
+
+  it('redirects authenticated users without legal acceptance outside the app shell', async () => {
+    getMockState().authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('records legal acceptance and opens the app workspace', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/items' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Terms version: terms-draft-2026-07-02')).toBeInTheDocument()
+    expect(screen.getByText('Privacy version: privacy-draft-2026-07-02')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
+    expect(
+      await screen.findByText('Accept the current legal documents to continue.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('checkbox'))
+    await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(state.authSession.acceptedLegalDocuments).toBe(true)
+    expect(screen.getByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('signs out from legal acceptance without rendering the app shell', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.acceptedLegalDocuments = false
+    await act(async () => {
+      await router.navigate({ to: '/legal/acceptance' })
+    })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
+    expect(state.authSession.signedIn).toBe(false)
+    expect(state.authSession.signOutScopes).toEqual(['local'])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('redirects authenticated guest routes to the intended route', async () => {
+    saveIntendedRoute('/items')
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Habits', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('renders auth callback and public legal routes outside the app shell', async () => {
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/callback' })
+    })
+    const { unmount } = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Finishing sign-in', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    unmount()
+    await act(async () => {
+      await router.navigate({ to: '/legal/privacy-policy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('routes recovery and email-change callbacks through their dedicated destinations', async () => {
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'recovery-code', flow: 'recovery' } as never,
+        to: '/auth/callback',
+      })
+    })
+    const { unmount } = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Reset password', level: 1 }),
+    ).toBeInTheDocument()
+
+    unmount()
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'email-change-code', flow: 'email-change' } as never,
+        to: '/auth/callback',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
+    ).toBeInTheDocument()
+  })
+
+  it('completes a Google-only deletion intent from the auth callback', async () => {
+    const state = getMockState()
+    state.authSession.providerClassification = 'oauth_only'
+    savePendingAccountDeletionState({
+      idempotencyKey: 'delete-google-1',
+      originalUserId: 'mock-user-1',
+    })
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'google-delete-code', flow: 'delete-account' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+      expect(state.authSession.signedIn).toBe(false)
+      expect(state.authSession.signOutScopes).toEqual(['local'])
+    })
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAccountDeletionState()).toBeNull()
   })
 
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
@@ -244,7 +485,9 @@ describe('app shell', () => {
 
     expect(await screen.findByRole('heading', { name: 'Categories', level: 1 })).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { name: 'Categories' })).toHaveLength(1)
-    expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByTestId('shell-section-icon')).not.toBeInTheDocument()
+    })
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/settings')
     const infoButton = screen.getByRole('button', { name: 'Information about categories' })
     const createButton = screen.getByRole('button', { name: 'Create category' })
@@ -1271,11 +1514,12 @@ describe('app shell', () => {
 
     await user.clear(within(dialog).getByLabelText('New email'))
     await user.type(within(dialog).getByLabelText('New email'), 'new@example.com')
+    await user.type(within(dialog).getByLabelText('Current password'), 'current-password')
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
 
     expect(
       await within(dialog).findByText(
-        'Check your current and new email addresses to confirm the change.',
+        'Check the new email address to confirm the change. Your current email stays active until then.',
       ),
     ).toBeInTheDocument()
     expect(getMockState().authSession.emailChangeRequests).toEqual(['new@example.com'])
@@ -1360,11 +1604,12 @@ describe('app shell', () => {
     expect(screen.queryByRole('button', { name: /Change email address/ })).not.toBeInTheDocument()
   })
 
-  it('confirms sign out, uses local current-session scope, and routes to signed out', async () => {
+  it('confirms sign out, uses local current-session scope, clears user state, and routes to sign in', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings' })
     })
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
     render(<App />)
 
     await user.click(await screen.findByRole('button', { name: 'Sign out' }))
@@ -1382,45 +1627,41 @@ describe('app shell', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getAllByRole('heading', { name: "You're signed out" })).toHaveLength(2)
+      expect(screen.getByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
     })
     expect(getMockState().authSession.signedIn).toBe(false)
     expect(getMockState().authSession.signOutScopes).toEqual(['local'])
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
-  it('schedules account deletion from Settings and routes to the pending-deletion screen', async () => {
+  it('deletes an account immediately from Settings and returns to sign in', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings' })
     })
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
     render(<App />)
 
     await user.click(await screen.findByRole('button', { name: 'Delete account' }))
     const intentDialog = screen.getByRole('dialog', { name: 'Delete your account?' })
-    expect(intentDialog).toHaveTextContent('7-day waiting period')
+    expect(intentDialog).toHaveTextContent('permanently deletes your account')
+    expect(intentDialog).toHaveTextContent('Access ends immediately')
 
     await user.click(within(intentDialog).getByRole('button', { name: 'Continue' }))
     const reauthDialog = screen.getByRole('dialog', { name: 'Confirm it is you' })
     await user.type(within(reauthDialog).getByLabelText('Current password'), 'current-password')
     await user.click(within(reauthDialog).getByRole('button', { name: 'Continue' }))
 
-    const scheduleDialog = screen.getByRole('dialog', { name: 'Schedule account deletion?' })
-    expect(scheduleDialog).toHaveTextContent(
-      'Until then, the app will only allow export, sign out, or cancellation.',
-    )
-    await user.click(within(scheduleDialog).getByRole('button', { name: 'Delete account' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Delete permanently?' })
+    expect(confirmDialog).toHaveTextContent('Deletion starts now')
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete account' }))
 
-    expect(
-      await screen.findByRole('button', { name: 'Cancel account deletion' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
-    ).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
     const state = getMockState()
-    expect(state.accountLifecycle.accountStatus).toBe('pending_deletion')
-    expect(state.accountLifecycle.deletionRequestSource).toBe('in_app')
     expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+    expect(state.authSession.signedIn).toBe(false)
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
   })
@@ -1587,7 +1828,9 @@ describe('app shell', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
     expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
-    expect(screen.queryByText(/subscriptions can currently be purchased/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Before purchasable Premium subscriptions are released/i),
+    ).toBeInTheDocument()
   })
 
   it('opens the rating fallback from Settings and validates required feedback on Support', async () => {

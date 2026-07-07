@@ -2,8 +2,10 @@
 
 ## Purpose
 
-This document tracks release-blocking legal placeholders, Play Console consistency checks, and future
-legal-update triggers for Habit Compass Settings, privacy, support, export, and account deletion.
+This document tracks release-blocking legal placeholders, Play Console consistency checks, and
+legal-update triggers for Habit Compass Settings, privacy, support, export, RevenueCat,
+subscriptions, and immediate account deletion. `/specs/auth` supersedes earlier MVP deferrals for
+RevenueCat, subscriptions, Android auth links, and scheduled account deletion.
 
 ## Related Documents
 
@@ -48,11 +50,13 @@ configuration are confirmed.
 Implemented in the app/repo:
 
 - Settings exposes Privacy Policy and Terms from Data and privacy.
-- Settings shows `Habit Compass Premium` only as a disabled Coming soon row.
+- RevenueCat/subscription identity is now in scope for `/specs/auth`; purchasable Premium UI still
+  requires accurate product, price, legal, and store configuration before release.
 - Settings does not show a Notifications row, notification permission flow, reminder UI, paywall, or
   subscription-management UI.
-- In-app account deletion can be requested, enters a seven-day pending-deletion state, allows export,
-  cancellation, and local sign-out, and blocks normal app routes while pending.
+- In-app account deletion must follow `/specs/auth`: reauthentication, subscription cancellation
+  when required, RevenueCat customer deletion, app-data cleanup, and Supabase Auth deletion happen
+  immediately through a secured backend path.
 - A public web route exists at `/account/delete` for account deletion requests, but production
   hosting and Play Console URL configuration are not confirmed.
 - Feedback screenshots are user-selected only; the app does not silently capture screenshots.
@@ -66,7 +70,8 @@ Not confirmed for release:
 - Public hosted Privacy Policy URL.
 - Public hosted Terms URL, if Terms are hosted separately.
 - Public external account-deletion URL entered in Play Console.
-- Supabase function secrets and Cron schedule for final account deletion.
+- Supabase function secrets for immediate account deletion.
+- RevenueCat and Google Play server-side credentials and sandbox configuration.
 - External account-deletion email template and production sender/provider.
 - Legal controller identity, contact details, legal basis, retention periods, processor details, and
   jurisdiction terms.
@@ -153,6 +158,8 @@ Check data collection:
 - [ ] App version, build number, device model, Android version, app language, screen identifier, and
       error identifier when included in feedback.
 - [ ] Ratings/reviews through Google Play In-App Reviews or Play listing.
+- [ ] RevenueCat subscription identity and entitlement state if enabled.
+- [ ] Google Play subscription management/cancellation data if enabled.
 - [ ] Crash/error diagnostics if `VITE_SENTRY_DSN` or another crash-reporting SDK is active.
 
 Check data sharing:
@@ -160,6 +167,7 @@ Check data sharing:
 - [ ] Supabase backend processing.
 - [ ] Google OAuth.
 - [ ] Google Play.
+- [ ] RevenueCat.
 - [ ] Email provider.
 - [ ] Hosting provider.
 - [ ] Support/admin tooling.
@@ -184,21 +192,20 @@ Google Play requires an in-app and outside-the-app account deletion path when ap
 is supported. The web resource must let users request deletion without sending them back to
 reinstall/use the app.
 
-- [x] In-app Delete account action exists.
-- [x] Deletion requires recent authentication for the in-app email/password flow.
-- [x] Seven-day pending deletion is implemented at application level.
-- [x] Pending-deletion screen blocks normal app use.
-- [x] Pending-deletion screen allows cancellation, export, and sign-out.
-- [x] Final deletion is server-controlled in an Edge Function.
-- [x] Supabase Storage feedback attachments are cleaned explicitly from recorded storage paths.
-- [x] Auth user deletion happens after app-data cleanup in the finalizer.
-- [x] External deletion page route exists and triggers the same lifecycle after verification.
+- [x] In-app Delete account action exists as legacy UI.
+- [ ] Deletion requires recent authentication for password-enabled and Google-only accounts.
+- [ ] Immediate deletion Edge Function replaces the legacy scheduled-deletion functions.
+- [ ] Required Google Play auto-renewing subscriptions are cancelled before account deletion.
+- [ ] RevenueCat customer deletion happens server-side before Supabase Auth user deletion.
+- [ ] Supabase Storage feedback attachments are cleaned explicitly from recorded storage paths.
+- [ ] Auth user deletion happens after external-service and app-data cleanup.
+- [ ] External deletion page route exists and triggers the same immediate workflow after verification.
 - [x] External deletion page is localized in English and Spanish.
-- [x] Privacy Policy describes seven-day grace period and final deletion.
-- [x] Terms describe deletion and cancellation.
+- [x] Privacy Policy describes immediate deletion, subscription cancellation checks, RevenueCat cleanup, and no automatic refund.
+- [x] Terms describe immediate deletion, subscription cancellation checks, RevenueCat cleanup, and no automatic refund.
 - [ ] External deletion page is deployed at a stable public URL.
 - [ ] External deletion email verification templates and production sender are configured.
-- [ ] Supabase Cron or equivalent schedule is configured with `CRON_SECRET`.
+- [ ] Immediate deletion function secrets and idempotency behavior are configured.
 - [ ] Play Console account-deletion URL is configured.
 - [ ] Production deletion flow has been manually tested against deployed Supabase functions.
 
@@ -224,32 +231,32 @@ Current status:
 - [x] `src/integrations/notifications/README.md` remains a placeholder only.
 - [x] No notification permission flow was added for Settings MVP.
 
-## Premium And RevenueCat Deferral Checklist
+## Premium And RevenueCat Checklist
 
-Premium and RevenueCat are deferred for MVP. Google Play policy requires accurate billing and
-subscription disclosures when digital in-app features or subscriptions are sold through a
-Play-distributed app, and subscription offers must not mislead users about terms, pricing,
-renewal, or whether a subscription is required.
+RevenueCat identity and subscription-aware account deletion are active auth requirements through
+`/specs/auth`. Purchasable Premium UI still requires accurate billing and subscription disclosures
+when digital in-app features or subscriptions are sold through a Play-distributed app, and
+subscription offers must not mislead users about terms, pricing, renewal, or whether a subscription
+is required.
 
-Before future Premium work starts:
+Before release:
 
-- [ ] Approve a Premium product spec.
+- [ ] Confirm whether purchasable Premium UI is part of the release or only auth/deletion identity is active.
 - [ ] Define paid/free feature boundaries without compromising the simple tracker baseline.
 - [ ] Add Google Play Billing or approved billing program requirements.
 - [ ] Add RevenueCat processor/subprocessor details.
-- [ ] Define RevenueCat customer deletion/anonymization behavior.
+- [ ] Implement RevenueCat customer deletion behavior required by `/specs/auth`.
 - [ ] Update Privacy Policy, Terms, Play Data Safety, and account-deletion copy.
-- [ ] Add the active-subscription deletion warning:
-      `Deleting your Habit Compass account does not automatically cancel your Google Play subscription.`
+- [ ] Add the active-subscription deletion warning explaining automatic renewal cancellation,
+      immediate access loss, and no automatic refund.
 - [ ] Add subscription management that routes to Google Play where required.
 - [ ] Add tests proving no misleading pricing, renewal, or cancellation UI.
 
 Current status:
 
-- [x] Settings Premium row is disabled and says Coming soon.
-- [x] No RevenueCat dependency or paywall implementation is active.
-- [x] `src/integrations/revenuecat/README.md` remains a placeholder only.
-- [x] Account deletion does not show a subscription warning in MVP because Premium is inactive.
+- [ ] RevenueCat dependency/paywall status must be confirmed during auth implementation.
+- [x] `src/integrations/revenuecat/README.md` points to `/specs/auth`.
+- [ ] Account deletion must show the subscription-aware immediate deletion warning from `/specs/auth`.
 
 ## Legal Versioning Checklist
 
@@ -267,8 +274,8 @@ Review and update Privacy Policy, Terms, in-app disclosures, and Play Console Da
 enabling:
 
 - Notifications.
-- RevenueCat.
-- Premium subscriptions.
+- RevenueCat behavior beyond `/specs/auth`.
+- Premium subscription behavior beyond `/specs/auth`.
 - Analytics.
 - Automatic crash reporting.
 - New OAuth providers.
@@ -288,7 +295,7 @@ enabling:
 - Same purposes and legal-basis placeholders.
 - Same retention placeholders.
 - Same account deletion explanation.
-- Same Premium/subscription future status.
+- Same Premium/subscription status.
 - Same contact and public URL placeholders.
 
 ## Open Release Risks
@@ -300,6 +307,6 @@ enabling:
 - Public account-deletion page hosting is unresolved.
 - External deletion email delivery, template configuration, and production verification flow are
   unresolved.
-- Supabase Cron scheduling for final account deletion is unresolved.
+- Immediate account-deletion function secrets and production testing are unresolved.
 - Sentry/crash-reporting release status is unresolved.
-- Premium is not active; any RevenueCat work requires a separate legal and product update.
+- RevenueCat/subscription legal and product details must match `/specs/auth` before release.

@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import { canShowSecurityAndSignIn } from '@/domain/auth'
 import { Sheet, SheetContent } from '@/shared/ui/sheet'
 
 import { PreferenceSheetBody } from './PreferenceSheetBody'
@@ -14,7 +13,7 @@ import { SettingsRow } from './components/SettingsRow'
 import { SettingsSection } from './components/SettingsSection'
 import { appBuildNumber, appVersion, currentYear } from './settings.constants'
 import type { PreferenceSheet } from './settings.types'
-import { useAccountProviderClassificationQuery } from './useAccountProviderClassificationQuery'
+import { useAccountCapabilitiesQuery } from './useAccountCapabilitiesQuery'
 
 export const SettingsPage = () => {
   const intl = useIntl()
@@ -26,8 +25,8 @@ export const SettingsPage = () => {
   const setTheme = useAppPreferencesStore((state) => state.setTheme)
   const setLocale = useAppPreferencesStore((state) => state.setLocale)
   const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
-  const providerClassification = useAccountProviderClassificationQuery()
-  const showSecurityAndSignIn = canShowSecurityAndSignIn(providerClassification.data)
+  const accountCapabilities = useAccountCapabilitiesQuery()
+  const showSecurityAndSignIn = accountCapabilities.data?.passwordEnabled === true
   const footerVersion = appBuildNumber
     ? intl.formatMessage(
         { id: 'settings.footer.versionWithBuild' },
@@ -85,7 +84,7 @@ export const SettingsPage = () => {
 
       <SettingsSupportSection onOpenRateDialog={() => setRateDialogOpen(true)} />
 
-      <SettingsAccountActionsSection providerClassification={providerClassification.data} />
+      <SettingsAccountActionsSection accountCapabilities={accountCapabilities.data} />
 
       <footer className="space-y-1 px-2 pb-2 pt-4 text-center text-xs text-muted-foreground">
         <p>{footerVersion}</p>

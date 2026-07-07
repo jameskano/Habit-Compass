@@ -5,10 +5,15 @@
 This is the future coding plan for the Settings feature. It documents phases, dependencies, likely
 files, backend work, tests, security review, and definitions of done. It does not implement code.
 
+Auth, RevenueCat, subscription, Android auth deep-link, and account-deletion guidance in this plan
+is superseded by `/specs/auth` where it conflicts. The old scheduled/pending-deletion phases are
+legacy context only.
+
 ## Canonical Specs
 
 - [Settings spec](../../../specs/mvp/settings-spec.md)
 - [Authentication spec](../../../specs/mvp/authentication-spec.md)
+- [Canonical auth spec package](../../../specs/auth/README.md)
 - [Data export spec](../../../specs/mvp/data-export-spec.md)
 - [Feedback and support spec](../../../specs/mvp/feedback-support-spec.md)
 - [Account lifecycle spec](../../../specs/mvp/account-lifecycle-spec.md)
@@ -299,6 +304,8 @@ Definition of done:
 
 ## Phase 9: Account-Deletion Request Flow
 
+Legacy phase. Replace with the immediate deletion flow in `/specs/auth` during auth implementation.
+
 Dependencies:
 
 - Account status fields migrated.
@@ -325,9 +332,11 @@ Tests:
 
 Definition of done:
 
-- Active users can schedule deletion safely and are routed to pending deletion.
+- Active users can complete the immediate deletion flow defined in `/specs/auth`.
 
 ## Phase 10: Pending-Deletion Routing
+
+Legacy phase. Pending-deletion routing is not target behavior for `/specs/auth`.
 
 Dependencies:
 
@@ -359,6 +368,8 @@ Definition of done:
 - Pending-deletion accounts cannot use normal tracking screens.
 
 ## Phase 11: Scheduled Final Deletion
+
+Legacy phase. Replace with the immediate deletion Edge Function in `/specs/auth`.
 
 Dependencies:
 
@@ -442,13 +453,14 @@ Definition of done:
 Deferred. Do not add MVP UI rows or permission flows. Before implementation, create or update a
 Notifications spec and legal disclosures.
 
-## Phase 15: Future Premium And RevenueCat
+## Phase 15: Premium And RevenueCat
 
-Deferred. Before implementation:
+RevenueCat identity and subscription-aware deletion are in scope through `/specs/auth`. Before
+release:
 
-- Update Premium product spec.
+- Confirm whether purchasable Premium UI is part of the release or only auth/deletion identity is active.
 - Update Terms and Privacy Policy.
 - Update Play Console Data Safety.
 - Add subscription-management flow.
-- Add deletion subscription warning.
-- Confirm RevenueCat processor/customer deletion behavior.
+- Add the subscription-aware immediate deletion warning.
+- Implement or document RevenueCat processor/customer deletion behavior required by `/specs/auth`.

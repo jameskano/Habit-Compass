@@ -4,6 +4,8 @@ import type {
   AccountDeletionRequestResult,
   AccountLifecycleState,
   CancelAccountDeletionResult,
+  DeleteAccountInput,
+  DeleteAccountResult,
   RequestAccountDeletionInput,
   RequestExternalAccountDeletionInput,
   RequestExternalAccountDeletionResult,
@@ -15,6 +17,7 @@ export type AccountLifecycleRepository = {
     input: RequestAccountDeletionInput,
   ): Promise<Result<AccountDeletionRequestResult>>
   cancelAccountDeletion(): Promise<Result<CancelAccountDeletionResult>>
+  deleteAccount(input: DeleteAccountInput): Promise<Result<DeleteAccountResult>>
   requestExternalAccountDeletion(
     input: RequestExternalAccountDeletionInput,
   ): Promise<Result<RequestExternalAccountDeletionResult>>

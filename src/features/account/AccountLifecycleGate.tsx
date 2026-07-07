@@ -9,7 +9,12 @@ type AccountLifecycleGateProps = {
   children: ReactNode
 }
 
-const publicRoutes = new Set(['/signed-out', '/account/delete'])
+const publicRoutes = new Set([
+  '/auth/sign-in',
+  '/auth/callback',
+  '/auth/reset-password',
+  '/account/delete',
+])
 const pendingDeletionRoute = '/account/pending-deletion'
 
 export const AccountLifecycleGate = ({ children }: AccountLifecycleGateProps) => {

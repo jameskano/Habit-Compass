@@ -47,8 +47,9 @@ gestionar tu cuenta, como:
 - Estado de autenticacion por contrasena gestionado por Supabase Auth. No almacenamos tu contrasena
   en texto claro.
 - Identificadores de sesion gestionados por Supabase Auth.
-- Estado de la cuenta, por ejemplo activa o pendiente de eliminacion.
-- Fechas de solicitud y programacion de eliminacion.
+- Estado de la cuenta y metadatos operativos de eliminacion inmediata.
+- Fechas o estado de solicitud de eliminacion, reautenticacion, cancelacion de suscripcion,
+  limpieza de RevenueCat y eliminacion cuando sean necesarios.
 - Registros de aceptacion de Terminos y de presentacion de avisos de privacidad cuando sean
   necesarios.
 
@@ -134,7 +135,8 @@ Tratamos datos para:
 - Preservar registros semanales historicos guardados y sus rangos de fechas explicitos.
 - Permitirte exportar tus datos.
 - Responder a feedback y solicitudes de soporte.
-- Programar, cancelar y completar la eliminacion de cuenta.
+- Completar la eliminacion inmediata de cuenta y las comprobaciones relacionadas de cancelacion de
+  suscripciones.
 - Mantener la seguridad, prevenir abusos y diagnosticar problemas tecnicos.
 - Cumplir obligaciones legales cuando correspondan.
 
@@ -168,8 +170,10 @@ sujetos a contratos y garantias confirmadas:
 - Supabase para autenticacion, base de datos, Storage, Edge Functions y servicios backend
   relacionados: `[PROCESSOR OR SUBPROCESSOR DETAILS TO CONFIRM]`.
 - Google OAuth, cuando eliges iniciar sesion con Google.
-- Google Play, para distribucion de la app, valoraciones/resenas y futura gestion de suscripciones
-  si se lanza Premium.
+- Google Play, para distribucion de la app, valoraciones/resenas y gestion de suscripciones cuando
+  Premium o la eliminacion de cuenta lo requieran.
+- RevenueCat, para identidad de suscripcion, estado de beneficios y eliminacion de cuenta con
+  comprobacion de suscripciones: `[PROCESSOR OR SUBPROCESSOR DETAILS TO CONFIRM]`.
 - Proveedor de envio de correo para emails de autenticacion, cuenta, eliminacion y soporte:
   `[EMAIL PROVIDER TO CONFIRM]`.
 - Proveedor de alojamiento para documentos legales publicos y futura pagina externa de eliminacion
@@ -203,8 +207,9 @@ Criterios de conservacion:
 - Conservacion de feedback: `[FEEDBACK RETENTION TO CONFIRM]`.
 - Conservacion de capturas de feedback: `[FEEDBACK SCREENSHOT RETENTION TO CONFIRM]`.
 - Conservacion temporal de exportaciones: `[EXPORT TEMP FILE RETENTION TO CONFIRM]`.
-- Periodo pendiente de eliminacion de cuenta: siete dias desde la solicitud registrada por el
-  servidor.
+- Los metadatos operativos de eliminacion de cuenta se conservan solo durante el tiempo necesario
+  para eliminacion fiable, seguridad, prevencion de fraude, obligaciones legales o cumplimiento,
+  pendiente de confirmar antes del lanzamiento.
 - Limitaciones de retencion en copias de seguridad: `[BACKUP RETENTION DETAILS TO CONFIRM]`.
 
 Si algun dato debe conservarse por razones legales, de seguridad, prevencion de fraude o cumplimiento
@@ -221,15 +226,20 @@ eliminacion sin reinstalar la app:
 
 Cuando solicitas la eliminacion:
 
-1. Tu cuenta se programa para eliminacion permanente en siete dias.
-2. Durante esos siete dias, puedes cancelar la eliminacion, exportar tus datos o cerrar sesion.
-3. La interfaz normal de la app no esta disponible mientras la eliminacion esta pendiente.
-4. Despues de la fecha programada, Habit Compass elimina permanentemente tu cuenta y datos de la
-   app, sujeto a cualquier obligacion legal de conservacion confirmada.
+1. Habit Compass te advierte de que la eliminacion es permanente y no puede deshacerse.
+2. Habit Compass requiere reautenticacion.
+3. Si existe una suscripcion de Google Play activa con renovacion automatica, Habit Compass intenta
+   cancelar la renovacion futura antes de eliminar la cuenta.
+4. Si no se puede confirmar una cancelacion de suscripcion obligatoria, la eliminacion se detiene y
+   puede intentarse de nuevo.
+5. Tras completar las comprobaciones y cancelaciones requeridas, Habit Compass elimina tu registro
+   de cliente de RevenueCat, tus datos de la app, tus registros de aceptacion legal y tu cuenta de
+   Supabase Auth, sujeto a cualquier obligacion legal de conservacion confirmada.
 
-Eliminar tu cuenta de Habit Compass no elimina necesariamente datos mantenidos de forma independiente
-por terceros, como resenas de Google Play o futuros registros de suscripcion. Si se lanza Premium, el
-flujo de eliminacion y esta politica deben explicar la cancelacion de suscripciones por separado.
+Eliminar tu cuenta de Habit Compass termina el acceso a la app inmediatamente y no reembolsa
+automaticamente el tiempo de suscripcion no usado. No elimina necesariamente datos mantenidos de
+forma independiente por terceros, como resenas de Google Play o registros que Google Play deba
+conservar.
 
 ## 10. Tus Derechos
 

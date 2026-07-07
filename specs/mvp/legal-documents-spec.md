@@ -2,10 +2,13 @@
 
 ## Status
 
-Partially implemented for Settings MVP. Legal drafts render in-app from Settings > Data and privacy,
-and compliance tracking lives under `docs/legal/`. Public-hosted legal URLs, confirmed controller
-details, retention periods, legal bases, processor details, Terms acceptance storage, and Play
-Console declarations remain release blockers.
+Partially implemented for Settings MVP and superseded where auth/deletion/subscription behavior
+conflicts with `/specs/auth`.
+
+Legal drafts render in-app from Settings > Data and privacy, and compliance tracking lives under
+`docs/legal/`. Public-hosted legal URLs, confirmed controller details, retention periods, legal
+bases, processor details, Terms acceptance storage, RevenueCat/Google Play subscription disclosures,
+immediate-deletion disclosures, and Play Console declarations remain release blockers.
 
 ## Related Documents
 
@@ -134,7 +137,7 @@ The Privacy Policy must address:
   actually used or explicitly planned.
 - International transfers and safeguards as placeholders pending processor confirmation.
 - Retention periods or criteria.
-- Account deletion, seven-day grace period, cancellation, final deletion, and backup limits.
+- Account deletion, immediate permanent deletion, subscription cancellation behavior, RevenueCat customer deletion, and backup limits.
 - Data export.
 - Data-subject rights.
 - Right to complain to the relevant supervisory authority.
@@ -144,8 +147,9 @@ The Privacy Policy must address:
 - Whether data is sold or used for advertising.
 - Changes to the policy.
 
-Do not describe Notifications, RevenueCat subscriptions, analytics, advertising, crash reporting,
-new OAuth providers, AI processing, or other future features as active.
+Do not describe Notifications, analytics, advertising, crash reporting, new OAuth providers, AI
+processing, or other future features as active. RevenueCat subscriptions are active for the auth
+scope and must be described accurately before release.
 
 ## Terms Of Service Content
 
@@ -159,7 +163,7 @@ The Terms must address:
 - User content/data ownership and permissions needed to operate the service.
 - Availability and changes to the service.
 - Data export.
-- User-requested account deletion, seven-day grace period, cancellation, and final deletion.
+- User-requested immediate account deletion, RevenueCat/Google Play subscription behavior, no automatic refunds, and backup limits.
 - Feedback submissions.
 - Intellectual property.
 - App updates.

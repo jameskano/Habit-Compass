@@ -10,6 +10,7 @@ import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
+import { emptySubscriptionSnapshot, type SubscriptionSnapshot } from '@/domain/subscriptions'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
 
@@ -57,11 +58,19 @@ const buildCategoryBaseFields = (id: EntityId) => {
 
 export type MockDataState = {
   authSession: {
+    acceptedLegalDocuments: boolean
+    currentPrivacyPolicyVersion: string
+    currentTermsVersion: string
     currentEmail: string
     currentPassword: string
     emailChangeRequests: string[]
+    emailCodeRequests: string[]
+    emailCodeVerifications: string[]
+    googleSignInRequests: string[]
+    legalAcceptedAt: string | null
     passwordResetRequests: string[]
     passwordUpdateRequests: string[]
+    signUpRequests: string[]
     providerClassification: AccountProviderClassification
     signedIn: boolean
     signOutScopes: string[]
@@ -70,6 +79,11 @@ export type MockDataState = {
     cancellationRequests: string[]
     deletionRequests: DeletionRequestSource[]
     externalDeletionRequests: string[]
+  }
+  subscription: {
+    clearRequests: number
+    identifiedUserIds: string[]
+    snapshot: SubscriptionSnapshot
   }
   categories: Category[]
   habits: Habit[]
@@ -360,11 +374,19 @@ const createInitialMockData = (): MockDataState => {
 
   return {
     authSession: {
+      acceptedLegalDocuments: true,
+      currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
+      currentTermsVersion: 'terms-draft-2026-07-02',
       currentEmail: 'person@example.com',
       currentPassword: 'current-password',
       emailChangeRequests: [],
+      emailCodeRequests: [],
+      emailCodeVerifications: [],
+      googleSignInRequests: [],
+      legalAcceptedAt: toIsoDateTime(today),
       passwordResetRequests: [],
       passwordUpdateRequests: [],
+      signUpRequests: [],
       providerClassification: 'email_password',
       signedIn: true,
       signOutScopes: [],
@@ -379,6 +401,11 @@ const createInitialMockData = (): MockDataState => {
       cancellationRequests: [],
       deletionRequests: [],
       externalDeletionRequests: [],
+    },
+    subscription: {
+      clearRequests: 0,
+      identifiedUserIds: [],
+      snapshot: emptySubscriptionSnapshot,
     },
     categories,
     habits,

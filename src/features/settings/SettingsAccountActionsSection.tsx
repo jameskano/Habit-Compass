@@ -1,22 +1,24 @@
 import { LogOut, Trash2 } from 'lucide-react'
 
-import type { AccountProviderClassification } from '@/domain/auth'
+import type { UserAccountCapabilities } from '@/domain/auth'
 
 import { DeleteAccountDialog } from './DeleteAccountDialog'
 import { SignOutDialog } from './SignOutDialog'
 import { SettingsRow } from './components/SettingsRow'
 import { SettingsSection } from './components/SettingsSection'
 import { useSettingsAccountActions } from './useSettingsAccountActions'
+import { useSubscriptionSnapshotQuery } from './useSubscriptionSnapshotQuery'
 
 type SettingsAccountActionsSectionProps = {
-  providerClassification: AccountProviderClassification | undefined
+  accountCapabilities: UserAccountCapabilities | undefined
 }
 
 export const SettingsAccountActionsSection = ({
-  providerClassification,
+  accountCapabilities,
 }: SettingsAccountActionsSectionProps) => {
+  const subscriptionSnapshot = useSubscriptionSnapshotQuery()
   const { deleteAccountDialog, openDeleteAccountDialog, openSignOutDialog, signOutDialog } =
-    useSettingsAccountActions(providerClassification)
+    useSettingsAccountActions(accountCapabilities)
 
   return (
     <>
@@ -31,7 +33,11 @@ export const SettingsAccountActionsSection = ({
       </SettingsSection>
 
       <SignOutDialog {...signOutDialog} />
-      <DeleteAccountDialog {...deleteAccountDialog} />
+      <DeleteAccountDialog
+        {...deleteAccountDialog}
+        subscriptionSnapshot={subscriptionSnapshot.data}
+        subscriptionSnapshotLoading={subscriptionSnapshot.isLoading}
+      />
     </>
   )
 }

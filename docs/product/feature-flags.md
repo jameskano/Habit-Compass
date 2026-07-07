@@ -7,7 +7,7 @@ Use feature flags for optional or future depth:
 - Suggestions.
 - Future AI.
 - Future calendar integration.
-- Future subscriptions.
+- Subscription feature gates where needed for rollout; core RevenueCat identity is specified in `/specs/auth`.
 
 Flags should default to the simplest stable experience.
 

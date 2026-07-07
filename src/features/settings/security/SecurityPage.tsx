@@ -2,7 +2,6 @@ import { KeyRound, Mail } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
-import { canShowSecurityAndSignIn } from '@/domain/auth'
 import { BackButton } from '@/shared/ui/BackButton'
 import { Card } from '@/shared/ui/card'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
@@ -22,9 +21,7 @@ export const SecurityPage = () => {
   const shellLeading = useMemo(() => <BackButton to="/settings" />, [])
   useShellLeading(shellLeading)
 
-  const showSecurityControls = canShowSecurityAndSignIn(
-    securityProfile.data?.providerClassification,
-  )
+  const showSecurityControls = securityProfile.data?.capabilities.passwordEnabled === true
 
   return (
     <>

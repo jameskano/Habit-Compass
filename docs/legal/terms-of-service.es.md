@@ -102,13 +102,19 @@ Habit Compass tambien debe ofrecer un recurso web publico para solicitudes de el
 
 Cuando solicitas la eliminacion:
 
-1. Tu cuenta se programa para eliminacion permanente en siete dias.
-2. Durante ese periodo, puedes cancelar la eliminacion, exportar tus datos o cerrar sesion.
-3. El uso normal de la app no esta disponible mientras la eliminacion esta pendiente.
-4. Despues de la fecha programada, Habit Compass elimina permanentemente tu cuenta y datos de la app,
-   sujeto a cualquier obligacion legal de conservacion confirmada.
+1. Habit Compass te advierte de que la eliminacion es permanente y no puede deshacerse.
+2. Habit Compass requiere reautenticacion antes de continuar.
+3. Si existe una suscripcion de Google Play activa con renovacion automatica, Habit Compass intenta
+   cancelar la renovacion futura antes de eliminar la cuenta.
+4. Si no se puede confirmar una cancelacion de suscripcion obligatoria, la eliminacion se detiene y
+   puede intentarse de nuevo.
+5. Tras completar las comprobaciones y cancelaciones requeridas, Habit Compass elimina tu registro
+   de cliente de RevenueCat, tus datos de la app, tus registros de aceptacion legal y tu cuenta de
+   Supabase Auth, sujeto a cualquier obligacion legal de conservacion confirmada.
 
-La eliminacion no puede deshacerse una vez completada la eliminacion final.
+La eliminacion es inmediata tras la confirmacion. El acceso termina inmediatamente, el tiempo de
+suscripcion no usado no se reembolsa automaticamente y la eliminacion no puede deshacerse una vez
+completada.
 
 ## 10. Feedback
 
@@ -136,17 +142,16 @@ Estos Terminos no te transfieren la propiedad de Habit Compass.
 
 ## 13. Premium Y Suscripciones
 
-Las suscripciones Premium no estan activas en el MVP.
+Habit Compass puede usar RevenueCat y Google Play para identidad de suscripcion Premium, estado de
+beneficios y eliminacion de cuenta con comprobacion de suscripciones.
 
-La app no debe mostrar precios falsos, planes falsos ni afirmar que actualmente se pueden comprar
-suscripciones.
+Antes de publicar suscripciones Premium comprables, estos Terminos deben incluir informacion exacta
+sobre suscripciones, facturacion, renovacion, cancelacion, reembolsos, Google Play y RevenueCat. La
+app no debe mostrar precios falsos ni planes falsos.
 
-Antes de lanzar Habit Compass Premium, estos Terminos deben actualizarse para incluir informacion
-exacta sobre suscripciones, facturacion, renovacion, cancelacion, reembolsos, Google Play y
-RevenueCat cuando corresponda.
-
-Si Premium usa suscripciones de Google Play en el futuro, la app debe explicar claramente como los
-usuarios pueden gestionar o cancelar suscripciones mediante Google Play cuando sea obligatorio.
+Eliminar tu cuenta de Habit Compass termina el acceso a la app inmediatamente. Cuando sea
+obligatorio, Habit Compass intenta cancelar la renovacion futura de Google Play antes de eliminar la
+cuenta, pero la eliminacion no reembolsa automaticamente el tiempo de suscripcion no usado.
 
 ## 14. Exenciones
 

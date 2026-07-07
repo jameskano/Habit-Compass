@@ -1,33 +1,39 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useIntl } from 'react-intl'
 
-import { calculateDeletionScheduledFor } from '@/domain/accountLifecycle'
-import type { AccountProviderClassification } from '@/domain/auth'
-import { useRequestAccountDeletionMutation } from '@/features/account/useAccountLifecycleMutations'
+import type { UserAccountCapabilities } from '@/domain/auth'
+import { useDeleteAccountMutation } from '@/features/account/useAccountLifecycleMutations'
+import { getAuthCallbackUrl } from '@/features/auth/authRedirects'
+import { useAuth } from '@/features/auth/authContext'
+import { savePendingAccountDeletionState } from '@/features/auth/pendingAccountDeletionState'
+import { authRepository } from '@/integrations/repositories'
+import { unwrapResult } from '@/shared/utils/result'
 
 import { accountDeletionRequiresPassword } from './settingsAccountActions.utils'
-import type { DeleteAccountStep } from './settings.types'
+import type { DeleteAccountReauthMethod, DeleteAccountStep } from './settings.types'
 import { useSignOutMutation } from './useSignOutMutation'
 
 export const useSettingsAccountActions = (
-  providerClassification: AccountProviderClassification | undefined,
+  accountCapabilities: UserAccountCapabilities | undefined,
 ) => {
   const navigate = useNavigate()
-  const intl = useIntl()
+  const { clearDeletedAccountState, state } = useAuth()
   const [signOutDialogOpen, setSignOutDialogOpen] = useState(false)
   const [signOutError, setSignOutError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteStep, setDeleteStep] = useState<DeleteAccountStep>('intent')
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteError, setDeleteError] = useState(false)
+  const [deleteGooglePending, setDeleteGooglePending] = useState(false)
+  const [deletionIdempotencyKey, setDeletionIdempotencyKey] = useState(() => crypto.randomUUID())
   const signOutMutation = useSignOutMutation()
-  const requestAccountDeletion = useRequestAccountDeletionMutation()
-  const deleteRequiresPassword = accountDeletionRequiresPassword(providerClassification)
-  const deletionPreviewLabel = intl.formatDate(calculateDeletionScheduledFor(new Date()), {
-    dateStyle: 'long',
-    timeStyle: 'short',
-  })
+  const deleteAccount = useDeleteAccountMutation()
+  const deleteRequiresPassword = accountDeletionRequiresPassword(accountCapabilities)
+  const deleteReauthMethod: DeleteAccountReauthMethod = deleteRequiresPassword
+    ? 'password'
+    : accountCapabilities?.googleEnabled
+      ? 'google'
+      : 'none'
 
   const openSignOutDialog = () => {
     setSignOutError(false)
@@ -38,6 +44,7 @@ export const useSettingsAccountActions = (
     setDeleteStep('intent')
     setDeletePassword('')
     setDeleteError(false)
+    setDeletionIdempotencyKey(crypto.randomUUID())
     setDeleteDialogOpen(true)
   }
 
@@ -47,6 +54,7 @@ export const useSettingsAccountActions = (
       setDeleteStep('intent')
       setDeletePassword('')
       setDeleteError(false)
+      setDeleteGooglePending(false)
     }
   }
 
@@ -59,22 +67,52 @@ export const useSettingsAccountActions = (
     signOutMutation.mutate(undefined, {
       onSuccess: () => {
         setSignOutDialogOpen(false)
-        navigate({ to: '/signed-out' })
+        navigate({ to: '/auth/sign-in' })
       },
       onError: () => setSignOutError(true),
     })
   }
 
   const submitAccountDeletion = () => {
-    requestAccountDeletion.mutate(
+    if (deleteReauthMethod === 'google') {
+      if (state.status !== 'authenticated') {
+        setDeleteError(true)
+        return
+      }
+
+      setDeleteGooglePending(true)
+      savePendingAccountDeletionState({
+        idempotencyKey: deletionIdempotencyKey,
+        originalUserId: state.user.id,
+      })
+      authRepository
+        .signInWithGoogle({ redirectTo: getAuthCallbackUrl('delete-account') })
+        .then((result) => {
+          unwrapResult(result)
+        })
+        .catch(() => {
+          setDeleteGooglePending(false)
+          setDeleteError(true)
+        })
+      return
+    }
+
+    if (deleteReauthMethod === 'none') {
+      setDeleteError(true)
+      return
+    }
+
+    deleteAccount.mutate(
       {
-        currentPassword: deleteRequiresPassword ? deletePassword : undefined,
-        source: 'in_app',
+        currentPassword: deletePassword,
+        idempotencyKey: deletionIdempotencyKey,
+        reauthProvider: 'password',
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setDeleteDialogOpen(false)
-          navigate({ to: '/account/pending-deletion' })
+          await clearDeletedAccountState()
+          navigate({ to: '/auth/sign-in' })
         },
         onError: () => setDeleteError(true),
       },
@@ -85,9 +123,8 @@ export const useSettingsAccountActions = (
     deleteAccountDialog: {
       deleteError,
       deletePassword,
-      deleteRequiresPassword,
-      deletionPreviewLabel,
-      isPending: requestAccountDeletion.isPending,
+      deleteReauthMethod,
+      isPending: deleteAccount.isPending || deleteGooglePending,
       onDeletePasswordChange: setCurrentDeletePassword,
       onOpenChange: setDeleteDialogOpenState,
       onStepChange: setDeleteStep,

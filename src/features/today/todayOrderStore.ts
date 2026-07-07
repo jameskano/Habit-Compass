@@ -8,6 +8,7 @@ type TodayOrderStore = {
   getOrderForDate: (date: ISODateString) => string[]
   setOrderForDate: (date: ISODateString, orderedIds: string[]) => void
   pruneOrderForDate: (date: ISODateString, availableIds: string[]) => void
+  resetOrderStore: () => void
 }
 
 export const useTodayOrderStore = create<TodayOrderStore>()(
@@ -38,6 +39,7 @@ export const useTodayOrderStore = create<TodayOrderStore>()(
           },
         }))
       },
+      resetOrderStore: () => set({ ordersByDate: {} }),
     }),
     {
       name: 'habit-compass-today-order-v1',

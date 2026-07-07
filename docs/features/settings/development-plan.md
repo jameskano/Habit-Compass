@@ -6,12 +6,17 @@ This is the step-by-step execution plan for implementing Settings. Each step is 
 small enough to run as a separate Codex task when requested. Do not skip ahead to later security,
 export, deletion, or payment-related work unless the current step explicitly depends on it.
 
+Auth, RevenueCat, subscription, Android auth deep-link, and account-deletion guidance in this plan
+is superseded by `/specs/auth` where it conflicts. The old scheduled/pending-deletion steps are
+legacy context only.
+
 Canonical references:
 
 - [Settings spec](../../../specs/mvp/settings-spec.md)
 - [Settings implementation plan](implementation-plan.md)
 - [Settings test plan](test-plan.md)
 - [Authentication spec](../../../specs/mvp/authentication-spec.md)
+- [Canonical auth spec package](../../../specs/auth/README.md)
 - [Data export spec](../../../specs/mvp/data-export-spec.md)
 - [Feedback and support spec](../../../specs/mvp/feedback-support-spec.md)
 - [Account lifecycle spec](../../../specs/mvp/account-lifecycle-spec.md)
@@ -29,8 +34,9 @@ Canonical references:
 - Use new field names only for new fields, such as future `period_end` / `periodEnd`.
 - Add or update tests with the step when behavior changes.
 - Run the narrowest useful verification first; run `pnpm verify` when practical.
-- Do not add Notifications, RevenueCat, analytics, crash reporting, AI, OAuth linking, or global
-  sign-out unless a later step explicitly opens that scope.
+- Do not add Notifications, analytics, crash reporting, AI, OAuth linking, or global sign-out unless
+  a later step explicitly opens that scope. RevenueCat and Android auth deep links are open only
+  through `/specs/auth`.
 
 ## Step 0: Preflight And Scope Check
 
@@ -550,18 +556,18 @@ Done when:
 
 - Users can export their own app data and no settings/auth credentials are included.
 
-## Step 18: Account Deletion Request UI
+## Step 18: Immediate Account Deletion UI
 
-Goal: implement the Settings entry and confirmation flow for scheduling deletion.
+Goal: implement the Settings entry and confirmation flow for immediate permanent deletion.
 
 Work:
 
 - Add prominent destructive Delete account action.
 - Add first confirmation dialog.
-- Add reauthentication step appropriate to provider classification.
-- Add final confirmation with scheduled deletion date.
+- Add reauthentication step appropriate to account capabilities.
+- Add subscription-aware warning for Google Play/RevenueCat.
+- Add final destructive confirmation with immediate access-loss and no automatic refund copy.
 - Do not require typing `DELETE`.
-- Add future subscription warning only when Premium exists; not in MVP.
 
 Likely files:
 
@@ -576,47 +582,48 @@ Verification:
 
 Done when:
 
-- Active users can start the deletion flow safely, pending backend scheduling.
+- Active users can start the immediate deletion flow safely, pending backend completion.
 
-## Step 19: Account Deletion Backend Scheduling
+## Step 19: Immediate Account Deletion Backend
 
-Goal: store pending-deletion state server-side.
+Goal: delete the account immediately through a secured backend workflow.
 
 Work:
 
-- Add account lifecycle fields to `profiles`.
-- Add request deletion Edge Function or equivalent server-controlled path.
-- Use server time to calculate seven-day deletion date.
-- Make the request idempotent.
+- Add immediate deletion Edge Function or equivalent server-controlled path.
+- Verify authenticated user and recent reauthentication.
+- Cancel required Google Play auto-renewing subscriptions before destructive deletion.
+- Delete the RevenueCat customer server-side.
+- Delete app data, Storage objects, legal records, and Supabase Auth user.
+- Make the request idempotent across partial failures.
 - Rate limit abuse.
 
 Likely files:
 
 - `supabase/migrations/*`
-- `supabase/functions/request-account-deletion/*`
+- `supabase/functions/delete-account/*`
 - `src/integrations/supabase/*`
 - `src/domain/accountLifecycle/*`
 
 Verification:
 
 - Migration tests where available.
-- Integration tests for scheduling and idempotency.
+- Integration tests for subscription cancellation, RevenueCat deletion, app-data cleanup, Auth deletion, and idempotency.
 
 Done when:
 
-- Deletion requests create a pending-deletion account state with a server-controlled schedule.
+- Deletion requests complete only after required external cancellation and server-side cleanup.
 
-## Step 20: Pending-Deletion Routing And Screen
+## Step 20: Retire Pending-Deletion Routing And Screen
 
-Goal: route pending-deletion accounts away from normal app usage.
+Goal: remove the legacy pending-deletion target behavior from auth implementation.
 
 Work:
 
-- Add pending-deletion screen.
-- Show scheduled deletion date.
-- Allow Cancel account deletion, Export data, and Sign out.
-- Block normal habit/task/planning creation and modification.
-- Handle session restoration and deep links.
+- Ensure auth/session restoration does not route to pending deletion as target behavior.
+- Make legacy pending-deletion routes unreachable or clearly non-target until removed.
+- Route deleted/session-invalid users to authentication.
+- Clear local user state after deletion.
 
 Likely files:
 
@@ -628,24 +635,22 @@ Likely files:
 Verification:
 
 - Route guard tests.
-- Pending login/session restoration tests.
-- Cancellation idempotency tests.
+- Deleted/session-invalid restoration tests.
+- Local cleanup tests.
 
 Done when:
 
-- Pending-deletion users cannot access normal tracking screens.
+- Deleted accounts cannot access normal tracking screens and no pending-deletion state is exposed.
 
-## Step 21: Cancel Account Deletion
+## Step 21: Retire Cancel Account Deletion
 
-Goal: safely reactivate pending-deletion accounts.
+Goal: remove cancellation from the target deletion model.
 
 Work:
 
-- Add server-side cancellation action.
-- Reset pending-deletion fields.
-- Return account to `active`.
-- Handle repeated cancellation attempts.
-- Route back to the normal app after successful cancellation.
+- Do not expose cancellation after final confirmation.
+- Remove or retire legacy cancellation UI and Edge Function from active routing.
+- Keep retry only for failed deletion attempts where the account still exists.
 
 Likely files:
 
@@ -655,42 +660,36 @@ Likely files:
 
 Verification:
 
-- Integration tests for active/pending/not-found states.
-- E2E cancellation flow.
+- Tests prove cancellation controls are not shown in the immediate deletion flow.
+- Failed deletion retry keeps the account usable when safe.
 
 Done when:
 
-- Pending deletion can be cancelled safely before final deletion.
+- Immediate deletion has no user-facing cancellation state.
 
-## Step 22: Scheduled Final Deletion
+## Step 22: Retire Scheduled Final Deletion
 
-Goal: permanently delete due accounts through server-side jobs.
+Goal: replace the legacy scheduled finalizer with the immediate deletion function.
 
 Work:
 
-- Add scheduled finalizer via Supabase Cron or equivalent.
-- Revoke sessions.
-- Delete Storage objects.
-- Delete user-owned database records.
-- Delete Auth user.
-- Clean feedback/export temporary records where appropriate.
-- Add retry and partial-failure handling.
-- Keep audit logging minimal and non-sensitive.
+- Do not add new Cron-based account finalization for the auth target.
+- Move Storage cleanup, app-data deletion, and Auth user deletion into the immediate backend workflow.
+- Keep retry and partial-failure handling minimal, non-sensitive, and idempotent.
 
 Likely files:
 
-- `supabase/functions/finalize-account-deletion/*`
+- `supabase/functions/delete-account/*`
 - `supabase/migrations/*`
 - `docs/database/*`
 
 Verification:
 
-- Integration tests for due accounts, retries, partial failures, storage cleanup, cascades, and Auth
-  user deletion.
+- Integration tests for retries, partial failures, storage cleanup, cascades, RevenueCat, and Auth user deletion.
 
 Done when:
 
-- Due accounts are permanently deleted without client-side privileged credentials.
+- Accounts are permanently deleted without client-side privileged credentials or delayed finalization.
 
 ## Step 23: External Account Deletion Webpage
 
@@ -701,7 +700,7 @@ Work:
 - Build or integrate a public deletion request page.
 - Do not merely redirect to the app.
 - Verify identity through web auth, verified email, secure one-time link, or approved equivalent.
-- Trigger the same pending-deletion lifecycle as the app.
+- Trigger the same immediate deletion workflow as the app.
 - Localize and make accessible.
 - Configure public URL for Play Console.
 
@@ -714,7 +713,7 @@ Likely files:
 
 Verification:
 
-- Tests for verified request, rate limiting, pending status, cancellation, and accessibility.
+- Tests for verified request, rate limiting, deletion failure/success, and accessibility.
 
 Done when:
 
@@ -731,7 +730,7 @@ Work:
 - Confirm hosted Terms URL if used.
 - Confirm external account-deletion URL.
 - Complete Data Safety checklist based on actual behavior.
-- Verify Premium is Coming Soon only.
+- Verify RevenueCat/subscription behavior matches `/specs/auth`.
 - Review feedback screenshot and export behavior against Privacy Policy.
 
 Verification:
@@ -751,10 +750,11 @@ Status: deferred.
 Only start after a Notifications spec exists. Do not add an MVP row, permission flow, or reminder UI
 as part of Settings MVP.
 
-## Step 26: Future Premium And RevenueCat
+## Step 26: Premium And RevenueCat
 
-Status: deferred.
+Status: active for auth-scope identity and deletion; broader paywall behavior still needs accurate product and legal configuration.
 
-Only start after Premium is approved for implementation. Update product specs, Terms, Privacy
-Policy, Play Data Safety, account-deletion subscription warning, and RevenueCat processor/deletion
-requirements before coding.
+Implement only the RevenueCat identity, subscription status, Google Play cancellation, and customer
+deletion behavior required by `/specs/auth` unless a separate Premium product spec approves broader
+paywall work. Keep Terms, Privacy Policy, Play Data Safety, account-deletion subscription warning,
+and RevenueCat processor/deletion requirements aligned before release.

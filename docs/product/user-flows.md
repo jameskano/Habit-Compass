@@ -12,4 +12,4 @@ Initial flows:
 - Export data from Data and privacy.
 - Submit feedback or rate the app from Support and feedback.
 - Sign out locally from the current device/session.
-- Request account deletion with a seven-day pending-deletion period.
+- Delete an account immediately after required warnings, reauthentication, subscription cancellation, and server-side cleanup.

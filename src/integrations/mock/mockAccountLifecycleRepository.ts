@@ -78,6 +78,29 @@ export const mockAccountLifecycleRepository: AccountLifecycleRepository = {
     return ok({ accountStatus: 'active', deletionCancelledAt: cancelledAt })
   },
 
+  async deleteAccount(input) {
+    const state = getMockState()
+
+    if (!state.authSession.signedIn) {
+      return err(createAppError('unauthorized', 'No signed-in user is available.'))
+    }
+
+    if (
+      input.reauthProvider === 'password' &&
+      input.currentPassword !== state.authSession.currentPassword
+    ) {
+      return err(createAppError('unauthorized', 'Account deletion could not be completed.'))
+    }
+
+    state.accountLifecycle.deletionRequests.push('in_app')
+    state.authSession.signedIn = false
+
+    return ok({
+      deleted: true,
+      operationId: input.idempotencyKey,
+    })
+  },
+
   async requestExternalAccountDeletion({ email }) {
     getMockState().accountLifecycle.externalDeletionRequests.push(email)
 

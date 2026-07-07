@@ -4,6 +4,7 @@ import { useForm, type Resolver } from 'react-hook-form'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import { buildChangeEmailSchema, type ChangeEmailValues } from '@/domain/auth/securityForms'
+import { getAuthCallbackUrl } from '@/features/auth/authRedirects'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
@@ -20,26 +21,29 @@ type ChangeEmailSheetProps = {
 
 export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEmailSheetProps) => {
   const intl = useIntl()
-  const [status, setStatus] = useState<'idle' | 'pending_confirmation' | 'error'>('idle')
+  const [status, setStatus] = useState<'idle' | 'pending_confirmation' | 'auth_error' | 'error'>(
+    'idle',
+  )
   const requestEmailChange = useRequestEmailChangeMutation()
   const schema = useMemo(() => buildChangeEmailSchema(currentEmail), [currentEmail])
   const form = useForm<ChangeEmailValues>({
     resolver: zodResolver(schema) as Resolver<ChangeEmailValues>,
     defaultValues: {
+      currentPassword: '',
       newEmail: '',
     },
   })
 
   useEffect(() => {
     if (open) {
-      form.reset({ newEmail: '' })
+      form.reset({ currentPassword: '', newEmail: '' })
       setStatus('idle')
     }
   }, [form, open])
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      form.reset({ newEmail: '' })
+      form.reset({ currentPassword: '', newEmail: '' })
       setStatus('idle')
     }
     onOpenChange(nextOpen)
@@ -48,17 +52,22 @@ export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEma
   const submit = form.handleSubmit((values) => {
     setStatus('idle')
     requestEmailChange.mutate(
-      { newEmail: values.newEmail },
+      {
+        currentPassword: values.currentPassword,
+        emailRedirectTo: getAuthCallbackUrl('email-change'),
+        newEmail: values.newEmail,
+      },
       {
         onSuccess: () => {
-          form.reset({ newEmail: '' })
+          form.reset({ currentPassword: '', newEmail: '' })
           setStatus('pending_confirmation')
         },
-        onError: () => setStatus('error'),
+        onError: () => setStatus('auth_error'),
       },
     )
   })
 
+  const currentPasswordError = form.formState.errors.currentPassword
   const newEmailError = form.formState.errors.newEmail
   const canSubmit = Boolean(currentEmail) && !requestEmailChange.isPending
 
@@ -106,6 +115,25 @@ export const ChangeEmailSheet = ({ currentEmail, open, onOpenChange }: ChangeEma
                 <FormattedMessage id={getEmailErrorId(newEmailError.message)} />
               ) : null}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="security-email-current-password">
+              <FormattedMessage id="settings.security.changeEmail.currentPassword" />
+            </Label>
+            <Input
+              id="security-email-current-password"
+              type="password"
+              autoComplete="current-password"
+              aria-invalid={Boolean(currentPasswordError)}
+              className="rounded-xl border-border/75"
+              {...form.register('currentPassword')}
+            />
+            {currentPasswordError ? (
+              <p className="text-xs text-destructive">
+                <FormattedMessage id={getEmailErrorId(currentPasswordError.message)} />
+              </p>
+            ) : null}
           </div>
 
           {status !== 'idle' ? (

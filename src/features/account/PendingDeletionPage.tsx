@@ -109,7 +109,7 @@ export const PendingDeletionPage = () => {
             disabled={signOut.isPending}
             onClick={() =>
               signOut.mutate(undefined, {
-                onSuccess: () => navigate({ to: '/signed-out' }),
+                onSuccess: () => navigate({ to: '/auth/sign-in' }),
               })
             }
           >

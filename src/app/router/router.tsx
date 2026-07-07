@@ -7,7 +7,13 @@ import {
   Outlet,
 } from '@tanstack/react-router'
 
-import { AppLayout } from '../layout/AppLayout'
+import {
+  GuestRoute,
+  LegalAcceptanceRoute,
+  ProtectedAppRoute,
+} from '@/features/auth/AuthRouteGuards'
+import { AuthDeepLinkHandler } from '@/features/auth/AuthDeepLinkHandler'
+import { LegalAcceptancePage } from '@/features/auth/LegalAcceptancePage'
 import { TodayPage } from '../../features/today/TodayPage'
 import { RoutePendingState } from '../../shared/ui/LazyLoadingFallbacks'
 
@@ -38,6 +44,14 @@ const TermsOfServicePage = lazyRouteComponent(
   () => import('../../features/settings/data-privacy/LegalDocumentPage'),
   'TermsOfServicePage',
 )
+const PublicPrivacyPolicyPage = lazyRouteComponent(
+  () => import('../../features/settings/data-privacy/LegalDocumentPage'),
+  'PublicPrivacyPolicyPage',
+)
+const PublicTermsOfServicePage = lazyRouteComponent(
+  () => import('../../features/settings/data-privacy/LegalDocumentPage'),
+  'PublicTermsOfServicePage',
+)
 const SupportPage = lazyRouteComponent(
   () => import('../../features/settings/support/SupportPage'),
   'SupportPage',
@@ -46,9 +60,31 @@ const OnboardingPage = lazyRouteComponent(
   () => import('../../features/onboarding/OnboardingPage'),
   'OnboardingPage',
 )
-const SignedOutPage = lazyRouteComponent(
-  () => import('../../features/auth/SignedOutPage'),
-  'SignedOutPage',
+const SignInPage = lazyRouteComponent(() => import('../../features/auth/SignInPage'), 'SignInPage')
+const SignUpPage = lazyRouteComponent(() => import('../../features/auth/SignUpPage'), 'SignUpPage')
+const EmailCodePage = lazyRouteComponent(
+  () => import('../../features/auth/EmailCodePage'),
+  'EmailCodePage',
+)
+const EmailCodeVerifyPage = lazyRouteComponent(
+  () => import('../../features/auth/EmailCodeVerifyPage'),
+  'EmailCodeVerifyPage',
+)
+const VerifyEmailPage = lazyRouteComponent(
+  () => import('../../features/auth/VerifyEmailPage'),
+  'VerifyEmailPage',
+)
+const ForgotPasswordPage = lazyRouteComponent(
+  () => import('../../features/auth/ForgotPasswordPage'),
+  'ForgotPasswordPage',
+)
+const AuthCallbackPage = lazyRouteComponent(
+  () => import('../../features/auth/AuthCallbackPage'),
+  'AuthCallbackPage',
+)
+const ResetPasswordPage = lazyRouteComponent(
+  () => import('../../features/auth/ResetPasswordPage'),
+  'ResetPasswordPage',
 )
 const PendingDeletionPage = lazyRouteComponent(
   () => import('../../features/account/PendingDeletionPage'),
@@ -61,9 +97,10 @@ const ExternalAccountDeletionPage = lazyRouteComponent(
 
 const rootRoute = createRootRoute({
   component: () => (
-    <AppLayout>
+    <>
+      <AuthDeepLinkHandler />
       <Outlet />
-    </AppLayout>
+    </>
   ),
 })
 
@@ -73,86 +110,180 @@ const indexRoute = createRoute({
   component: () => <Navigate to="/today" />,
 })
 
-const todayRoute = createRoute({
+const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'protected',
+  component: ProtectedAppRoute,
+})
+
+const todayRoute = createRoute({
+  getParentRoute: () => protectedRoute,
   path: '/today',
   component: TodayPage,
 })
 
 const weekRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/week',
   component: WeekPage,
 })
 
 const itemsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/items',
   component: ItemsPage,
 })
 
 const moodRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/mood',
   component: MoodPage,
 })
 
 const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings',
   component: SettingsPage,
 })
 
 const settingsCategoriesRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/categories',
   component: CategoriesPage,
 })
 
 const settingsDataPrivacyRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/data-privacy',
   component: DataPrivacyPage,
 })
 
 const settingsSecurityRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/security',
   component: SecurityPage,
 })
 
 const settingsPrivacyPolicyRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/data-privacy/privacy-policy',
   component: PrivacyPolicyPage,
 })
 
 const settingsTermsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/data-privacy/terms',
   component: TermsOfServicePage,
 })
 
 const settingsSupportRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/settings/support',
   component: SupportPage,
 })
 
 const onboardingRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/onboarding',
   component: OnboardingPage,
 })
 
-const signedOutRoute = createRoute({
+const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/signed-out',
-  component: SignedOutPage,
+  path: '/auth/sign-in',
+  component: () => (
+    <GuestRoute>
+      <SignInPage />
+    </GuestRoute>
+  ),
+})
+
+const signUpRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/sign-up',
+  component: () => (
+    <GuestRoute>
+      <SignUpPage />
+    </GuestRoute>
+  ),
+})
+
+const emailCodeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/email-code',
+  component: () => (
+    <GuestRoute>
+      <EmailCodePage />
+    </GuestRoute>
+  ),
+})
+
+const emailCodeVerifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/email-code/verify',
+  component: () => (
+    <GuestRoute>
+      <EmailCodeVerifyPage />
+    </GuestRoute>
+  ),
+})
+
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/verify-email',
+  component: () => (
+    <GuestRoute>
+      <VerifyEmailPage />
+    </GuestRoute>
+  ),
+})
+
+const authCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/callback',
+  component: AuthCallbackPage,
+})
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/forgot-password',
+  component: () => (
+    <GuestRoute>
+      <ForgotPasswordPage />
+    </GuestRoute>
+  ),
+})
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/reset-password',
+  component: ResetPasswordPage,
+})
+
+const legalAcceptanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/legal/acceptance',
+  component: () => (
+    <LegalAcceptanceRoute>
+      <LegalAcceptancePage />
+    </LegalAcceptanceRoute>
+  ),
+})
+
+const publicPrivacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/legal/privacy-policy',
+  component: PublicPrivacyPolicyPage,
+})
+
+const publicTermsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/legal/terms',
+  component: PublicTermsOfServicePage,
 })
 
 const pendingDeletionRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => protectedRoute,
   path: '/account/pending-deletion',
   component: PendingDeletionPage,
 })
@@ -165,20 +296,32 @@ const externalAccountDeletionRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  todayRoute,
-  weekRoute,
-  itemsRoute,
-  moodRoute,
-  settingsRoute,
-  settingsCategoriesRoute,
-  settingsSecurityRoute,
-  settingsDataPrivacyRoute,
-  settingsPrivacyPolicyRoute,
-  settingsTermsRoute,
-  settingsSupportRoute,
-  onboardingRoute,
-  signedOutRoute,
-  pendingDeletionRoute,
+  signInRoute,
+  signUpRoute,
+  emailCodeRoute,
+  emailCodeVerifyRoute,
+  verifyEmailRoute,
+  forgotPasswordRoute,
+  authCallbackRoute,
+  resetPasswordRoute,
+  legalAcceptanceRoute,
+  publicPrivacyPolicyRoute,
+  publicTermsRoute,
+  protectedRoute.addChildren([
+    todayRoute,
+    weekRoute,
+    itemsRoute,
+    moodRoute,
+    settingsRoute,
+    settingsCategoriesRoute,
+    settingsSecurityRoute,
+    settingsDataPrivacyRoute,
+    settingsPrivacyPolicyRoute,
+    settingsTermsRoute,
+    settingsSupportRoute,
+    onboardingRoute,
+    pendingDeletionRoute,
+  ]),
   externalAccountDeletionRoute,
 ])
 

@@ -5,6 +5,9 @@ import { getEmailErrorId, getPasswordErrorId } from './securityFormMessages'
 describe('security form messages', () => {
   it('maps change-email validation messages to translation ids', () => {
     expect(getEmailErrorId('unchanged')).toBe('settings.security.changeEmail.error.unchanged')
+    expect(getEmailErrorId('required')).toBe(
+      'settings.security.changeEmail.error.currentPasswordRequired',
+    )
     expect(getEmailErrorId('invalid')).toBe('settings.security.changeEmail.error.invalid')
     expect(getEmailErrorId()).toBe('settings.security.changeEmail.error.invalid')
   })
