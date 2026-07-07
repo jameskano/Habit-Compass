@@ -13,6 +13,7 @@ export type AuthLifecycleState =
       user: AuthSessionUser
       capabilities: UserAccountCapabilities
       legalStatus: CurrentLegalStatus
+      onboardingCompletedAt: string | null
     }
   | {
       status: 'error'

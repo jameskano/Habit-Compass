@@ -2,7 +2,11 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { AuthLifecycleState } from './authState.types'
-import { authRepository, subscriptionRepository } from '@/integrations/repositories'
+import {
+  authRepository,
+  settingsRepository,
+  subscriptionRepository,
+} from '@/integrations/repositories'
 import { AppError, createAppError } from '@/shared/utils/appError'
 import { unwrapResult } from '@/shared/utils/result'
 
@@ -83,6 +87,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const capabilities = unwrapResult(await authRepository.ensureUserProvisioned())
       const legalStatus = unwrapResult(await authRepository.getCurrentLegalStatus())
+      const onboardingStatus = unwrapResult(await settingsRepository.getOnboardingStatus())
 
       if (refreshVersion !== stateVersionRef.current) {
         return
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setState({
         capabilities,
         legalStatus,
+        onboardingCompletedAt: onboardingStatus.onboardingCompletedAt,
         status: 'authenticated',
         user,
       })
