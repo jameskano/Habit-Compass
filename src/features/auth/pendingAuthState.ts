@@ -52,6 +52,6 @@ export const legalIntentMatches = (
 ) =>
   Boolean(
     intent &&
-      intent.currentTermsVersion === versions.currentTermsVersion &&
-      intent.currentPrivacyPolicyVersion === versions.currentPrivacyPolicyVersion,
+    intent.currentTermsVersion === versions.currentTermsVersion &&
+    intent.currentPrivacyPolicyVersion === versions.currentPrivacyPolicyVersion,
   )

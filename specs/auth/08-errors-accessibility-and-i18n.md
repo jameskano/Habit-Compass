@@ -25,7 +25,7 @@ type AuthErrorCode =
   | 'SUBSCRIPTION_STATUS_FAILED'
   | 'SUBSCRIPTION_CANCELLATION_FAILED'
   | 'ACCOUNT_DELETION_FAILED'
-  | 'UNKNOWN';
+  | 'UNKNOWN'
 ```
 
 Map Supabase/RevenueCat error codes centrally.

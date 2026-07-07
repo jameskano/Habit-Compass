@@ -22,7 +22,13 @@ export const FieldError = ({ id, messageId }: FieldErrorProps) =>
     </p>
   ) : null
 
-export const AuthAlert = ({ errorCode, messageId }: { errorCode?: AuthErrorCode | null; messageId?: string }) => {
+export const AuthAlert = ({
+  errorCode,
+  messageId,
+}: {
+  errorCode?: AuthErrorCode | null
+  messageId?: string
+}) => {
   if (!errorCode && !messageId) {
     return null
   }
@@ -102,7 +108,13 @@ export const OAuthDivider = () => (
   </div>
 )
 
-export const GoogleButton = ({ disabled, onClick }: { disabled?: boolean; onClick: () => void }) => (
+export const GoogleButton = ({
+  disabled,
+  onClick,
+}: {
+  disabled?: boolean
+  onClick: () => void
+}) => (
   <Button className="w-full" disabled={disabled} onClick={onClick} type="button" variant="outline">
     <FormattedMessage id="auth.google.continue" />
   </Button>

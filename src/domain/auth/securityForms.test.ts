@@ -10,9 +10,9 @@ describe('auth security form validation', () => {
       schema.safeParse({ currentPassword: 'current-password', newEmail: 'new@example.com' })
         .success,
     ).toBe(true)
-    expect(
-      schema.safeParse({ currentPassword: '', newEmail: 'new@example.com' }).success,
-    ).toBe(false)
+    expect(schema.safeParse({ currentPassword: '', newEmail: 'new@example.com' }).success).toBe(
+      false,
+    )
     expect(
       schema.safeParse({ currentPassword: 'current-password', newEmail: 'not-an-email' }).success,
     ).toBe(false)

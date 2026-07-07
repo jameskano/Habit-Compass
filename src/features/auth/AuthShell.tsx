@@ -43,7 +43,10 @@ export const AuthTextLink = ({
   className?: string
   to: string
 }) => (
-  <Link className={cn('font-medium text-primary underline-offset-4 hover:underline', className)} to={to as never}>
+  <Link
+    className={cn('font-medium text-primary underline-offset-4 hover:underline', className)}
+    to={to as never}
+  >
     {children}
   </Link>
 )

@@ -107,11 +107,11 @@ Provide one query/RPC that returns:
 
 ```ts
 type LegalStatus = {
-  accepted: boolean;
-  currentTermsVersion: string;
-  currentPrivacyPolicyVersion: string;
-  acceptedAt: string | null;
-};
+  accepted: boolean
+  currentTermsVersion: string
+  currentPrivacyPolicyVersion: string
+  acceptedAt: string | null
+}
 ```
 
 A user is current only when an acceptance row exists for the exact current Terms and Privacy version pair.

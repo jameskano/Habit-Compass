@@ -104,7 +104,7 @@ await supabase.auth.signInWithOtp({
   options: {
     shouldCreateUser: false,
   },
-});
+})
 ```
 
 The configured Supabase template must contain the one-time token, not only a magic link.

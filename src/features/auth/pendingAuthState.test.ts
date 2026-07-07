@@ -37,7 +37,10 @@ describe('pendingAuthState', () => {
 
     expect(legalIntentMatches({ ...versions, locale: 'en' }, versions)).toBe(true)
     expect(
-      legalIntentMatches({ currentPrivacyPolicyVersion: 'old', currentTermsVersion: 'terms', locale: 'en' }, versions),
+      legalIntentMatches(
+        { currentPrivacyPolicyVersion: 'old', currentTermsVersion: 'terms', locale: 'en' },
+        versions,
+      ),
     ).toBe(false)
   })
 })

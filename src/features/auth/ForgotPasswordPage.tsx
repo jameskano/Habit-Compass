@@ -33,7 +33,9 @@ export const ForgotPasswordPage = () => {
     const email = normalizeEmail(values.email)
 
     try {
-      unwrapResult(await authRepository.requestPasswordReset({ email, redirectTo: getPasswordRecoveryUrl() }))
+      unwrapResult(
+        await authRepository.requestPasswordReset({ email, redirectTo: getPasswordRecoveryUrl() }),
+      )
       savePendingAuthState({ email, flow: 'recovery' })
       setSent(true)
     } catch (error) {

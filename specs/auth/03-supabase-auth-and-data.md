@@ -221,7 +221,7 @@ supabase.auth.signUp({
   options: {
     emailRedirectTo: AUTH_REDIRECTS.emailConfirmation,
   },
-});
+})
 ```
 
 ### Sign-in
@@ -230,7 +230,7 @@ supabase.auth.signUp({
 supabase.auth.signInWithPassword({
   email,
   password,
-});
+})
 ```
 
 ### Change password in Settings
@@ -241,7 +241,7 @@ Require a compatible `supabase-js` version and use:
 supabase.auth.updateUser({
   password: newPassword,
   currentPassword,
-});
+})
 ```
 
 The current password is not optional in the Habit Compass Settings flow.
@@ -251,7 +251,7 @@ The current password is not optional in the Habit Compass Settings flow.
 ```ts
 supabase.auth.resetPasswordForEmail(email, {
   redirectTo: AUTH_REDIRECTS.passwordRecovery,
-});
+})
 ```
 
 ### Complete recovery
@@ -259,7 +259,7 @@ supabase.auth.resetPasswordForEmail(email, {
 ```ts
 supabase.auth.updateUser({
   password: newPassword,
-});
+})
 ```
 
 Only do this within the valid recovery session.
@@ -274,7 +274,7 @@ supabase.auth.signInWithOtp({
   options: {
     shouldCreateUser: false,
   },
-});
+})
 ```
 
 ### Verify
@@ -284,7 +284,7 @@ supabase.auth.verifyOtp({
   email,
   token,
   type: 'email',
-});
+})
 ```
 
 Email OTP must use the six-digit token template.
@@ -308,10 +308,7 @@ Abort if:
 ### Request new email
 
 ```ts
-supabase.auth.updateUser(
-  { email: newEmail },
-  { emailRedirectTo: AUTH_REDIRECTS.emailChange }
-);
+supabase.auth.updateUser({ email: newEmail }, { emailRedirectTo: AUTH_REDIRECTS.emailChange })
 ```
 
 Exact overload/options must match the installed Supabase SDK.
@@ -341,7 +338,7 @@ The client must not call the Auth admin API.
 The account-deletion Edge Function uses a server-only Supabase client and performs a permanent delete:
 
 ```ts
-supabaseAdmin.auth.admin.deleteUser(userId, false);
+supabaseAdmin.auth.admin.deleteUser(userId, false)
 ```
 
 Use the exact installed SDK signature.

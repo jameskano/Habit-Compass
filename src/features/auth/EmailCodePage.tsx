@@ -79,7 +79,12 @@ export const EmailCodePage = () => {
           errorMessageId={getAuthFieldErrorMessageId(form.formState.errors.email?.message)}
           labelId="auth.fields.email"
         >
-          <Input autoComplete="email" id="email-code-email" type="email" {...form.register('email')} />
+          <Input
+            autoComplete="email"
+            id="email-code-email"
+            type="email"
+            {...form.register('email')}
+          />
         </FormField>
         <Button className="w-full" disabled={pending} type="submit">
           <FormattedMessage id={pending ? 'auth.emailCode.sending' : 'auth.emailCode.send'} />

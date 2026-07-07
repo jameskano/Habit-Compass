@@ -39,13 +39,13 @@ Create an application representation:
 
 ```ts
 type SubscriptionSnapshot = {
-  loading: boolean;
-  hasActiveEntitlement: boolean;
-  hasActiveGooglePlayAutoRenewingSubscription: boolean;
-  willRenew: boolean | null;
-  managementUrl: string | null;
-  expirationDate: string | null;
-};
+  loading: boolean
+  hasActiveEntitlement: boolean
+  hasActiveGooglePlayAutoRenewingSubscription: boolean
+  willRenew: boolean | null
+  managementUrl: string | null
+  expirationDate: string | null
+}
 ```
 
 Adapt fields to the existing subscription specification.

@@ -40,7 +40,9 @@ export const EmailCodeVerifyPage = () => {
     clearError()
 
     try {
-      unwrapResult(await authRepository.verifyEmailCode({ email, token: normalizeOtpCode(values.code) }))
+      unwrapResult(
+        await authRepository.verifyEmailCode({ email, token: normalizeOtpCode(values.code) }),
+      )
       await postAuthNavigate()
     } catch (error) {
       captureError(error)
@@ -64,7 +66,10 @@ export const EmailCodeVerifyPage = () => {
   }
 
   return (
-    <AuthShell titleId="auth.emailCode.verifyTitle" descriptionId="auth.emailCode.verifyDescription">
+    <AuthShell
+      titleId="auth.emailCode.verifyTitle"
+      descriptionId="auth.emailCode.verifyDescription"
+    >
       <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         {email ? (

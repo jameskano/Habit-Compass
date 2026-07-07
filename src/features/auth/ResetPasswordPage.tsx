@@ -25,7 +25,9 @@ export const ResetPasswordPage = () => {
     clearError()
 
     try {
-      unwrapResult(await authRepository.updateRecoveredPassword({ newPassword: values.newPassword }))
+      unwrapResult(
+        await authRepository.updateRecoveredPassword({ newPassword: values.newPassword }),
+      )
       await postAuthNavigate()
     } catch (error) {
       captureError(error)
@@ -49,7 +51,9 @@ export const ResetPasswordPage = () => {
         </FormField>
         <FormField
           errorId="reset-password-confirm-error"
-          errorMessageId={getAuthFieldErrorMessageId(form.formState.errors.confirmPassword?.message)}
+          errorMessageId={getAuthFieldErrorMessageId(
+            form.formState.errors.confirmPassword?.message,
+          )}
           labelId="auth.resetPassword.confirmPassword"
         >
           <PasswordInput

@@ -55,7 +55,7 @@ export const createAuthAppError = (
 
 export const mapSupabaseAuthError = (cause: unknown, fallback: AuthErrorCode = 'UNKNOWN') => {
   const code = getErrorCode(cause)
-  return code ? knownSupabaseCodes[code] ?? fallback : fallback
+  return code ? (knownSupabaseCodes[code] ?? fallback) : fallback
 }
 
 export const getAuthErrorCode = (error: unknown): AuthErrorCode => {

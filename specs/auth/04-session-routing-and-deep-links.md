@@ -91,7 +91,7 @@ const AUTH_REDIRECTS = {
   emailConfirmation: 'habitcompass://auth/callback?flow=signup',
   passwordRecovery: 'habitcompass://auth/callback?flow=recovery',
   emailChange: 'habitcompass://auth/callback?flow=email-change',
-};
+}
 ```
 
 The actual scheme/package identifier must match the existing Capacitor app identity.

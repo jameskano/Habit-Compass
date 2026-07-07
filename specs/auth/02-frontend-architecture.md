@@ -81,27 +81,27 @@ type AuthLifecycle =
   | { status: 'initializing' }
   | { status: 'unauthenticated' }
   | {
-      status: 'authenticated';
-      session: Session;
-      user: User;
-      capabilities: AccountCapabilities | null;
-      legalStatus: 'loading' | 'required' | 'accepted';
+      status: 'authenticated'
+      session: Session
+      user: User
+      capabilities: AccountCapabilities | null
+      legalStatus: 'loading' | 'required' | 'accepted'
     }
   | {
-      status: 'error';
-      error: AppAuthError;
-    };
+      status: 'error'
+      error: AppAuthError
+    }
 
 type AccountCapabilities = {
-  passwordEnabled: boolean;
-  googleEnabled: boolean;
-};
+  passwordEnabled: boolean
+  googleEnabled: boolean
+}
 
 type AuthContextValue = {
-  lifecycle: AuthLifecycle;
-  refreshAccountContext(): Promise<void>;
-  signOutLocal(): Promise<void>;
-};
+  lifecycle: AuthLifecycle
+  refreshAccountContext(): Promise<void>
+  signOutLocal(): Promise<void>
+}
 ```
 
 The final naming may follow repository conventions.

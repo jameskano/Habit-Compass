@@ -63,7 +63,7 @@ Use Supabase password update with `currentPassword`.
 await supabase.auth.updateUser({
   password: newPassword,
   currentPassword,
-});
+})
 ```
 
 ### Success
@@ -152,18 +152,18 @@ See `01-user-flows-and-ui.md` for complete flow.
 
 ## 6. Reauthentication matrix
 
-| Operation | Required proof |
-|---|---|
-| Change password in Settings | Current password in the Supabase update request |
-| Change email | Current password, verified before update |
-| Delete account: password-enabled account | Fresh current-password sign-in |
-| Delete account: Google-only account | Fresh Google OAuth sign-in and same-user-ID check |
-| Forgot/reset password | Valid Supabase recovery flow |
-| Sign out | None |
-| Manage subscription | No additional Habit Compass reauthentication |
-| Restore purchases | None |
-| Edit habits/tasks/categories | None |
-| Theme/language/week-start changes | None |
+| Operation                                | Required proof                                    |
+| ---------------------------------------- | ------------------------------------------------- |
+| Change password in Settings              | Current password in the Supabase update request   |
+| Change email                             | Current password, verified before update          |
+| Delete account: password-enabled account | Fresh current-password sign-in                    |
+| Delete account: Google-only account      | Fresh Google OAuth sign-in and same-user-ID check |
+| Forgot/reset password                    | Valid Supabase recovery flow                      |
+| Sign out                                 | None                                              |
+| Manage subscription                      | No additional Habit Compass reauthentication      |
+| Restore purchases                        | None                                              |
+| Edit habits/tasks/categories             | None                                              |
+| Theme/language/week-start changes        | None                                              |
 
 ## 7. Recent-auth proof for deletion
 

@@ -127,7 +127,10 @@ export const mockAuthRepository: AuthRepository = {
   async signInWithPassword(input) {
     const authSession = getMockState().authSession
 
-    if (input.email !== authSession.currentEmail || input.password !== authSession.currentPassword) {
+    if (
+      input.email !== authSession.currentEmail ||
+      input.password !== authSession.currentPassword
+    ) {
       return err(createAppError('unauthorized', 'Authentication failed.'))
     }
 
