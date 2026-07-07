@@ -21,6 +21,7 @@ export type AuthLifecycleState =
 
 export type AuthContextValue = {
   state: AuthLifecycleState
+  clearDeletedAccountState: () => Promise<void>
   refreshAccountContext: () => Promise<void>
   signOut: () => Promise<void>
 }

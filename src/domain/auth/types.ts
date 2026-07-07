@@ -13,7 +13,7 @@ export type AuthIdentity = {
 
 export type AuthSecurityProfile = {
   currentEmail: string | null
-  providerClassification: AccountProviderClassification
+  capabilities: UserAccountCapabilities
 }
 
 export type AuthSessionUser = {
@@ -133,6 +133,8 @@ export type AcceptCurrentLegalDocumentsInput = {
 }
 
 export type RequestEmailChangeInput = {
+  currentPassword: string
+  emailRedirectTo: string
   newEmail: string
 }
 

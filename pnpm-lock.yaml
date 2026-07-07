@@ -41,11 +41,14 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@revenuecat/purchases-capacitor':
+        specifier: ^11.3.2
+        version: 11.3.2(@capacitor/core@7.4.3)
       '@sentry/react':
         specifier: ^10.17.0
         version: 10.53.1(react@19.2.6)
       '@supabase/supabase-js':
-        specifier: ^2.75.0
+        specifier: ^2.102.0
         version: 2.106.1
       '@tanstack/react-query':
         specifier: ^5.90.2
@@ -1264,6 +1267,14 @@ packages:
         optional: true
       react-redux:
         optional: true
+
+  '@revenuecat/purchases-capacitor@11.3.2':
+    resolution: {integrity: sha512-3T4/lcAwpbPagrT4DuXvJ+8RewzFmHf3fQJQuhVy+uTQk5HGMHNlXcm2A/UdyHtWqU+/VqWbCClPFYGnpnNXAQ==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@revenuecat/purchases-typescript-internal-esm@17.25.0':
+    resolution: {integrity: sha512-KC4BjFaQclXqFafG1Enh7t8GSwdg8p905by7UrHq0WSJmLhOR6yXSj6WDv1iwsFSAZxPPwgozNxt+U6IOFTdCA==}
 
   '@rolldown/pluginutils@1.0.0-rc.3':
     resolution: {integrity: sha512-eybk3TjzzzV97Dlj5c+XrBFW57eTNhzod66y9HrBlzJ6NsCrWCp/2kaPS3K9wJmurBC0Tdw4yPjXKZqlznim3Q==}
@@ -4395,6 +4406,13 @@ snapshots:
     optionalDependencies:
       react: 19.2.6
       react-redux: 9.3.0(@types/react@19.2.15)(react@19.2.6)(redux@5.0.1)
+
+  '@revenuecat/purchases-capacitor@11.3.2(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
+      '@revenuecat/purchases-typescript-internal-esm': 17.25.0
+
+  '@revenuecat/purchases-typescript-internal-esm@17.25.0': {}
 
   '@rolldown/pluginutils@1.0.0-rc.3': {}
 

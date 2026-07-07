@@ -7,6 +7,10 @@ export const getEmailErrorId = (message?: string) => {
     return 'settings.security.changeEmail.error.unchanged'
   }
 
+  if (message === 'required') {
+    return 'settings.security.changeEmail.error.currentPasswordRequired'
+  }
+
   return 'settings.security.changeEmail.error.invalid'
 }
 

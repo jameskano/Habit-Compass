@@ -7,6 +7,7 @@ import type {
   AuthSessionUser,
   CurrentLegalStatus,
   CurrentLegalVersions,
+  UserAccountCapabilities,
 } from '@/domain/auth'
 import { classifyAccountProviders } from '@/domain/auth'
 import { createAuthAppError, mapSupabaseAuthError } from '@/domain/auth/authErrors'
@@ -61,6 +62,31 @@ type LegalVersionsRpcRow = {
   current_privacy_policy_version: string
 }
 
+const mapProvisioningRow = (row: ProvisioningRpcRow): UserAccountCapabilities => ({
+  googleEnabled: row.google_enabled,
+  passwordEnabled: row.password_enabled,
+  userId: row.user_id,
+})
+
+const loadAccountCapabilities = async () => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('ensure_user_provisioned')
+
+  if (error) {
+    return err(
+      createAppError('unknown', 'Could not prepare the signed-in account.', { cause: error }),
+    )
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as ProvisioningRpcRow | undefined
+
+  if (!row) {
+    return err(createAppError('unknown', 'Account provisioning returned no account data.'))
+  }
+
+  return ok(mapProvisioningRow(row))
+}
+
 export const supabaseAuthRepository: AuthRepository = {
   async getStoredSession() {
     const supabase = getSupabaseClient()
@@ -100,26 +126,7 @@ export const supabaseAuthRepository: AuthRepository = {
   },
 
   async ensureUserProvisioned() {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase.rpc('ensure_user_provisioned')
-
-    if (error) {
-      return err(
-        createAppError('unknown', 'Could not prepare the signed-in account.', { cause: error }),
-      )
-    }
-
-    const row = (Array.isArray(data) ? data[0] : data) as ProvisioningRpcRow | undefined
-
-    if (!row) {
-      return err(createAppError('unknown', 'Account provisioning returned no account data.'))
-    }
-
-    return ok({
-      googleEnabled: row.google_enabled,
-      passwordEnabled: row.password_enabled,
-      userId: row.user_id,
-    })
+    return loadAccountCapabilities()
   },
 
   async getCurrentLegalStatus() {
@@ -159,6 +166,10 @@ export const supabaseAuthRepository: AuthRepository = {
     return ok(classifyAccountProviders(data.identities))
   },
 
+  async getAccountCapabilities() {
+    return loadAccountCapabilities()
+  },
+
   async getSecurityProfile() {
     const supabase = getSupabaseClient()
     const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -171,13 +182,15 @@ export const supabaseAuthRepository: AuthRepository = {
       )
     }
 
-    const { data: identityData, error: identityError } = await supabase.auth.getUserIdentities()
+    const capabilities = await loadAccountCapabilities()
+
+    if (!capabilities.ok) {
+      return err(capabilities.error)
+    }
 
     return ok({
+      capabilities: capabilities.data,
       currentEmail: userData.user.email ?? null,
-      providerClassification: identityError
-        ? 'unknown'
-        : classifyAccountProviders(identityData.identities),
     })
   },
 
@@ -356,10 +369,31 @@ export const supabaseAuthRepository: AuthRepository = {
 
   async requestEmailChange(input) {
     const supabase = getSupabaseClient()
-    const { error } = await supabase.auth.updateUser({ email: input.newEmail })
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    const email = userData.user?.email
+
+    if (userError || !email) {
+      return err(
+        createAuthAppError('SESSION_EXPIRED', 'Could not verify the signed-in user.', userError),
+      )
+    }
+
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: input.currentPassword,
+    })
+
+    if (signInError || signInData.user?.id !== userData.user.id) {
+      return authErr(signInError, 'CURRENT_PASSWORD_INCORRECT')
+    }
+
+    const { error } = await supabase.auth.updateUser(
+      { email: input.newEmail },
+      { emailRedirectTo: input.emailRedirectTo },
+    )
 
     if (error) {
-      return err(sanitizeAuthError('Could not start the email change.', error))
+      return authErr(error, 'INVALID_EMAIL')
     }
 
     return ok({ pendingEmail: input.newEmail })
@@ -367,32 +401,14 @@ export const supabaseAuthRepository: AuthRepository = {
 
   async updatePassword(input) {
     const supabase = getSupabaseClient()
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    const email = userData.user?.email
-
-    if (userError || !email) {
-      return err(
-        createAppError('unauthorized', 'Could not verify the signed-in user.', {
-          cause: userError,
-        }),
-      )
+    const passwordAttributes = {
+      currentPassword: input.currentPassword,
+      password: input.newPassword,
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password: input.currentPassword,
-    })
-
-    if (signInError) {
-      return err(
-        createAppError('unauthorized', 'Password could not be updated.', { cause: signInError }),
-      )
-    }
-
-    const { error } = await supabase.auth.updateUser({ password: input.newPassword })
+    const { error } = await supabase.auth.updateUser(passwordAttributes)
 
     if (error) {
-      return err(sanitizeAuthError('Could not update the password.', error))
+      return authErr(error, 'CURRENT_PASSWORD_INCORRECT')
     }
 
     return ok(null)

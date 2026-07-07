@@ -2,7 +2,9 @@ import type { AppSettings } from '@/domain/settings'
 
 export type PreferenceSheet = 'language' | 'theme' | 'weekStartsOn'
 
-export type DeleteAccountStep = 'intent' | 'reauth' | 'schedule'
+export type DeleteAccountStep = 'intent' | 'reauth' | 'confirm'
+
+export type DeleteAccountReauthMethod = 'password' | 'google' | 'none'
 
 export type PreferenceOption<Value extends string | number> = {
   value: Value

@@ -8,6 +8,7 @@ import { mockMoodRepository } from './mock/mockMoodRepository'
 import { mockPlanningRepository } from './mock/mockPlanningRepository'
 import { mockRecurrentTasksRepository } from './mock/mockRecurrentTasksRepository'
 import { mockTasksRepository } from './mock/mockTasksRepository'
+import { mockSubscriptionRepository } from './mock/mockSubscriptionRepository'
 import { supabaseAuthRepository } from './supabase/repositories/authRepository'
 import { supabaseAccountLifecycleRepository } from './supabase/repositories/accountLifecycleRepository'
 import { supabaseCategoriesRepository } from './supabase/repositories/categoriesRepository'
@@ -18,6 +19,7 @@ import { supabaseMoodRepository } from './supabase/repositories/moodRepository'
 import { supabasePlanningRepository } from './supabase/repositories/planningRepository'
 import { supabaseRecurrentTasksRepository } from './supabase/repositories/recurrentTasksRepository'
 import { supabaseTasksRepository } from './supabase/repositories/tasksRepository'
+import { revenueCatRepository } from './revenuecat/revenueCatRepository'
 
 const repositorySource = import.meta.env.VITE_APP_DATA_SOURCE === 'supabase' ? 'supabase' : 'mock'
 
@@ -43,5 +45,7 @@ export const accountLifecycleRepository =
   repositorySource === 'supabase'
     ? supabaseAccountLifecycleRepository
     : mockAccountLifecycleRepository
+export const subscriptionRepository =
+  repositorySource === 'supabase' ? revenueCatRepository : mockSubscriptionRepository
 
 export const activeRepositorySource = repositorySource

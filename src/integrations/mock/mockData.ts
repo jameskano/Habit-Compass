@@ -10,6 +10,7 @@ import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
+import { emptySubscriptionSnapshot, type SubscriptionSnapshot } from '@/domain/subscriptions'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
 
@@ -78,6 +79,11 @@ export type MockDataState = {
     cancellationRequests: string[]
     deletionRequests: DeletionRequestSource[]
     externalDeletionRequests: string[]
+  }
+  subscription: {
+    clearRequests: number
+    identifiedUserIds: string[]
+    snapshot: SubscriptionSnapshot
   }
   categories: Category[]
   habits: Habit[]
@@ -395,6 +401,11 @@ const createInitialMockData = (): MockDataState => {
       cancellationRequests: [],
       deletionRequests: [],
       externalDeletionRequests: [],
+    },
+    subscription: {
+      clearRequests: 0,
+      identifiedUserIds: [],
+      snapshot: emptySubscriptionSnapshot,
     },
     categories,
     habits,

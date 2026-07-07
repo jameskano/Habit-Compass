@@ -5,7 +5,7 @@ export const authNativeScheme = 'habitcompass'
 export const authNativeHost = 'auth'
 export const authNativePath = '/callback'
 
-export const authCallbackFlows = ['signup', 'recovery', 'email-change'] as const
+export const authCallbackFlows = ['signup', 'recovery', 'email-change', 'delete-account'] as const
 
 export type AuthCallbackFlow = (typeof authCallbackFlows)[number]
 

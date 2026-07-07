@@ -2,7 +2,7 @@ import { FormattedMessage } from 'react-intl'
 
 import { cn } from '@/shared/utils/cn'
 
-type SettingsStatusTone = 'success' | 'error'
+type SettingsStatusTone = 'success' | 'error' | 'info' | 'warning'
 
 type SettingsStatusMessageProps = {
   messageId: string
@@ -28,10 +28,20 @@ export const SettingsStatusMessage = ({
       tone === 'error' && appearance === 'bordered'
         ? 'border-destructive/20 bg-destructive/10 text-destructive'
         : null,
+      tone === 'info' && appearance === 'bordered'
+        ? 'border-border bg-muted/70 text-muted-foreground'
+        : null,
+      tone === 'warning' && appearance === 'bordered'
+        ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+        : null,
       tone === 'success' && appearance === 'plain'
         ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
         : null,
       tone === 'error' && appearance === 'plain' ? 'bg-destructive/10 text-destructive' : null,
+      tone === 'info' && appearance === 'plain' ? 'bg-muted text-muted-foreground' : null,
+      tone === 'warning' && appearance === 'plain'
+        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+        : null,
     )}
     role={role}
   >

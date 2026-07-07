@@ -1,9 +1,9 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { createAuthAppError } from '@/domain/auth/authErrors'
-import { authRepository } from '@/integrations/repositories'
+import { accountLifecycleRepository, authRepository } from '@/integrations/repositories'
 import { Button } from '@/shared/ui/button'
 import { unwrapResult } from '@/shared/utils/result'
 
@@ -11,6 +11,10 @@ import { AuthAlert, AuthStatus } from './AuthFormControls'
 import { AuthShell, AuthTextLink } from './AuthShell'
 import { parseAuthCallbackSearch, type AuthCallbackSearch } from './authRedirects'
 import { useAuth } from './authContext'
+import {
+  clearPendingAccountDeletionState,
+  readPendingAccountDeletionState,
+} from './pendingAccountDeletionState'
 import { clearPendingAuthState, savePendingAuthState } from './pendingAuthState'
 import { useAuthFormError } from './useAuthFormError'
 import { usePostAuthNavigation } from './usePostAuthNavigation'
@@ -19,9 +23,10 @@ export const AuthCallbackPage = () => {
   const search = useSearch({ strict: false }) as AuthCallbackSearch
   const navigate = useNavigate()
   const postAuthNavigate = usePostAuthNavigation()
-  const { refreshAccountContext } = useAuth()
+  const { clearDeletedAccountState, refreshAccountContext } = useAuth()
   const { captureError, errorCode } = useAuthFormError()
   const [processing, setProcessing] = useState(true)
+  const processedRef = useRef(false)
   const {
     code,
     error,
@@ -32,6 +37,14 @@ export const AuthCallbackPage = () => {
 
   useEffect(() => {
     let active = true
+
+    if (processedRef.current) {
+      return () => {
+        active = false
+      }
+    }
+
+    processedRef.current = true
 
     const processCallback = async () => {
       try {
@@ -62,8 +75,32 @@ export const AuthCallbackPage = () => {
           return
         }
 
+        if (callback.flow === 'delete-account') {
+          const deletionIntent = readPendingAccountDeletionState()
+          const user = unwrapResult(await authRepository.getVerifiedUser())
+
+          if (!deletionIntent || !user || user.id !== deletionIntent.originalUserId) {
+            throw createAuthAppError('CALLBACK_INVALID')
+          }
+
+          unwrapResult(
+            await accountLifecycleRepository.deleteAccount({
+              idempotencyKey: deletionIntent.idempotencyKey,
+              reauthProvider: 'google',
+            }),
+          )
+          clearPendingAccountDeletionState()
+          clearPendingAuthState()
+          await clearDeletedAccountState()
+          await navigate({ replace: true, to: '/auth/sign-in' })
+          return
+        }
+
         await postAuthNavigate()
       } catch (error) {
+        if (flow === 'delete-account') {
+          clearPendingAccountDeletionState()
+        }
         clearPendingAuthState()
         captureError(error)
       } finally {
@@ -80,6 +117,7 @@ export const AuthCallbackPage = () => {
     }
   }, [
     captureError,
+    clearDeletedAccountState,
     navigate,
     postAuthNavigate,
     refreshAccountContext,

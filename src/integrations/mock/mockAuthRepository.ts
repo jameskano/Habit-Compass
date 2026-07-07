@@ -93,6 +93,20 @@ export const mockAuthRepository: AuthRepository = {
     return ok(getMockState().authSession.providerClassification)
   },
 
+  async getAccountCapabilities() {
+    const authSession = getMockState().authSession
+
+    if (!authSession.signedIn) {
+      return err(createAppError('unauthorized', 'No signed-in user is available.'))
+    }
+
+    return ok({
+      googleEnabled: ['mixed', 'oauth_only'].includes(authSession.providerClassification),
+      passwordEnabled: ['email_password', 'mixed'].includes(authSession.providerClassification),
+      userId: 'mock-user-1',
+    })
+  },
+
   async getSecurityProfile() {
     const authSession = getMockState().authSession
 
@@ -101,8 +115,12 @@ export const mockAuthRepository: AuthRepository = {
     }
 
     return ok({
+      capabilities: {
+        googleEnabled: ['mixed', 'oauth_only'].includes(authSession.providerClassification),
+        passwordEnabled: ['email_password', 'mixed'].includes(authSession.providerClassification),
+        userId: 'mock-user-1',
+      },
       currentEmail: authSession.currentEmail,
-      providerClassification: authSession.providerClassification,
     })
   },
 
@@ -219,6 +237,10 @@ export const mockAuthRepository: AuthRepository = {
 
     if (!authSession.signedIn) {
       return err(createAppError('unauthorized', 'No signed-in user is available.'))
+    }
+
+    if (input.currentPassword !== authSession.currentPassword) {
+      return err(createAppError('unauthorized', 'Email change could not be started.'))
     }
 
     authSession.emailChangeRequests.push(input.newEmail)

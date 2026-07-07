@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import type {
+  DeleteAccountInput,
   RequestAccountDeletionInput,
   RequestExternalAccountDeletionInput,
 } from '@/domain/accountLifecycle'
@@ -33,6 +34,12 @@ export const useCancelAccountDeletionMutation = () => {
     },
   })
 }
+
+export const useDeleteAccountMutation = () =>
+  useMutation({
+    mutationFn: async (input: DeleteAccountInput) =>
+      unwrapResult(await accountLifecycleRepository.deleteAccount(input)),
+  })
 
 export const useRequestExternalAccountDeletionMutation = () =>
   useMutation({

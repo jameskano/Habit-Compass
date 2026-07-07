@@ -5,6 +5,7 @@ const trimString = (value: unknown) => (typeof value === 'string' ? value.trim()
 export const buildChangeEmailSchema = (currentEmail: string | null | undefined) =>
   z
     .object({
+      currentPassword: z.string().min(1, 'required'),
       newEmail: z.preprocess(trimString, z.email()),
     })
     .superRefine((value, context) => {

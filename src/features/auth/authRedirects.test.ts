@@ -23,7 +23,12 @@ describe('auth redirects', () => {
       flow: 'signup',
       valid: true,
     })
-    expect(parseAuthCallbackSearch({ code: 'abc', flow: 'delete-account' }).valid).toBe(false)
+    expect(parseAuthCallbackSearch({ code: 'abc', flow: 'delete-account' })).toMatchObject({
+      code: 'abc',
+      flow: 'delete-account',
+      valid: true,
+    })
+    expect(parseAuthCallbackSearch({ code: 'abc', flow: 'unknown' }).valid).toBe(false)
   })
 
   it('normalizes only expected native auth callback URLs', () => {
@@ -40,8 +45,15 @@ describe('auth redirects', () => {
     expect(toInternalAuthCallbackRoute('habitcompass://settings/security?code=abc')).toBeNull()
     expect(toInternalAuthCallbackRoute('https://example.com/auth/callback?code=abc')).toBeNull()
     expect(
-      toInternalAuthCallbackRoute('habitcompass://auth/callback?flow=delete-account'),
-    ).toBeNull()
+      toInternalAuthCallbackRoute('habitcompass://auth/callback?code=delete&flow=delete-account'),
+    ).toEqual({
+      pathname: '/auth/callback',
+      search: {
+        code: 'delete',
+        flow: 'delete-account',
+      },
+    })
+    expect(toInternalAuthCallbackRoute('habitcompass://auth/callback?flow=unknown')).toBeNull()
   })
 
   it('merges hash callback params without exposing unrelated params', () => {

@@ -32,6 +32,7 @@ export type AuthRepository = {
   ensureUserProvisioned(): Promise<Result<UserAccountCapabilities>>
   getCurrentLegalStatus(): Promise<Result<CurrentLegalStatus>>
   getProviderClassification(): Promise<Result<AccountProviderClassification>>
+  getAccountCapabilities(): Promise<Result<UserAccountCapabilities>>
   getSecurityProfile(): Promise<Result<AuthSecurityProfile>>
   signInWithPassword(input: SignInWithPasswordInput): Promise<Result<null>>
   requestEmailCode(input: RequestEmailCodeInput): Promise<Result<null>>

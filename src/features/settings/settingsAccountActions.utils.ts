@@ -1,5 +1,5 @@
-import type { AccountProviderClassification } from '@/domain/auth'
+import type { UserAccountCapabilities } from '@/domain/auth'
 
 export const accountDeletionRequiresPassword = (
-  providerClassification: AccountProviderClassification | undefined,
-) => providerClassification === 'email_password' || providerClassification === 'mixed'
+  accountCapabilities: UserAccountCapabilities | undefined,
+) => accountCapabilities?.passwordEnabled === true

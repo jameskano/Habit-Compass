@@ -6,6 +6,10 @@ import App from './App'
 import { router } from './app/router/router'
 import { useAppPreferencesStore } from './app/state/appPreferencesStore'
 import { saveIntendedRoute } from './features/auth/intendedRoute'
+import {
+  readPendingAccountDeletionState,
+  savePendingAccountDeletionState,
+} from './features/auth/pendingAccountDeletionState'
 import { useTodayOrderStore } from './features/today/todayOrderStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 
@@ -258,6 +262,33 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
     ).toBeInTheDocument()
+  })
+
+  it('completes a Google-only deletion intent from the auth callback', async () => {
+    const state = getMockState()
+    state.authSession.providerClassification = 'oauth_only'
+    savePendingAccountDeletionState({
+      idempotencyKey: 'delete-google-1',
+      originalUserId: 'mock-user-1',
+    })
+    await act(async () => {
+      await router.navigate({
+        search: { code: 'google-delete-code', flow: 'delete-account' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+      expect(state.authSession.signedIn).toBe(false)
+      expect(state.authSession.signOutScopes).toEqual(['local'])
+    })
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAccountDeletionState()).toBeNull()
   })
 
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
@@ -1483,11 +1514,12 @@ describe('app shell', () => {
 
     await user.clear(within(dialog).getByLabelText('New email'))
     await user.type(within(dialog).getByLabelText('New email'), 'new@example.com')
+    await user.type(within(dialog).getByLabelText('Current password'), 'current-password')
     await user.click(within(dialog).getByRole('button', { name: 'Continue' }))
 
     expect(
       await within(dialog).findByText(
-        'Check your current and new email addresses to confirm the change.',
+        'Check the new email address to confirm the change. Your current email stays active until then.',
       ),
     ).toBeInTheDocument()
     expect(getMockState().authSession.emailChangeRequests).toEqual(['new@example.com'])
@@ -1603,38 +1635,33 @@ describe('app shell', () => {
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
-  it('schedules account deletion from Settings and routes to the pending-deletion screen', async () => {
+  it('deletes an account immediately from Settings and returns to sign in', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings' })
     })
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
     render(<App />)
 
     await user.click(await screen.findByRole('button', { name: 'Delete account' }))
     const intentDialog = screen.getByRole('dialog', { name: 'Delete your account?' })
-    expect(intentDialog).toHaveTextContent('7-day waiting period')
+    expect(intentDialog).toHaveTextContent('permanently deletes your account')
+    expect(intentDialog).toHaveTextContent('Access ends immediately')
 
     await user.click(within(intentDialog).getByRole('button', { name: 'Continue' }))
     const reauthDialog = screen.getByRole('dialog', { name: 'Confirm it is you' })
     await user.type(within(reauthDialog).getByLabelText('Current password'), 'current-password')
     await user.click(within(reauthDialog).getByRole('button', { name: 'Continue' }))
 
-    const scheduleDialog = screen.getByRole('dialog', { name: 'Schedule account deletion?' })
-    expect(scheduleDialog).toHaveTextContent(
-      'Until then, the app will only allow export, sign out, or cancellation.',
-    )
-    await user.click(within(scheduleDialog).getByRole('button', { name: 'Delete account' }))
+    const confirmDialog = screen.getByRole('dialog', { name: 'Delete permanently?' })
+    expect(confirmDialog).toHaveTextContent('Deletion starts now')
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete account' }))
 
-    expect(
-      await screen.findByRole('button', { name: 'Cancel account deletion' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
-    ).toBeGreaterThan(0)
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
     const state = getMockState()
-    expect(state.accountLifecycle.accountStatus).toBe('pending_deletion')
-    expect(state.accountLifecycle.deletionRequestSource).toBe('in_app')
     expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+    expect(state.authSession.signedIn).toBe(false)
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
   })

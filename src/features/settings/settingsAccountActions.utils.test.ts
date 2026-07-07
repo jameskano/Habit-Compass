@@ -4,13 +4,23 @@ import { accountDeletionRequiresPassword } from './settingsAccountActions.utils'
 
 describe('accountDeletionRequiresPassword', () => {
   it('requires a password for password-capable accounts', () => {
-    expect(accountDeletionRequiresPassword('email_password')).toBe(true)
-    expect(accountDeletionRequiresPassword('mixed')).toBe(true)
+    expect(
+      accountDeletionRequiresPassword({
+        googleEnabled: false,
+        passwordEnabled: true,
+        userId: 'user-1',
+      }),
+    ).toBe(true)
   })
 
-  it('does not require a password for OAuth-only, unknown, or loading accounts', () => {
-    expect(accountDeletionRequiresPassword('oauth_only')).toBe(false)
-    expect(accountDeletionRequiresPassword('unknown')).toBe(false)
+  it('does not require a password for Google-only or loading accounts', () => {
+    expect(
+      accountDeletionRequiresPassword({
+        googleEnabled: true,
+        passwordEnabled: false,
+        userId: 'user-1',
+      }),
+    ).toBe(false)
     expect(accountDeletionRequiresPassword(undefined)).toBe(false)
   })
 })

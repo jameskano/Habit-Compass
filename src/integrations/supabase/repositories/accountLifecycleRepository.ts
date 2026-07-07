@@ -87,6 +87,19 @@ export const supabaseAccountLifecycleRepository: AccountLifecycleRepository = {
     return ok(data as CancelAccountDeletionResult)
   },
 
+  async deleteAccount(input) {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase.functions.invoke('delete-account', {
+      body: input,
+    })
+
+    if (error) {
+      return err(toUnknownError('Account deletion could not be completed.', error))
+    }
+
+    return ok(data as { deleted: true; operationId: string })
+  },
+
   async requestExternalAccountDeletion(input: RequestExternalAccountDeletionInput) {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase.functions.invoke('request-external-account-deletion', {
