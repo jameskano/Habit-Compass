@@ -34,11 +34,13 @@ Additional repository interfaces also exist for recurrent tasks, reflections, an
 ## Local Development
 
 - `VITE_APP_DATA_SOURCE=mock` keeps the app backend-free.
+- `VITE_APP_DATA_SOURCE=supabase` uses the Supabase-backed repository implementations.
+  Supabase mode requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
 - Mock repositories share an in-memory state object so archive, confirmed physical delete, completion, and list behavior can be tested together.
 
 ## Future Supabase Path
 
 - Keep hooks unchanged.
 - Replace or extend repository implementations under `src/integrations/supabase/repositories/`.
-- Add auth-aware user resolution.
+- Use auth-aware user resolution in Supabase repositories so RLS policies receive the signed-in user ID rather than mock IDs.
 - Add mutation hooks only after the relevant feature specs and forms are ready.

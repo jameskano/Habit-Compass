@@ -21,7 +21,9 @@ pnpm dev
 
 Use `pnpm.cmd` on Windows PowerShell if script execution policy blocks `pnpm`.
 
-Create a local `.env` from `.env.example` when Supabase or Sentry work begins. The MVP scaffold is safe without those values.
+Create a local `.env.local` from `.env.example`. Use `VITE_APP_DATA_SOURCE=mock` for
+backend-free development, or `VITE_APP_DATA_SOURCE=supabase` with
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` to use the real backend.
 
 ## Development Workflow
 

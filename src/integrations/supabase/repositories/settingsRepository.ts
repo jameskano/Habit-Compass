@@ -1,26 +1,12 @@
 import type { SettingsRepository } from '@/domain/settings'
 import { createAppError } from '@/shared/utils/appError'
-import { err, ok, type Result } from '@/shared/utils/result'
+import { err, ok } from '@/shared/utils/result'
 
 import { getSupabaseClient } from '../client'
+import { getSignedInUserId } from './supabaseRepository.utils'
 
 type ProfileOnboardingRow = {
   onboarding_completed_at: string | null
-}
-
-const getSignedInUserId = async (): Promise<Result<string>> => {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase.auth.getUser()
-
-  if (error || !data.user) {
-    return err(
-      createAppError('unauthorized', 'Could not load the signed-in user.', {
-        cause: error,
-      }),
-    )
-  }
-
-  return ok(data.user.id)
 }
 
 export const supabaseSettingsRepository: SettingsRepository = {
