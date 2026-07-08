@@ -24,8 +24,8 @@ export const SignInPage = () => {
   const postAuthNavigate = usePostAuthNavigation()
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<SignInPasswordValues>({
-    resolver: zodResolver(SignInPasswordSchema) as Resolver<SignInPasswordValues>,
     defaultValues: { email: '', password: '' },
+    resolver: zodResolver(SignInPasswordSchema) as Resolver<SignInPasswordValues>,
   })
   const pending = form.formState.isSubmitting
 
@@ -71,7 +71,7 @@ export const SignInPage = () => {
       }
       titleId="auth.signIn.title"
     >
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         <FormField
           errorId="sign-in-email-error"

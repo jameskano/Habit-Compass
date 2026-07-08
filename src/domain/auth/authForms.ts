@@ -2,8 +2,11 @@ import { z } from 'zod'
 
 const trimString = (value: unknown) => (typeof value === 'string' ? value.trim() : value)
 
-const emailSchema = z.preprocess(trimString, z.email('invalid_email'))
-const passwordSchema = z.string().min(8, 'password_too_short')
+const emailSchema = z.preprocess(
+  trimString,
+  z.string().min(1, 'required').pipe(z.email('invalid_email')),
+)
+const passwordSchema = z.string().min(1, 'required').min(8, 'password_too_short')
 
 export const SignInPasswordSchema = z.object({
   email: emailSchema,
@@ -17,6 +20,7 @@ export const EmailCodeRequestSchema = z.object({
 export const EmailCodeVerifySchema = z.object({
   code: z
     .string()
+    .min(1, 'required')
     .transform((value) => value.replace(/\D/g, '').slice(0, 6))
     .pipe(z.string().length(6, 'otp_length')),
 })

@@ -26,6 +26,10 @@ const authErrorMessages: Record<AuthErrorCode, string> = {
 export const getAuthErrorMessageId = (code: AuthErrorCode) => authErrorMessages[code]
 
 export const getAuthFieldErrorMessageId = (message?: string) => {
+  if (!message) {
+    return undefined
+  }
+
   switch (message) {
     case 'invalid_email':
       return 'auth.validation.email'

@@ -17,8 +17,8 @@ export const ResetPasswordPage = () => {
   const postAuthNavigate = usePostAuthNavigation()
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<ResetPasswordValues>({
-    resolver: zodResolver(ResetPasswordSchema) as Resolver<ResetPasswordValues>,
     defaultValues: { confirmPassword: '', newPassword: '' },
+    resolver: zodResolver(ResetPasswordSchema) as Resolver<ResetPasswordValues>,
   })
 
   const submit = async (values: ResetPasswordValues) => {
@@ -36,7 +36,7 @@ export const ResetPasswordPage = () => {
 
   return (
     <AuthShell titleId="auth.resetPassword.title" descriptionId="auth.resetPassword.description">
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         <FormField
           errorId="reset-password-new-error"
