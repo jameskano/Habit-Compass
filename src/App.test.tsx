@@ -10,6 +10,7 @@ import {
   readPendingAccountDeletionState,
   savePendingAccountDeletionState,
 } from './features/auth/pendingAccountDeletionState'
+import { readPendingAuthState, savePendingAuthState } from './features/auth/pendingAuthState'
 import { useTodayOrderStore } from './features/today/todayOrderStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 
@@ -262,6 +263,42 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Security and sign-in', level: 1 }),
     ).toBeInTheDocument()
+  })
+
+  it('returns to sign in when Google OAuth is cancelled from sign in', async () => {
+    getMockState().authSession.signedIn = false
+    savePendingAuthState({ oauthReturnTo: '/auth/sign-in' })
+    await act(async () => {
+      await router.navigate({
+        search: { error: 'access_denied', error_description: '' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAuthState()).toBeNull()
+  })
+
+  it('returns to sign up when Google OAuth is cancelled from sign up', async () => {
+    getMockState().authSession.signedIn = false
+    savePendingAuthState({ flow: 'signup', oauthReturnTo: '/auth/sign-up' })
+    await act(async () => {
+      await router.navigate({
+        search: { error: 'access_denied', error_description: '' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAuthState()).toBeNull()
   })
 
   it('completes a Google-only deletion intent from the auth callback', async () => {

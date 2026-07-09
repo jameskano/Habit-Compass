@@ -16,6 +16,7 @@ import { AuthAlert, FormField, GoogleButton, OAuthDivider, PasswordInput } from 
 import { AuthShell, AuthTextLink } from './AuthShell'
 import { getAuthFieldErrorMessageId } from './authMessages'
 import { getAuthCallbackUrl } from './authRedirects'
+import { savePendingAuthState } from './pendingAuthState'
 import { useAuthFormError } from './useAuthFormError'
 import { usePostAuthNavigation } from './usePostAuthNavigation'
 
@@ -47,6 +48,7 @@ export const SignInPage = () => {
 
   const signInWithGoogle = async () => {
     clearError()
+    savePendingAuthState({ oauthReturnTo: '/auth/sign-in' })
 
     try {
       unwrapResult(await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl() }))

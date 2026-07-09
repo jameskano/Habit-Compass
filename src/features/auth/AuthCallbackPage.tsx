@@ -15,7 +15,11 @@ import {
   clearPendingAccountDeletionState,
   readPendingAccountDeletionState,
 } from './pendingAccountDeletionState'
-import { clearPendingAuthState, savePendingAuthState } from './pendingAuthState'
+import {
+  clearPendingAuthState,
+  readPendingAuthState,
+  savePendingAuthState,
+} from './pendingAuthState'
 import { useAuthFormError } from './useAuthFormError'
 import { usePostAuthNavigation } from './usePostAuthNavigation'
 
@@ -55,6 +59,16 @@ export const AuthCallbackPage = () => {
           error_description: errorDescription,
           flow,
         })
+
+        if (callback.valid && callback.error === 'access_denied') {
+          const pendingAuth = readPendingAuthState()
+          const returnRoute =
+            pendingAuth?.oauthReturnTo ??
+            (callback.flow === 'signup' ? '/auth/sign-up' : '/auth/sign-in')
+          clearPendingAuthState()
+          await navigate({ replace: true, to: returnRoute })
+          return
+        }
 
         if (!callback.valid || callback.error || !callback.code) {
           throw createAuthAppError('CALLBACK_INVALID')

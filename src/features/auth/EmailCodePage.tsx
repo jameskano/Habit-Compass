@@ -44,6 +44,7 @@ export const EmailCodePage = () => {
 
   const signInWithGoogle = async () => {
     clearError()
+    savePendingAuthState({ oauthReturnTo: '/auth/email-code' })
 
     try {
       unwrapResult(await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl() }))

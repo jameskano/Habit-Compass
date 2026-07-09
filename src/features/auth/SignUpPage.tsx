@@ -54,7 +54,7 @@ export const SignUpPage = () => {
   }
 
   const signUpWithGoogle = async () => {
-    const isValid = await form.trigger(['email', 'legalAccepted'])
+    const isValid = await form.trigger(['legalAccepted'])
 
     if (!isValid) {
       return
@@ -68,6 +68,7 @@ export const SignUpPage = () => {
         email: normalizeEmail(form.getValues('email')),
         flow: 'signup',
         legalIntent,
+        oauthReturnTo: '/auth/sign-up',
       })
       unwrapResult(
         await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl('signup') }),
