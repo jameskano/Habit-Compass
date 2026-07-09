@@ -27,8 +27,8 @@ export const EmailCodeVerifyPage = () => {
   const email = pendingAuth?.flow === 'email-code' ? pendingAuth.email : null
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<EmailCodeVerifyValues>({
-    resolver: zodResolver(EmailCodeVerifySchema) as Resolver<EmailCodeVerifyValues>,
     defaultValues: { code: '' },
+    resolver: zodResolver(EmailCodeVerifySchema) as Resolver<EmailCodeVerifyValues>,
   })
 
   const submit = async (values: EmailCodeVerifyValues) => {
@@ -70,7 +70,7 @@ export const EmailCodeVerifyPage = () => {
       titleId="auth.emailCode.verifyTitle"
       descriptionId="auth.emailCode.verifyDescription"
     >
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         {email ? (
           <AuthStatus>

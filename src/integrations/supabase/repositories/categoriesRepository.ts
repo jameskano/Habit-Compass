@@ -5,10 +5,14 @@ import {
   type CategoriesRepository,
   type Category,
 } from '@/domain/categories'
-import { createAppError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 
 import { getSupabaseClient } from '../client'
+import {
+  executeSupabaseOperation,
+  getSignedInUserId,
+  toSupabaseError,
+} from './supabaseRepository.utils'
 
 type CategoryRow = {
   id: string
@@ -38,22 +42,23 @@ const mapCategory = (row: CategoryRow): Category => ({
   updatedAt: row.updated_at,
 })
 
-const toError = (message: string, cause: unknown) => {
-  return createAppError('unknown', message, { cause })
-}
+const toError = toSupabaseError
 
 const execute = async <T>(operation: () => Promise<Result<T>>): Promise<Result<T>> => {
-  try {
-    return await operation()
-  } catch (error) {
-    return err(toError('Supabase category operation failed.', error))
-  }
+  return executeSupabaseOperation(operation, 'Supabase category operation failed.')
 }
 
 export const supabaseCategoriesRepository: CategoriesRepository = {
-  async listForUser({ userId }) {
+  async listForUser() {
     return execute(async () => {
       const supabase = getSupabaseClient()
+      const signedInUserId = await getSignedInUserId()
+
+      if (!signedInUserId.ok) {
+        return signedInUserId
+      }
+
+      const userId = signedInUserId.data
       await supabase.rpc('ensure_default_categories_for_user', { target_user_id: userId })
 
       const { data, error } = await supabase
@@ -72,10 +77,16 @@ export const supabaseCategoriesRepository: CategoriesRepository = {
   async create(input) {
     return execute(async () => {
       const supabase = getSupabaseClient()
+      const signedInUserId = await getSignedInUserId()
+
+      if (!signedInUserId.ok) {
+        return signedInUserId
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .insert({
-          user_id: input.userId,
+          user_id: signedInUserId.data,
           name: input.name,
           description: input.description ?? null,
           color: input.colorToken,

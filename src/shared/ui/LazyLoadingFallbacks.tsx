@@ -1,12 +1,10 @@
 import { LoaderCircle } from 'lucide-react'
 import { FormattedMessage } from 'react-intl'
 
-import { EmptyState } from './EmptyState'
+import { PendingState } from './PendingState'
 
 export const RoutePendingState = () => (
-  <section className="space-y-6" role="status" aria-live="polite">
-    <EmptyState titleId="shared.lazy.route.title" descriptionId="shared.lazy.route.description" />
-  </section>
+  <PendingState messageId="shared.lazy.route.title" className="min-h-dvh" />
 )
 
 export const OverlayPendingState = () => (
@@ -17,7 +15,7 @@ export const OverlayPendingState = () => (
   >
     <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background px-5 py-4 shadow-xl">
       <LoaderCircle aria-hidden className="animate-spin text-primary" size={20} />
-      <span className="text-sm font-medium">
+      <span className="text-sm font-medium text-foreground">
         <FormattedMessage id="shared.lazy.feature" />
       </span>
     </div>

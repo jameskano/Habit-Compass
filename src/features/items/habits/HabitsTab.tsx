@@ -15,6 +15,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
@@ -66,7 +67,7 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
   const detailHabit = habits.find((habit) => habit.id === detailSelection?.habitId) ?? null
 
   if (categoriesQuery.isLoading || logsQuery.isLoading) {
-    return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+    return <PendingState messageId="shared.loading.title" />
   }
 
   if (categoriesQuery.isError || logsQuery.isError) {

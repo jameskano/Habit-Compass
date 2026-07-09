@@ -24,8 +24,8 @@ export const ForgotPasswordPage = () => {
   const [sent, setSent] = useState(false)
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<ForgotPasswordValues>({
-    resolver: zodResolver(ForgotPasswordSchema) as Resolver<ForgotPasswordValues>,
     defaultValues: { email: '' },
+    resolver: zodResolver(ForgotPasswordSchema) as Resolver<ForgotPasswordValues>,
   })
 
   const submit = async (values: ForgotPasswordValues) => {
@@ -45,7 +45,7 @@ export const ForgotPasswordPage = () => {
 
   return (
     <AuthShell titleId="auth.forgotPassword.title" descriptionId="auth.forgotPassword.description">
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         {sent ? (
           <AuthStatus>

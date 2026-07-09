@@ -5,6 +5,7 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { useMoodLogsQuery } from '@/features/mood/hooks/useMoodLogsQuery'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ItemCard } from '@/shared/ui/ItemCard'
+import { PendingState } from '@/shared/ui/PendingState'
 import { StatCard } from '@/shared/ui/StatCard'
 
 export const MoodPage = () => {
@@ -28,9 +29,7 @@ export const MoodPage = () => {
         />
       ) : (
         <>
-          {moodLogsQuery.isLoading ? (
-            <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
-          ) : null}
+          {moodLogsQuery.isLoading ? <PendingState messageId="shared.loading.title" /> : null}
 
           {moodLogsQuery.isError ? (
             <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />

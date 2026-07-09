@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Input } from '@/shared/ui/input'
+import { PendingState } from '@/shared/ui/PendingState'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useShellActions } from '@/shared/ui/useShellActions'
 import { useShellLeading } from '@/shared/ui/useShellLeading'
@@ -91,7 +92,7 @@ export const CategoriesPage = () => {
   useShellActions(shellActions)
 
   if (categoriesQuery.isLoading) {
-    return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+    return <PendingState messageId="shared.loading.title" />
   }
 
   if (categoriesQuery.isError) {

@@ -10,6 +10,7 @@ import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
+import type { OnboardingStatus } from '@/domain/settings'
 import { emptySubscriptionSnapshot, type SubscriptionSnapshot } from '@/domain/subscriptions'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
@@ -80,6 +81,7 @@ export type MockDataState = {
     deletionRequests: DeletionRequestSource[]
     externalDeletionRequests: string[]
   }
+  appSettings: OnboardingStatus
   subscription: {
     clearRequests: number
     identifiedUserIds: string[]
@@ -401,6 +403,9 @@ const createInitialMockData = (): MockDataState => {
       cancellationRequests: [],
       deletionRequests: [],
       externalDeletionRequests: [],
+    },
+    appSettings: {
+      onboardingCompletedAt: toIsoDateTime(fourDaysAgo),
     },
     subscription: {
       clearRequests: 0,

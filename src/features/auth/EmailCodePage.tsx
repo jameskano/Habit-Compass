@@ -24,8 +24,8 @@ export const EmailCodePage = () => {
   const navigate = useNavigate()
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<EmailCodeRequestValues>({
-    resolver: zodResolver(EmailCodeRequestSchema) as Resolver<EmailCodeRequestValues>,
     defaultValues: { email: '' },
+    resolver: zodResolver(EmailCodeRequestSchema) as Resolver<EmailCodeRequestValues>,
   })
   const pending = form.formState.isSubmitting
 
@@ -44,6 +44,7 @@ export const EmailCodePage = () => {
 
   const signInWithGoogle = async () => {
     clearError()
+    savePendingAuthState({ oauthReturnTo: '/auth/email-code' })
 
     try {
       unwrapResult(await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl() }))
@@ -69,7 +70,7 @@ export const EmailCodePage = () => {
       titleId="auth.emailCode.title"
       descriptionId="auth.emailCode.description"
     >
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         <AuthStatus>
           <FormattedMessage id="auth.emailCode.neutral" />

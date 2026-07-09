@@ -16,6 +16,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
@@ -105,7 +106,7 @@ export const RecurrentTasksTab = ({
   }, [categoryId, normalizedSearch, occurrencesQuery.data, orderedTasks, today])
 
   if (categoriesQuery.isLoading || occurrencesQuery.isLoading) {
-    return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+    return <PendingState messageId="shared.loading.title" />
   }
 
   if (categoriesQuery.isError || occurrencesQuery.isError) {

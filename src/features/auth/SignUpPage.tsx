@@ -23,8 +23,8 @@ export const SignUpPage = () => {
   const locale: 'en' | 'es' = intl.locale.startsWith('es') ? 'es' : 'en'
   const { captureError, clearError, errorCode } = useAuthFormError()
   const form = useForm<SignUpValues>({
-    resolver: zodResolver(SignUpSchema) as Resolver<SignUpValues>,
     defaultValues: { email: '', password: '', legalAccepted: false as true },
+    resolver: zodResolver(SignUpSchema) as Resolver<SignUpValues>,
   })
   const pending = form.formState.isSubmitting
 
@@ -54,7 +54,7 @@ export const SignUpPage = () => {
   }
 
   const signUpWithGoogle = async () => {
-    const isValid = await form.trigger(['email', 'legalAccepted'])
+    const isValid = await form.trigger(['legalAccepted'])
 
     if (!isValid) {
       return
@@ -68,6 +68,7 @@ export const SignUpPage = () => {
         email: normalizeEmail(form.getValues('email')),
         flow: 'signup',
         legalIntent,
+        oauthReturnTo: '/auth/sign-up',
       })
       unwrapResult(
         await authRepository.signInWithGoogle({ redirectTo: getAuthCallbackUrl('signup') }),
@@ -94,7 +95,7 @@ export const SignUpPage = () => {
       }
       titleId="auth.signUp.title"
     >
-      <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      <form className="space-y-4" noValidate onSubmit={form.handleSubmit(submit)}>
         <AuthAlert errorCode={errorCode} />
         <FormField
           errorId="sign-up-email-error"

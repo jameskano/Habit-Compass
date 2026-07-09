@@ -7,6 +7,7 @@ import { mockHabitsRepository } from './mock/mockHabitsRepository'
 import { mockMoodRepository } from './mock/mockMoodRepository'
 import { mockPlanningRepository } from './mock/mockPlanningRepository'
 import { mockRecurrentTasksRepository } from './mock/mockRecurrentTasksRepository'
+import { mockSettingsRepository } from './mock/mockSettingsRepository'
 import { mockTasksRepository } from './mock/mockTasksRepository'
 import { mockSubscriptionRepository } from './mock/mockSubscriptionRepository'
 import { supabaseAuthRepository } from './supabase/repositories/authRepository'
@@ -18,6 +19,7 @@ import { supabaseHabitsRepository } from './supabase/repositories/habitsReposito
 import { supabaseMoodRepository } from './supabase/repositories/moodRepository'
 import { supabasePlanningRepository } from './supabase/repositories/planningRepository'
 import { supabaseRecurrentTasksRepository } from './supabase/repositories/recurrentTasksRepository'
+import { supabaseSettingsRepository } from './supabase/repositories/settingsRepository'
 import { supabaseTasksRepository } from './supabase/repositories/tasksRepository'
 import { revenueCatRepository } from './revenuecat/revenueCatRepository'
 
@@ -39,6 +41,8 @@ export const feedbackRepository =
   repositorySource === 'supabase' ? supabaseFeedbackRepository : mockFeedbackRepository
 export const dataExportRepository =
   repositorySource === 'supabase' ? supabaseDataExportRepository : mockDataExportRepository
+export const settingsRepository =
+  repositorySource === 'supabase' ? supabaseSettingsRepository : mockSettingsRepository
 export const authRepository =
   repositorySource === 'supabase' ? supabaseAuthRepository : mockAuthRepository
 export const accountLifecycleRepository =

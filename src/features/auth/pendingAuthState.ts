@@ -10,6 +10,7 @@ export type PendingAuthState = {
   legalIntent?: CurrentLegalVersions & {
     locale: 'en' | 'es'
   }
+  oauthReturnTo?: '/auth/email-code' | '/auth/sign-in' | '/auth/sign-up'
 }
 
 const getStorage = () => (typeof window === 'undefined' ? null : window.sessionStorage)

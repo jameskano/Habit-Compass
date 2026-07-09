@@ -11,6 +11,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { TodayActionSheet } from './TodayActionSheet'
 import { TodayDateNavigator } from './TodayDateNavigator'
@@ -132,7 +133,7 @@ export const TodayPage = () => {
   if (todayData.isLoading) {
     return (
       <section className="space-y-6">
-        <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+        <PendingState messageId="shared.loading.title" />
       </section>
     )
   }

@@ -7,6 +7,7 @@ export {
   FeatureTogglesSchema,
   ThemePreferenceSchema,
 } from './schemas'
+export type { CompletedOnboardingStatus, OnboardingStatus, SettingsRepository } from './repository'
 export type {
   AppLocale,
   AppSettings,

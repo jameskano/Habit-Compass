@@ -56,6 +56,8 @@ const getCurrentHref = (location: ReturnType<typeof useLocation>) =>
 export const ProtectedAppRoute = () => {
   const { state } = useAuth()
   const location = useLocation()
+  const isAccountLifecycleRoute = location.pathname.startsWith('/account/')
+  const isOnboardingRoute = location.pathname === '/onboarding'
 
   if (state.status === 'initializing') {
     return <RoutePendingState />
@@ -71,6 +73,14 @@ export const ProtectedAppRoute = () => {
 
   if (!state.legalStatus.accepted) {
     return <RouteRedirect intendedRoute={getCurrentHref(location)} to="/legal/acceptance" />
+  }
+
+  if (!state.onboardingCompletedAt && !isOnboardingRoute && !isAccountLifecycleRoute) {
+    return <RouteRedirect to="/onboarding" />
+  }
+
+  if (state.onboardingCompletedAt && isOnboardingRoute) {
+    return <RouteRedirect to="/today" />
   }
 
   return (

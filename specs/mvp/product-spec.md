@@ -48,6 +48,12 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Mutation failures use localized generic error toasts without exposing technical details.
 - Form validation and persistent query failures remain inline.
 
+## Loading States
+
+- Route, page, and standalone pending states use a spinner-first loading treatment.
+- Empty-state cards remain reserved for true empty, disabled-feature, and error surfaces.
+- Submit buttons keep disabled and progress-label loading behavior.
+
 ## Later
 
 - Bulk actions.

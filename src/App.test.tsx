@@ -10,6 +10,7 @@ import {
   readPendingAccountDeletionState,
   savePendingAccountDeletionState,
 } from './features/auth/pendingAccountDeletionState'
+import { readPendingAuthState, savePendingAuthState } from './features/auth/pendingAuthState'
 import { useTodayOrderStore } from './features/today/todayOrderStore'
 import { cloneMockState, getMockState, resetMockState } from './integrations/mock/mockData'
 
@@ -264,6 +265,42 @@ describe('app shell', () => {
     ).toBeInTheDocument()
   })
 
+  it('returns to sign in when Google OAuth is cancelled from sign in', async () => {
+    getMockState().authSession.signedIn = false
+    savePendingAuthState({ oauthReturnTo: '/auth/sign-in' })
+    await act(async () => {
+      await router.navigate({
+        search: { error: 'access_denied', error_description: '' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAuthState()).toBeNull()
+  })
+
+  it('returns to sign up when Google OAuth is cancelled from sign up', async () => {
+    getMockState().authSession.signedIn = false
+    savePendingAuthState({ flow: 'signup', oauthReturnTo: '/auth/sign-up' })
+    await act(async () => {
+      await router.navigate({
+        search: { error: 'access_denied', error_description: '' } as never,
+        to: '/auth/callback',
+      })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 }),
+    ).toBeInTheDocument()
+    expect(readPendingAuthState()).toBeNull()
+  })
+
   it('completes a Google-only deletion intent from the auth callback', async () => {
     const state = getMockState()
     state.authSession.providerClassification = 'oauth_only'
@@ -454,7 +491,6 @@ describe('app shell', () => {
       ['/week', 'Week'],
       ['/mood', 'Mood'],
       ['/settings', 'Settings'],
-      ['/onboarding', 'Onboarding'],
     ] as const) {
       await act(async () => {
         await router.navigate({ to })
@@ -1947,13 +1983,82 @@ describe('app shell', () => {
     ).toBeInTheDocument()
   })
 
-  it('onboarding has max 3 steps', async () => {
+  it('redirects first-run users to onboarding before normal app routes', async () => {
+    getMockState().appSettings.onboardingCompletedAt = null
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Onboarding', level: 1 })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Settings' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
+  })
+
+  it('onboarding renders a 3-slide introduction carousel without setup controls', async () => {
+    const user = userEvent.setup()
+    getMockState().appSettings.onboardingCompletedAt = null
     await act(async () => {
       await router.navigate({ to: '/onboarding' })
     })
 
     render(<App />)
 
-    expect(await screen.findAllByRole('listitem')).toHaveLength(3)
+    expect(
+      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /Go to slide/i })).toHaveLength(3)
+    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('First habit idea')).not.toBeInTheDocument()
+    expect(screen.queryByText('Choose your style')).not.toBeInTheDocument()
+    expect(screen.queryByText('Personalize the shell')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    expect(
+      await screen.findByRole('heading', { name: 'Keep items organized', level: 2 }),
+    ).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: 'Go to slide 3: Plan lightly when you want' }),
+    )
+    expect(
+      await screen.findByRole('heading', { name: 'Plan lightly when you want', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument()
+  })
+
+  it('finishes onboarding by storing completion and opening Today', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.appSettings.onboardingCompletedAt = null
+    await act(async () => {
+      await router.navigate({ to: '/onboarding' })
+    })
+
+    render(<App />)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Go to slide 3: Plan lightly when you want' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Finish' }))
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(state.appSettings.onboardingCompletedAt).not.toBeNull()
+    expect(screen.getByRole('link', { name: 'Today' })).toBeInTheDocument()
+  })
+
+  it('redirects completed users away from direct onboarding routes', async () => {
+    await act(async () => {
+      await router.navigate({ to: '/onboarding' })
+    })
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Start with Today', level: 2 }),
+    ).not.toBeInTheDocument()
   })
 })

@@ -9,6 +9,7 @@ import { useRecurrentTasksQuery } from '@/features/recurrent-tasks/hooks/useRecu
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { cn } from '@/shared/utils/cn'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { PendingState } from '@/shared/ui/PendingState'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 
@@ -43,9 +44,7 @@ export const ItemsPage = () => {
           : recurrentTasksQuery
 
     if (activeQuery.isLoading) {
-      return (
-        <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
-      )
+      return <PendingState messageId="shared.loading.title" />
     }
 
     if (activeQuery.isError) {
