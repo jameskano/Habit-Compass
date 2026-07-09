@@ -5,9 +5,10 @@ import { FormattedMessage } from 'react-intl'
 import { createAuthAppError } from '@/domain/auth/authErrors'
 import { accountLifecycleRepository, authRepository } from '@/integrations/repositories'
 import { Button } from '@/shared/ui/button'
+import { PendingState } from '@/shared/ui/PendingState'
 import { unwrapResult } from '@/shared/utils/result'
 
-import { AuthAlert, AuthStatus } from './AuthFormControls'
+import { AuthAlert } from './AuthFormControls'
 import { AuthShell, AuthTextLink } from './AuthShell'
 import { parseAuthCallbackSearch, type AuthCallbackSearch } from './authRedirects'
 import { useAuth } from './authContext'
@@ -146,9 +147,7 @@ export const AuthCallbackPage = () => {
     <AuthShell titleId="auth.callback.title" descriptionId="auth.callback.description">
       <div className="space-y-4">
         {processing ? (
-          <AuthStatus>
-            <FormattedMessage id="auth.callback.processing" />
-          </AuthStatus>
+          <PendingState messageId="auth.callback.processing" className="min-h-28 px-0 py-2" />
         ) : null}
         <AuthAlert errorCode={errorCode} />
         {!processing && errorCode ? (

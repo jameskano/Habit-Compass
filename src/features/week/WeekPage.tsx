@@ -9,6 +9,7 @@ import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRang
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { WeekBigRocksSection } from './WeekBigRocksSection'
 import { WeekDateNavigator } from './WeekDateNavigator'
@@ -112,7 +113,7 @@ export const WeekPage = () => {
   if (isLoading) {
     return (
       <section className="space-y-6">
-        <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+        <PendingState messageId="shared.loading.title" />
       </section>
     )
   }

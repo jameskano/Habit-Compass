@@ -9,6 +9,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { ItemWaterfallReveal } from '../components/ItemWaterfallReveal'
@@ -129,7 +130,7 @@ export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabPr
   )
 
   if (categoriesQuery.isLoading) {
-    return <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+    return <PendingState messageId="shared.loading.title" />
   }
 
   if (categoriesQuery.isError) {

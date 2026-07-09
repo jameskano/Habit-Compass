@@ -16,6 +16,7 @@ import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { PendingState } from '@/shared/ui/PendingState'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { HabitCalendarTab } from './HabitCalendarTab'
@@ -133,7 +134,7 @@ export const HabitDetail = ({
 
         <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {logsQuery.isLoading ? (
-            <EmptyState titleId="shared.loading.title" descriptionId="shared.loading.description" />
+            <PendingState messageId="shared.loading.title" />
           ) : logsQuery.isError ? (
             <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />
           ) : (
