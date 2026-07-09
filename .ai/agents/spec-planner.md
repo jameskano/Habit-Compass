@@ -1,8 +1,8 @@
 ---
-name: "Spec Planner"
-description: "Use for requirements, acceptance criteria, feature specs, behavior changes, and SDD task breakdowns."
-domain: "Spec"
-status: "production"
+name: 'Spec Planner'
+description: 'Use for requirements, acceptance criteria, feature specs, behavior changes, and SDD task breakdowns.'
+domain: 'Spec'
+status: 'production'
 ---
 
 # Spec Planner Agent

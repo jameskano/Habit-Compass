@@ -1,8 +1,8 @@
 ---
-name: "[Agent Name]"
-description: "[One-sentence routing description for when this agent should be used.]"
-domain: "[Product|Spec|UX|Frontend|Domain|Data|Testing|Review|Other]"
-status: "draft"
+name: '[Agent Name]'
+description: '[One-sentence routing description for when this agent should be used.]'
+domain: '[Product|Spec|UX|Frontend|Domain|Data|Testing|Review|Other]'
+status: 'draft'
 ---
 
 # [Agent Name]

@@ -1,8 +1,8 @@
 ---
-name: "Reviewer Gatekeeper"
-description: "Use for review gates, regression risk, scope creep, i18n, accessibility, and verification completeness."
-domain: "Review"
-status: "production"
+name: 'Reviewer Gatekeeper'
+description: 'Use for review gates, regression risk, scope creep, i18n, accessibility, and verification completeness.'
+domain: 'Review'
+status: 'production'
 ---
 
 # Reviewer Gatekeeper Agent

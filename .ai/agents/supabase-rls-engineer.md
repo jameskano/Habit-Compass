@@ -1,8 +1,8 @@
 ---
-name: "Supabase RLS Engineer"
-description: "Use for Supabase schema, migrations, RLS policies, auth/data boundaries, repository contracts, and Edge Function contracts."
-domain: "Data"
-status: "production"
+name: 'Supabase RLS Engineer'
+description: 'Use for Supabase schema, migrations, RLS policies, auth/data boundaries, repository contracts, and Edge Function contracts.'
+domain: 'Data'
+status: 'production'
 ---
 
 # Supabase RLS Engineer Agent

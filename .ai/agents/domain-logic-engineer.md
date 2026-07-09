@@ -1,8 +1,8 @@
 ---
-name: "Domain Logic Engineer"
-description: "Use for pure domain models, habit/task rules, completion semantics, reset/archive/delete behavior, and suggestion triggers."
-domain: "Domain"
-status: "production"
+name: 'Domain Logic Engineer'
+description: 'Use for pure domain models, habit/task rules, completion semantics, reset/archive/delete behavior, and suggestion triggers.'
+domain: 'Domain'
+status: 'production'
 ---
 
 # Domain Logic Engineer Agent

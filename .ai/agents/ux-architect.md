@@ -1,8 +1,8 @@
 ---
-name: "UX Architect"
-description: "Use for user flows, onboarding, settings, empty states, accessibility, progressive disclosure, and humane UX language."
-domain: "UX"
-status: "production"
+name: 'UX Architect'
+description: 'Use for user flows, onboarding, settings, empty states, accessibility, progressive disclosure, and humane UX language.'
+domain: 'UX'
+status: 'production'
 ---
 
 # UX Architect Agent

@@ -29,9 +29,7 @@ export const MoodPage = () => {
         />
       ) : (
         <>
-          {moodLogsQuery.isLoading ? (
-            <PendingState messageId="shared.loading.title" />
-          ) : null}
+          {moodLogsQuery.isLoading ? <PendingState messageId="shared.loading.title" /> : null}
 
           {moodLogsQuery.isError ? (
             <EmptyState titleId="shared.error.title" descriptionId="shared.error.description" />

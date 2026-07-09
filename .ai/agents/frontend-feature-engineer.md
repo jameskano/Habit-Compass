@@ -1,8 +1,8 @@
 ---
-name: "Frontend Feature Engineer"
-description: "Use for React implementation, UI composition, forms, client routing, TanStack Query, and local UI state wiring."
-domain: "Frontend"
-status: "production"
+name: 'Frontend Feature Engineer'
+description: 'Use for React implementation, UI composition, forms, client routing, TanStack Query, and local UI state wiring.'
+domain: 'Frontend'
+status: 'production'
 ---
 
 # Frontend Feature Engineer Agent

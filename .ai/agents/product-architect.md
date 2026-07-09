@@ -1,8 +1,8 @@
 ---
-name: "Product Architect"
-description: "Use for product coherence, MVP scope, optional-depth boundaries, navigation tradeoffs, and future-feature sequencing."
-domain: "Product"
-status: "production"
+name: 'Product Architect'
+description: 'Use for product coherence, MVP scope, optional-depth boundaries, navigation tradeoffs, and future-feature sequencing.'
+domain: 'Product'
+status: 'production'
 ---
 
 # Product Architect Agent

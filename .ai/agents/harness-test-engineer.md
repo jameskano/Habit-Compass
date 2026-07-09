@@ -1,8 +1,8 @@
 ---
-name: "Harness Test Engineer"
-description: "Use for domain tests, React Testing Library tests, Playwright flows, fixtures, harnesses, and CI verification gaps."
-domain: "Testing"
-status: "production"
+name: 'Harness Test Engineer'
+description: 'Use for domain tests, React Testing Library tests, Playwright flows, fixtures, harnesses, and CI verification gaps.'
+domain: 'Testing'
+status: 'production'
 ---
 
 # Harness Test Engineer Agent

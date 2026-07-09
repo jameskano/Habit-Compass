@@ -5,7 +5,11 @@ import { describe, expect, it } from 'vitest'
 
 import { getMessages } from '@/i18n/messages'
 
-import { CalendarPendingState, OverlayPendingState, RoutePendingState } from './LazyLoadingFallbacks'
+import {
+  CalendarPendingState,
+  OverlayPendingState,
+  RoutePendingState,
+} from './LazyLoadingFallbacks'
 
 const renderFallback = (ui: ReactNode) =>
   render(
@@ -19,7 +23,9 @@ describe('LazyLoadingFallbacks', () => {
     renderFallback(<RoutePendingState />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Opening this screen...')
-    expect(screen.queryByRole('heading', { name: 'Opening this screen...' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Opening this screen...' }),
+    ).not.toBeInTheDocument()
   })
 
   it('renders overlay and calendar spinner variants', () => {
