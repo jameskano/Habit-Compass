@@ -8,6 +8,7 @@ import { ShellActionsProvider } from './ShellActionsContext'
 import { ShellLeadingProvider } from './ShellLeadingContext'
 import { ShellTitleProvider } from './ShellTitleContext'
 import { TopBar } from './TopBar'
+import { cn } from '../utils/cn'
 
 type AppShellProps = {
   children: ReactNode
@@ -53,15 +54,24 @@ export const AppShell = ({ children }: AppShellProps) => {
         <ShellActionsProvider onChange={setHeaderActions}>
           <div className="min-h-screen bg-background text-foreground">
             <div className="fixed inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top,_rgba(26,154,130,0.18),_transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent)] dark:bg-[radial-gradient(circle_at_top,_rgba(28,189,154,0.16),_transparent_55%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]" />
-            <TopBar
-              titleId={titleOverrideId ?? defaultTitleId}
-              hideSettings={isSettings || isAccountLifecycle || isOnboarding}
-              leading={isOnboarding ? null : headerLeading}
-              actions={isOnboarding ? null : headerActions}
-            />
+            {!isOnboarding ? (
+              <TopBar
+                titleId={titleOverrideId ?? defaultTitleId}
+                hideSettings={isSettings || isAccountLifecycle}
+                leading={headerLeading}
+                actions={headerActions}
+              />
+            ) : null}
 
-            <div className="mx-auto flex min-h-[calc(100vh-4.5rem)] max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:pb-8">
-              <main className="flex-1 pb-24 md:pb-6">{children}</main>
+            <div
+              className={cn(
+                'mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-6 md:pb-8',
+                isOnboarding ? 'min-h-screen' : 'min-h-[calc(100vh-4.5rem)]',
+              )}
+            >
+              <main className={cn('flex-1', isOnboarding ? 'pb-0' : 'pb-24 md:pb-6')}>
+                {children}
+              </main>
               {showBottomNav ? <BottomNav /> : null}
             </div>
 

@@ -3,9 +3,11 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { AppLayout } from '@/app/layout/AppLayout'
+import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { RoutePendingState } from '@/shared/ui/LazyLoadingFallbacks'
 
+import { AuthTextLink } from './AuthShell'
 import { useAuth } from './authContext'
 import { consumeIntendedRoute, saveIntendedRoute } from './intendedRoute'
 
@@ -36,15 +38,27 @@ const RedirectToIntendedRoute = ({ fallback }: { fallback: string }) => {
 }
 
 const AuthErrorPage = () => {
+  const navigate = useNavigate()
+
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
-      <Card className="w-full max-w-md space-y-3 p-5 text-center">
+      <Card className="w-full max-w-md space-y-5 p-5 text-center">
         <h1 className="text-xl font-semibold">
           <FormattedMessage id="auth.error.title" />
         </h1>
         <p className="text-sm leading-6 text-muted-foreground">
           <FormattedMessage id="auth.error.description" />
         </p>
+        <div className="space-y-3">
+          <Button className="w-full" onClick={() => void navigate({ to: '/auth/sign-in' })}>
+            <FormattedMessage id="auth.error.backToSignIn" />
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            <AuthTextLink to="/auth/sign-up">
+              <FormattedMessage id="auth.error.createAccount" />
+            </AuthTextLink>
+          </p>
+        </div>
       </Card>
     </main>
   )

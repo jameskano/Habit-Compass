@@ -23,6 +23,7 @@ turning Settings into a feature maze.
 - Feedback and support: [feedback-support-spec.md](feedback-support-spec.md)
 - Account lifecycle and deletion: [account-lifecycle-spec.md](account-lifecycle-spec.md)
 - Legal documents and acceptance: [legal-documents-spec.md](legal-documents-spec.md)
+- Premium: [premium-spec.md](premium-spec.md)
 - Future implementation plan: [settings implementation plan](../../docs/features/settings/implementation-plan.md)
 - Detailed test plan: [settings test plan](../../docs/features/settings/test-plan.md)
 
@@ -238,6 +239,7 @@ is specified in [legal-documents-spec.md](legal-documents-spec.md) and the legal
 
 This section is superseded by `/specs/auth` for auth implementation. RevenueCat and subscription
 identity are now in scope for the auth feature, and account deletion must be subscription-aware.
+Premium product behavior and free active-item limits are specified in [premium-spec.md](premium-spec.md).
 
 Settings shows a row named `Habit Compass Premium`.
 
@@ -254,6 +256,10 @@ Future behavior:
 - Active subscribers should see plan or management status instead of acquisition-only UI.
 - Subscription management must lead to Google Play subscription management where required.
 - Account deletion must follow `/specs/auth/06-revenuecat-and-account-deletion.md`.
+- Free users may be limited to 5 active habits, 10 active incomplete one-time tasks, and 5 active
+  recurrent tasks as specified in [premium-spec.md](premium-spec.md).
+- AI insights are a future Premium feature and require a separate AI feature spec before
+  implementation.
 
 ## Support And Feedback
 

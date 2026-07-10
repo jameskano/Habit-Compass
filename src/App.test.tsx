@@ -1988,10 +1988,10 @@ describe('app shell', () => {
 
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Onboarding', level: 1 })).toBeInTheDocument()
     expect(
       await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Onboarding', level: 1 })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Settings' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
@@ -2019,12 +2019,20 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Keep items organized', level: 2 }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByText('Add and edit schedules, details, and priorities from Habits and Tasks.'),
+    ).toBeInTheDocument()
 
     await user.click(
       screen.getByRole('button', { name: 'Go to slide 3: Plan lightly when you want' }),
     )
     expect(
       await screen.findByRole('heading', { name: 'Plan lightly when you want', level: 2 }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Week helps you choose a focus, pick up to three Big Rocks, and review gently. Settings keeps preferences, categories, support, and account actions in one place.',
+      ),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument()
   })

@@ -6,6 +6,19 @@ RevenueCat and subscription identity are now in scope for the authentication fea
 Subscription behavior must not compromise the simple tracker experience. Keep core create, complete,
 and review flows usable.
 
+Premium product behavior is specified in `specs/mvp/premium-spec.md`.
+
+Current Premium boundary:
+
+- Free users can have up to 5 active habits.
+- Free users can have up to 10 active incomplete one-time tasks.
+- Free users can have up to 5 active recurrent tasks.
+- Archived items do not count against free limits.
+- Completed one-time tasks do not count against the active task limit.
+- Premium removes those active-item limits.
+- AI insights are planned as a future Premium feature, but must not be described as currently
+  available until a separate AI feature spec and implementation ship.
+
 Any purchasable Premium UI must use accurate product, price, renewal, cancellation, refund, Google
 Play, RevenueCat, Privacy Policy, Terms, and Play Console configuration. Do not show fake prices or
 fake plans.

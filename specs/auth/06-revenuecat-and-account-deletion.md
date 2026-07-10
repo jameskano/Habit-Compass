@@ -77,6 +77,10 @@ If the user already has the required entitlement, the paywall should not be show
 may be exposed for active subscribers when it is configured and supported by the active RevenueCat
 plan.
 
+Premium product behavior, free active-item limits, and future AI-insights positioning are specified
+in `/specs/mvp/premium-spec.md`. Paywall copy must stay aligned with that spec and must not promise
+unimplemented AI behavior as currently available.
+
 ## 4. Delete-account endpoint
 
 Implement a secured Supabase Edge Function, conceptually:

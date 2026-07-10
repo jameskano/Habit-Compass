@@ -70,6 +70,8 @@ Every async action has:
 
 Avoid indefinite spinners. Provide retry for startup, callback, provisioning, legal acceptance, subscription lookup, and deletion failures.
 
+Auth error screens must provide at least one clear sign-in recovery path and must not strand users on a passive error-only view.
+
 ## 5. Password accessibility
 
 - Show/hide button has an accessible label that changes with state.
