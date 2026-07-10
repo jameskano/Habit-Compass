@@ -52,6 +52,31 @@ Adapt fields to the existing subscription specification.
 
 The client snapshot is for UI. The deletion Edge Function must independently query RevenueCat before destructive actions.
 
+## 3.1 Premium entitlement, products, and paywall
+
+Habit Compass Premium access is represented by the RevenueCat entitlement:
+
+```text
+Habit Compass Premium
+```
+
+The default Offering must include:
+
+- `lifetime`
+- `yearly`
+- `monthly`
+
+Implementation should prefer RevenueCat's predefined package slots where possible:
+
+- Lifetime package for `lifetime`.
+- Annual package for `yearly`.
+- Monthly package for `monthly`.
+
+The Settings premium row may present the hosted RevenueCat Paywall for the current Offering.
+If the user already has the required entitlement, the paywall should not be shown. Customer Center
+may be exposed for active subscribers when it is configured and supported by the active RevenueCat
+plan.
+
 ## 4. Delete-account endpoint
 
 Implement a secured Supabase Edge Function, conceptually:

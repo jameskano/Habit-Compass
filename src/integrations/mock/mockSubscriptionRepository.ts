@@ -16,6 +16,26 @@ export const mockSubscriptionRepository: SubscriptionRepository = {
     return ok(getMockState().subscription.snapshot)
   },
 
+  async getCurrentOffering() {
+    return ok(null)
+  },
+
+  async purchaseProduct() {
+    return ok(getMockState().subscription.snapshot)
+  },
+
+  async restorePurchases() {
+    return ok(getMockState().subscription.snapshot)
+  },
+
+  async presentPaywall() {
+    return ok('not_presented')
+  },
+
+  async presentCustomerCenter() {
+    return ok(null)
+  },
+
   async clearIdentity() {
     const subscription = getMockState().subscription
     subscription.clearRequests += 1

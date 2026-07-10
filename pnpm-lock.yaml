@@ -44,6 +44,9 @@ importers:
       '@revenuecat/purchases-capacitor':
         specifier: ^11.3.2
         version: 11.3.2(@capacitor/core@7.4.3)
+      '@revenuecat/purchases-capacitor-ui':
+        specifier: ^11.3.2
+        version: 11.3.2(@capacitor/core@7.4.3)
       '@sentry/react':
         specifier: ^10.17.0
         version: 10.53.1(react@19.2.6)
@@ -1268,10 +1271,23 @@ packages:
       react-redux:
         optional: true
 
+  '@revenuecat/purchases-capacitor-ui@11.3.2':
+    resolution: {integrity: sha512-WmXukwbRISYlSaMDP+97HVKQD2VDDXL3FzgFEVhNEjxu/Dl/hSx/AXYiQAWuSuHYaxU0dWUZZwgC+XMVjsa1Dg==}
+    peerDependencies:
+      '@capacitor/core': ^7.0.0
+
+  '@revenuecat/purchases-capacitor@10.4.0':
+    resolution: {integrity: sha512-205im5Bs1BY8wLt+qaS0O2GTWtSHUMFc3Z8U2QaVx4EN0hHOk9gqx2bNaUEH+cOWTUPlNz9yikdiMUSTjJzwyA==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
   '@revenuecat/purchases-capacitor@11.3.2':
     resolution: {integrity: sha512-3T4/lcAwpbPagrT4DuXvJ+8RewzFmHf3fQJQuhVy+uTQk5HGMHNlXcm2A/UdyHtWqU+/VqWbCClPFYGnpnNXAQ==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
+
+  '@revenuecat/purchases-typescript-internal-esm@14.3.0':
+    resolution: {integrity: sha512-7mkuBupATfPvBw+skTE/chY6UEux9ZidTbKBOcZ/MgALKJdcww7LgSbChdyoGdQlSJXBFf1zRPzHH+RB7y+LQA==}
 
   '@revenuecat/purchases-typescript-internal-esm@17.25.0':
     resolution: {integrity: sha512-KC4BjFaQclXqFafG1Enh7t8GSwdg8p905by7UrHq0WSJmLhOR6yXSj6WDv1iwsFSAZxPPwgozNxt+U6IOFTdCA==}
@@ -4407,10 +4423,23 @@ snapshots:
       react: 19.2.6
       react-redux: 9.3.0(@types/react@19.2.15)(react@19.2.6)(redux@5.0.1)
 
+  '@revenuecat/purchases-capacitor-ui@11.3.2(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
+      '@revenuecat/purchases-capacitor': 10.4.0(@capacitor/core@7.4.3)
+      '@revenuecat/purchases-typescript-internal-esm': 17.25.0
+
+  '@revenuecat/purchases-capacitor@10.4.0(@capacitor/core@7.4.3)':
+    dependencies:
+      '@capacitor/core': 7.4.3
+      '@revenuecat/purchases-typescript-internal-esm': 14.3.0
+
   '@revenuecat/purchases-capacitor@11.3.2(@capacitor/core@7.4.3)':
     dependencies:
       '@capacitor/core': 7.4.3
       '@revenuecat/purchases-typescript-internal-esm': 17.25.0
+
+  '@revenuecat/purchases-typescript-internal-esm@14.3.0': {}
 
   '@revenuecat/purchases-typescript-internal-esm@17.25.0': {}
 
