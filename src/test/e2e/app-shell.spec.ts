@@ -13,14 +13,14 @@ test('add menu opens the four focused creation flows', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Add item' }).click()
   const addSheet = page.getByRole('dialog', { name: 'Choose what to create' })
-  await expect(addSheet.getByRole('button', { name: 'Habit' })).toBeVisible()
-  await expect(addSheet.getByRole('button', { name: 'Task', exact: true })).toBeVisible()
-  await expect(addSheet.getByRole('button', { name: 'Recurrent task' })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: /^Habit/ })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: /^Task/ })).toBeVisible()
+  await expect(addSheet.getByRole('button', { name: /^Recurrent task/ })).toBeVisible()
   await expect(addSheet.getByRole('button', { name: 'Category' })).toBeVisible()
   await expect(addSheet.getByText('Reflection')).toHaveCount(0)
   await expect(addSheet.getByText('Quick capture')).toHaveCount(0)
 
-  await addSheet.getByRole('button', { name: 'Habit' }).click()
+  await addSheet.getByRole('button', { name: /^Habit/ }).click()
   await expect(page.getByRole('heading', { name: 'Create habit' })).toBeVisible()
   await expect(page.getByText('Step 1 of 3')).toBeVisible()
   await page.getByRole('button', { name: 'Continue' }).click()
@@ -32,7 +32,7 @@ test('add menu opens the four focused creation flows', async ({ page }) => {
   await page.getByRole('button', { name: 'Add item' }).click()
   await page
     .getByRole('dialog', { name: 'Choose what to create' })
-    .getByRole('button', { name: 'Task', exact: true })
+    .getByRole('button', { name: /^Task/ })
     .click()
   await expect(page.getByRole('heading', { name: 'Create task' })).toBeVisible()
   await expect(page.getByRole('checkbox')).toBeChecked()
@@ -41,7 +41,7 @@ test('add menu opens the four focused creation flows', async ({ page }) => {
   await page.getByRole('button', { name: 'Add item' }).click()
   await page
     .getByRole('dialog', { name: 'Choose what to create' })
-    .getByRole('button', { name: 'Recurrent task' })
+    .getByRole('button', { name: /^Recurrent task/ })
     .click()
   await expect(page.getByRole('heading', { name: 'Create recurrent task' })).toBeVisible()
   await expect(page.getByText('Step 1 of 2')).toBeVisible()
@@ -62,7 +62,7 @@ test('re-clicking an open item-form dropdown keeps its creation screen open', as
   await page.getByRole('button', { name: 'Add item' }).click()
   await page
     .getByRole('dialog', { name: 'Choose what to create' })
-    .getByRole('button', { name: 'Task', exact: true })
+    .getByRole('button', { name: /^Task/ })
     .click()
   await expect(page.locator('[role="status"].fixed.inset-0')).toHaveCount(0)
 
