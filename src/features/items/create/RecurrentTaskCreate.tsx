@@ -11,9 +11,9 @@ import { FrequencyFields } from './FrequencyFields'
 import { RecurrentTaskCreateDetailsStep } from './RecurrentTaskCreateDetailsStep'
 import { useRecurrentTaskCreateForm } from './useRecurrentTaskCreateForm'
 
-export const RecurrentTaskCreate = ({ onClose }: CreateDialogProps) => {
+export const RecurrentTaskCreate = ({ onClose, onLimitReached }: CreateDialogProps) => {
   const intl = useIntl()
-  const recurrentTaskCreate = useRecurrentTaskCreateForm(onClose)
+  const recurrentTaskCreate = useRecurrentTaskCreateForm(onClose, onLimitReached)
 
   return (
     <DialogFrame

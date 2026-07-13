@@ -14,7 +14,7 @@ import { SettingsSection } from './components/SettingsSection'
 import { appBuildNumber, appVersion, currentYear } from './settings.constants'
 import type { PreferenceSheet } from './settings.types'
 import { useAccountCapabilitiesQuery } from './useAccountCapabilitiesQuery'
-import { usePremiumSubscriptionActions } from './usePremiumSubscriptionActions'
+import { usePremiumSubscriptionActions } from '@/features/subscriptions/usePremiumSubscriptionActions'
 import { useSubscriptionSnapshotQuery } from './useSubscriptionSnapshotQuery'
 
 export const SettingsPage = () => {

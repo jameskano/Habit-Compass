@@ -3,7 +3,10 @@ import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
 import type { CreateRecurrentTaskInput } from '@/domain/recurrent-tasks'
+import type { LimitedItemKind } from '@/domain/subscriptions'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
+import { getItemLimitKindFromError } from '@/features/items/limits/itemLimitErrors'
+import { useItemLimitGate } from '@/features/items/limits/useItemLimitGate'
 import { useCreateRecurrentTaskMutation } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { useRecurrentTasksQuery } from '@/features/recurrent-tasks/hooks/useRecurrentTasksQuery'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
@@ -16,9 +19,13 @@ import {
   validateFrequency,
 } from './createItem.utils'
 
-export const useRecurrentTaskCreateForm = (onClose: () => void) => {
+export const useRecurrentTaskCreateForm = (
+  onClose: () => void,
+  onLimitReached?: (kind: LimitedItemKind) => void,
+) => {
   const intl = useIntl()
   const mutation = useCreateRecurrentTaskMutation()
+  const limitGate = useItemLimitGate()
   const tasks = useRecurrentTasksQuery().data ?? []
   const categories = useCategoriesQuery().data ?? []
   const [step, setStep] = useState(1)
@@ -43,6 +50,10 @@ export const useRecurrentTaskCreateForm = (onClose: () => void) => {
       setError(intl.formatMessage({ id: 'page.items.create.error.details' }))
       return
     }
+    if (!limitGate.canUse('recurrentTask')) {
+      onLimitReached?.('recurrentTask')
+      return
+    }
     mutation.mutate(
       {
         userId: MOCK_USER_ID,
@@ -58,7 +69,16 @@ export const useRecurrentTaskCreateForm = (onClose: () => void) => {
         order: tasks.length,
         lifecycleStatus: 'active',
       },
-      { onSuccess: onClose },
+      {
+        onError: (error) => {
+          const limitKind = getItemLimitKindFromError(error)
+
+          if (limitKind) {
+            onLimitReached?.(limitKind)
+          }
+        },
+        onSuccess: onClose,
+      },
     )
   }
 

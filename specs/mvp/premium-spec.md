@@ -9,6 +9,7 @@ feel broken, punitive, or overloaded with sales pressure.
 
 - Free usage limits for active items.
 - Premium entitlement behavior at the product level.
+- Server-side entitlement mirroring and database enforcement for Supabase-backed item writes.
 - Paywall messaging requirements for the current RevenueCat paywall.
 - AI insights positioning as a future Premium feature.
 
@@ -68,6 +69,9 @@ scarcity, shame, or punitive streak language.
 ## Domain Rules
 
 - Premium access is represented by the RevenueCat entitlement `Habit Compass Premium`.
+- Supabase-backed item writes must not trust client-only entitlement state. The backend mirrors the
+  current RevenueCat entitlement into a server-managed `subscription_entitlements` record and uses
+  that mirror for database enforcement.
 - Non-Premium active item limits are:
   - Habits: 5 active habits.
   - Tasks: 10 active, incomplete one-time tasks.
@@ -78,6 +82,13 @@ scarcity, shame, or punitive streak language.
   the user's history and must not be deleted to satisfy limits.
 - Reactivating an archived item or reopening a completed task must respect the same active-item
   limits as creating a new active item.
+- Item-limit checks must run before opening creation UI, again before client-side save, and at the
+  database layer for inserts or updates that would increase the active/open item count.
+- Existing active/open items may still be edited when the user is already at the limit, provided the
+  edit does not create another counted item.
+- Cancellation does not remove Premium immediately when RevenueCat still reports an active
+  entitlement through the paid access period. The mirror follows RevenueCat's current entitlement
+  state.
 - AI insights are a future Premium feature. Any implementation requires a separate AI feature spec
   covering data use, privacy, safety, explainability, user controls, and testing.
 - Paywall copy may mention AI insights only as planned/future value until the feature ships.
@@ -118,6 +129,12 @@ Avoid:
 - Given a one-time task is completed, then it does not count against the free active task limit.
 - Given a user has the `Habit Compass Premium` entitlement, then the free active-item limits do not
   block creation, reopening, or reactivation.
+- Given a Supabase-backed free user bypasses the client and attempts to insert or restore an item
+  above the relevant limit, then the database rejects the write with a stable
+  `free_plan_limit_exceeded` error.
+- Given RevenueCat sends a purchase, renewal, cancellation, refund, transfer, or expiration event,
+  then the server refreshes the user's current RevenueCat customer state and updates the Supabase
+  entitlement mirror idempotently.
 
 ## Test Plan
 
@@ -127,4 +144,8 @@ When item-limit enforcement is implemented:
 - Add repository or mutation tests for create, archive, complete, reopen, and reactivate flows.
 - Add UI tests for the blocked-at-limit state and Premium entry point.
 - Add entitlement-state tests proving Premium users bypass free limits.
+- Add Supabase migration or SQL tests for trigger enforcement, Premium bypass, archived/completed
+  exclusions, and stable over-limit errors.
+- Add Edge Function tests or local verification for RevenueCat webhook idempotency and authenticated
+  subscription sync.
 - Add regression coverage proving archived items and completed one-time tasks remain accessible.

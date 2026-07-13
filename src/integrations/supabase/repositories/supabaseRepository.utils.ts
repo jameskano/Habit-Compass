@@ -1,3 +1,4 @@
+import { getFreePlanLimitErrorKind } from '@/domain/subscriptions'
 import { createAppError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 
@@ -18,8 +19,33 @@ export const getSignedInUserId = async (): Promise<Result<string>> => {
   return ok(data.user.id)
 }
 
-export const toSupabaseError = (message: string, cause: unknown) =>
-  createAppError('unknown', message, { cause })
+const getErrorMessage = (cause: unknown) => {
+  if (cause instanceof Error) {
+    return cause.message
+  }
+  if (
+    cause &&
+    typeof cause === 'object' &&
+    'message' in cause &&
+    typeof cause.message === 'string'
+  ) {
+    return cause.message
+  }
+  return String(cause ?? '')
+}
+
+export const toSupabaseError = (message: string, cause: unknown) => {
+  const limitKind = getFreePlanLimitErrorKind(getErrorMessage(cause))
+
+  if (limitKind) {
+    return createAppError('validation', `free_plan_limit_exceeded:${limitKind}`, {
+      cause,
+      details: { limitKind },
+    })
+  }
+
+  return createAppError('unknown', message, { cause })
+}
 
 export const executeSupabaseOperation = async <T>(
   operation: () => Promise<Result<T>>,

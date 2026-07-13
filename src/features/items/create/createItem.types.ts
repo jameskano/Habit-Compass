@@ -2,15 +2,18 @@ import type { Dispatch, SetStateAction } from 'react'
 
 import type { HabitPeriod } from '@/domain/habits'
 import type { DayOfWeek } from '@/domain/recurrent-tasks'
+import type { LimitedItemKind } from '@/domain/subscriptions'
 
 export type CreateKind = 'habit' | 'task' | 'recurrentTask' | 'category'
 
 export type CreateItemDialogsProps = {
   kind: CreateKind | null
+  onLimitReached?: (kind: LimitedItemKind) => void
   onClose: () => void
 }
 
 export type CreateDialogProps = {
+  onLimitReached?: (kind: LimitedItemKind) => void
   onClose: () => void
 }
 

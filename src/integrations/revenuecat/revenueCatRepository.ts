@@ -8,6 +8,7 @@ import type {
 
 import { createAppError } from '@/shared/utils/appError'
 import { err, ok } from '@/shared/utils/result'
+import { getSupabaseClient } from '@/integrations/supabase/client'
 import {
   emptySubscriptionSnapshot,
   type PaywallPresentationResult,
@@ -195,16 +196,60 @@ const getCurrentSnapshot = async () => {
   return mapCustomerInfoToSnapshot(customerInfo)
 }
 
+type SubscriptionEntitlementRow = {
+  expiration_at: string | null
+  has_active_entitlement: boolean
+  management_url: string | null
+  will_renew: boolean | null
+}
+
+const syncServerSubscription = async () => {
+  try {
+    await getSupabaseClient().functions.invoke('sync-subscription', {
+      body: {},
+    })
+  } catch {
+    // Webhooks are the durable sync path; this call only shortens the client feedback loop.
+  }
+}
+
+const getServerMirroredSnapshot = async () => {
+  try {
+    const { data, error } = await getSupabaseClient()
+      .from('subscription_entitlements')
+      .select('expiration_at, has_active_entitlement, management_url, will_renew')
+      .eq('entitlement_id', revenueCatEntitlementId)
+      .maybeSingle()
+
+    if (error || !data) {
+      return emptySubscriptionSnapshot
+    }
+
+    const entitlement = data as SubscriptionEntitlementRow
+    return {
+      expirationDate: entitlement.expiration_at,
+      hasActiveEntitlement: entitlement.has_active_entitlement,
+      hasActiveGooglePlayAutoRenewingSubscription: entitlement.will_renew === true,
+      loading: false,
+      managementUrl: entitlement.management_url,
+      willRenew: entitlement.will_renew,
+    }
+  } catch {
+    return emptySubscriptionSnapshot
+  }
+}
+
 export const revenueCatRepository: SubscriptionRepository = {
   async identifyUser(userId) {
     if (!isRevenueCatAvailable()) {
-      return ok(emptySubscriptionSnapshot)
+      return ok(await getServerMirroredSnapshot())
     }
 
     try {
       const Purchases = await ensureConfigured(userId)
 
       const { customerInfo } = await Purchases!.getCustomerInfo()
+      await syncServerSubscription()
       return ok(mapCustomerInfoToSnapshot(customerInfo))
     } catch (cause) {
       return err(createAppError('unknown', 'Could not load subscription status.', { cause }))
@@ -213,7 +258,7 @@ export const revenueCatRepository: SubscriptionRepository = {
 
   async getSnapshot() {
     if (!isRevenueCatAvailable() || !configuredUserId) {
-      return ok(emptySubscriptionSnapshot)
+      return ok(await getServerMirroredSnapshot())
     }
 
     try {
@@ -249,9 +294,11 @@ export const revenueCatRepository: SubscriptionRepository = {
       }
 
       const { customerInfo } = await Purchases.purchasePackage({ aPackage })
+      await syncServerSubscription()
       return ok(mapCustomerInfoToSnapshot(customerInfo))
     } catch (cause) {
       if (isUserCancelledPurchase(cause)) {
+        await syncServerSubscription()
         return ok(await getCurrentSnapshot())
       }
 
@@ -267,6 +314,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     try {
       const Purchases = await getPurchases()
       const { customerInfo } = await Purchases.restorePurchases()
+      await syncServerSubscription()
       return ok(mapCustomerInfoToSnapshot(customerInfo))
     } catch (cause) {
       return err(createAppError('unknown', 'Could not restore purchases.', { cause }))
@@ -285,6 +333,10 @@ export const revenueCatRepository: SubscriptionRepository = {
         requiredEntitlementIdentifier: revenueCatEntitlementId,
       })
 
+      if (result.result === 'PURCHASED' || result.result === 'RESTORED') {
+        await syncServerSubscription()
+      }
+
       return ok(mapPaywallResult(result.result))
     } catch (cause) {
       return err(createAppError('unknown', 'Could not present the paywall.', { cause }))
@@ -299,6 +351,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     try {
       const RevenueCatUI = await getRevenueCatUI()
       await RevenueCatUI.presentCustomerCenter()
+      await syncServerSubscription()
       return ok(null)
     } catch (cause) {
       return err(createAppError('unknown', 'Could not open subscription management.', { cause }))
