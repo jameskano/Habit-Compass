@@ -10,6 +10,7 @@ This folder contains the unapplied first-deploy Supabase schema for Habit Compas
 - `migrations/0004_categories_management.sql`: protected default categories, custom-category constraints, and delete-with-reassignment behavior.
 - `migrations/20260702154444_auth_foundation.sql`: auth foundation tables, legal document versions,
   legal acceptances, provisioning/capability RPCs, and RLS policies for `/specs/auth`.
+- `migrations/20260710153624_add_weekly_plan_lifecycle_columns.sql`: weekly plan archive and soft-delete lifecycle columns.
 - `tests/auth_foundation_test.sql`: database/RLS tests for the auth foundation.
 - `config.toml`: local Supabase configuration for auth development.
 - `seed.sql`: commented example seed statements for a local authenticated user.
@@ -48,7 +49,7 @@ It does not include:
 - Insert and update policies validate both row ownership and same-user ownership for linked parent rows such as categories, habits, mood logs, weekly plans, and Big Rock habits.
 - Item tables keep `archived_at` for reversible removal; confirmed item deletion is physical. Non-item authored content may retain `deleted_at`.
 - Habit inactivity periods preserve repeated archive/reactivation history for stats. The migration can backfill the current archived state only; archive cycles lost before migration `0002` cannot be reconstructed.
-- Weekly Big Rocks are limited to 3 active rows per weekly plan by a database trigger and can reference habits only.
+- Weekly plans and Big Rocks carry reversible lifecycle timestamps. Big Rocks are limited to 3 active rows per weekly plan by a database trigger and can reference habits only.
 - Habit and recurrence variability is stored in JSONB config columns so the TypeScript domain contracts can evolve without forcing an early schema explosion.
 - Default categories are intentionally not seeded globally. They should be created during onboarding or profile bootstrap after a real user exists.
 - Settings, account lifecycle, legal, data export, and feedback requirements are specified for future

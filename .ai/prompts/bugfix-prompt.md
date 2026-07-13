@@ -17,7 +17,18 @@ Read before editing:
 3. Relevant spec or feature doc that defines expected behavior.
 4. Existing tests and utilities around the affected area.
 
-Use `.ai/agents/reviewer-gatekeeper.md` when the fix needs regression-risk review.
+Use these when relevant:
+
+- `.agents/skills/domain-modeling`
+- `.agents/skills/frequency-goal-logic`
+- `.agents/skills/ui-feature-implementation`
+- `.agents/skills/fixing-accessibility`
+- `.agents/skills/supabase-schema-rls`
+- `.agents/skills/test-harness-writing`
+- `.ai/agents/reviewer-gatekeeper.md` for regression-risk review.
+- `.ai/agents/domain-logic-engineer.md` for rule or lifecycle bugs.
+- `.ai/agents/frontend-feature-engineer.md` for UI state, form, routing, or query bugs.
+- `.ai/agents/supabase-rls-engineer.md` for data ownership, repository, auth, or RLS bugs.
 
 ## Workflow
 
@@ -26,8 +37,9 @@ Use `.ai/agents/reviewer-gatekeeper.md` when the fix needs regression-risk revie
 3. Find the smallest safe fix and avoid unrelated cleanup.
 4. Add or update a focused regression test when the bug is testable.
 5. Keep public contracts stable unless the bug is in the contract and the spec supports changing it.
-6. Run the narrowest relevant verification first.
-7. Run broader checks only when the fix touches shared contracts, routing, providers, schemas, repositories, or core UI.
+6. Use the domain, frontend, Supabase, accessibility, or test lane that matches the root cause.
+7. Run the narrowest relevant verification first.
+8. Run broader checks only when the fix touches shared contracts, routing, providers, schemas, repositories, or core UI.
 
 ## Output
 

@@ -6,12 +6,14 @@ import { HabitCreate } from './HabitCreate'
 import { RecurrentTaskCreate } from './RecurrentTaskCreate'
 import { TaskCreate } from './TaskCreate'
 
-export const CreateItemDialogs = ({ kind, onClose }: CreateItemDialogsProps) => {
+export const CreateItemDialogs = ({ kind, onClose, onLimitReached }: CreateItemDialogsProps) => {
   const categories = useCategoriesQuery().data ?? []
 
-  if (kind === 'habit') return <HabitCreate onClose={onClose} />
-  if (kind === 'task') return <TaskCreate onClose={onClose} />
-  if (kind === 'recurrentTask') return <RecurrentTaskCreate onClose={onClose} />
+  if (kind === 'habit') return <HabitCreate onClose={onClose} onLimitReached={onLimitReached} />
+  if (kind === 'task') return <TaskCreate onClose={onClose} onLimitReached={onLimitReached} />
+  if (kind === 'recurrentTask') {
+    return <RecurrentTaskCreate onClose={onClose} onLimitReached={onLimitReached} />
+  }
   if (kind === 'category') {
     return (
       <CategoryFormSheet

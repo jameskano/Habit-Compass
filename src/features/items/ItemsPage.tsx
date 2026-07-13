@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
@@ -27,13 +28,22 @@ type ItemTabKey = (typeof itemTabs)[number]['key']
 
 export const ItemsPage = () => {
   const intl = useIntl()
-  const [activeTab, setActiveTab] = useState<ItemTabKey>('habits')
+  const search = useSearch({ strict: false }) as { tab?: ItemTabKey }
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<ItemTabKey>(search.tab ?? 'habits')
   const [showingArchived, setShowingArchived] = useState(false)
   const habitsQuery = useHabitsQuery()
   const tasksQuery = useTasksQuery()
   const recurrentTasksQuery = useRecurrentTasksQuery()
   const activeTabConfig = itemTabs.find((tab) => tab.key === activeTab) ?? itemTabs[0]
   useShellTitle(`page.items.section.${activeTab}`)
+
+  useEffect(() => {
+    if (search.tab && search.tab !== activeTab) {
+      setActiveTab(search.tab)
+      setShowingArchived(false)
+    }
+  }, [activeTab, search.tab])
 
   const renderCards = () => {
     const activeQuery =
@@ -95,8 +105,10 @@ export const ItemsPage = () => {
       <Tabs
         value={activeTab}
         onValueChange={(value) => {
-          setActiveTab(value as ItemTabKey)
+          const nextTab = value as ItemTabKey
+          setActiveTab(nextTab)
           setShowingArchived(false)
+          void navigate({ to: '/items', search: { tab: nextTab } })
         }}
       >
         <TabsList

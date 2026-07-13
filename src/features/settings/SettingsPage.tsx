@@ -1,4 +1,4 @@
-import { Crown, Database, Shield, Tags } from 'lucide-react'
+import { Crown, Database, Headphones, Shield, Tags } from 'lucide-react'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
@@ -14,6 +14,8 @@ import { SettingsSection } from './components/SettingsSection'
 import { appBuildNumber, appVersion, currentYear } from './settings.constants'
 import type { PreferenceSheet } from './settings.types'
 import { useAccountCapabilitiesQuery } from './useAccountCapabilitiesQuery'
+import { usePremiumSubscriptionActions } from '@/features/subscriptions/usePremiumSubscriptionActions'
+import { useSubscriptionSnapshotQuery } from './useSubscriptionSnapshotQuery'
 
 export const SettingsPage = () => {
   const intl = useIntl()
@@ -26,7 +28,10 @@ export const SettingsPage = () => {
   const setLocale = useAppPreferencesStore((state) => state.setLocale)
   const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
   const accountCapabilities = useAccountCapabilitiesQuery()
+  const subscriptionSnapshot = useSubscriptionSnapshotQuery()
+  const premiumActions = usePremiumSubscriptionActions()
   const showSecurityAndSignIn = accountCapabilities.data?.passwordEnabled === true
+  const hasActivePremium = subscriptionSnapshot.data?.hasActiveEntitlement === true
   const footerVersion = appBuildNumber
     ? intl.formatMessage(
         { id: 'settings.footer.versionWithBuild' },
@@ -75,11 +80,25 @@ export const SettingsPage = () => {
 
       <SettingsSection>
         <SettingsRow
-          disabled
-          descriptionId="settings.premium.status"
+          disabled={premiumActions.paywallPending}
+          descriptionId={
+            hasActivePremium
+              ? 'settings.premium.status.active'
+              : 'settings.premium.status.available'
+          }
           icon={Crown}
           labelId="settings.premium.title"
+          onClick={premiumActions.presentPaywall}
         />
+        {hasActivePremium ? (
+          <SettingsRow
+            disabled={premiumActions.customerCenterPending}
+            descriptionId="settings.premium.customerCenter.description"
+            icon={Headphones}
+            labelId="settings.premium.customerCenter.title"
+            onClick={premiumActions.presentCustomerCenter}
+          />
+        ) : null}
       </SettingsSection>
 
       <SettingsSupportSection onOpenRateDialog={() => setRateDialogOpen(true)} />

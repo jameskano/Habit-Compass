@@ -23,21 +23,32 @@ Read before changing behavior:
 
 Use these skills or agents when relevant:
 
-- `.ai/skills/feature-spec-writing`
-- `.ai/skills/acceptance-criteria-writing`
+- `.agents/skills/feature-spec-writing`
+- `.agents/skills/acceptance-criteria-writing`
+- `.agents/skills/domain-modeling`
+- `.agents/skills/frequency-goal-logic`
+- `.agents/skills/suggestion-rule-engine`
+- `.agents/skills/ui-feature-implementation`
+- `.agents/skills/react-component-architecture`
+- `.agents/skills/test-harness-writing`
 - `.ai/agents/spec-planner.md`
 - `.ai/agents/product-architect.md`
+- `.ai/agents/domain-logic-engineer.md`
+- `.ai/agents/frontend-feature-engineer.md`
+- `.ai/agents/ux-architect.md`
+- `.ai/agents/harness-test-engineer.md`
 
 ## Workflow
 
 1. Search for an existing spec, route, feature folder, domain model, repository, hook, UI pattern, translation key, and test utility before creating new ones.
 2. If no relevant spec exists, create or update the spec before implementation.
 3. Confirm the user problem, MVP behavior, non-goals, domain rules, UI states, acceptance criteria, and test plan.
-4. Implement the smallest useful slice that satisfies the accepted criteria.
-5. Keep domain logic out of React components and keep server state in TanStack Query.
-6. Add or update `react-intl` messages for user-facing strings.
-7. Add focused tests for domain behavior, forms, hooks, or user-facing flows.
-8. Run targeted verification; reserve `pnpm verify` for broad-risk changes or final validation.
+4. Route product scope to `product-architect`, formal behavior to `spec-planner`, pure rules to `domain-logic-engineer`, UI wiring to `frontend-feature-engineer`, and coverage planning to `harness-test-engineer`.
+5. Implement the smallest useful slice that satisfies the accepted criteria.
+6. Keep domain logic out of React components and keep server state in TanStack Query.
+7. Add or update `react-intl` messages for user-facing strings.
+8. Add focused tests for domain behavior, forms, hooks, or user-facing flows.
+9. Run targeted verification; reserve `pnpm verify` for broad-risk changes or final validation.
 
 ## Output
 

@@ -2,17 +2,24 @@ import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
+import type { LimitedItemKind } from '@/domain/subscriptions'
 import type { CreateTaskInput } from '@/domain/tasks'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
+import { getItemLimitKindFromError } from '@/features/items/limits/itemLimitErrors'
+import { useItemLimitGate } from '@/features/items/limits/useItemLimitGate'
 import { useCreateTaskMutation } from '@/features/tasks/hooks/useTaskMutations'
 import { useTasksQuery } from '@/features/tasks/hooks/useTasksQuery'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 
 import { isTaskDetailsValid, todayAsISODate } from './createItem.utils'
 
-export const useTaskCreateForm = (onClose: () => void) => {
+export const useTaskCreateForm = (
+  onClose: () => void,
+  onLimitReached?: (kind: LimitedItemKind) => void,
+) => {
   const intl = useIntl()
   const mutation = useCreateTaskMutation()
+  const limitGate = useItemLimitGate()
   const tasks = useTasksQuery().data ?? []
   const categories = useCategoriesQuery().data ?? []
   const [title, setTitle] = useState('')
@@ -27,6 +34,10 @@ export const useTaskCreateForm = (onClose: () => void) => {
   const submit = () => {
     if (!isTaskDetailsValid({ title, dueDate })) {
       setError(intl.formatMessage({ id: 'page.items.create.error.details' }))
+      return
+    }
+    if (!limitGate.canUse('task')) {
+      onLimitReached?.('task')
       return
     }
     mutation.mutate(
@@ -44,7 +55,16 @@ export const useTaskCreateForm = (onClose: () => void) => {
         completionStatus: 'pending',
         completedAt: null,
       },
-      { onSuccess: onClose },
+      {
+        onError: (error) => {
+          const limitKind = getItemLimitKindFromError(error)
+
+          if (limitKind) {
+            onLimitReached?.(limitKind)
+          }
+        },
+        onSuccess: onClose,
+      },
     )
   }
 

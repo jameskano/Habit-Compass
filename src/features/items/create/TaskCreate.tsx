@@ -17,9 +17,9 @@ import { DialogFrame } from './DialogFrame'
 import { ErrorText } from './ErrorText'
 import { useTaskCreateForm } from './useTaskCreateForm'
 
-export const TaskCreate = ({ onClose }: CreateDialogProps) => {
+export const TaskCreate = ({ onClose, onLimitReached }: CreateDialogProps) => {
   const intl = useIntl()
-  const taskCreate = useTaskCreateForm(onClose)
+  const taskCreate = useTaskCreateForm(onClose, onLimitReached)
 
   return (
     <DialogFrame

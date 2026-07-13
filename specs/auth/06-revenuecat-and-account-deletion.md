@@ -52,6 +52,44 @@ Adapt fields to the existing subscription specification.
 
 The client snapshot is for UI. The deletion Edge Function must independently query RevenueCat before destructive actions.
 
+Supabase also maintains a server-managed entitlement mirror for non-destructive product
+authorization. RevenueCat remains the source of truth, but Supabase item-limit enforcement reads the
+latest mirrored `Habit Compass Premium` entitlement instead of trusting client-only SDK state.
+
+## 3.1 Premium entitlement, products, and paywall
+
+Habit Compass Premium access is represented by the RevenueCat entitlement:
+
+```text
+Habit Compass Premium
+```
+
+The default Offering must include:
+
+- `lifetime`
+- `yearly`
+- `monthly`
+
+Implementation should prefer RevenueCat's predefined package slots where possible:
+
+- Lifetime package for `lifetime`.
+- Annual package for `yearly`.
+- Monthly package for `monthly`.
+
+The Settings premium row may present the hosted RevenueCat Paywall for the current Offering.
+If the user already has the required entitlement, the paywall should not be shown. Customer Center
+may be exposed for active subscribers when it is configured and supported by the active RevenueCat
+plan.
+
+Premium product behavior, free active-item limits, and future AI-insights positioning are specified
+in `/specs/mvp/premium-spec.md`. Paywall copy must stay aligned with that spec and must not promise
+unimplemented AI behavior as currently available.
+
+When purchase, restore, cancellation, expiration, refund, transfer, or renewal state may have
+changed, the backend must refresh the RevenueCat customer and upsert the current entitlement mirror.
+This happens through both RevenueCat webhooks and an authenticated sync endpoint called by the app
+after local RevenueCat identity or paywall state changes.
+
 ## 4. Delete-account endpoint
 
 Implement a secured Supabase Edge Function, conceptually:

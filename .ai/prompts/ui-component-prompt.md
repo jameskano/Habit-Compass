@@ -24,8 +24,11 @@ Read before editing:
 
 Use these when relevant:
 
-- `.ai/skills/ui-feature-implementation`
-- `.ai/skills/react-component-architecture`
+- `.agents/skills/ui-feature-implementation`
+- `.agents/skills/react-component-architecture`
+- `.agents/skills/fixing-accessibility`
+- `.agents/skills/frontend-design` or `.agents/skills/impeccable` when the task is visual design, redesign, polish, or UI craft.
+- `.agents/skills/shadcn` when adding, composing, or debugging shadcn UI.
 - `.ai/agents/frontend-feature-engineer.md`
 - `.ai/agents/ux-architect.md`
 
@@ -46,7 +49,8 @@ Before coding:
 5. Use React Hook Form and Zod for forms.
 6. Use `react-intl` for all user-facing copy.
 7. Cover loading, empty, error, success, disabled, and destructive states when relevant.
-8. Apply mobile-first layout and accessibility requirements.
+8. Apply mobile-first layout, accessibility requirements, and existing visual conventions.
+9. For design polish, inspect the rendered UI when practical and verify responsive behavior.
 
 ## Output
 

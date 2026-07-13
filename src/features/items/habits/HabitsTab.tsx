@@ -11,6 +11,9 @@ import {
   useRestoreHabitMutation,
 } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
+import { getItemLimitKindFromError } from '@/features/items/limits/itemLimitErrors'
+import { ItemLimitDialog } from '@/features/items/limits/ItemLimitDialog'
+import { useItemLimitGate } from '@/features/items/limits/useItemLimitGate'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -58,6 +61,7 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
   const resetMutation = useResetHabitProgressMutation()
   const deleteMutation = useDeleteHabitMutation()
   const restoreMutation = useRestoreHabitMutation()
+  const limitGate = useItemLimitGate()
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null)
   const [detailSelection, setDetailSelection] = useState<DetailSelection | null>(null)
   const [searchText, setSearchText] = useState('')
@@ -121,9 +125,21 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
   }
 
   const reactivateHabit = (habit: Habit) => {
+    if (!limitGate.canUse('habit')) {
+      limitGate.openLimitDialog('habit', 'restore')
+      return
+    }
+
     restoreMutation.mutate(
       { habitId: habit.id, date: today },
       {
+        onError: (error) => {
+          const limitKind = getItemLimitKindFromError(error)
+
+          if (limitKind) {
+            limitGate.openLimitDialog(limitKind, 'restore')
+          }
+        },
         onSuccess: () => {
           setSelectedHabitId(null)
           setDetailSelection(null)
@@ -244,6 +260,13 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
             }}
           />
         </Suspense>
+      ) : null}
+      {limitGate.dialogState ? (
+        <ItemLimitDialog
+          action={limitGate.dialogState.action}
+          kind={limitGate.dialogState.kind}
+          onClose={limitGate.closeLimitDialog}
+        />
       ) : null}
     </>
   )

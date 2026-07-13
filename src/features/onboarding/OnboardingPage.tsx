@@ -67,7 +67,7 @@ export const OnboardingPage = () => {
   }
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-10rem)] w-full max-w-3xl items-center">
+    <section className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-3xl items-center">
       <Card className="w-full overflow-hidden rounded-2xl p-0">
         <div
           aria-label={intl.formatMessage({ id: 'onboarding.carousel.aria' })}

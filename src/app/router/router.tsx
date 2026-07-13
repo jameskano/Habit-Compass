@@ -128,9 +128,23 @@ const weekRoute = createRoute({
   component: WeekPage,
 })
 
+type ItemsRouteSearch = {
+  tab?: 'habits' | 'tasks' | 'recurrent'
+}
+
+const itemsRouteTabs = ['habits', 'tasks', 'recurrent'] as const
+
 const itemsRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/items',
+  validateSearch: (search: Record<string, unknown>): ItemsRouteSearch => {
+    const tab = search.tab
+
+    return typeof tab === 'string' &&
+      itemsRouteTabs.includes(tab as (typeof itemsRouteTabs)[number])
+      ? { tab: tab as ItemsRouteSearch['tab'] }
+      : {}
+  },
   component: ItemsPage,
 })
 

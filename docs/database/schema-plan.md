@@ -10,6 +10,7 @@ The first Supabase schema for Habit Compass is defined across:
 - [0006_update_default_categories.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0006_update_default_categories.sql>)
 - [0007_feedback_support.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0007_feedback_support.sql>)
 - [0008_account_lifecycle.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/0008_account_lifecycle.sql>)
+- [20260710153624_add_weekly_plan_lifecycle_columns.sql](</C:/Users/iajer/Desktop/Desarrollo Web/Proyectos/Habit Compass/supabase/migrations/20260710153624_add_weekly_plan_lifecycle_columns.sql>)
 
 ## Principles
 
@@ -64,6 +65,7 @@ The first Supabase schema for Habit Compass is defined across:
 - `weekly_plans`
   - Optional weekly planning records currently keyed by `week_start`.
   - Stores optional focus text, weekly review feeling, three review answers, and reflections with database length/value checks.
+  - Stores archive and soft-delete timestamps from the shared base entity contract.
   - Unique per user and week start.
   - A future Settings migration must keep `week_start` as the existing start-date field and add
     `period_end` before user-facing week-start changes ship. Persisted weekly records preserve the
@@ -204,7 +206,7 @@ records from the current `first_day_of_week` value.
 - `archived_at` is used where the product expects a reversible inactive state. Categories do not use archive state.
 - Habits additionally keep normalized inactivity periods so repeated archive/reactivation cycles can be excluded from stats.
 - Items do not use `deleted_at`; confirmed deletion physically removes an item.
-- `deleted_at` remains available only for base-entity non-item records whose lifecycle may need soft deletion, such as reflections and weekly Big Rocks.
+- `deleted_at` remains available only for base-entity non-item records whose lifecycle may need soft deletion, such as reflections, weekly plans, and weekly Big Rocks.
 - Custom category deletion happens through `delete_category_with_reassignment(category_id)`: linked
   habits move to the user's protected Uncategorized category; linked tasks and recurrent tasks clear
   `category_id`; protected defaults cannot be deleted.

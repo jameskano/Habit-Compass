@@ -4,3 +4,9 @@ project(':capacitor-android').projectDir = new File('../node_modules/.pnpm/@capa
 
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacitor+app@7.0.0_@capacitor+core@7.4.3/node_modules/@capacitor/app/android')
+
+include ':revenuecat-purchases-capacitor'
+project(':revenuecat-purchases-capacitor').projectDir = new File('../node_modules/.pnpm/@revenuecat+purchases-capacitor@11.3.2_@capacitor+core@7.4.3/node_modules/@revenuecat/purchases-capacitor/android')
+
+include ':revenuecat-purchases-capacitor-ui'
+project(':revenuecat-purchases-capacitor-ui').projectDir = new File('../node_modules/.pnpm/@revenuecat+purchases-capac_a55931360e66e9ebffd6994be388e826/node_modules/@revenuecat/purchases-capacitor-ui/android')

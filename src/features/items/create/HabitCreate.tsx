@@ -12,9 +12,9 @@ import { HabitCreateDetailsStep } from './HabitCreateDetailsStep'
 import { HabitCreateFrequencyStep } from './HabitCreateFrequencyStep'
 import { useHabitCreateForm } from './useHabitCreateForm'
 
-export const HabitCreate = ({ onClose }: CreateDialogProps) => {
+export const HabitCreate = ({ onClose, onLimitReached }: CreateDialogProps) => {
   const intl = useIntl()
-  const habitCreate = useHabitCreateForm(onClose)
+  const habitCreate = useHabitCreateForm(onClose, onLimitReached)
 
   return (
     <DialogFrame

@@ -3,9 +3,12 @@ import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
 import type { CreateHabitInput } from '@/domain/habits'
+import type { LimitedItemKind } from '@/domain/subscriptions'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useCreateHabitMutation } from '@/features/habits/hooks/useHabitDetailMutations'
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'
+import { getItemLimitKindFromError } from '@/features/items/limits/itemLimitErrors'
+import { useItemLimitGate } from '@/features/items/limits/useItemLimitGate'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 
 import {
@@ -23,9 +26,13 @@ import type {
   HabitMeasurementScope,
 } from './createItem.types'
 
-export const useHabitCreateForm = (onClose: () => void) => {
+export const useHabitCreateForm = (
+  onClose: () => void,
+  onLimitReached?: (kind: LimitedItemKind) => void,
+) => {
   const intl = useIntl()
   const mutation = useCreateHabitMutation()
+  const limitGate = useItemLimitGate()
   const habits = useHabitsQuery().data ?? []
   const categories = useCategoriesQuery().data ?? []
   const [step, setStep] = useState(1)
@@ -79,6 +86,10 @@ export const useHabitCreateForm = (onClose: () => void) => {
       setError(intl.formatMessage({ id: 'page.items.create.error.details' }))
       return
     }
+    if (!limitGate.canUse('habit')) {
+      onLimitReached?.('habit')
+      return
+    }
     const goalConfig = buildHabitGoal(getGoalDraft())
     const minimumConfigured =
       goalConfig.trackingType === 'binary'
@@ -107,7 +118,16 @@ export const useHabitCreateForm = (onClose: () => void) => {
         defaultCompletionLevel: minimumConfigured ? 'standard' : null,
         resetMode: 'soft',
       },
-      { onSuccess: onClose },
+      {
+        onError: (error) => {
+          const limitKind = getItemLimitKindFromError(error)
+
+          if (limitKind) {
+            onLimitReached?.(limitKind)
+          }
+        },
+        onSuccess: onClose,
+      },
     )
   }
 

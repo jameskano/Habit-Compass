@@ -1,11 +1,14 @@
 # Future Features
 
+- AI insights as a future Premium feature.
 - AI suggestions.
 - Google Calendar integration.
 - Routines, projects, systems, and collections.
 - Advanced recurrence.
 - Broader native mobile platform work beyond the auth deep-link requirements in `/specs/auth`.
-- Subscription and monetization work beyond the RevenueCat identity, Google Play cancellation, and account-deletion requirements in `/specs/auth`.
+- Subscription and monetization work beyond RevenueCat identity, Google Play cancellation,
+  account-deletion requirements in `/specs/auth`, and the Premium limits defined in
+  `specs/mvp/premium-spec.md`.
 - Richer planning and reflection workflows.
 - Habit pause: a reversible, gentler alternative to archive that reuses habit inactivity periods and excludes paused dates from stats.
 - Notifications, notification permission flows, and per-item reminders.

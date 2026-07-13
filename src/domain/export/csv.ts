@@ -168,6 +168,8 @@ export const buildCsvExportFiles = (data: HabitCompassExportData) => ({
     { header: 'review_got_in_way', value: (row) => row.reviewGotInWay },
     { header: 'review_adjust_next_week', value: (row) => row.reviewAdjustNextWeek },
     { header: 'review_reflections', value: (row) => row.reviewReflections },
+    { header: 'archived_at', value: (row) => row.archivedAt },
+    { header: 'deleted_at', value: (row) => row.deletedAt },
     { header: 'created_at', value: (row) => row.createdAt },
     { header: 'updated_at', value: (row) => row.updatedAt },
   ]),

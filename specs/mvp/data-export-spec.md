@@ -194,7 +194,7 @@ entities into one oversized CSV.
 - `id`, `week_start`, future `period_end` once implemented, `focus_text`,
   `review_overall_feeling`,
   `review_went_well`, `review_got_in_way`, `review_adjust_next_week`, `review_reflections`,
-  `created_at`, `updated_at`
+  `archived_at`, `deleted_at`, `created_at`, `updated_at`
 
 `weekly_big_rocks.csv`:
 
