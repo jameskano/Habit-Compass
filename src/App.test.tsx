@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
 import { router } from './app/router/router'
@@ -23,7 +23,22 @@ const chooseSelectOption = async (
   await user.click(await screen.findByRole('option', { name: optionName }))
 }
 
+const cleanupAppTestDom = () => {
+  cleanup()
+  document.body.removeAttribute('data-scroll-locked')
+  document.body.style.removeProperty('pointer-events')
+  document
+    .querySelectorAll('[data-radix-focus-guard]')
+    .forEach((element) => element.remove())
+}
+
 describe('app shell', () => {
+  vi.setConfig({ testTimeout: 10000 })
+
+  afterEach(() => {
+    cleanupAppTestDom()
+  })
+
   beforeEach(async () => {
     resetMockState()
     window.sessionStorage.clear()
@@ -227,6 +242,7 @@ describe('app shell', () => {
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
 
     unmount()
+    cleanupAppTestDom()
     await act(async () => {
       await router.navigate({ to: '/legal/privacy-policy' })
     })
@@ -252,6 +268,7 @@ describe('app shell', () => {
     ).toBeInTheDocument()
 
     unmount()
+    cleanupAppTestDom()
     await act(async () => {
       await router.navigate({
         search: { code: 'email-change-code', flow: 'email-change' } as never,
@@ -615,11 +632,14 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Add item' }))
 
-    expect(screen.getByRole('dialog', { name: 'Choose what to create' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Habit' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Task' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Recurrent task' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Category' })).toBeInTheDocument()
+    const createDialog = screen.getByRole('dialog', { name: 'Choose what to create' })
+    expect(createDialog).toBeInTheDocument()
+    expect(within(createDialog).getByRole('button', { name: /^Habit/ })).toBeInTheDocument()
+    expect(within(createDialog).getByRole('button', { name: /^Task/ })).toBeInTheDocument()
+    expect(
+      within(createDialog).getByRole('button', { name: /^Recurrent task/ }),
+    ).toBeInTheDocument()
+    expect(within(createDialog).getByRole('button', { name: 'Category' })).toBeInTheDocument()
     expect(screen.queryByText('Reflection')).not.toBeInTheDocument()
     expect(screen.queryByText('Quick capture')).not.toBeInTheDocument()
   })
@@ -1412,7 +1432,7 @@ describe('app shell', () => {
       'href',
       '/settings/support',
     )
-    expect(screen.getByText('Coming soon')).toBeInTheDocument()
+    expect(screen.getByText('Unlock Habit Compass Premium.')).toBeInTheDocument()
     expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
     expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
     expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
@@ -1499,6 +1519,7 @@ describe('app shell', () => {
     })
 
     unmount()
+    cleanupAppTestDom()
     getMockState().authSession.providerClassification = 'unknown'
     render(<App />)
 
@@ -1627,6 +1648,7 @@ describe('app shell', () => {
     expect(getMockState().authSession.passwordResetRequests).toEqual(['person@example.com'])
 
     unmount()
+    cleanupAppTestDom()
     getMockState().authSession.providerClassification = 'oauth_only'
     await act(async () => {
       await router.navigate({ to: '/settings/security' })

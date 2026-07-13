@@ -70,6 +70,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    env: {
+      VITE_APP_DATA_SOURCE: 'mock',
+    },
     exclude: ['**/node_modules/**', '**/dist/**', '**/src/test/e2e/**'],
     globals: true,
     setupFiles: './src/test/setup.ts',

@@ -1,6 +1,6 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { router } from '@/app/router/router'
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
@@ -49,9 +49,23 @@ const seedPastWeeklyPlan = () => {
   })
 }
 
+const cleanupWeekPageTestDom = () => {
+  cleanup()
+  document.body.removeAttribute('data-scroll-locked')
+  document.body.style.removeProperty('pointer-events')
+  document
+    .querySelectorAll('[data-radix-focus-guard]')
+    .forEach((element) => element.remove())
+}
+
 describe('WeekPage', () => {
+  afterEach(() => {
+    cleanupWeekPageTestDom()
+  })
+
   beforeEach(async () => {
     resetMockState()
+    window.sessionStorage.clear()
     useAppPreferencesStore.setState({
       theme: 'system',
       locale: 'en',
