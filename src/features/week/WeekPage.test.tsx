@@ -53,9 +53,7 @@ const cleanupWeekPageTestDom = () => {
   cleanup()
   document.body.removeAttribute('data-scroll-locked')
   document.body.style.removeProperty('pointer-events')
-  document
-    .querySelectorAll('[data-radix-focus-guard]')
-    .forEach((element) => element.remove())
+  document.querySelectorAll('[data-radix-focus-guard]').forEach((element) => element.remove())
 }
 
 describe('WeekPage', () => {
