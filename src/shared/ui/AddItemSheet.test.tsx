@@ -57,10 +57,7 @@ describe('AddItemSheet limits', () => {
       { completionStatus: 'pending', lifecycleStatus: 'active' },
       { completionStatus: 'pending', lifecycleStatus: 'active' },
     ]
-    queryState.recurrentTasks = [
-      { lifecycleStatus: 'active' },
-      { lifecycleStatus: 'active' },
-    ]
+    queryState.recurrentTasks = [{ lifecycleStatus: 'active' }, { lifecycleStatus: 'active' }]
     queryState.snapshot = { hasActiveEntitlement: false }
   })
 

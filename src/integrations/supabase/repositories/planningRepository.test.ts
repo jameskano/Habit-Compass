@@ -277,10 +277,7 @@ describe('supabasePlanningRepository', () => {
   it('computes the next Big Rock sort order before insert', async () => {
     mockSupabase(
       {
-        data: [
-          weeklyBigRockRow,
-          { ...weeklyBigRockRow, id: 'weekly-big-rock-2', sort_order: 1 },
-        ],
+        data: [weeklyBigRockRow, { ...weeklyBigRockRow, id: 'weekly-big-rock-2', sort_order: 1 }],
         error: null,
       },
       {
