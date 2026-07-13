@@ -20,7 +20,12 @@ Read before writing tests:
 6. `docs/testing/acceptance-testing.md`
 7. Relevant source files, specs, and existing tests.
 
-Use `.ai/skills/test-harness-writing` and `.ai/agents/harness-test-engineer.md`.
+Use these when relevant:
+
+- `.agents/skills/test-harness-writing`
+- `.agents/skills/vitest`
+- `.agents/skills/playwright-cli`
+- `.ai/agents/harness-test-engineer.md`
 
 ## Exploration
 
@@ -39,7 +44,9 @@ Before writing tests:
 4. Use existing render helpers and providers from `src/test/utils`.
 5. Use Playwright only for critical flows that need real routing or browser behavior.
 6. Assert observable outcomes, not implementation details.
-7. Run the narrowest relevant test command.
+7. Use Vitest guidance for focused unit, hook, schema, and component tests.
+8. Use Playwright guidance for browser flows, storage state, traces, or generated tests.
+9. Run the narrowest relevant test command.
 
 ## Output
 

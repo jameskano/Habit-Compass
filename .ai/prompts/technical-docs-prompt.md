@@ -17,7 +17,12 @@ Read before writing:
 3. `docs/engineering/ai-code-task-guardrails.md`
 4. Relevant architecture, engineering, database, testing, specs, and implementation files.
 
-Use `.ai/skills/ai-context-maintenance` when docs may drift from implementation.
+Use these when relevant:
+
+- `.agents/skills/ai-context-maintenance` when docs may drift from implementation.
+- `.agents/skills/domain-modeling` for domain contracts.
+- `.agents/skills/supabase-schema-rls` for schema, RLS, auth, or repository contracts.
+- `.agents/skills/test-harness-writing` for verification docs.
 
 ## Workflow
 
@@ -25,7 +30,8 @@ Use `.ai/skills/ai-context-maintenance` when docs may drift from implementation.
 2. Identify what is confirmed by code or specs versus assumptions.
 3. Document responsibilities, interfaces, state/data flow, errors, accessibility or i18n concerns, and verification.
 4. Link to source-of-truth docs instead of copying long guidance.
-5. Recommend ADR updates only for durable architecture decisions.
+5. Update the smallest source of truth that fixes drift.
+6. Recommend ADR updates only for durable architecture decisions.
 
 ## Output
 

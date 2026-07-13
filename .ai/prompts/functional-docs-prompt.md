@@ -18,7 +18,16 @@ Read before writing:
 4. `.ai/context/domain-glossary.md`
 5. Relevant specs, feature docs, user flows, and implementation files.
 
-Use `.ai/agents/spec-planner.md`, `.ai/agents/product-architect.md`, or `.ai/agents/ux-architect.md` when the docs expose unresolved product decisions.
+Use these when relevant:
+
+- `.agents/skills/feature-spec-writing`
+- `.agents/skills/acceptance-criteria-writing`
+- `.agents/skills/ai-context-maintenance`
+- `.ai/agents/spec-planner.md`
+- `.ai/agents/product-architect.md`
+- `.ai/agents/ux-architect.md`
+
+Use the agents when the docs expose unresolved product decisions.
 
 ## Workflow
 

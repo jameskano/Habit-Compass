@@ -20,6 +20,16 @@ Read before reviewing:
 
 Use `.ai/agents/reviewer-gatekeeper.md` as the review stance.
 
+Use these specialized skills when the diff touches their area:
+
+- `.agents/skills/fixing-accessibility`
+- `.agents/skills/supabase-schema-rls`
+- `.agents/skills/domain-modeling`
+- `.agents/skills/frequency-goal-logic`
+- `.agents/skills/suggestion-rule-engine`
+- `.agents/skills/test-harness-writing`
+- `.agents/skills/ai-context-maintenance`
+
 ## Review Focus
 
 Prioritize:

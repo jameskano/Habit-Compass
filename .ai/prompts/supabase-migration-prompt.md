@@ -20,7 +20,14 @@ Read before editing:
 6. `docs/database/rls-plan.md`
 7. Relevant specs under `specs/`, especially `specs/auth/` for auth, account lifecycle, subscriptions, or deep links.
 
-Use `.ai/skills/supabase-schema-rls` and `.ai/agents/supabase-rls-engineer.md`.
+Use these when relevant:
+
+- `.agents/skills/supabase-schema-rls`
+- `.agents/skills/supabase-postgres-best-practices`
+- `.agents/skills/domain-modeling`
+- `.agents/skills/test-harness-writing`
+- `.ai/agents/supabase-rls-engineer.md`
+- `.ai/agents/domain-logic-engineer.md` when persistence shape depends on unresolved domain semantics.
 
 ## Workflow
 

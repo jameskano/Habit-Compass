@@ -17,7 +17,15 @@ Read before editing:
 3. `docs/engineering/react-code-organization.md` when React components are involved.
 4. Relevant specs, tests, hooks, utilities, and type contracts.
 
-Use `.ai/skills/react-component-architecture` for React extraction work.
+Use these when relevant:
+
+- `.agents/skills/react-component-architecture` for React extraction work.
+- `.agents/skills/domain-modeling` for pure rule, schema, type, or utility extraction.
+- `.agents/skills/vercel-react-best-practices` for React performance-sensitive refactors.
+- `.agents/skills/vercel-composition-patterns` for reusable component API or boolean-prop cleanup.
+- `.ai/agents/frontend-feature-engineer.md` for React structure and wiring.
+- `.ai/agents/domain-logic-engineer.md` for behavior-preserving domain extraction.
+- `.ai/agents/reviewer-gatekeeper.md` for final regression-risk review.
 
 ## Workflow
 

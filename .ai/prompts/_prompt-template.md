@@ -16,15 +16,16 @@ Read before acting:
 2. `.ai/context/project-brief.md`
 3. `.ai/context/product-principles.md`
 4. `docs/engineering/ai-code-task-guardrails.md`
-5. Relevant specs, docs, skills, agents, or workflows for this task.
+5. Relevant specs, docs, `.agents/skills/`, `.ai/agents/`, or workflows for this task.
 
 ## Workflow
 
 1. Search existing specs, docs, and implementation patterns before creating anything new.
 2. Identify confirmed facts, assumptions, open questions, and out-of-scope items.
-3. Make the smallest safe change or plan that satisfies the request.
-4. Add or update focused tests and documentation when the task changes behavior.
-5. Run targeted verification first; use broad verification only when risk justifies it.
+3. Load task-specific skills and agent guidance only when they match the work.
+4. Make the smallest safe change or plan that satisfies the request.
+5. Add or update focused tests and documentation when the task changes behavior.
+6. Run targeted verification first; use broad verification only when risk justifies it.
 
 ## Output
 
@@ -42,4 +43,5 @@ Return:
 - Keep optional depth optional and preserve simple tracking by default.
 - Use existing project architecture, hooks, repositories, UI primitives, i18n, and test utilities.
 - Keep user-facing strings in `react-intl`.
+- Keep detailed guidance in specs, docs, agents, or skills; do not duplicate long rule sets in prompts.
 - Prefer targeted verification unless broad risk justifies `pnpm verify`.
