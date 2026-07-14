@@ -72,6 +72,29 @@ describe('app shell', () => {
     expect(screen.queryByText('Simple by default, deep by choice')).not.toBeInTheDocument()
   })
 
+  it('renders a standalone not-found page for unknown routes and returns home', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/missing-route' as never })
+    })
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Page not found', level: 1 }))
+      .toBeInTheDocument()
+    expect(
+      screen.getByText('That route does not exist. Return home to keep going.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    const homeLink = screen.getByRole('link', { name: 'Go home' })
+    expect(homeLink).toHaveAttribute('href', '/today')
+
+    await user.click(homeLink)
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+  })
+
   it('redirects unauthenticated protected routes to sign in outside the app shell', async () => {
     getMockState().authSession.signedIn = false
     await act(async () => {

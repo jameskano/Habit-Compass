@@ -14,6 +14,7 @@ import {
 } from '@/features/auth/AuthRouteGuards'
 import { AuthDeepLinkHandler } from '@/features/auth/AuthDeepLinkHandler'
 import { LegalAcceptancePage } from '@/features/auth/LegalAcceptancePage'
+import { NotFoundPage } from '@/features/not-found/NotFoundPage'
 import { TodayPage } from '../../features/today/TodayPage'
 import { RoutePendingState } from '../../shared/ui/LazyLoadingFallbacks'
 
@@ -341,6 +342,7 @@ const routeTree = rootRoute.addChildren([
 
 export const router = createRouter({
   routeTree,
+  defaultNotFoundComponent: NotFoundPage,
   defaultPendingComponent: RoutePendingState,
   defaultPreload: import.meta.env.MODE === 'test' ? false : 'intent',
 })
