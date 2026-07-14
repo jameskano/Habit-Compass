@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useEffect, useState } from 'react'
 import { IntlProvider } from 'react-intl'
 
@@ -10,13 +10,14 @@ import { useAppPreferencesStore } from '../state/appPreferencesStore'
 import { getMessages } from '../../i18n/messages'
 import { SentryProvider } from './SentryProvider'
 import { ThemeProvider } from './ThemeProvider'
+import { createAppQueryClient } from './queryClient'
 
 type AppProvidersProps = {
   children: ReactNode
 }
 
 export const AppProviders = ({ children }: AppProvidersProps) => {
-  const [queryClient] = useState(() => new QueryClient())
+  const [queryClient] = useState(createAppQueryClient)
   const locale = useAppPreferencesStore((state) => state.locale)
   const resolvedLocale = resolveAppLocale(locale, getDeviceLocale())
 

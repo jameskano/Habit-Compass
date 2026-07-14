@@ -32,9 +32,10 @@ export const ItemsPage = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<ItemTabKey>(search.tab ?? 'habits')
   const [showingArchived, setShowingArchived] = useState(false)
-  const habitsQuery = useHabitsQuery()
-  const tasksQuery = useTasksQuery()
-  const recurrentTasksQuery = useRecurrentTasksQuery()
+  const pageBlocking = { pageBlocking: true }
+  const habitsQuery = useHabitsQuery(undefined, pageBlocking)
+  const tasksQuery = useTasksQuery(undefined, pageBlocking)
+  const recurrentTasksQuery = useRecurrentTasksQuery(undefined, pageBlocking)
   const activeTabConfig = itemTabs.find((tab) => tab.key === activeTab) ?? itemTabs[0]
   useShellTitle(`page.items.section.${activeTab}`)
 

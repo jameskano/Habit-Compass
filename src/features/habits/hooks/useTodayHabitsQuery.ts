@@ -4,9 +4,17 @@ import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { getHabitPeriodBounds } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
 import { mockData, MOCK_USER_ID } from '@/integrations/mock/mockData'
+import {
+  getPageBlockingQueryMeta,
+  type PageBlockingQueryOptions,
+} from '@/shared/query/pageBlockingQuery'
 import { unwrapResult } from '@/shared/utils/result'
 
-export const useTodayHabitsQuery = (userId = MOCK_USER_ID, date = mockData.today) => {
+export const useTodayHabitsQuery = (
+  userId = MOCK_USER_ID,
+  date = mockData.today,
+  options: PageBlockingQueryOptions = {},
+) => {
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
 
   return useQuery({
@@ -34,5 +42,6 @@ export const useTodayHabitsQuery = (userId = MOCK_USER_ID, date = mockData.today
         ).length,
       }
     },
+    meta: getPageBlockingQueryMeta(options),
   })
 }

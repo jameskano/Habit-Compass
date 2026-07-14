@@ -10,7 +10,10 @@ import { StatCard } from '@/shared/ui/StatCard'
 
 export const MoodPage = () => {
   const featureToggles = useAppPreferencesStore((state) => state.featureToggles)
-  const moodLogsQuery = useMoodLogsQuery()
+  const moodLogsQuery = useMoodLogsQuery(undefined, {
+    enabled: featureToggles.mood,
+    pageBlocking: true,
+  })
 
   return (
     <section className="space-y-6">

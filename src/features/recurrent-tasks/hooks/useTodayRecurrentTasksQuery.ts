@@ -3,9 +3,17 @@ import { useQuery } from '@tanstack/react-query'
 import { deriveRecurrentOccurrences } from '@/domain/recurrent-tasks'
 import { mockData, MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { recurrentTasksRepository } from '@/integrations/repositories'
+import {
+  getPageBlockingQueryMeta,
+  type PageBlockingQueryOptions,
+} from '@/shared/query/pageBlockingQuery'
 import { unwrapResult } from '@/shared/utils/result'
 
-export const useTodayRecurrentTasksQuery = (userId = MOCK_USER_ID, date = mockData.today) => {
+export const useTodayRecurrentTasksQuery = (
+  userId = MOCK_USER_ID,
+  date = mockData.today,
+  options: PageBlockingQueryOptions = {},
+) => {
   return useQuery({
     queryKey: ['recurrent-tasks', 'today', userId, date],
     queryFn: async () => {
@@ -34,5 +42,6 @@ export const useTodayRecurrentTasksQuery = (userId = MOCK_USER_ID, date = mockDa
           .length,
       }
     },
+    meta: getPageBlockingQueryMeta(options),
   })
 }

@@ -49,10 +49,11 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
   const setOrderForDate = useTodayOrderStore((state) => state.setOrderForDate)
   const pruneOrderForDate = useTodayOrderStore((state) => state.pruneOrderForDate)
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
-  const categoriesQuery = useCategoriesQuery()
-  const habitsQuery = useTodayHabitsQuery(undefined, selectedDate)
-  const tasksQuery = useTodayTasksQuery(undefined, selectedDate)
-  const recurrentQuery = useTodayRecurrentTasksQuery(undefined, selectedDate)
+  const pageBlocking = { pageBlocking: true }
+  const categoriesQuery = useCategoriesQuery(undefined, pageBlocking)
+  const habitsQuery = useTodayHabitsQuery(undefined, selectedDate, pageBlocking)
+  const tasksQuery = useTodayTasksQuery(undefined, selectedDate, pageBlocking)
+  const recurrentQuery = useTodayRecurrentTasksQuery(undefined, selectedDate, pageBlocking)
   const habitLogs = habitsQuery.data?.logs ?? EMPTY_HABIT_LOGS
 
   const rawItems = useMemo(

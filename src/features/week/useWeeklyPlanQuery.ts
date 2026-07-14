@@ -2,6 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { planningRepository } from '@/integrations/repositories'
+import {
+  getPageBlockingQueryMeta,
+  type PageBlockingQueryOptions,
+} from '@/shared/query/pageBlockingQuery'
 import type { ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
 
@@ -17,15 +21,24 @@ export const weeklyBigRocksQueryKey = (userId: string, weeklyPlanId: string | nu
   weeklyPlanId,
 ]
 
-export const useWeeklyPlanQuery = (weekStartDate: ISODateString, userId = MOCK_USER_ID) => {
+export const useWeeklyPlanQuery = (
+  weekStartDate: ISODateString,
+  userId = MOCK_USER_ID,
+  options: PageBlockingQueryOptions = {},
+) => {
   return useQuery({
     queryKey: weeklyPlanQueryKey(userId, weekStartDate),
     queryFn: async () =>
       unwrapResult(await planningRepository.getForWeek({ userId, weekStartDate })),
+    meta: getPageBlockingQueryMeta(options),
   })
 }
 
-export const useWeeklyBigRocksQuery = (weeklyPlanId: string | null, userId = MOCK_USER_ID) => {
+export const useWeeklyBigRocksQuery = (
+  weeklyPlanId: string | null,
+  userId = MOCK_USER_ID,
+  options: PageBlockingQueryOptions = {},
+) => {
   return useQuery({
     queryKey: weeklyBigRocksQueryKey(userId, weeklyPlanId),
     queryFn: async () => {
@@ -35,5 +48,6 @@ export const useWeeklyBigRocksQuery = (weeklyPlanId: string | null, userId = MOC
 
       return unwrapResult(await planningRepository.listBigRocks({ userId, weeklyPlanId }))
     },
+    meta: getPageBlockingQueryMeta(options),
   })
 }

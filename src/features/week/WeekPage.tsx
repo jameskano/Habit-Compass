@@ -52,14 +52,23 @@ export const WeekPage = () => {
     setSelectedWeekStart,
   })
 
-  const weeklyPlanQuery = useWeeklyPlanQuery(selectedWeekStart)
-  const weeklyBigRocksQuery = useWeeklyBigRocksQuery(weeklyPlanQuery.data?.id ?? null)
-  const habitsQuery = useHabitsQuery()
-  const categoriesQuery = useCategoriesQuery()
-  const habitLogsQuery = useHabitLogsRangeQuery({
-    from: weekDates[0],
-    to: weekDates[weekDates.length - 1],
-  })
+  const pageBlocking = { pageBlocking: true }
+  const weeklyPlanQuery = useWeeklyPlanQuery(selectedWeekStart, undefined, pageBlocking)
+  const weeklyBigRocksQuery = useWeeklyBigRocksQuery(
+    weeklyPlanQuery.data?.id ?? null,
+    undefined,
+    pageBlocking,
+  )
+  const habitsQuery = useHabitsQuery(undefined, pageBlocking)
+  const categoriesQuery = useCategoriesQuery(undefined, pageBlocking)
+  const habitLogsQuery = useHabitLogsRangeQuery(
+    {
+      from: weekDates[0],
+      to: weekDates[weekDates.length - 1],
+    },
+    undefined,
+    pageBlocking,
+  )
   const mutations = useWeeklyPlanMutations()
 
   const habits = habitsQuery.data ?? emptyHabits
