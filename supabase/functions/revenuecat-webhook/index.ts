@@ -62,6 +62,12 @@ const getRequiredEnv = (key: string) => {
 const encodePath = (value: string) => encodeURIComponent(value)
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+const getErrorStatus = (error: unknown) => {
+  return typeof error === 'object' && error !== null && 'status' in error
+    ? Number((error as { status?: unknown }).status)
+    : null
+}
+
 const toHex = (buffer: ArrayBuffer) =>
   [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 
@@ -234,6 +240,21 @@ Deno.serve(async (request) => {
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
     const revenueCatSecretKey = getRequiredEnv('REVENUECAT_SECRET_API_KEY')
     const serviceClient = createClient(supabaseUrl, serviceRoleKey)
+    const {
+      data: { user },
+      error: userLookupError,
+    } = await serviceClient.auth.admin.getUserById(userId)
+
+    if (userLookupError) {
+      if (getErrorStatus(userLookupError) !== 404) {
+        throw userLookupError
+      }
+      return jsonResponse({ ignored: true, processed: true })
+    }
+
+    if (!user) {
+      return jsonResponse({ ignored: true, processed: true })
+    }
 
     const { error: eventError } = await serviceClient.from('revenuecat_webhook_events').upsert(
       {

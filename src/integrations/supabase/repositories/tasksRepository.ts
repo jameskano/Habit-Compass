@@ -94,21 +94,21 @@ export const supabaseTasksRepository: TasksRepository = {
   },
 
   async listForToday({ date }) {
-    const tasks = await this.listForUser({ userId: '' })
-    if (!tasks.ok) return tasks
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
 
-    return ok(
-      tasks.data.filter(
-        (task) =>
-          task.lifecycleStatus === 'active' &&
-          (task.dueDate === date ||
-            (task.dueDate !== null &&
-              task.dueDate !== undefined &&
-              task.dueDate < date &&
-              task.carryForward &&
-              task.completionStatus === 'pending')),
-      ),
-    )
+      const { data, error } = await getSupabaseClient()
+        .from('tasks')
+        .select('*')
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .or(`due_date.eq.${date},and(due_date.lt.${date},carry_forward.eq.true,status.eq.pending)`)
+        .order('sort_order', { ascending: true })
+
+      if (error) return err(toSupabaseError('Could not load tasks.', error))
+      return ok((data as TaskRow[]).map(mapTask))
+    })
   },
 
   async create(input) {

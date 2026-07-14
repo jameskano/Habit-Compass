@@ -126,16 +126,32 @@ export const supabaseRecurrentTasksRepository: RecurrentTasksRepository = {
 
   async listForToday({ date }) {
     return execute(async () => {
-      const [tasks, occurrences] = await Promise.all([
-        this.listForUser({ userId: '' }),
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
+
+      const tasksQuery = getSupabaseClient()
+        .from('recurrent_tasks')
+        .select('*')
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .lte('starts_on', date)
+        .or(`ends_on.is.null,ends_on.gte.${date}`)
+        .order('sort_order', { ascending: true })
+
+      const [tasksResponse, occurrences] = await Promise.all([
+        tasksQuery,
         this.listOccurrencesForRange({ userId: '', from: date, to: date }),
       ])
 
-      if (!tasks.ok) return tasks
+      if (tasksResponse.error) {
+        return err(toSupabaseError('Could not load recurrent tasks.', tasksResponse.error))
+      }
       if (!occurrences.ok) return occurrences
 
+      const tasks = (tasksResponse.data as RecurrentTaskRow[]).map(mapRecurrentTask)
+
       return ok(
-        tasks.data
+        tasks
           .flatMap((task) =>
             deriveRecurrentOccurrences({
               task,
@@ -151,8 +167,7 @@ export const supabaseRecurrentTasksRepository: RecurrentTasksRepository = {
             (derived) =>
               derived.storedOccurrence ?? {
                 id: `derived-${derived.recurrentTaskId}-${derived.scheduledForDate}`,
-                userId:
-                  tasks.data.find((task) => task.id === derived.recurrentTaskId)?.userId ?? '',
+                userId: tasks.find((task) => task.id === derived.recurrentTaskId)?.userId ?? '',
                 recurrentTaskId: derived.recurrentTaskId,
                 scheduledForDate: derived.scheduledForDate,
                 status: derived.status,

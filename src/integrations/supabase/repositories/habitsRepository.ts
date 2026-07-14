@@ -178,16 +178,27 @@ export const supabaseHabitsRepository: HabitsRepository = {
   },
 
   async listForToday({ date }) {
-    const habits = await this.listForUser({ userId: '' })
-    if (!habits.ok) return habits
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
 
-    return ok(
-      habits.data.filter(
-        (habit) =>
-          habit.lifecycleStatus === 'active' &&
-          (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date)),
-      ),
-    )
+      const { data, error } = await getSupabaseClient()
+        .from('habits')
+        .select('*')
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .lte('starts_on', date)
+        .or(`ends_on.is.null,ends_on.gte.${date}`)
+        .order('sort_order', { ascending: true })
+
+      if (error) return err(toSupabaseError('Could not load habits.', error))
+
+      return ok(
+        (data as HabitRow[]).map(mapHabit).filter((habit) => {
+          return habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date)
+        }),
+      )
+    })
   },
 
   async listLogsForDate({ date }) {
