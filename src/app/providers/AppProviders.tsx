@@ -26,8 +26,8 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
   }, [resolvedLocale])
 
   return (
-    <SentryProvider>
-      <IntlProvider locale={resolvedLocale} messages={getMessages(resolvedLocale)}>
+    <IntlProvider locale={resolvedLocale} messages={getMessages(resolvedLocale)}>
+      <SentryProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <ThemeProvider>
@@ -36,7 +36,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
             </ThemeProvider>
           </AuthProvider>
         </QueryClientProvider>
-      </IntlProvider>
-    </SentryProvider>
+      </SentryProvider>
+    </IntlProvider>
   )
 }

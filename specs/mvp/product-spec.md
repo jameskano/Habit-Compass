@@ -54,6 +54,13 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Empty-state cards remain reserved for true empty, disabled-feature, and error surfaces.
 - Submit buttons keep disabled and progress-label loading behavior.
 
+## Error Recovery
+
+- Route errors, page-blocking query failures, and app-level crash fallbacks use the global error
+  treatment with localized copy and clear recovery actions.
+- App-level crash fallbacks do not expose raw error messages, component stacks, or technical
+  traces to users.
+
 ## Later
 
 - Bulk actions.

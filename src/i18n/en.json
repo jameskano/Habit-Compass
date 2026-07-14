@@ -34,6 +34,7 @@
   "errorPage.validation.title": "We could not open this screen",
   "errorPage.validation.description": "We could not process the information needed to open this screen. Try again or return home.",
   "errorPage.retry": "Try again",
+  "errorPage.reload": "Reload app",
   "errorPage.goHome": "Go home",
   "shared.toast.error.generic": "Something went wrong. Please try again.",
   "sheet.add.title": "Choose what to create",

@@ -34,6 +34,7 @@
   "errorPage.validation.title": "No se pudo abrir la pantalla",
   "errorPage.validation.description": "No hemos podido procesar la información necesaria para abrir esta pantalla. Inténtalo de nuevo o vuelve al inicio.",
   "errorPage.retry": "Intentar de nuevo",
+  "errorPage.reload": "Recargar la app",
   "errorPage.goHome": "Ir al inicio",
   "shared.toast.error.generic": "Algo salió mal. Inténtalo de nuevo.",
   "sheet.add.title": "Elige qué quieres crear",
