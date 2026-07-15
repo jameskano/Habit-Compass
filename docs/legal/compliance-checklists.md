@@ -2,10 +2,15 @@
 
 ## Purpose
 
-This document tracks release-blocking legal placeholders, Play Console consistency checks, and
-legal-update triggers for Habit Compass Settings, privacy, support, export, RevenueCat,
-subscriptions, and immediate account deletion. `/specs/auth` supersedes earlier MVP deferrals for
-RevenueCat, subscriptions, Android auth links, and scheduled account deletion.
+This document tracks internal legal review items, Google Play consistency checks, and legal-update
+triggers for Habit Compass privacy, Terms, support, export, RevenueCat, subscriptions, crash
+reporting, and immediate account deletion.
+
+The public legal documents are production-facing documents, not legal advice from this checklist.
+`/specs/auth` is the source of truth for required accounts, RevenueCat subscription identity,
+Android auth links, and immediate account deletion. Any legacy scheduled or pending deletion flow is
+implementation context only and must not ship as the active deletion model while the public legal
+documents describe immediate deletion.
 
 ## Related Documents
 
@@ -14,6 +19,8 @@ RevenueCat, subscriptions, Android auth links, and scheduled account deletion.
 - [Account lifecycle spec](../../specs/mvp/account-lifecycle-spec.md)
 - [Data export spec](../../specs/mvp/data-export-spec.md)
 - [Feedback and support spec](../../specs/mvp/feedback-support-spec.md)
+- [Auth scope and decisions](../../specs/auth/00-scope-and-decisions.md)
+- [RevenueCat and account deletion](../../specs/auth/06-revenuecat-and-account-deletion.md)
 - [Privacy Policy EN](privacy-policy.en.md)
 - [Privacy Policy ES](privacy-policy.es.md)
 - [Terms EN](terms-of-service.en.md)
@@ -21,7 +28,7 @@ RevenueCat, subscriptions, Android auth links, and scheduled account deletion.
 
 ## Official References
 
-Last checked against the official Google Play Help pages on 2026-06-20.
+Last checked against official sources on 2026-07-15.
 
 - European Commission GDPR overview:
   https://commission.europa.eu/law/law-topic/data-protection/legal-framework-eu-data-protection_en
@@ -44,229 +51,199 @@ Last checked against the official Google Play Help pages on 2026-06-20.
 
 ## Current Release Readiness Snapshot
 
-Status: release-blocked until the required legal facts, public URLs, and production service
-configuration are confirmed.
+Status: release-blocked until Play Console declarations and production service configuration are
+confirmed.
 
-Implemented in the app/repo:
+Implemented or present in the repo:
 
-- Settings exposes Privacy Policy and Terms from Data and privacy.
-- RevenueCat/subscription identity is now in scope for `/specs/auth`; purchasable Premium UI still
-  requires accurate product, price, legal, and store configuration before release.
-- Settings does not show a Notifications row, notification permission flow, reminder UI, paywall, or
-  subscription-management UI.
-- In-app account deletion must follow `/specs/auth`: reauthentication, subscription cancellation
-  when required, RevenueCat customer deletion, app-data cleanup, and Supabase Auth deletion happen
-  immediately through a secured backend path.
-- A public web route exists at `/account/delete` for account deletion requests, but production
-  hosting and Play Console URL configuration are not confirmed.
-- Feedback screenshots are user-selected only; the app does not silently capture screenshots.
+- Settings exposes Privacy Policy and Terms under Data and privacy.
+- Public app routes exist for `/legal/privacy-policy`, `/legal/terms`, and `/account/delete`.
+- The public Render deployment base URL is `https://habit-compass.onrender.com/`.
+- Account creation and protected app access are in scope through `/specs/auth`.
+- RevenueCat SDK integration, Premium UI, entitlement sync, paywall hooks, Customer Center hooks,
+  RevenueCat webhooks, and server-side deletion support are present.
 - Export actions generate CSV ZIP and JSON for app data and exclude auth/session data and Settings
   preferences.
-- Sentry is conditional on `VITE_SENTRY_DSN`; if a DSN is configured for release, crash-reporting
-  disclosures and Data Safety answers must be completed before release.
+- Feedback screenshots are user-selected only; the app does not silently capture screenshots.
+- Sentry initializes only when `VITE_SENTRY_DSN` is configured.
+
+Confirmed public legal document facts:
+
+- Provider/controller: Jaime Canovas.
+- Privacy/support contact: jaimecanovasdesign@gmail.com.
+- Country of establishment: Spain.
+- Terms and Privacy Policy version: 1.0.0.
+- Effective date: July 15, 2026.
+- Minimum age: 16.
+- Feedback and feedback screenshots: retained up to 6 months unless needed longer for support,
+  safety, legal, or abuse handling.
+- Export files: generated for download and not retained as separate temporary files.
+- App backups: no separate Habit Compass app backups are currently maintained.
+- Public Privacy Policy URL: `https://habit-compass.onrender.com/legal/privacy-policy`.
+- Public Terms URL: `https://habit-compass.onrender.com/legal/terms`.
+- Public external account-deletion URL: `https://habit-compass.onrender.com/account/delete`.
 
 Not confirmed for release:
 
-- Public hosted Privacy Policy URL.
-- Public hosted Terms URL, if Terms are hosted separately.
 - Public external account-deletion URL entered in Play Console.
-- Supabase function secrets for immediate account deletion.
-- RevenueCat and Google Play server-side credentials and sandbox configuration.
-- External account-deletion email template and production sender/provider.
-- Legal controller identity, contact details, legal basis, retention periods, processor details, and
-  jurisdiction terms.
-- Play Console Data Safety answers.
+- Production email provider.
+- Production Supabase project region, backup behavior, subprocessors, and transfer safeguards.
+- RevenueCat and Google/Google Play production subprocessors, transfer safeguards, product, price,
+  renewal, cancellation, refund, Customer Center, webhook, and secret configuration.
+- Play Console Data Safety answers and data-deletion answers.
+- Supabase function secrets and production testing for immediate account deletion.
+- External account-deletion email templates, sender, and verification behavior.
 - Whether Sentry/crash reporting is enabled in the release build.
+- Removal or unreachable status of legacy scheduled/pending deletion routes and functions.
 
-## Release-Blocking Placeholders
+## Public Document Placeholder Status
 
-Resolve these before public release:
+None in the public legal documents.
 
-- `[LEGAL NAME / DATA CONTROLLER]`
-- `[BUSINESS OR CONTACT ADDRESS]`
-- `[PRIVACY CONTACT EMAIL]`
-- `[SUPPORT EMAIL]`
-- `[COUNTRY OF ESTABLISHMENT]`
-- `[EFFECTIVE DATE]`
-- `[MINIMUM AGE]`
-- `[HOSTED PRIVACY POLICY URL]`
-- `[HOSTED TERMS URL]`
-- `[PUBLIC ACCOUNT DELETION URL]`
-- `[DATA RETENTION PERIOD]`
-- `[FEEDBACK RETENTION TO CONFIRM]`
-- `[FEEDBACK SCREENSHOT RETENTION TO CONFIRM]`
-- `[EXPORT TEMP FILE RETENTION TO CONFIRM]`
-- `[BACKUP RETENTION DETAILS TO CONFIRM]`
-- `[PROCESSOR OR SUBPROCESSOR DETAILS TO CONFIRM]`
-- `[EMAIL PROVIDER TO CONFIRM]`
-- `[HOSTING PROVIDER TO CONFIRM]`
-- `[LEGAL BASIS TO CONFIRM]`
-- `[SERVICE WARRANTY / DISCLAIMER LANGUAGE TO CONFIRM]`
-- `[LIABILITY TERMS TO CONFIRM]`
-- `[GOVERNING LAW TO CONFIRM]`
-- `[JURISDICTION / DISPUTE FORUM TO CONFIRM]`
+Production configuration details still to confirm before release:
 
-## Processor And SDK Review
+- Supabase project region, backup behavior, subprocessors, and transfer safeguards.
+- RevenueCat and Google/Google Play production configuration and transfer details.
+- Email delivery provider and sender configuration.
+- Sentry/crash reporting release status.
+- Play Console Data Safety and account deletion answers.
 
-Before release, confirm whether each provider is active:
+## Provider And SDK Review
 
-- Supabase Auth.
-- Supabase Postgres.
-- Supabase Storage.
-- Supabase Edge Functions.
-- Supabase Cron.
+Before release, confirm whether each provider or SDK is active:
+
+- Supabase Auth, Postgres, Storage, Edge Functions, and Cron.
 - Google OAuth.
-- Google Play distribution.
+- Google Play distribution, purchases, subscriptions, ratings, and reviews.
+- RevenueCat SDK, RevenueCat UI, webhooks, and backend APIs.
 - Email-delivery provider.
-- Public web host for legal pages.
-- Public web host for external deletion page.
+- Public web host for legal pages and account-deletion pages.
 - Sentry or any crash-reporting provider.
 - Analytics provider.
-- RevenueCat.
+- Support/admin tooling.
 - AI provider.
 - Push-notification provider.
+- Advertising or ad identifier provider.
 
-If a provider is active, document:
+For every active provider, document:
 
 - Role: processor, controller, independent third party, or platform provider.
-- Data categories.
-- Purpose.
-- Transfer location.
-- Transfer safeguard.
-- Retention.
+- Data categories and purposes.
+- Transfer location and safeguard.
+- Retention and deletion behavior.
 - User-facing disclosure.
 - Play Console Data Safety impact.
 
-## Play Console Data Safety Checklist
+## Google Play Requirements Checklist
 
-Verify the Play Console Data Safety form matches actual app behavior and the Privacy Policy.
-
-Google Play requires developers to complete accurate Data Safety declarations for published apps,
-including data handled by third-party libraries/SDKs, and to keep those declarations consistent with
-the app behavior and Privacy Policy.
-
-Check data collection:
-
-- [ ] Account email.
-- [ ] Google OAuth profile/email data.
-- [ ] User-generated habits, tasks, categories, recurrent tasks, notes, mood, reflections, weekly
-      records, and completion logs.
-- [ ] Feedback message.
-- [ ] Optional feedback reply email.
-- [ ] Optional feedback screenshots.
-- [ ] Optional technical diagnostics.
-- [ ] App version, build number, device model, Android version, app language, screen identifier, and
-      error identifier when included in feedback.
-- [ ] Ratings/reviews through Google Play In-App Reviews or Play listing.
-- [ ] RevenueCat subscription identity and entitlement state if enabled.
-- [ ] Google Play subscription management/cancellation data if enabled.
-- [ ] Crash/error diagnostics if `VITE_SENTRY_DSN` or another crash-reporting SDK is active.
-
-Check data sharing:
-
-- [ ] Supabase backend processing.
-- [ ] Google OAuth.
-- [ ] Google Play.
-- [ ] RevenueCat.
-- [ ] Email provider.
-- [ ] Hosting provider.
-- [ ] Support/admin tooling.
-- [ ] Any crash/analytics provider if enabled.
-
-Check security disclosures:
-
-- [ ] Data in transit encryption.
-- [ ] Account deletion available in app and on web when accounts are supported.
-- [ ] Data export availability.
-- [ ] Retention/deletion policy alignment.
-
-Check URL requirements:
+Privacy Policy:
 
 - [ ] Privacy Policy URL is active, public, non-geofenced, non-editable, and not a PDF.
-- [ ] Account deletion URL is active, public, not merely an app redirect, and entered in Play
-      Console.
+- [ ] Privacy Policy names the app and the developer/controller matching the Play listing.
+- [ ] Privacy Policy includes a privacy contact or inquiry mechanism.
+- [ ] Privacy Policy discloses data categories, purposes, sharing/recipients, security, retention,
+      and deletion.
+- [x] Privacy Policy is available in-app from Settings > Data and privacy.
 
-## Account Deletion Release Checklist
+Data Safety:
 
-Google Play requires an in-app and outside-the-app account deletion path when app account creation
-is supported. The web resource must let users request deletion without sending them back to
-reinstall/use the app.
+- [ ] Data Safety answers match actual app behavior and enabled SDKs.
+- [ ] Account email and authentication data are declared correctly.
+- [ ] Google OAuth profile/email data is declared correctly.
+- [ ] User-generated habits, tasks, categories, recurrent tasks, notes, mood, reflections, weekly
+      records, and completion logs are declared correctly.
+- [ ] Feedback message, optional reply email, optional screenshots, and optional diagnostics are
+      declared correctly.
+- [ ] RevenueCat subscription identity and Google Play subscription data are declared correctly if
+      enabled.
+- [ ] Crash/error diagnostics are declared if `VITE_SENTRY_DSN` or another crash SDK is active.
+- [ ] No analytics, notifications, advertising, AI, or unrelated SDK data is declared as active
+      unless actually enabled.
 
-- [x] In-app Delete account action exists as legacy UI.
+Account deletion:
+
+- [ ] In-app account deletion is readily discoverable.
+- [ ] Web account-deletion URL lets users request deletion without reinstalling or opening the app.
+- [ ] Play Console account-deletion URL is configured.
+- [ ] Deletion text explains retained data, if any retention remains after deletion.
+- [ ] Account deletion deletes account-associated app data unless a specific retained category,
+      purpose, period, and legal basis is documented.
+
+## Immediate Account Deletion Checklist
+
+Target release behavior is immediate deletion after warnings, reauthentication, subscription checks,
+RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth deletion.
+
+- [x] Public legal documents describe immediate deletion, subscription cancellation checks, RevenueCat
+      cleanup, no automatic refund, and immediate access loss.
+- [x] In-app deletion warning includes irreversible deletion, access loss, no automatic refund, and
+      subscription warning copy.
 - [ ] Deletion requires recent authentication for password-enabled and Google-only accounts.
-- [ ] Immediate deletion Edge Function replaces the legacy scheduled-deletion functions.
 - [ ] Required Google Play auto-renewing subscriptions are cancelled before account deletion.
 - [ ] RevenueCat customer deletion happens server-side before Supabase Auth user deletion.
 - [ ] Supabase Storage feedback attachments are cleaned explicitly from recorded storage paths.
 - [ ] Auth user deletion happens after external-service and app-data cleanup.
-- [ ] External deletion page route exists and triggers the same immediate workflow after verification.
-- [x] External deletion page is localized in English and Spanish.
-- [x] Privacy Policy describes immediate deletion, subscription cancellation checks, RevenueCat cleanup, and no automatic refund.
-- [x] Terms describe immediate deletion, subscription cancellation checks, RevenueCat cleanup, and no automatic refund.
-- [ ] External deletion page is deployed at a stable public URL.
-- [ ] External deletion email verification templates and production sender are configured.
 - [ ] Immediate deletion function secrets and idempotency behavior are configured.
-- [ ] Play Console account-deletion URL is configured.
 - [ ] Production deletion flow has been manually tested against deployed Supabase functions.
-
-## Notifications Deferral Checklist
-
-Notifications are deferred for MVP. Do not add notification Settings rows, Android permission
-requests, local reminders, push notifications, reminder scheduling, or notification provider SDKs
-until a Notifications spec exists.
-
-Before future notification work starts:
-
-- [ ] Create a Notifications product/spec document.
-- [ ] Define local vs push notification behavior.
-- [ ] Define Android permissions and prominent disclosure requirements if personal/sensitive data is
-      involved.
-- [ ] Update Privacy Policy and Terms if notification data or providers are introduced.
-- [ ] Update Play Console Data Safety.
-- [ ] Add tests proving Settings behavior, permissions, opt-in/opt-out, and deletion cleanup.
-
-Current status:
-
-- [x] No MVP Notifications Settings row is present.
-- [x] `src/integrations/notifications/README.md` remains a placeholder only.
-- [x] No notification permission flow was added for Settings MVP.
+- [ ] Legacy pending-deletion route, cancellation UI, `request-account-deletion`,
+      `cancel-account-deletion`, and `finalize-account-deletion` are removed, retired, or made
+      unreachable before release.
+- [ ] External account-deletion page triggers the immediate workflow after verification, not the
+      legacy delayed workflow.
+- [ ] External deletion email templates and production sender are configured.
 
 ## Premium And RevenueCat Checklist
 
-RevenueCat identity and subscription-aware account deletion are active auth requirements through
-`/specs/auth`. Purchasable Premium UI still requires accurate billing and subscription disclosures
-when digital in-app features or subscriptions are sold through a Play-distributed app, and
-subscription offers must not mislead users about terms, pricing, renewal, or whether a subscription
-is required.
+Premium and RevenueCat behavior are active implementation scope, not purely future scope. Before paid
+release:
 
-Before release:
+- [ ] Confirm paid Premium launch status and supported countries.
+- [ ] Define free and paid feature boundaries without compromising the simple tracker baseline.
+- [ ] Confirm Google Play Billing and approved billing requirements.
+- [ ] Confirm RevenueCat product, entitlement, Offering, paywall, Customer Center, webhook, and
+      secret configuration.
+- [ ] Update Terms, Privacy Policy, Play listing, Play Data Safety, and in-app purchase surfaces
+      with accurate price, renewal, trial, cancellation, refund, and subscription-management details.
+- [ ] Add tests proving no misleading pricing, renewal, cancellation, AI, or paid-feature claims.
 
-- [ ] Confirm whether purchasable Premium UI is part of the release or only auth/deletion identity is active.
-- [ ] Define paid/free feature boundaries without compromising the simple tracker baseline.
-- [ ] Add Google Play Billing or approved billing program requirements.
-- [ ] Add RevenueCat processor/subprocessor details.
-- [ ] Implement RevenueCat customer deletion behavior required by `/specs/auth`.
-- [ ] Update Privacy Policy, Terms, Play Data Safety, and account-deletion copy.
-- [ ] Add the active-subscription deletion warning explaining automatic renewal cancellation,
-      immediate access loss, and no automatic refund.
-- [ ] Add subscription management that routes to Google Play where required.
-- [ ] Add tests proving no misleading pricing, renewal, or cancellation UI.
+## Crash Reporting, Analytics, Notifications, AI, And Ads
 
-Current status:
+Current public legal document position:
 
-- [ ] RevenueCat dependency/paywall status must be confirmed during auth implementation.
-- [x] `src/integrations/revenuecat/README.md` points to `/specs/auth`.
-- [ ] Account deletion must show the subscription-aware immediate deletion warning from `/specs/auth`.
+- Sentry/crash reporting is conditional on release configuration.
+- Analytics are not active unless separately enabled and documented.
+- Notifications are not active.
+- AI features are not active in MVP.
+- Advertising and ad identifiers are not active.
+
+Before enabling any of these:
+
+- [ ] Update Privacy Policy and Terms if the feature changes data processing or user obligations.
+- [ ] Add any required in-app prominent disclosure and consent flow.
+- [ ] Update Play Console Data Safety.
+- [ ] Add deletion/export/provider cleanup notes where relevant.
+- [ ] Add focused tests for Settings visibility, permissions, opt-in/out, and data cleanup.
 
 ## Legal Versioning Checklist
 
-- Terms version ID is stable.
-- Privacy Policy version ID is stable.
-- Terms acceptance timestamp and version are stored separately from privacy notice presentation.
-- Privacy notice presentation is not treated as consent.
-- Optional consent records are separate if introduced.
-- Existing users have a reacceptance/migration plan for material Terms changes.
-- In-app documents render the same version as public documents or clearly identify the version.
+- [ ] Terms version ID is stable.
+- [ ] Privacy Policy version ID is stable.
+- [ ] Terms acceptance timestamp and version are stored separately from privacy notice presentation.
+- [ ] Privacy notice presentation is not treated as blanket consent.
+- [ ] Optional consent records are separate if introduced.
+- [ ] Existing users have a reacceptance or migration plan for material Terms changes.
+- [ ] In-app documents render the same version as public documents or clearly identify the version.
+
+## English/Spanish Parity Checklist
+
+- [ ] Same effective date and version.
+- [ ] Same controller/contact facts.
+- [ ] Same data categories and purposes.
+- [ ] Same legal-basis and retention facts.
+- [ ] Same account deletion explanation.
+- [ ] Same Premium/subscription status.
+- [ ] Same Sentry/analytics/notifications/AI/ads status.
+- [ ] Same contact facts and public URL facts.
 
 ## Future Legal Update Triggers
 
@@ -274,8 +251,8 @@ Review and update Privacy Policy, Terms, in-app disclosures, and Play Console Da
 enabling:
 
 - Notifications.
-- RevenueCat behavior beyond `/specs/auth`.
-- Premium subscription behavior beyond `/specs/auth`.
+- RevenueCat behavior beyond the current Premium/deletion scope.
+- Premium subscription behavior beyond the confirmed product configuration.
 - Analytics.
 - Automatic crash reporting.
 - New OAuth providers.
@@ -284,29 +261,17 @@ enabling:
 - Additional personal-data processing.
 - Additional languages.
 - Account linking/unlinking.
-- External account-deletion page production launch.
-- Public legal webpage production launch.
-
-## English/Spanish Parity Checklist
-
-- Same effective date and version.
-- Same controller/contact placeholders.
-- Same data categories.
-- Same purposes and legal-basis placeholders.
-- Same retention placeholders.
-- Same account deletion explanation.
-- Same Premium/subscription status.
-- Same contact and public URL placeholders.
 
 ## Open Release Risks
 
-- Legal basis and retention periods are unresolved.
-- Processor/subprocessor list is unresolved.
-- Minimum age is unresolved.
-- Public Privacy Policy and Terms hosting is unresolved.
-- Public account-deletion page hosting is unresolved.
-- External deletion email delivery, template configuration, and production verification flow are
+- Production email provider is unresolved.
+- Supabase, RevenueCat, Google/Google Play, and any enabled Sentry transfer safeguards and
+  subprocessors need production confirmation.
+- Play Console Data Safety and data-deletion answers are unresolved.
+- External deletion email delivery, template configuration, and production verification are
   unresolved.
-- Immediate account-deletion function secrets and production testing are unresolved.
+- Immediate deletion function secrets and production testing are unresolved.
+- Legacy scheduled/pending deletion code remains a release risk if reachable.
 - Sentry/crash-reporting release status is unresolved.
-- RevenueCat/subscription legal and product details must match `/specs/auth` before release.
+- RevenueCat, Google Play subscription, and Premium legal/product details must be confirmed before
+  paid release.

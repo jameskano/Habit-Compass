@@ -27,8 +27,9 @@ export const WeekdayPicker = ({ value, onChange }: WeekdayPickerProps) => {
             variant="ghost"
             aria-pressed={value.includes(day)}
             className={cn(
-              'rounded-full border border-border/75 px-3 py-2 text-xs',
-              value.includes(day) && 'border-primary bg-primary text-primary-foreground',
+              'rounded-full border border-border/75 px-3 py-2 text-xs hover:!bg-transparent [@media(hover:hover)_and_(pointer:fine)]:hover:!bg-muted',
+              value.includes(day) &&
+                'border-primary bg-primary text-primary-foreground hover:!bg-primary hover:!text-primary-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:!bg-primary/90',
             )}
             onClick={() =>
               onChange(

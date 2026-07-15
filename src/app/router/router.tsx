@@ -10,6 +10,7 @@ import {
 import {
   GuestRoute,
   LegalAcceptanceRoute,
+  NativeAppOnlyRoute,
   ProtectedAppRoute,
 } from '@/features/auth/AuthRouteGuards'
 import { AuthDeepLinkHandler } from '@/features/auth/AuthDeepLinkHandler'
@@ -115,7 +116,11 @@ const indexRoute = createRoute({
 const protectedRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'protected',
-  component: ProtectedAppRoute,
+  component: () => (
+    <NativeAppOnlyRoute>
+      <ProtectedAppRoute />
+    </NativeAppOnlyRoute>
+  ),
 })
 
 const todayRoute = createRoute({
@@ -208,9 +213,11 @@ const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/sign-in',
   component: () => (
-    <GuestRoute>
-      <SignInPage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <SignInPage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
@@ -218,9 +225,11 @@ const signUpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/sign-up',
   component: () => (
-    <GuestRoute>
-      <SignUpPage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <SignUpPage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
@@ -228,9 +237,11 @@ const emailCodeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/email-code',
   component: () => (
-    <GuestRoute>
-      <EmailCodePage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <EmailCodePage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
@@ -238,9 +249,11 @@ const emailCodeVerifyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/email-code/verify',
   component: () => (
-    <GuestRoute>
-      <EmailCodeVerifyPage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <EmailCodeVerifyPage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
@@ -248,41 +261,55 @@ const verifyEmailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/verify-email',
   component: () => (
-    <GuestRoute>
-      <VerifyEmailPage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <VerifyEmailPage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
-  component: AuthCallbackPage,
+  component: () => (
+    <NativeAppOnlyRoute>
+      <AuthCallbackPage />
+    </NativeAppOnlyRoute>
+  ),
 })
 
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/forgot-password',
   component: () => (
-    <GuestRoute>
-      <ForgotPasswordPage />
-    </GuestRoute>
+    <NativeAppOnlyRoute>
+      <GuestRoute>
+        <ForgotPasswordPage />
+      </GuestRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 
 const resetPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/reset-password',
-  component: ResetPasswordPage,
+  component: () => (
+    <NativeAppOnlyRoute>
+      <ResetPasswordPage />
+    </NativeAppOnlyRoute>
+  ),
 })
 
 const legalAcceptanceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/legal/acceptance',
   component: () => (
-    <LegalAcceptanceRoute>
-      <LegalAcceptancePage />
-    </LegalAcceptanceRoute>
+    <NativeAppOnlyRoute>
+      <LegalAcceptanceRoute>
+        <LegalAcceptancePage />
+      </LegalAcceptanceRoute>
+    </NativeAppOnlyRoute>
   ),
 })
 

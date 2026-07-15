@@ -35,6 +35,7 @@ describe('app shell', () => {
 
   afterEach(() => {
     cleanupAppTestDom()
+    vi.unstubAllEnvs()
   })
 
   beforeEach(async () => {
@@ -110,6 +111,46 @@ describe('app shell', () => {
     expect(
       screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('blocks browser app and auth access when web access is disabled', async () => {
+    vi.stubEnv('VITE_DISABLE_WEB_APP_ACCESS', 'true')
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    let view = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Sign in', level: 1 })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    view.unmount()
+    cleanupAppTestDom()
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+    view = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
+    ).toBeInTheDocument()
+
+    view.unmount()
+    cleanupAppTestDom()
+    await act(async () => {
+      await router.navigate({ to: '/legal/privacy-policy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }))
+      .not.toBeInTheDocument()
   })
 
   it('signs in with password and returns through the auth decision flow', async () => {
@@ -1880,7 +1921,7 @@ describe('app shell', () => {
     clickSpy.mockRestore()
   })
 
-  it('renders Privacy Policy and Terms from local legal drafts', async () => {
+  it('renders Privacy Policy and Terms from local legal documents', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings/data-privacy' })
@@ -1892,10 +1933,10 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
-    expect(await screen.findByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
-    expect(await screen.findByText('[EFFECTIVE DATE]')).toBeInTheDocument()
+    expect(await screen.findByText('1.0.0')).toBeInTheDocument()
+    expect(await screen.findByText('July 15, 2026')).toBeInTheDocument()
     expect(
-      screen.getByText(/Public hosted URLs are still release placeholders/),
+      screen.getByText(/legal document included with the app/),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
 
@@ -1906,9 +1947,9 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
-    expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
+    expect(screen.getByText('1.0.0')).toBeInTheDocument()
     expect(
-      screen.getByText(/Before purchasable Premium subscriptions are released/i),
+      screen.getByText(/If paid Premium subscriptions are offered/i),
     ).toBeInTheDocument()
   })
 
