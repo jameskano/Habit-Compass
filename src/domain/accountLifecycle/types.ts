@@ -15,11 +15,6 @@ export type AccountLifecycleState = {
   deletionRequestSource?: DeletionRequestSource | null
 }
 
-export type RequestAccountDeletionInput = {
-  currentPassword?: string
-  source: Extract<DeletionRequestSource, 'in_app' | 'external_web'>
-}
-
 export type RequestExternalAccountDeletionInput = {
   email: string
   locale: 'en' | 'es'
@@ -27,17 +22,6 @@ export type RequestExternalAccountDeletionInput = {
 
 export type RequestExternalAccountDeletionResult = {
   requestAccepted: true
-}
-
-export type AccountDeletionRequestResult = {
-  accountStatus: 'pending_deletion'
-  deletionRequestedAt: string
-  deletionScheduledFor: string
-}
-
-export type CancelAccountDeletionResult = {
-  accountStatus: 'active'
-  deletionCancelledAt: string
 }
 
 export type DeleteAccountInput = {

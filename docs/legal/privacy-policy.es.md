@@ -75,7 +75,7 @@ objetivos, habitos de salud, estado de animo, valores, trabajo, familia u otro c
 
 ### Datos De Suscripcion Y Compra
 
-Habit Compass puede usar RevenueCat y Google Play para proporcionar identidad de suscripcion
+Habit Compass usa RevenueCat y Google Play para proporcionar identidad de suscripcion
 Premium, estado de beneficios, presentacion de paywall, Customer Center o gestion de suscripcion, y
 eliminacion de cuenta con comprobacion de suscripciones. Los datos pueden incluir:
 
@@ -147,7 +147,7 @@ Tratamos datos para:
   reflexiones, planificacion semanal y estadisticas.
 - Almacenar y mostrar tus datos de app entre dispositivos.
 - Proporcionar comprobaciones de beneficios Premium, acceso a paywall, acceso a Customer Center y
-  eliminacion con comprobacion de suscripciones cuando este configurado.
+  eliminacion con comprobacion de suscripciones.
 - Generar exportaciones de datos que solicites.
 - Responder a feedback y solicitudes de soporte.
 - Completar la eliminacion inmediata de cuenta, incluidas comprobaciones de cancelacion de
@@ -185,7 +185,8 @@ Podemos compartir o poner datos a disposicion de proveedores que ayudan a operar
 sujetos a contratos y garantias confirmadas:
 
 - Supabase, Inc. para autenticacion, base de datos Postgres, Storage, Edge Functions y servicios
-  backend relacionados.
+  backend relacionados. Supabase actua principalmente como proveedor/encargado del tratamiento para
+  los datos de app que almacenamos en el proyecto alojado de Supabase.
 - Google OAuth, cuando eliges iniciar sesion con Google.
 - Google Play, para distribucion de app, valoraciones o resenas, compras, gestion de suscripciones y
   requisitos de eliminacion de cuenta cuando corresponda.
@@ -231,8 +232,11 @@ Criterios de conservacion:
 - Los metadatos operativos de eliminacion de cuenta se conservan solo durante el tiempo necesario
   para eliminacion fiable, seguridad, prevencion de fraude, obligaciones legales o cumplimiento.
 - Limitaciones de retencion en copias de seguridad: Habit Compass no mantiene actualmente copias de
-  seguridad de app separadas. El comportamiento de copias de seguridad puede estar sujeto a la
-  infraestructura y practicas de conservacion de Supabase.
+  seguridad de app separadas. El proyecto de Supabase esta actualmente en el plan Free, y la
+  documentacion publica de Supabase indica que las copias de seguridad diarias automaticas de base
+  de datos son para proyectos de pago Pro, Team y Enterprise; los proyectos Free deben usar
+  exportaciones manuales si necesitan copias de seguridad. La infraestructura de Supabase puede
+  tratar datos segun sea necesario para operar y proteger el servicio alojado.
 
 Si algun dato debe conservarse despues de la eliminacion de cuenta por razones legales, de
 seguridad, prevencion de fraude o cumplimiento, limitamos esa conservacion al dato, periodo,

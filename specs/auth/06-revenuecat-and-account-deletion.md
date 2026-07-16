@@ -1,6 +1,11 @@
 # 06 — RevenueCat and Immediate Account Deletion
 
-This specification replaces the legacy seven-day scheduled deletion model currently represented by `profiles.account_status = 'pending_deletion'`, the pending-deletion UI, cancellation flow, `request-account-deletion`, `cancel-account-deletion`, and `finalize-account-deletion` Edge Functions. Those modules are implementation context only and must be replaced, retired, or made unreachable when the immediate deletion feature ships.
+This specification replaces the legacy seven-day scheduled deletion model that used
+`profiles.account_status = 'pending_deletion'`, pending-deletion UI, cancellation flow,
+`request-account-deletion`, `cancel-account-deletion`, and `finalize-account-deletion` Edge
+Functions. The user-facing route and scheduled Edge Function source files have been removed from
+the repository; any remaining legacy database fields are migration compatibility only and must not
+drive product behavior.
 
 ## 1. RevenueCat identity
 

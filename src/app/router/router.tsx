@@ -89,10 +89,6 @@ const ResetPasswordPage = lazyRouteComponent(
   () => import('../../features/auth/ResetPasswordPage'),
   'ResetPasswordPage',
 )
-const PendingDeletionPage = lazyRouteComponent(
-  () => import('../../features/account/PendingDeletionPage'),
-  'PendingDeletionPage',
-)
 const ExternalAccountDeletionPage = lazyRouteComponent(
   () => import('../../features/account/ExternalAccountDeletionPage'),
   'ExternalAccountDeletionPage',
@@ -325,12 +321,6 @@ const publicTermsRoute = createRoute({
   component: PublicTermsOfServicePage,
 })
 
-const pendingDeletionRoute = createRoute({
-  getParentRoute: () => protectedRoute,
-  path: '/account/pending-deletion',
-  component: PendingDeletionPage,
-})
-
 const externalAccountDeletionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/account/delete',
@@ -363,7 +353,6 @@ const routeTree = rootRoute.addChildren([
     settingsTermsRoute,
     settingsSupportRoute,
     onboardingRoute,
-    pendingDeletionRoute,
   ]),
   externalAccountDeletionRoute,
 ])

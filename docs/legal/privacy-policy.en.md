@@ -71,7 +71,7 @@ goals, health habits, mood, values, work, family, or other personal context.
 
 ### Subscription And Purchase Data
 
-Habit Compass may use RevenueCat and Google Play to provide Premium subscription identity,
+Habit Compass uses RevenueCat and Google Play to provide Premium subscription identity,
 entitlement state, paywall presentation, Customer Center or subscription management, and
 subscription-aware account deletion. Data may include:
 
@@ -138,8 +138,8 @@ We process data to:
 - Provide habit, task, recurrent-task, category, mood, reflection, weekly-planning, and stats
   features.
 - Store and display your app data across devices.
-- Provide Premium entitlement checks, paywall access, Customer Center access, and subscription-aware
-  deletion where configured.
+- Provide Premium entitlement checks, paywall access, Customer Center access, and
+  subscription-aware deletion.
 - Generate data exports you request.
 - Respond to feedback and support requests.
 - Complete immediate account deletion, including required subscription-cancellation checks,
@@ -174,7 +174,8 @@ We may share or make data available to service providers that help operate Habit
 confirmed contracts and safeguards:
 
 - Supabase, Inc. for authentication, Postgres database, Storage, Edge Functions, and related backend
-  services.
+  services. Supabase acts mainly as a service provider/processor for app data we store in the
+  hosted Supabase project.
 - Google OAuth, when you choose Google sign-in.
 - Google Play, for app distribution, ratings or reviews, purchases, subscription management, and
   account-deletion requirements where applicable.
@@ -217,8 +218,11 @@ Retention criteria:
   separate temporary files after the export response is delivered.
 - Account-deletion operation metadata is retained only as long as needed for reliable deletion,
   security, fraud prevention, legal obligations, or compliance.
-- Backup retention limitations: Habit Compass does not currently maintain separate app backups.
-  Supabase backup behavior may be subject to Supabase's infrastructure and retention practices.
+- Backup retention limitations: Habit Compass does not currently maintain separate app backups. The
+  Supabase project is currently on the Free plan, and Supabase's public backup documentation says
+  automatic daily database backups are for paid Pro, Team, and Enterprise projects; Free projects
+  should use manual exports if backups are needed. Supabase infrastructure may still process data as
+  necessary to operate and secure the hosted service.
 
 If any data must be retained after account deletion for legal, security, fraud-prevention, or
 compliance reasons, we limit that retention to the data, period, purpose, and legal basis that

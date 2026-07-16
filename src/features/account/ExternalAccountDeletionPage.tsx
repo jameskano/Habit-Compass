@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 
@@ -9,18 +8,13 @@ import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { useShellTitle } from '@/shared/ui/useShellTitle'
 
-import {
-  useRequestAccountDeletionMutation,
-  useRequestExternalAccountDeletionMutation,
-} from './useAccountLifecycleMutations'
+import { useRequestExternalAccountDeletionMutation } from './useAccountLifecycleMutations'
 
 export const ExternalAccountDeletionPage = () => {
   const intl = useIntl()
-  const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'linkSent' | 'error' | 'scheduled'>('idle')
+  const [status, setStatus] = useState<'idle' | 'linkSent' | 'error'>('idle')
   const requestExternal = useRequestExternalAccountDeletionMutation()
-  const requestDeletion = useRequestAccountDeletionMutation()
   const resolvedLocale = resolveAppLocale('system', getDeviceLocale())
   useShellTitle('account.externalDeletion.title')
 
@@ -71,26 +65,6 @@ export const ExternalAccountDeletionPage = () => {
 
           <div className="rounded-lg border border-border/70 p-3 text-sm text-muted-foreground">
             <FormattedMessage id="account.externalDeletion.verifiedHelp" />
-            <div className="mt-3">
-              <Button
-                variant="secondary"
-                disabled={requestDeletion.isPending}
-                onClick={() =>
-                  requestDeletion.mutate(
-                    { source: 'external_web' },
-                    {
-                      onError: () => setStatus('error'),
-                      onSuccess: () => {
-                        setStatus('scheduled')
-                        navigate({ to: '/account/pending-deletion' })
-                      },
-                    },
-                  )
-                }
-              >
-                <FormattedMessage id="account.externalDeletion.scheduleVerified" />
-              </Button>
-            </div>
           </div>
 
           {status !== 'idle' ? (

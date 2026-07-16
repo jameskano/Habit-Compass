@@ -9,7 +9,6 @@ const rejectedExactPaths = new Set([
 ])
 
 const allowedProtectedPrefixes = [
-  '/account/pending-deletion',
   '/items',
   '/mood',
   '/onboarding',

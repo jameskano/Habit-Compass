@@ -51,14 +51,16 @@ Last checked against official sources on 2026-07-15.
 
 ## Current Release Readiness Snapshot
 
-Status: release-blocked until Play Console declarations and production service configuration are
-confirmed.
+Status: release-blocked until Play Console declarations and remaining production service
+configuration are confirmed.
 
 Implemented or present in the repo:
 
 - Settings exposes Privacy Policy and Terms under Data and privacy.
 - Public app routes exist for `/legal/privacy-policy`, `/legal/terms`, and `/account/delete`.
 - The public Render deployment base URL is `https://habit-compass.onrender.com/`.
+- Render is configured with `VITE_DISABLE_WEB_APP_ACCESS=true`, so normal browser app and auth
+  routes are blocked while public legal and account-deletion routes remain available.
 - Account creation and protected app access are in scope through `/specs/auth`.
 - RevenueCat SDK integration, Premium UI, entitlement sync, paywall hooks, Customer Center hooks,
   RevenueCat webhooks, and server-side deletion support are present.
@@ -66,6 +68,7 @@ Implemented or present in the repo:
   preferences.
 - Feedback screenshots are user-selected only; the app does not silently capture screenshots.
 - Sentry initializes only when `VITE_SENTRY_DSN` is configured.
+- Legacy scheduled deletion Edge Function source files have been removed from the repository.
 
 Confirmed public legal document facts:
 
@@ -82,19 +85,27 @@ Confirmed public legal document facts:
 - Public Privacy Policy URL: `https://habit-compass.onrender.com/legal/privacy-policy`.
 - Public Terms URL: `https://habit-compass.onrender.com/legal/terms`.
 - Public external account-deletion URL: `https://habit-compass.onrender.com/account/delete`.
+- Supabase production project region: West EU (Ireland).
+- Supabase backup behavior: the project is currently on the Free plan; Habit Compass does not
+  maintain separate app backups. Supabase's public backup documentation says automatic daily
+  database backups are for Pro, Team, and Enterprise projects, and recommends manual exports for
+  Free plan projects when backups are needed.
+- Premium is part of the first production release.
 
 Not confirmed for release:
 
 - Public external account-deletion URL entered in Play Console.
 - Production email provider.
-- Production Supabase project region, backup behavior, subprocessors, and transfer safeguards.
+- Supabase subprocessors and transfer safeguards.
 - RevenueCat and Google/Google Play production subprocessors, transfer safeguards, product, price,
   renewal, cancellation, refund, Customer Center, webhook, and secret configuration.
 - Play Console Data Safety answers and data-deletion answers.
 - Supabase function secrets and production testing for immediate account deletion.
-- External account-deletion email templates, sender, and verification behavior.
+- External account-deletion email templates, sender, verification behavior, and verified immediate
+  deletion completion.
 - Whether Sentry/crash reporting is enabled in the release build.
-- Removal or unreachable status of legacy scheduled/pending deletion routes and functions.
+- Hosted Supabase project confirmation that legacy scheduled/pending deletion functions are not
+  deployed or are blocked.
 
 ## Public Document Placeholder Status
 
@@ -102,7 +113,7 @@ None in the public legal documents.
 
 Production configuration details still to confirm before release:
 
-- Supabase project region, backup behavior, subprocessors, and transfer safeguards.
+- Supabase subprocessors and transfer safeguards.
 - RevenueCat and Google/Google Play production configuration and transfer details.
 - Email delivery provider and sender configuration.
 - Sentry/crash reporting release status.
@@ -164,6 +175,8 @@ Account deletion:
 
 - [ ] In-app account deletion is readily discoverable.
 - [ ] Web account-deletion URL lets users request deletion without reinstalling or opening the app.
+- [ ] Web account-deletion URL completes immediate deletion after verification without using the
+      legacy delayed workflow.
 - [ ] Play Console account-deletion URL is configured.
 - [ ] Deletion text explains retained data, if any retention remains after deletion.
 - [ ] Account deletion deletes account-associated app data unless a specific retained category,
@@ -185,9 +198,11 @@ RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth de
 - [ ] Auth user deletion happens after external-service and app-data cleanup.
 - [ ] Immediate deletion function secrets and idempotency behavior are configured.
 - [ ] Production deletion flow has been manually tested against deployed Supabase functions.
-- [ ] Legacy pending-deletion route, cancellation UI, `request-account-deletion`,
-      `cancel-account-deletion`, and `finalize-account-deletion` are removed, retired, or made
-      unreachable before release.
+- [x] Legacy pending-deletion route and cancellation UI are not reachable from the route tree.
+- [x] Legacy `request-account-deletion`, `cancel-account-deletion`, and
+      `finalize-account-deletion` Edge Function source files are removed from the repo.
+- [ ] Hosted Supabase project has no deployed legacy scheduled-deletion functions, or those deployed
+      functions are blocked/removed.
 - [ ] External account-deletion page triggers the immediate workflow after verification, not the
       legacy delayed workflow.
 - [ ] External deletion email templates and production sender are configured.
@@ -197,7 +212,8 @@ RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth de
 Premium and RevenueCat behavior are active implementation scope, not purely future scope. Before paid
 release:
 
-- [ ] Confirm paid Premium launch status and supported countries.
+- [x] Confirm paid Premium launch status.
+- [ ] Confirm supported countries.
 - [ ] Define free and paid feature boundaries without compromising the simple tracker baseline.
 - [ ] Confirm Google Play Billing and approved billing requirements.
 - [ ] Confirm RevenueCat product, entitlement, Offering, paywall, Customer Center, webhook, and
@@ -268,10 +284,11 @@ enabling:
 - Supabase, RevenueCat, Google/Google Play, and any enabled Sentry transfer safeguards and
   subprocessors need production confirmation.
 - Play Console Data Safety and data-deletion answers are unresolved.
-- External deletion email delivery, template configuration, and production verification are
-  unresolved.
+- External deletion email delivery, template configuration, production verification, and immediate
+  verified deletion completion are unresolved.
 - Immediate deletion function secrets and production testing are unresolved.
-- Legacy scheduled/pending deletion code remains a release risk if reachable.
+- Hosted legacy scheduled/pending deletion Edge Functions remain a release risk until removed,
+  blocked, or confirmed undeployed in the Supabase project.
 - Sentry/crash-reporting release status is unresolved.
 - RevenueCat, Google Play subscription, and Premium legal/product details must be confirmed before
   paid release.

@@ -243,8 +243,8 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Terms version: terms-draft-2026-07-02')).toBeInTheDocument()
-    expect(screen.getByText('Privacy version: privacy-draft-2026-07-02')).toBeInTheDocument()
+    expect(screen.getByText('Terms version: 1.0.0')).toBeInTheDocument()
+    expect(screen.getByText('Privacy version: 1.0.0')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
     expect(
@@ -1786,7 +1786,7 @@ describe('app shell', () => {
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
   })
 
-  it('routes pending-deletion accounts away from normal app screens', async () => {
+  it('does not expose the legacy pending-deletion route', async () => {
     const state = getMockState()
     const requestedAt = new Date()
     state.accountLifecycle.accountStatus = 'pending_deletion'
@@ -1797,46 +1797,13 @@ describe('app shell', () => {
     state.accountLifecycle.deletionRequestSource = 'in_app'
 
     await act(async () => {
-      await router.navigate({ to: '/today' })
+      await router.navigate({ to: '/account/pending-deletion' as never })
     })
     render(<App />)
 
-    expect(
-      await screen.findByRole('button', { name: 'Cancel account deletion' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
-    ).toBeGreaterThan(0)
-    expect(
-      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
-    ).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Page not found', level: 1 }))
+      .toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
-  })
-
-  it('cancels account deletion and restores normal app access', async () => {
-    const user = userEvent.setup()
-    const state = getMockState()
-    const requestedAt = new Date()
-    state.accountLifecycle.accountStatus = 'pending_deletion'
-    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
-    state.accountLifecycle.deletionScheduledFor = new Date(
-      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
-    ).toISOString()
-    state.accountLifecycle.deletionRequestSource = 'in_app'
-
-    await act(async () => {
-      await router.navigate({ to: '/account/pending-deletion' })
-    })
-    render(<App />)
-
-    await user.click(await screen.findByRole('button', { name: 'Cancel account deletion' }))
-
-    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
-    expect(state.accountLifecycle.accountStatus).toBe('active')
-    expect(state.accountLifecycle.deletionRequestedAt).toBeNull()
-    expect(state.accountLifecycle.deletionScheduledFor).toBeNull()
-    expect(state.accountLifecycle.cancellationRequests).toHaveLength(1)
-    expect(await screen.findByRole('link', { name: 'Today' })).toBeInTheDocument()
   })
 
   it('supports the public external account deletion request path', async () => {
@@ -1858,12 +1825,8 @@ describe('app shell', () => {
       ),
     ).toBeInTheDocument()
     expect(getMockState().accountLifecycle.externalDeletionRequests).toEqual(['person@example.com'])
-
-    await user.click(screen.getByRole('button', { name: 'Schedule after verification' }))
-    expect(
-      await screen.findAllByRole('heading', { name: 'Account deletion scheduled' }),
-    ).toHaveLength(2)
-    expect(getMockState().accountLifecycle.deletionRequestSource).toBe('external_web')
+    expect(screen.queryByRole('button', { name: /Schedule after verification/i }))
+      .not.toBeInTheDocument()
   })
 
   it('opens Data and privacy, exports CSV and JSON, and links to legal documents', async () => {
@@ -1948,9 +1911,7 @@ describe('app shell', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
     expect(screen.getByText('1.0.0')).toBeInTheDocument()
-    expect(
-      screen.getByText(/If paid Premium subscriptions are offered/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Paid Premium subscription details are shown/i)).toBeInTheDocument()
   })
 
   it('opens the rating fallback from Settings and validates required feedback on Support', async () => {

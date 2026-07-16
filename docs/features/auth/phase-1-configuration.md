@@ -36,13 +36,13 @@ match the hosted Supabase dashboard before auth is released.
 
 ## Legal Seed Metadata
 
-Phase 1 seeds draft current rows:
+Phase 1 seeds the current production-facing legal rows:
 
-- Terms: `terms-draft-2026-07-02`
-- Privacy: `privacy-draft-2026-07-02`
+- Terms: `1.0.0`
+- Privacy: `1.0.0`
 
-These are development placeholders. Replacing them with reviewed version IDs and effective dates is
-a release blocker before production auth launch.
+Both use an effective date of July 15, 2026. Any future material legal update must insert a new
+current version and require re-acceptance where appropriate.
 
 ## Notes
 

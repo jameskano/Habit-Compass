@@ -28,8 +28,8 @@ select is(
     where document_type = 'terms'
       and is_current
   ),
-  'terms-draft-2026-07-02',
-  'current draft Terms version is seeded'
+  '1.0.0',
+  'current Terms version is seeded'
 );
 
 select is(
@@ -39,8 +39,8 @@ select is(
     where document_type = 'privacy'
       and is_current
   ),
-  'privacy-draft-2026-07-02',
-  'current draft Privacy version is seeded'
+  '1.0.0',
+  'current Privacy version is seeded'
 );
 
 select throws_ok(
@@ -342,8 +342,8 @@ select throws_ok(
     )
     values (
       '00000000-0000-0000-0000-000000000101',
-      'terms-draft-2026-07-02',
-      'privacy-draft-2026-07-02',
+      '1.0.0',
+      '1.0.0',
       'en'
     )
   $$,

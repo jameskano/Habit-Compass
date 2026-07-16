@@ -116,15 +116,15 @@ la eliminacion no puede deshacerse una vez completada.
 
 ## 10. Premium Y Suscripciones
 
-Habit Compass puede usar RevenueCat y Google Play para identidad de suscripcion Premium, estado de
+Habit Compass usa RevenueCat y Google Play para identidad de suscripcion Premium, estado de
 beneficios, presentacion de paywall, Customer Center o gestion de suscripcion, sincronizacion de
 suscripciones y eliminacion de cuenta con comprobacion de suscripciones.
 
-Si se ofrecen suscripciones Premium de pago, estos Terminos, la Politica de Privacidad, la ficha de
-Google Play, la configuracion de RevenueCat, las respuestas de Seguridad de Datos de Play y las
-superficies de compra dentro de la app deben incluir informacion exacta de producto, precio,
-renovacion, cancelacion, reembolso, prueba y gestion de tienda. La app no debe mostrar precios
-falsos, planes falsos ni afirmaciones de funciones de pago que no esten implementadas.
+Los detalles de suscripcion Premium de pago se muestran en Google Play y en la superficie de compra
+dentro de la app antes de comprar, incluida la informacion disponible de producto, precio,
+renovacion, cancelacion, reembolso, prueba y gestion de tienda cuando corresponda. La app no debe
+mostrar precios falsos, planes falsos ni afirmaciones de funciones de pago que no esten
+implementadas.
 
 Eliminar tu cuenta de Habit Compass termina el acceso a la app inmediatamente. Cuando sea
 obligatorio, Habit Compass intenta cancelar la renovacion futura de Google Play antes de eliminar la

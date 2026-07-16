@@ -111,14 +111,14 @@ completes.
 
 ## 10. Premium And Subscriptions
 
-Habit Compass may use RevenueCat and Google Play for Premium subscription identity, entitlement
+Habit Compass uses RevenueCat and Google Play for Premium subscription identity, entitlement
 state, paywall presentation, Customer Center or subscription management, subscription
 synchronization, and subscription-aware account deletion.
 
-If paid Premium subscriptions are offered, these Terms, the Privacy Policy, Google Play listing,
-RevenueCat configuration, Play Data Safety answers, and in-app purchase surfaces must include
-accurate product, price, renewal, cancellation, refund, trial, and store-management information.
-The app must not show fake prices, fake plans, or paid-feature claims that are not implemented.
+Paid Premium subscription details are shown in Google Play and the in-app purchase surface before
+purchase, including available product, price, renewal, cancellation, refund, trial, and
+store-management information where applicable. The app must not show fake prices, fake plans, or
+paid-feature claims that are not implemented.
 
 Deleting your Habit Compass account ends app access immediately. When required, Habit Compass
 attempts to cancel future Google Play renewal before deleting the account, but deletion does not

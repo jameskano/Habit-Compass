@@ -377,8 +377,8 @@ const createInitialMockData = (): MockDataState => {
   return {
     authSession: {
       acceptedLegalDocuments: true,
-      currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
-      currentTermsVersion: 'terms-draft-2026-07-02',
+      currentPrivacyPolicyVersion: '1.0.0',
+      currentTermsVersion: '1.0.0',
       currentEmail: 'person@example.com',
       currentPassword: 'current-password',
       emailChangeRequests: [],
