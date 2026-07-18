@@ -115,6 +115,16 @@ The endpoint is privileged and uses:
 
 Existing scheduled-deletion Edge Functions are not the target endpoint. The new endpoint must perform the immediate workflow in this spec and must not create a pending-deletion state or expose a cancellation period.
 
+The public web account-deletion route uses the same endpoint after additional verification. The
+`request-external-account-deletion` function stores only a hashed one-time challenge, sends a
+Supabase email OTP link to `/account/delete?challenge=<token>`, and expires the challenge after 15
+minutes. The public page exchanges the OTP code, shows the final warning, and then calls
+`delete-account` with `reauthProvider: "external_email_otp"` and the raw challenge token. The
+`delete-account` function must require a fresh authenticated Supabase JWT, match the challenge
+against the authenticated user's email hash, consume it once, and only then continue the normal
+subscription-aware immediate deletion workflow. The email link alone must never delete the account,
+and failed public deletion attempts must not disclose whether an email address has an account.
+
 ## 5. Preconditions
 
 The function must:

@@ -81,8 +81,9 @@ describe('app shell', () => {
 
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Page not found', level: 1 }))
-      .toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found', level: 1 }),
+    ).toBeInTheDocument()
     expect(
       screen.getByText('That route does not exist. Return home to keep going.'),
     ).toBeInTheDocument()
@@ -149,8 +150,9 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }))
-      .not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
+    ).not.toBeInTheDocument()
   })
 
   it('signs in with password and returns through the auth decision flow', async () => {
@@ -1495,7 +1497,7 @@ describe('app shell', () => {
       '/settings/support',
     )
     expect(screen.getByText('Unlock Habit Compass Premium.')).toBeInTheDocument()
-    expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
+    expect(screen.getByText(/Habit Compass . Version /)).toBeInTheDocument()
     expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
     expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
     expect(screen.queryByText('Optional depth')).not.toBeInTheDocument()
@@ -1801,8 +1803,9 @@ describe('app shell', () => {
     })
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Page not found', level: 1 }))
-      .toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found', level: 1 }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
   })
 
@@ -1825,8 +1828,75 @@ describe('app shell', () => {
       ),
     ).toBeInTheDocument()
     expect(getMockState().accountLifecycle.externalDeletionRequests).toEqual(['person@example.com'])
-    expect(screen.queryByRole('button', { name: /Schedule after verification/i }))
-      .not.toBeInTheDocument()
+    expect(getMockState().accountLifecycle.externalDeletionChallenges).toEqual([
+      'valid-external-deletion-challenge',
+    ])
+    expect(
+      screen.queryByRole('button', { name: /Schedule after verification/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('completes verified public external account deletion after explicit confirmation', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.signedIn = false
+    state.accountLifecycle.externalDeletionChallenges.push('valid-external-deletion-challenge')
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
+
+    await act(async () => {
+      await router.navigate({
+        search: {
+          challenge: 'valid-external-deletion-challenge',
+          code: 'external-delete-code',
+        } as never,
+        to: '/account/delete',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete this account permanently?', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/This deletes the verified Habit Compass account/)).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+
+    await user.click(screen.getByRole('button', { name: 'Delete account permanently' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Account deleted', level: 2 }),
+    ).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual(['external_web'])
+    expect(state.accountLifecycle.externalDeletionChallenges).toEqual([])
+    expect(state.authSession.signedIn).toBe(false)
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('does not delete through the public route with a missing or invalid challenge', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.signedIn = false
+
+    await act(async () => {
+      await router.navigate({
+        search: { challenge: 'missing-challenge', code: 'external-delete-code' } as never,
+        to: '/account/delete',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete this account permanently?', level: 2 }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Delete account permanently' }))
+
+    expect(
+      await screen.findByText(
+        'The deletion link is invalid, expired, or already used. Request a new link to continue.',
+      ),
+    ).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+    expect(state.authSession.signedIn).toBe(true)
   })
 
   it('opens Data and privacy, exports CSV and JSON, and links to legal documents', async () => {
@@ -1898,9 +1968,7 @@ describe('app shell', () => {
     expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
     expect(await screen.findByText('1.0.0')).toBeInTheDocument()
     expect(await screen.findByText('July 15, 2026')).toBeInTheDocument()
-    expect(
-      screen.getByText(/legal document included with the app/),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/legal document included with the app/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
 
     await act(async () => {

@@ -90,19 +90,21 @@ Confirmed public legal document facts:
   maintain separate app backups. Supabase's public backup documentation says automatic daily
   database backups are for Pro, Team, and Enterprise projects, and recommends manual exports for
   Free plan projects when backups are needed.
+- Supabase subprocessors and transfer safeguards reviewed against Supabase legal/provider
+  documentation for release-draft purposes.
 - Premium is part of the first production release.
+- Production email sender/provider decision: use Supabase Auth default email for now until a custom
+  SMTP provider is selected.
 
 Not confirmed for release:
 
 - Public external account-deletion URL entered in Play Console.
-- Production email provider.
-- Supabase subprocessors and transfer safeguards.
-- RevenueCat and Google/Google Play production subprocessors, transfer safeguards, product, price,
-  renewal, cancellation, refund, Customer Center, webhook, and secret configuration.
+- RevenueCat and Google/Google Play production subprocessors and transfer safeguards.
+- Google Play product, price, renewal, cancellation, refund, and store-listing configuration.
 - Play Console Data Safety answers and data-deletion answers.
 - Supabase function secrets and production testing for immediate account deletion.
-- External account-deletion email templates, sender, verification behavior, and verified immediate
-  deletion completion.
+- External account-deletion template behavior, hosted redirect allow-list, and production
+  verification testing.
 - Whether Sentry/crash reporting is enabled in the release build.
 - Hosted Supabase project confirmation that legacy scheduled/pending deletion functions are not
   deployed or are blocked.
@@ -113,9 +115,9 @@ None in the public legal documents.
 
 Production configuration details still to confirm before release:
 
-- Supabase subprocessors and transfer safeguards.
-- RevenueCat and Google/Google Play production configuration and transfer details.
-- Email delivery provider and sender configuration.
+- RevenueCat and Google/Google Play transfer details.
+- Google Play product, price, renewal, cancellation, refund, and store-listing configuration.
+- Custom SMTP provider is deferred; Supabase Auth default email is the current sender.
 - Sentry/crash reporting release status.
 - Play Console Data Safety and account deletion answers.
 
@@ -174,8 +176,8 @@ Data Safety:
 Account deletion:
 
 - [ ] In-app account deletion is readily discoverable.
-- [ ] Web account-deletion URL lets users request deletion without reinstalling or opening the app.
-- [ ] Web account-deletion URL completes immediate deletion after verification without using the
+- [x] Web account-deletion URL lets users request deletion without reinstalling or opening the app.
+- [x] Web account-deletion URL completes immediate deletion after verification without using the
       legacy delayed workflow.
 - [ ] Play Console account-deletion URL is configured.
 - [ ] Deletion text explains retained data, if any retention remains after deletion.
@@ -203,9 +205,11 @@ RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth de
       `finalize-account-deletion` Edge Function source files are removed from the repo.
 - [ ] Hosted Supabase project has no deployed legacy scheduled-deletion functions, or those deployed
       functions are blocked/removed.
-- [ ] External account-deletion page triggers the immediate workflow after verification, not the
+- [x] External account-deletion page triggers the immediate workflow after verification, not the
       legacy delayed workflow.
-- [ ] External deletion email templates and production sender are configured.
+- [x] Production email sender/provider decision is Supabase Auth default email for now.
+- [ ] External deletion email template behavior, hosted redirect allow-list, and production
+      verification behavior are configured/tested.
 
 ## Premium And RevenueCat Checklist
 
@@ -213,10 +217,10 @@ Premium and RevenueCat behavior are active implementation scope, not purely futu
 release:
 
 - [x] Confirm paid Premium launch status.
-- [ ] Confirm supported countries.
+- [x] Confirm supported countries.
 - [ ] Define free and paid feature boundaries without compromising the simple tracker baseline.
 - [ ] Confirm Google Play Billing and approved billing requirements.
-- [ ] Confirm RevenueCat product, entitlement, Offering, paywall, Customer Center, webhook, and
+- [x] Confirm RevenueCat product, entitlement, Offering, paywall, Customer Center, webhook, and
       secret configuration.
 - [ ] Update Terms, Privacy Policy, Play listing, Play Data Safety, and in-app purchase surfaces
       with accurate price, renewal, trial, cancellation, refund, and subscription-management details.
@@ -280,15 +284,14 @@ enabling:
 
 ## Open Release Risks
 
-- Production email provider is unresolved.
-- Supabase, RevenueCat, Google/Google Play, and any enabled Sentry transfer safeguards and
-  subprocessors need production confirmation.
+- Custom production SMTP provider is deferred; Supabase Auth default email is the current sender.
+- RevenueCat, Google/Google Play, and any enabled Sentry transfer safeguards and subprocessors need
+  production confirmation.
 - Play Console Data Safety and data-deletion answers are unresolved.
-- External deletion email delivery, template configuration, production verification, and immediate
-  verified deletion completion are unresolved.
+- External deletion template behavior, hosted redirect allow-list, and production verification
+  testing are unresolved.
 - Immediate deletion function secrets and production testing are unresolved.
 - Hosted legacy scheduled/pending deletion Edge Functions remain a release risk until removed,
   blocked, or confirmed undeployed in the Supabase project.
 - Sentry/crash-reporting release status is unresolved.
-- RevenueCat, Google Play subscription, and Premium legal/product details must be confirmed before
-  paid release.
+- Google Play subscription/store-listing details must be confirmed before paid release.

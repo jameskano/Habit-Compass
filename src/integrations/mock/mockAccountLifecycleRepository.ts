@@ -22,6 +22,25 @@ export const mockAccountLifecycleRepository: AccountLifecycleRepository = {
       return err(createAppError('unauthorized', 'No signed-in user is available.'))
     }
 
+    if (input.reauthProvider === 'external_email_otp') {
+      const challengeIndex = input.deletionChallenge
+        ? state.accountLifecycle.externalDeletionChallenges.indexOf(input.deletionChallenge)
+        : -1
+
+      if (challengeIndex < 0) {
+        return err(createAppError('unauthorized', 'Account deletion could not be completed.'))
+      }
+
+      state.accountLifecycle.externalDeletionChallenges.splice(challengeIndex, 1)
+      state.accountLifecycle.deletionRequests.push('external_web')
+      state.authSession.signedIn = false
+
+      return ok({
+        deleted: true,
+        operationId: input.idempotencyKey,
+      })
+    }
+
     if (
       input.reauthProvider === 'password' &&
       input.currentPassword !== state.authSession.currentPassword
@@ -39,7 +58,9 @@ export const mockAccountLifecycleRepository: AccountLifecycleRepository = {
   },
 
   async requestExternalAccountDeletion({ email }) {
-    getMockState().accountLifecycle.externalDeletionRequests.push(email)
+    const state = getMockState()
+    state.accountLifecycle.externalDeletionRequests.push(email)
+    state.accountLifecycle.externalDeletionChallenges.push('valid-external-deletion-challenge')
 
     return ok({ requestAccepted: true })
   },

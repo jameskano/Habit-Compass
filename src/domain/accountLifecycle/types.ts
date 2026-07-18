@@ -26,8 +26,9 @@ export type RequestExternalAccountDeletionResult = {
 
 export type DeleteAccountInput = {
   currentPassword?: string
+  deletionChallenge?: string
   idempotencyKey: string
-  reauthProvider: 'password' | 'google'
+  reauthProvider: 'password' | 'google' | 'external_email_otp'
 }
 
 export type DeleteAccountResult = {

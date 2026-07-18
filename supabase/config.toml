@@ -45,6 +45,8 @@ additional_redirect_urls = [
   "http://127.0.0.1:5173/auth/callback?flow=signup",
   "http://127.0.0.1:5173/auth/callback?flow=recovery",
   "http://127.0.0.1:5173/auth/callback?flow=email-change",
+  "http://127.0.0.1:5173/account/delete",
+  "https://habit-compass.onrender.com/account/delete",
   "habitcompass://auth/callback",
   "habitcompass://auth/callback?flow=signup",
   "habitcompass://auth/callback?flow=recovery",

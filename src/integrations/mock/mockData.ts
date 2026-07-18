@@ -79,6 +79,7 @@ export type MockDataState = {
   accountLifecycle: AccountLifecycleState & {
     cancellationRequests: string[]
     deletionRequests: DeletionRequestSource[]
+    externalDeletionChallenges: string[]
     externalDeletionRequests: string[]
   }
   appSettings: OnboardingStatus
@@ -402,6 +403,7 @@ const createInitialMockData = (): MockDataState => {
       deletionRequestSource: null,
       cancellationRequests: [],
       deletionRequests: [],
+      externalDeletionChallenges: [],
       externalDeletionRequests: [],
     },
     appSettings: {

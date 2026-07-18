@@ -75,6 +75,11 @@ The gate must not block:
 The gate must use runtime platform detection, not viewport width or user-agent guessing. Capacitor
 native builds must still be able to use the same production bundle.
 
+The public external account-deletion route may receive a Supabase email OTP callback with
+`code` plus a server-issued `challenge` query parameter. This route must exchange the code, verify a
+temporary Supabase session, show a final destructive confirmation, and then call the immediate
+deletion endpoint. Opening the link alone must not delete the account.
+
 ## 4. Guest-only behavior
 
 Sign-in and sign-up are guest-only except when they are participating in an active callback/recovery flow.

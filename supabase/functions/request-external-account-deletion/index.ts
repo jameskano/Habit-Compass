@@ -26,6 +26,8 @@ const hashText = async (value: string) => {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
+const createDeletionChallenge = () => `${crypto.randomUUID()}.${crypto.randomUUID()}`
+
 const getClientIp = (request: Request) =>
   request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
   request.headers.get('cf-connecting-ip') ??
@@ -61,6 +63,9 @@ Deno.serve(async (request) => {
     const emailHash = await hashText(email)
     const ipHash = await hashText(getClientIp(request))
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const challenge = createDeletionChallenge()
+    const challengeHash = await hashText(challenge)
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
     const { count } = await serviceClient
       .from('external_account_deletion_requests')
       .select('id', { count: 'exact', head: true })
@@ -69,7 +74,9 @@ Deno.serve(async (request) => {
     const rateLimited = (count ?? 0) >= 3
 
     await serviceClient.from('external_account_deletion_requests').insert({
+      challenge_hash: rateLimited ? null : challengeHash,
       email_hash: emailHash,
+      expires_at: rateLimited ? null : expiresAt,
       ip_hash: ipHash,
       locale,
       status: rateLimited ? 'rate_limited' : 'requested',
@@ -79,7 +86,11 @@ Deno.serve(async (request) => {
       await anonClient.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${publicSiteUrl.replace(/\/$/, '')}/account/delete`,
+          emailRedirectTo: `${publicSiteUrl.replace(
+            /\/$/,
+            '',
+          )}/account/delete?challenge=${encodeURIComponent(challenge)}`,
+          shouldCreateUser: false,
         },
       })
     }

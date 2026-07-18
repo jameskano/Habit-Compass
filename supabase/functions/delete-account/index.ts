@@ -17,6 +17,7 @@ type AccountDeletionStatus =
 
 type DeleteAccountBody = {
   currentPassword?: unknown
+  deletionChallenge?: unknown
   idempotencyKey?: unknown
   reauthProvider?: unknown
 }
@@ -75,6 +76,67 @@ const isFreshJwt = (authorization: string) => {
 
   const maxAgeSeconds = Number(Deno.env.get('ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS') ?? '600')
   return Math.floor(Date.now() / 1000) - issuedAt <= maxAgeSeconds
+}
+
+const hashText = async (value: string) => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+const consumeExternalDeletionChallenge = async (
+  serviceClient: ReturnType<typeof createClient>,
+  email: string,
+  challenge: string | undefined,
+) => {
+  if (!challenge || challenge.length > 120) {
+    return null
+  }
+
+  const now = new Date().toISOString()
+  const emailHash = await hashText(email.trim().toLowerCase())
+  const challengeHash = await hashText(challenge)
+  const { data: request, error: requestError } = await serviceClient
+    .from('external_account_deletion_requests')
+    .select('id')
+    .eq('email_hash', emailHash)
+    .eq('challenge_hash', challengeHash)
+    .eq('status', 'requested')
+    .is('consumed_at', null)
+    .gt('expires_at', now)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (requestError) {
+    return null
+  }
+
+  if (!request) {
+    await serviceClient
+      .from('external_account_deletion_requests')
+      .update({ status: 'expired' })
+      .eq('email_hash', emailHash)
+      .eq('challenge_hash', challengeHash)
+      .eq('status', 'requested')
+      .is('consumed_at', null)
+      .lte('expires_at', now)
+
+    return null
+  }
+
+  const { data: consumedRequest, error: consumeError } = await serviceClient
+    .from('external_account_deletion_requests')
+    .update({
+      consumed_at: now,
+      status: 'consumed',
+    })
+    .eq('id', request.id)
+    .eq('status', 'requested')
+    .is('consumed_at', null)
+    .select('id')
+    .maybeSingle()
+
+  return consumeError || !consumedRequest ? null : String(consumedRequest.id)
 }
 
 const loadRevenueCatCustomer = async (apiKey: string, userId: string) => {
@@ -197,11 +259,19 @@ Deno.serve(async (request) => {
     const body = (await request.json().catch(() => ({}))) as DeleteAccountBody
     const currentPassword =
       typeof body.currentPassword === 'string' ? body.currentPassword : undefined
+    const deletionChallenge =
+      typeof body.deletionChallenge === 'string' ? body.deletionChallenge : undefined
     const idempotencyKey =
       typeof body.idempotencyKey === 'string' && body.idempotencyKey.length <= 120
         ? body.idempotencyKey
         : crypto.randomUUID()
-    const reauthProvider = body.reauthProvider === 'google' ? 'google' : 'password'
+    const reauthProvider =
+      body.reauthProvider === 'google'
+        ? 'google'
+        : body.reauthProvider === 'external_email_otp'
+          ? 'external_email_otp'
+          : 'password'
+    let externalDeletionRequestId: string | null = null
     const supabaseUrl = getRequiredEnv('SUPABASE_URL')
     const supabaseAnonKey = getRequiredEnv('SUPABASE_ANON_KEY')
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
@@ -254,7 +324,17 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Account could not be verified.', operationId }, 409)
     }
 
-    if (capabilities.password_enabled) {
+    if (reauthProvider === 'external_email_otp') {
+      externalDeletionRequestId =
+        user.email && isFreshJwt(authorization)
+          ? await consumeExternalDeletionChallenge(serviceClient, user.email, deletionChallenge)
+          : null
+
+      if (!externalDeletionRequestId) {
+        await updateOperation(serviceClient, operationId, 'failed', 'recent_auth_required')
+        return jsonResponse({ error: 'Recent authentication required.', operationId }, 401)
+      }
+    } else if (capabilities.password_enabled) {
       if (!user.email || !currentPassword) {
         await updateOperation(serviceClient, operationId, 'failed', 'recent_auth_required')
         return jsonResponse({ error: 'Recent authentication required.', operationId }, 401)
@@ -319,6 +399,13 @@ Deno.serve(async (request) => {
     }
 
     await updateOperation(serviceClient, operationId, 'auth_user_deleted')
+    if (externalDeletionRequestId) {
+      await serviceClient
+        .from('external_account_deletion_requests')
+        .update({ status: 'completed' })
+        .eq('id', externalDeletionRequestId)
+        .eq('status', 'consumed')
+    }
 
     return jsonResponse({ deleted: true, operationId })
   } catch (error) {
