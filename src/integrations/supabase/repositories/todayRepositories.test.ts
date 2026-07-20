@@ -172,9 +172,7 @@ describe('Supabase Today repositories', () => {
     expect(testState.builders[0].eq).toHaveBeenCalledWith('user_id', 'signed-user')
     expect(testState.builders[0].is).toHaveBeenCalledWith('archived_at', null)
     expect(testState.builders[0].lte).toHaveBeenCalledWith('starts_on', '2026-07-14')
-    expect(testState.builders[0].or).toHaveBeenCalledWith(
-      'ends_on.is.null,ends_on.gte.2026-07-14',
-    )
+    expect(testState.builders[0].or).toHaveBeenCalledWith('ends_on.is.null,ends_on.gte.2026-07-14')
   })
 
   it('loads active recurrent task candidates before deriving selected-date occurrences', async () => {
@@ -196,9 +194,7 @@ describe('Supabase Today repositories', () => {
     expect(testState.builders[0].eq).toHaveBeenCalledWith('user_id', 'signed-user')
     expect(testState.builders[0].is).toHaveBeenCalledWith('archived_at', null)
     expect(testState.builders[0].lte).toHaveBeenCalledWith('starts_on', '2026-07-14')
-    expect(testState.builders[0].or).toHaveBeenCalledWith(
-      'ends_on.is.null,ends_on.gte.2026-07-14',
-    )
+    expect(testState.builders[0].or).toHaveBeenCalledWith('ends_on.is.null,ends_on.gte.2026-07-14')
     expect(testState.builders[1].gte).toHaveBeenCalledWith('occurrence_date', '2026-07-14')
     expect(testState.builders[1].lte).toHaveBeenCalledWith('occurrence_date', '2026-07-14')
   })

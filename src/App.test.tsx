@@ -802,7 +802,13 @@ describe('app shell', () => {
 
     expect(await screen.findByText('Move for 20 minutes')).toBeInTheDocument()
     expect(screen.getByText('3 times per week')).toBeInTheDocument()
-    const habitCard = screen.getByRole('button', { name: 'Open options for Move for 20 minutes' })
+    const habitCardButton = screen.getByRole('button', {
+      name: 'Open options for Move for 20 minutes',
+    })
+    const habitCard = habitCardButton.closest('[data-habit-card]') as HTMLElement | null
+    if (!habitCard) {
+      throw new Error('Expected habit card container.')
+    }
     expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
     expect(within(habitCard).queryByText('Medium')).not.toBeInTheDocument()
@@ -1054,11 +1060,15 @@ describe('app shell', () => {
     const habitCard = await screen.findByRole('button', {
       name: 'Open options for Read before bed',
     })
+    const habitCardContainer = habitCard.closest('[data-habit-card]') as HTMLElement | null
+    if (!habitCardContainer) {
+      throw new Error('Expected habit card container.')
+    }
     fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
     fireEvent.pointerMove(habitCard, { clientX: 60, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(-40px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(-40px, 0, 0)' })
     fireEvent.pointerUp(habitCard, { clientX: 60, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
     fireEvent.click(habitCard)
     expect(
       screen.queryByRole('dialog', { name: /Options for Read before bed/ }),
@@ -1066,9 +1076,9 @@ describe('app shell', () => {
 
     fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
     fireEvent.pointerMove(habitCard, { clientX: 80, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(-20px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(-20px, 0, 0)' })
     fireEvent.pointerCancel(habitCard)
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
   })
 
   it('updates a habit through the simple edit form', async () => {
@@ -1857,7 +1867,7 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Delete this account permanently?', level: 2 }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/This deletes the verified Habit Compass account/)).toBeInTheDocument()
+    expect(screen.getByText(/This deletes the Habit Compass account/)).toBeInTheDocument()
     expect(state.accountLifecycle.deletionRequests).toEqual([])
 
     await user.click(screen.getByRole('button', { name: 'Delete account permanently' }))

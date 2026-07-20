@@ -1,5 +1,4 @@
 import { CalendarDays, MoreHorizontal } from 'lucide-react'
-import { type KeyboardEvent } from 'react'
 import { type IntlShape, useIntl } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
@@ -110,13 +109,6 @@ export const HabitCard = ({
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${habit.priority}` })}`
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onOpenOptions()
-    }
-  }
-
   const swipeMotion = useSwipeCardMotion({
     onSwipeLeft: () => {
       if (!archived) {
@@ -140,26 +132,28 @@ export const HabitCard = ({
 
   return (
     <Card
-      role="button"
-      tabIndex={0}
-      aria-label={intl.formatMessage(
-        { id: 'page.items.habit.action.openOptions' },
-        { habit: habit.title },
-      )}
-      onClick={handleCardClick}
-      onKeyDown={handleKeyDown}
-      onPointerDown={swipeMotion.handlePointerDown}
-      onPointerMove={swipeMotion.handlePointerMove}
-      onPointerUp={swipeMotion.handlePointerUp}
-      onPointerCancel={swipeMotion.handlePointerCancel}
+      data-habit-card
       style={swipeMotion.style}
       className={cn(
         'group relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
         swipeMotion.isDragging && 'transition-none',
       )}
     >
+      <button
+        type="button"
+        aria-label={intl.formatMessage(
+          { id: 'page.items.habit.action.openOptions' },
+          { habit: habit.title },
+        )}
+        onClick={handleCardClick}
+        onPointerDown={swipeMotion.handlePointerDown}
+        onPointerMove={swipeMotion.handlePointerMove}
+        onPointerUp={swipeMotion.handlePointerUp}
+        onPointerCancel={swipeMotion.handlePointerCancel}
+        className="absolute inset-0 z-0 rounded-[1.35rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      />
       <div className="absolute inset-y-0 left-0 w-1 bg-primary/55" aria-hidden="true" />
-      <div className="ml-1">
+      <div className="pointer-events-none relative z-10 ml-1">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <h3 className="truncate text-base font-semibold tracking-tight">{habit.title}</h3>
@@ -168,6 +162,7 @@ export const HabitCard = ({
           <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
             {category && CategoryIcon ? (
               <span
+                role="img"
                 aria-label={category.name}
                 title={category.name}
                 className={cn(
@@ -231,7 +226,7 @@ export const HabitCard = ({
                 { id: 'page.items.habit.action.calendar' },
                 { habit: habit.title },
               )}
-              className="h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
+              className="pointer-events-auto h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
             >
               <CalendarDays aria-hidden="true" size={18} />
             </Button>
@@ -249,7 +244,7 @@ export const HabitCard = ({
                 { id: 'page.items.habit.action.options' },
                 { habit: habit.title },
               )}
-              className="h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
+              className="pointer-events-auto h-6 min-h-6 w-6 rounded-full p-0 text-muted-foreground"
             >
               <MoreHorizontal aria-hidden="true" size={18} />
             </Button>

@@ -28,13 +28,13 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     setIsDragging(false)
   }
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     suppressClick.current = false
     movedHorizontally.current = false
     pointerStart.current = { x: event.clientX, y: event.clientY }
   }
 
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     const start = pointerStart.current
     if (!start) {
       return
@@ -54,7 +54,7 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     }
   }
 
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (event: PointerEvent<HTMLElement>) => {
     const start = pointerStart.current
     if (!start) {
       return

@@ -261,7 +261,6 @@ Deleting your Habit Compass account ends app access immediately and does not aut
 unused subscription time. It does not necessarily delete data held independently by third parties,
 such as Google Play ratings, reviews, or records that Google Play must retain.
 
-
 ## 11. Your Rights
 
 Depending on where you live, you may have rights to:

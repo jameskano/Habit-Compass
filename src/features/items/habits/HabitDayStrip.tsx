@@ -33,7 +33,7 @@ export const HabitDayStrip = ({
       {({ isDayDisabled, onLongPressDay, onTapDay }) => (
         <ol
           data-no-card-action
-          className="mx-auto mb-3 mt-3 flex w-full max-w-[19.75rem] justify-center gap-1.5"
+          className="pointer-events-auto mx-auto mb-3 mt-3 flex w-full max-w-[19.75rem] justify-center gap-1.5"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}

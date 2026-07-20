@@ -280,7 +280,6 @@ automaticamente el tiempo de suscripcion no usado. No elimina necesariamente dat
 forma independiente por terceros, como valoraciones, resenas o registros que Google Play deba
 conservar.
 
-
 ## 11. Tus Derechos
 
 Segun donde vivas, puedes tener derecho a:

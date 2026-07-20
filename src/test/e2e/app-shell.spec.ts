@@ -119,11 +119,12 @@ test('item swipe tracks the pointer and the header title uses calm motion', asyn
   await page.goto('/items')
 
   const habitCard = page.getByRole('button', { name: 'Open options for Read before bed' })
+  const habitCardContainer = habitCard.locator('xpath=ancestor::*[@data-habit-card][1]')
   await habitCard.dispatchEvent('pointerdown', { clientX: 100, clientY: 20 })
   await habitCard.dispatchEvent('pointermove', { clientX: 60, clientY: 20 })
-  await expect(habitCard).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -40, 0)')
+  await expect(habitCardContainer).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -40, 0)')
   await habitCard.dispatchEvent('pointerup', { clientX: 60, clientY: 20 })
-  await expect(habitCard).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+  await expect(habitCardContainer).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
 
   await page.getByRole('tab', { name: 'Recurrent Tasks' }).click()
   await expect(page.getByRole('heading', { name: 'Recurrent Tasks' }).locator('span')).toHaveClass(

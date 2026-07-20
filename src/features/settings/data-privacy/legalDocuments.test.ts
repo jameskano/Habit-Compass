@@ -63,7 +63,9 @@ describe('legal documents', () => {
         expect(document.body).not.toMatch(/Release Draft Notice|Aviso De Borrador/i)
         expect(document.body).not.toMatch(/Before Publication|Antes De Publicar/i)
         expect(document.body).not.toMatch(/pre-release draft|borrador previo/i)
-        expect(document.body).not.toMatch(/resolve every placeholder|resuelve todos los marcadores/i)
+        expect(document.body).not.toMatch(
+          /resolve every placeholder|resuelve todos los marcadores/i,
+        )
       }
     }
   })

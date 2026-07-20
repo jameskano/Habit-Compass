@@ -23,7 +23,7 @@ export const priorityColorPalette: Record<HabitPriority, string> = {
 
 export const completionColorPalette: Record<HabitDayState, string> = {
   completed_standard:
-    'border-emerald-600 bg-emerald-600 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-emerald-950',
+    'border-emerald-700 bg-emerald-700 text-white dark:border-emerald-400 dark:bg-emerald-400 dark:text-emerald-950',
   completed_minimum:
     'border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/75 dark:text-emerald-100',
   progress_logged:
@@ -32,9 +32,9 @@ export const completionColorPalette: Record<HabitDayState, string> = {
   missed:
     'border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-200',
   skipped:
-    'border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  future: 'border-transparent bg-muted/25 text-muted-foreground/40',
-  not_scheduled: 'border-transparent bg-muted/35 text-muted-foreground/55',
+    'border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  future: 'border-transparent bg-muted/25 text-muted-foreground',
+  not_scheduled: 'border-transparent bg-muted/35 text-muted-foreground',
   inactive:
-    'border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-500',
+    'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-950/45 dark:text-slate-300',
 }

@@ -18,11 +18,7 @@ export const AccountLifecycleGate = ({ children }: AccountLifecycleGateProps) =>
     }
 
     console.warn('Legacy pending-deletion account state returned by repository.')
-  }, [
-    accountLifecycle.isError,
-    accountLifecycle.isLoading,
-    pendingDeletion,
-  ])
+  }, [accountLifecycle.isError, accountLifecycle.isLoading, pendingDeletion])
 
   return <>{children}</>
 }

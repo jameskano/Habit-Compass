@@ -23,7 +23,7 @@ describe('support feedback helpers', () => {
     })
 
     expect(details).toEqual({
-      appVersion: 'dev',
+      appVersion: '1.0.0',
       buildNumber: null,
       platform: 'web',
       appLanguage: 'en',
