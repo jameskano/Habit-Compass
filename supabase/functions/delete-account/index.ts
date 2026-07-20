@@ -1,5 +1,15 @@
 /* global Deno */
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import {
+  cancelGooglePlayRenewal,
+  deleteRevenueCatCustomer,
+  getRevenueCatApiBaseUrl,
+  loadRevenueCatCustomer,
+} from '../_shared/revenuecat.ts'
+import {
+  runAccountDeletionWorkflow,
+  type AccountDeletionStatus,
+} from '../_shared/accountDeletionWorkflow.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,32 +17,11 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-type AccountDeletionStatus =
-  | 'started'
-  | 'subscriptions_cancelled'
-  | 'revenuecat_deleted'
-  | 'app_data_deleted'
-  | 'auth_user_deleted'
-  | 'failed'
-
 type DeleteAccountBody = {
   currentPassword?: unknown
   deletionChallenge?: unknown
   idempotencyKey?: unknown
   reauthProvider?: unknown
-}
-
-type RevenueCatSubscription = {
-  expires_date?: string | null
-  store?: string | null
-  store_transaction_id?: string | number | null
-  unsubscribe_detected_at?: string | null
-}
-
-type RevenueCatSubscriberResponse = {
-  subscriber?: {
-    subscriptions?: Record<string, RevenueCatSubscription>
-  }
 }
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -48,8 +37,6 @@ const getRequiredEnv = (key: string) => {
   }
   return value
 }
-
-const encodePath = (value: string) => encodeURIComponent(value)
 
 const decodeJwtPayload = (authorization: string) => {
   const token = authorization.replace(/^Bearer\s+/i, '')
@@ -139,75 +126,6 @@ const consumeExternalDeletionChallenge = async (
   return consumeError || !consumedRequest ? null : String(consumedRequest.id)
 }
 
-const loadRevenueCatCustomer = async (apiKey: string, userId: string) => {
-  const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodePath(userId)}`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (response.status === 404) {
-    return { subscriber: { subscriptions: {} } } satisfies RevenueCatSubscriberResponse
-  }
-
-  if (!response.ok) {
-    throw new Error('revenuecat_customer_lookup_failed')
-  }
-
-  return (await response.json()) as RevenueCatSubscriberResponse
-}
-
-const getRequiredGooglePlayRenewals = (customer: RevenueCatSubscriberResponse) => {
-  const now = Date.now()
-  return Object.entries(customer.subscriber?.subscriptions ?? {}).filter(([, subscription]) => {
-    const expiresAt = subscription.expires_date ? Date.parse(subscription.expires_date) : null
-    return (
-      subscription.store === 'play_store' &&
-      !subscription.unsubscribe_detected_at &&
-      (!expiresAt || expiresAt > now) &&
-      Boolean(subscription.store_transaction_id)
-    )
-  })
-}
-
-const cancelGooglePlayRenewal = async (
-  apiKey: string,
-  userId: string,
-  storeTransactionId: string,
-) => {
-  const response = await fetch(
-    `https://api.revenuecat.com/v1/subscribers/${encodePath(
-      userId,
-    )}/subscriptions/${encodePath(storeTransactionId)}/cancel`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    },
-  )
-
-  if (!response.ok) {
-    throw new Error('subscription_cancellation_failed')
-  }
-}
-
-const deleteRevenueCatCustomer = async (apiKey: string, userId: string) => {
-  const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodePath(userId)}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok && response.status !== 404) {
-    throw new Error('revenuecat_deletion_failed')
-  }
-}
-
 const updateOperation = async (
   serviceClient: ReturnType<typeof createClient>,
   operationId: string,
@@ -276,6 +194,7 @@ Deno.serve(async (request) => {
     const supabaseAnonKey = getRequiredEnv('SUPABASE_ANON_KEY')
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
     const revenueCatSecretKey = getRequiredEnv('REVENUECAT_SECRET_API_KEY')
+    const revenueCatApiBaseUrl = getRevenueCatApiBaseUrl((key) => Deno.env.get(key) ?? undefined)
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authorization } },
     })
@@ -359,46 +278,35 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Supported authentication required.', operationId }, 409)
     }
 
-    const customer = await loadRevenueCatCustomer(revenueCatSecretKey, user.id)
-    const renewals = getRequiredGooglePlayRenewals(customer)
+    const deletionResult = await runAccountDeletionWorkflow({
+      cancelGooglePlayRenewal: (storeTransactionId) =>
+        cancelGooglePlayRenewal(
+          fetch,
+          revenueCatApiBaseUrl,
+          revenueCatSecretKey,
+          user.id,
+          storeTransactionId,
+        ),
+      deleteAuthUser: () => serviceClient.auth.admin.deleteUser(user.id, false),
+      deleteRevenueCatCustomer: () =>
+        deleteRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
+      loadRevenueCatCustomer: () =>
+        loadRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
+      removeFeedbackAttachments: () => removeFeedbackAttachments(serviceClient, user.id),
+      updateOperation: (status, failureCode = null) =>
+        updateOperation(serviceClient, operationId, status, failureCode),
+    })
 
-    for (const [, renewal] of renewals) {
-      await cancelGooglePlayRenewal(
-        revenueCatSecretKey,
-        user.id,
-        String(renewal.store_transaction_id),
-      )
-    }
-
-    await updateOperation(serviceClient, operationId, 'subscriptions_cancelled')
-
-    const verifiedCustomer = await loadRevenueCatCustomer(revenueCatSecretKey, user.id)
-    if (getRequiredGooglePlayRenewals(verifiedCustomer).length > 0) {
-      await updateOperation(
-        serviceClient,
-        operationId,
-        'failed',
-        'subscription_cancellation_unconfirmed',
-      )
+    if (!deletionResult.deleted) {
       return jsonResponse(
-        { error: 'Subscription cancellation could not be confirmed.', operationId },
-        409,
+        {
+          error: deletionResult.error,
+          operationId,
+        },
+        deletionResult.status,
       )
     }
 
-    await deleteRevenueCatCustomer(revenueCatSecretKey, user.id)
-    await updateOperation(serviceClient, operationId, 'revenuecat_deleted')
-
-    await removeFeedbackAttachments(serviceClient, user.id)
-    await updateOperation(serviceClient, operationId, 'app_data_deleted')
-
-    const { error: deleteUserError } = await serviceClient.auth.admin.deleteUser(user.id, false)
-    if (deleteUserError) {
-      await updateOperation(serviceClient, operationId, 'failed', 'auth_user_deletion_failed')
-      return jsonResponse({ error: 'Account could not be deleted.', operationId }, 500)
-    }
-
-    await updateOperation(serviceClient, operationId, 'auth_user_deleted')
     if (externalDeletionRequestId) {
       await serviceClient
         .from('external_account_deletion_requests')

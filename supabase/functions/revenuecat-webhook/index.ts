@@ -1,7 +1,10 @@
 /* global Deno */
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-
-const premiumEntitlementId = 'Habit Compass Premium'
+import {
+  buildEntitlementRow,
+  getRevenueCatApiBaseUrl,
+  loadRevenueCatCustomer,
+} from '../_shared/revenuecat.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,27 +25,6 @@ type RevenueCatWebhookBody = {
   event?: RevenueCatEvent
 }
 
-type RevenueCatEntitlement = {
-  expires_date?: string | null
-  product_identifier?: string | null
-}
-
-type RevenueCatSubscription = {
-  expires_date?: string | null
-  management_url?: string | null
-  product_identifier?: string | null
-  store?: string | null
-  unsubscribe_detected_at?: string | null
-}
-
-type RevenueCatSubscriberResponse = {
-  subscriber?: {
-    entitlements?: Record<string, RevenueCatEntitlement>
-    management_url?: string | null
-    subscriptions?: Record<string, RevenueCatSubscription>
-  }
-}
-
 const textEncoder = new TextEncoder()
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -59,7 +41,6 @@ const getRequiredEnv = (key: string) => {
   return value
 }
 
-const encodePath = (value: string) => encodeURIComponent(value)
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const getErrorStatus = (error: unknown) => {
@@ -131,70 +112,6 @@ const verifyRevenueCatSignature = async (
   return safeEqual(toHex(signature), expectedSignature)
 }
 
-const loadRevenueCatCustomer = async (apiKey: string, userId: string) => {
-  const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodePath(userId)}`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (response.status === 404) {
-    return {
-      subscriber: { entitlements: {}, subscriptions: {} },
-    } satisfies RevenueCatSubscriberResponse
-  }
-
-  if (!response.ok) {
-    throw new Error('revenuecat_customer_lookup_failed')
-  }
-
-  return (await response.json()) as RevenueCatSubscriberResponse
-}
-
-const isActiveExpiration = (expiresDate: string | null | undefined) =>
-  !expiresDate || Date.parse(expiresDate) > Date.now()
-
-const findSubscriptionForEntitlement = (
-  customer: RevenueCatSubscriberResponse,
-  entitlement: RevenueCatEntitlement | undefined,
-) => {
-  const productId = entitlement?.product_identifier ?? null
-  const subscriptions = Object.values(customer.subscriber?.subscriptions ?? {})
-
-  return (
-    subscriptions.find((subscription) => subscription.product_identifier === productId) ??
-    subscriptions.find((subscription) => isActiveExpiration(subscription.expires_date)) ??
-    null
-  )
-}
-
-const buildEntitlementRow = (
-  userId: string,
-  customer: RevenueCatSubscriberResponse,
-  environment: string | null,
-) => {
-  const entitlement = customer.subscriber?.entitlements?.[premiumEntitlementId]
-  const subscription = findSubscriptionForEntitlement(customer, entitlement)
-  const expirationAt = entitlement?.expires_date ?? subscription?.expires_date ?? null
-  const hasActiveEntitlement = Boolean(entitlement) && isActiveExpiration(expirationAt)
-  const now = new Date().toISOString()
-
-  return {
-    entitlement_id: premiumEntitlementId,
-    environment,
-    expiration_at: expirationAt,
-    has_active_entitlement: hasActiveEntitlement,
-    management_url: subscription?.management_url ?? customer.subscriber?.management_url ?? null,
-    product_id: entitlement?.product_identifier ?? subscription?.product_identifier ?? null,
-    store: subscription?.store ?? null,
-    synced_at: now,
-    updated_at: now,
-    user_id: userId,
-    will_renew: subscription ? !subscription.unsubscribe_detected_at : null,
-  }
-}
-
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -239,6 +156,7 @@ Deno.serve(async (request) => {
     const supabaseUrl = getRequiredEnv('SUPABASE_URL')
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
     const revenueCatSecretKey = getRequiredEnv('REVENUECAT_SECRET_API_KEY')
+    const revenueCatApiBaseUrl = getRevenueCatApiBaseUrl((key) => Deno.env.get(key) ?? undefined)
     const serviceClient = createClient(supabaseUrl, serviceRoleKey)
     const {
       data: { user },
@@ -271,7 +189,12 @@ Deno.serve(async (request) => {
       throw eventError
     }
 
-    const customer = await loadRevenueCatCustomer(revenueCatSecretKey, userId)
+    const customer = await loadRevenueCatCustomer(
+      fetch,
+      revenueCatApiBaseUrl,
+      revenueCatSecretKey,
+      userId,
+    )
     const row = buildEntitlementRow(userId, customer, event.environment ?? null)
     const { error: entitlementError } = await serviceClient
       .from('subscription_entitlements')
