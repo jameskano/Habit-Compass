@@ -12,7 +12,7 @@
     "format:check": "prettier . --check",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:supabase:functions": "pnpm exec supabase start && pnpm exec supabase migration up && vitest run --config vitest.supabase.config.ts",
+    "test:supabase:functions": "pnpm exec supabase start && pnpm exec supabase migration up --include-all && vitest run --config vitest.supabase.config.ts",
     "test:watch": "vitest",
     "test:a11y": "playwright test src/test/e2e/accessibility.spec.ts",
     "test:e2e": "playwright test",

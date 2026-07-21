@@ -141,7 +141,8 @@ are present in the current migration set; remaining items stay planned until the
     backfill. Do not rename `week_start` unless a separate migration/spec deliberately does so.
 - `feedback_submissions`
   - User-owned feedback records with type (`suggestion`, `problem`, `other`), required message, optional
-    reply email, optional technical details, status, timestamps, and account-deletion behavior.
+    reply email, optional technical details, status, server-managed notification state, timestamps,
+    and account-deletion behavior.
   - Anonymous submission is deferred unless a separate abuse-prevention design is approved.
 - `feedback_attachments`
   - User-owned metadata for optional screenshots stored in a private Supabase Storage bucket.

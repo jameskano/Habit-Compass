@@ -2,10 +2,14 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(20);
+select plan(24);
 
 select has_table('public', 'feedback_submissions', 'feedback submissions table exists');
 select has_table('public', 'feedback_attachments', 'feedback attachments table exists');
+select has_column('public', 'feedback_submissions', 'notification_status', 'feedback notification status column exists');
+select has_column('public', 'feedback_submissions', 'notification_attempted_at', 'feedback notification attempted timestamp column exists');
+select has_column('public', 'feedback_submissions', 'notification_sent_at', 'feedback notification sent timestamp column exists');
+select has_column('public', 'feedback_submissions', 'notification_failure_code', 'feedback notification failure code column exists');
 
 select is(
   (

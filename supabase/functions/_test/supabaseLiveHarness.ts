@@ -25,6 +25,13 @@ export type ServedFunction = {
   getOutput: () => string
 }
 
+type StartSupabaseFunctionsOptions = {
+  feedbackNotificationWebhookSecret?: string
+  feedbackNotificationWebhookUrl?: string
+  readinessFunctionName: string
+  revenueCatApiBaseUrl?: string
+}
+
 const repoRoot = process.cwd()
 const pnpmBin = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 
@@ -191,23 +198,39 @@ export const createConfirmedPasswordUser = async (
   }
 }
 
-export const startDeleteAccountFunction = async (
+export const startSupabaseFunctions = async (
   status: LocalSupabaseStatus,
-  revenueCatApiBaseUrl: string,
+  {
+    feedbackNotificationWebhookSecret,
+    feedbackNotificationWebhookUrl,
+    readinessFunctionName,
+    revenueCatApiBaseUrl,
+  }: StartSupabaseFunctionsOptions,
 ): Promise<ServedFunction> => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'habit-compass-delete-account-'))
+  const tempDir = await mkdtemp(join(tmpdir(), 'habit-compass-functions-'))
   const envFile = join(tempDir, 'edge-function.env')
-  await writeFile(
-    envFile,
-    [
-      `ACCOUNT_DELETION_SUPABASE_ANON_KEY=${status.ANON_KEY}`,
-      `ACCOUNT_DELETION_SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
-      'REVENUECAT_SECRET_API_KEY=fake-revenuecat-secret',
-      `REVENUECAT_API_BASE_URL=${revenueCatApiBaseUrl}`,
-      'ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS=600',
-    ].join('\n'),
-    'utf8',
-  )
+  const envLines = [
+    `ACCOUNT_DELETION_SUPABASE_ANON_KEY=${status.ANON_KEY}`,
+    `ACCOUNT_DELETION_SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
+    `FEEDBACK_SUPABASE_ANON_KEY=${status.ANON_KEY}`,
+    `FEEDBACK_SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
+    'REVENUECAT_SECRET_API_KEY=fake-revenuecat-secret',
+    'ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS=600',
+  ]
+
+  if (revenueCatApiBaseUrl) {
+    envLines.push(`REVENUECAT_API_BASE_URL=${revenueCatApiBaseUrl}`)
+  }
+
+  if (feedbackNotificationWebhookUrl) {
+    envLines.push(`FEEDBACK_NOTIFICATION_WEBHOOK_URL=${feedbackNotificationWebhookUrl}`)
+  }
+
+  if (feedbackNotificationWebhookSecret) {
+    envLines.push(`FEEDBACK_NOTIFICATION_WEBHOOK_SECRET=${feedbackNotificationWebhookSecret}`)
+  }
+
+  await writeFile(envFile, envLines.join('\n'), 'utf8')
 
   const child = spawn(pnpmBin, ['exec', 'supabase', 'functions', 'serve', '--env-file', envFile], {
     cwd: repoRoot,
@@ -217,7 +240,7 @@ export const startDeleteAccountFunction = async (
   const output = captureProcessOutput(child)
 
   try {
-    await waitForFunctionReadiness(status, child, output)
+    await waitForFunctionReadiness(status, child, output, readinessFunctionName)
   } catch (error) {
     await stopProcess(child)
     await rm(tempDir, { force: true, recursive: true })
@@ -232,6 +255,15 @@ export const startDeleteAccountFunction = async (
     getOutput: output,
   }
 }
+
+export const startDeleteAccountFunction = async (
+  status: LocalSupabaseStatus,
+  revenueCatApiBaseUrl: string,
+) =>
+  startSupabaseFunctions(status, {
+    readinessFunctionName: 'delete-account',
+    revenueCatApiBaseUrl,
+  })
 
 const captureProcessOutput = (child: ChildProcessWithoutNullStreams) => {
   let output = ''
@@ -248,11 +280,12 @@ const waitForFunctionReadiness = async (
   status: LocalSupabaseStatus,
   child: ChildProcessWithoutNullStreams,
   getOutput: () => string,
+  functionName: string,
 ) => {
   await new Promise((resolve) => setTimeout(resolve, 5_000))
 
   const deadline = Date.now() + 45_000
-  const url = `${status.FUNCTIONS_URL}/delete-account`
+  const url = `${status.FUNCTIONS_URL}/${functionName}`
 
   while (Date.now() < deadline) {
     if (child.exitCode !== null) {
@@ -277,7 +310,7 @@ const waitForFunctionReadiness = async (
     await new Promise((resolve) => setTimeout(resolve, 500))
   }
 
-  throw new Error(`Timed out waiting for delete-account function readiness.\n${getOutput()}`)
+  throw new Error(`Timed out waiting for ${functionName} function readiness.\n${getOutput()}`)
 }
 
 const stopProcess = async (child: ChildProcessWithoutNullStreams) => {

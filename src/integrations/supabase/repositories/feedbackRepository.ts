@@ -46,6 +46,17 @@ const mapSubmission = (
   attachments,
 })
 
+const notifyFeedbackSubmission = async (submissionId: string) => {
+  const supabase = getSupabaseClient()
+  const { error } = await supabase.functions.invoke('notify-feedback', {
+    body: { submissionId },
+  })
+
+  if (error) {
+    console.warn('Feedback notification could not be delivered.', error)
+  }
+}
+
 export const supabaseFeedbackRepository: FeedbackRepository = {
   async submit(input) {
     const parsed = CreateFeedbackSubmissionInputSchema.safeParse(input)
@@ -140,6 +151,10 @@ export const supabaseFeedbackRepository: FeedbackRepository = {
         deletedAt: null,
       })
     }
+
+    await notifyFeedbackSubmission(submissionId).catch((error: unknown) => {
+      console.warn('Feedback notification could not be delivered.', error)
+    })
 
     return ok(mapSubmission(parsed.data, submissionId, createdAt, attachments))
   },
