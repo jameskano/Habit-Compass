@@ -57,6 +57,20 @@ Users may benefit from lightweight nudges, but suggestions must remain explainab
 - Suggestions must remain explainable and testable.
 - The model must remain compatible with future AI without depending on it now.
 
+## Ethical Cognitive Support
+
+MVP suggestions use rule-based support, not manipulation. Inspired by support-first cognitive
+principles, suggestions may reduce decision friction, make the smallest useful action visible, and
+protect context when a day is overloaded.
+
+- Suggestions appear only when an explainable rule is met and the Suggestions toggle is enabled.
+- Suggestion copy must describe the situation gently without implying failure.
+- Suggestions may offer a minimum version, lighter cadence, pause, archive, or small category action,
+  but they must not mutate items without explicit user action.
+- Users can dismiss a suggestion without penalty.
+- Suggestions must not promote Premium directly; Premium messaging belongs to Premium surfaces and
+  item-limit moments.
+
 ## Data Model
 
 - `Suggestion`

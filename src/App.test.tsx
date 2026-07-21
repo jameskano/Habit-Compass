@@ -1506,7 +1506,7 @@ describe('app shell', () => {
       'href',
       '/settings/support',
     )
-    expect(screen.getByText('Unlock Habit Compass Premium.')).toBeInTheDocument()
+    expect(screen.getByText('More room for the routine you are building.')).toBeInTheDocument()
     expect(screen.getByText(/Habit Compass . Version /)).toBeInTheDocument()
     expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
     expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
@@ -2112,7 +2112,7 @@ describe('app shell', () => {
     render(<App />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+      await screen.findByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Onboarding', level: 1 })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
@@ -2130,7 +2130,7 @@ describe('app shell', () => {
     render(<App />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+      await screen.findByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Go to slide/i })).toHaveLength(3)
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument()
@@ -2189,7 +2189,7 @@ describe('app shell', () => {
 
     expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
     expect(
-      screen.queryByRole('heading', { name: 'Start with Today', level: 2 }),
+      screen.queryByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).not.toBeInTheDocument()
   })
 })

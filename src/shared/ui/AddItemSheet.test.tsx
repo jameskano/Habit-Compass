@@ -97,7 +97,7 @@ describe('AddItemSheet limits', () => {
 
     await user.click(habitButton!)
 
-    expect(screen.getByRole('heading', { name: 'Free plan limit reached' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Unlock Premium' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'The free plan is full' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'See Premium' })).toBeInTheDocument()
   })
 })

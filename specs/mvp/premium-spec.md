@@ -111,6 +111,19 @@ Avoid:
 - Unverified savings claims.
 - Promises of AI behavior before the AI feature spec and implementation exist.
 
+## Ethical Cognitive Support
+
+Premium and upgrade-adjacent copy may use cognitive ease, clear defaults, small commitments, real
+limits, and context preservation to help users choose calmly.
+
+- Frame Premium as more room for the routine the user is already building.
+- Keep the free plan useful and describe limits as product boundaries, not personal failure.
+- Offer reversible alternatives such as archiving or completing an item before asking for Premium.
+- Mention future guidance only as optional future value until it is specified and shipped.
+
+Do not use fake urgency, fake scarcity, shame, punitive streak framing, hidden costs, or repeated
+conversion prompts.
+
 ## Acceptance Criteria
 
 - Given a free user has fewer than 5 active habits, when they create a habit, then creation is
