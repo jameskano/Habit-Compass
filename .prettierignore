@@ -1,4 +1,5 @@
 dist
+android/app/src/main/assets/public
 node_modules
 coverage
 playwright-report

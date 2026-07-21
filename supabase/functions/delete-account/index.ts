@@ -38,6 +38,9 @@ const getRequiredEnv = (key: string) => {
   return value
 }
 
+const getRequiredEnvWithOverride = (overrideKey: string, defaultKey: string) =>
+  Deno.env.get(overrideKey) ?? getRequiredEnv(defaultKey)
+
 const decodeJwtPayload = (authorization: string) => {
   const token = authorization.replace(/^Bearer\s+/i, '')
   const payload = token.split('.')[1]
@@ -161,6 +164,37 @@ const removeFeedbackAttachments = async (
   }
 }
 
+const deleteUserAppData = async (
+  serviceClient: ReturnType<typeof createClient>,
+  userId: string,
+) => {
+  const { error } = await serviceClient.rpc('delete_user_app_data_for_account_deletion', {
+    target_user_id: userId,
+  })
+
+  if (error) {
+    throw error
+  }
+}
+
+const deleteAuthUser = async (supabaseUrl: string, serviceRoleKey: string, userId: string) => {
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+    },
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    return {
+      error: await response.text().catch(() => `Auth admin delete failed: ${response.status}`),
+    }
+  }
+
+  return { error: null }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -191,8 +225,14 @@ Deno.serve(async (request) => {
           : 'password'
     let externalDeletionRequestId: string | null = null
     const supabaseUrl = getRequiredEnv('SUPABASE_URL')
-    const supabaseAnonKey = getRequiredEnv('SUPABASE_ANON_KEY')
-    const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseAnonKey = getRequiredEnvWithOverride(
+      'ACCOUNT_DELETION_SUPABASE_ANON_KEY',
+      'SUPABASE_ANON_KEY',
+    )
+    const serviceRoleKey = getRequiredEnvWithOverride(
+      'ACCOUNT_DELETION_SUPABASE_SERVICE_ROLE_KEY',
+      'SUPABASE_SERVICE_ROLE_KEY',
+    )
     const revenueCatSecretKey = getRequiredEnv('REVENUECAT_SECRET_API_KEY')
     const revenueCatApiBaseUrl = getRevenueCatApiBaseUrl((key) => Deno.env.get(key) ?? undefined)
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -287,12 +327,25 @@ Deno.serve(async (request) => {
           user.id,
           storeTransactionId,
         ),
-      deleteAuthUser: () => serviceClient.auth.admin.deleteUser(user.id, false),
+      deleteAuthUser: async () => {
+        const result = await deleteAuthUser(supabaseUrl, serviceRoleKey, user.id)
+        if (result.error) {
+          console.error({
+            code: String(result.error),
+            operationId,
+            step: 'auth_user_delete',
+          })
+        }
+        return result
+      },
       deleteRevenueCatCustomer: () =>
         deleteRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
       loadRevenueCatCustomer: () =>
         loadRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
-      removeFeedbackAttachments: () => removeFeedbackAttachments(serviceClient, user.id),
+      removeFeedbackAttachments: async () => {
+        await removeFeedbackAttachments(serviceClient, user.id)
+        await deleteUserAppData(serviceClient, user.id)
+      },
       updateOperation: (status, failureCode = null) =>
         updateOperation(serviceClient, operationId, status, failureCode),
     })

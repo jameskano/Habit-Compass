@@ -115,7 +115,7 @@ export default defineConfig(({ mode }) => {
       env: {
         VITE_APP_DATA_SOURCE: 'mock',
       },
-      exclude: ['**/node_modules/**', '**/dist/**', '**/src/test/e2e/**'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/src/test/e2e/**', '**/*.live.test.ts'],
       globals: true,
       setupFiles: './src/test/setup.ts',
     },
