@@ -85,6 +85,8 @@ Confirmed public legal document facts:
 - Public Privacy Policy URL: `https://habit-compass.onrender.com/legal/privacy-policy`.
 - Public Terms URL: `https://habit-compass.onrender.com/legal/terms`.
 - Public external account-deletion URL: `https://habit-compass.onrender.com/account/delete`.
+- Supabase `PUBLIC_SITE_URL` is configured as `https://habit-compass.onrender.com` for
+  external account-deletion email redirects.
 - Supabase production project region: West EU (Ireland).
 - Supabase backup behavior: the project is currently on the Free plan; Habit Compass does not
   maintain separate app backups. Supabase's public backup documentation says automatic daily
@@ -93,8 +95,15 @@ Confirmed public legal document facts:
 - Supabase subprocessors and transfer safeguards reviewed against Supabase legal/provider
   documentation for release-draft purposes.
 - Premium is part of the first production release.
+- RevenueCat webhook, secret API key, and related Supabase Edge Function secrets are configured in
+  Supabase for the MVP backend.
+- The repository implementation uses the server-only `EXTERNAL_ACCOUNT_DELETION_HASH_SECRET` Edge
+  Function secret for external account-deletion email/IP/challenge lookup hashes.
+- Supabase production `EXTERNAL_ACCOUNT_DELETION_HASH_SECRET` is configured.
 - Production email sender/provider decision: use Supabase Auth default email for now until a custom
   SMTP provider is selected.
+- Production dependency audit on 2026-07-23 returned no known production vulnerabilities with
+  `pnpm audit --prod`.
 
 Not confirmed for release:
 
@@ -102,12 +111,14 @@ Not confirmed for release:
 - RevenueCat and Google/Google Play production subprocessors and transfer safeguards.
 - Google Play product, price, renewal, cancellation, refund, and store-listing configuration.
 - Play Console Data Safety answers and data-deletion answers.
-- Supabase function secrets and production testing for immediate account deletion.
-- External account-deletion template behavior, hosted redirect allow-list, and production
-  verification testing.
+- Production testing for immediate account deletion.
+- External account-deletion email template behavior and production verification testing.
 - Whether Sentry/crash reporting is enabled in the release build.
 - Hosted Supabase project confirmation that legacy scheduled/pending deletion functions are not
   deployed or are blocked.
+- Android App Links release completion: Play app-signing SHA-256 fingerprint, hosted
+  `/.well-known/assetlinks.json`, deployed-file verification, Android domain verification, and
+  production deep-link test.
 
 ## Public Document Placeholder Status
 
@@ -117,6 +128,8 @@ Production configuration details still to confirm before release:
 
 - RevenueCat and Google/Google Play transfer details.
 - Google Play product, price, renewal, cancellation, refund, and store-listing configuration.
+- Play Console Privacy Policy URL, account-deletion URL, Data Safety, subscriptions, pricing,
+  cancellation disclosures, and refund disclosures.
 - Custom SMTP provider is deferred; Supabase Auth default email is the current sender.
 - Sentry/crash reporting release status.
 - Play Console Data Safety and account deletion answers.
@@ -151,7 +164,7 @@ For every active provider, document:
 
 Privacy Policy:
 
-- [ ] Privacy Policy URL is active, public, non-geofenced, non-editable, and not a PDF.
+- [x] Privacy Policy URL is active, public, non-geofenced, non-editable, and not a PDF.
 - [ ] Privacy Policy names the app and the developer/controller matching the Play listing.
 - [ ] Privacy Policy includes a privacy contact or inquiry mechanism.
 - [ ] Privacy Policy discloses data categories, purposes, sharing/recipients, security, retention,
@@ -198,7 +211,9 @@ RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth de
 - [ ] RevenueCat customer deletion happens server-side before Supabase Auth user deletion.
 - [ ] Supabase Storage feedback attachments are cleaned explicitly from recorded storage paths.
 - [ ] Auth user deletion happens after external-service and app-data cleanup.
-- [ ] Immediate deletion function secrets and idempotency behavior are configured.
+- [x] Immediate deletion function secrets and idempotency behavior are configured.
+- [x] Supabase production `EXTERNAL_ACCOUNT_DELETION_HASH_SECRET` is configured after the
+      keyed-hashing change is deployed.
 - [ ] Production deletion flow has been manually tested against deployed Supabase functions.
 - [x] Legacy pending-deletion route and cancellation UI are not reachable from the route tree.
 - [x] Legacy `request-account-deletion`, `cancel-account-deletion`, and
@@ -208,8 +223,28 @@ RevenueCat cleanup, app-data cleanup, legal-record cleanup, and Supabase Auth de
 - [x] External account-deletion page triggers the immediate workflow after verification, not the
       legacy delayed workflow.
 - [x] Production email sender/provider decision is Supabase Auth default email for now.
-- [ ] External deletion email template behavior, hosted redirect allow-list, and production
-      verification behavior are configured/tested.
+- [x] Hosted redirect allow-list is configured.
+- [ ] External deletion email template behavior and production verification behavior are
+      configured/tested.
+
+## Android App Links Release Checklist
+
+The app has an HTTPS App Link intent filter for `https://habit-compass.onrender.com/auth/callback`
+and can normalize that callback if Android delivers it to the app. The custom scheme
+`habitcompass://auth/callback` remains the active fallback until the verified App Link release work
+is complete.
+
+- [x] Supabase redirect allow-list includes the Render auth callback and account-deletion URLs.
+- [x] Android manifest declares the Render auth callback host with `android:autoVerify="true"`.
+- [x] Native deep-link handling accepts the Render HTTPS auth callback route.
+- [ ] Play Console app-signing SHA-256 fingerprint is copied from the final release signing key.
+- [ ] `public/.well-known/assetlinks.json` is created with package `com.habitcompass.app` and the
+      Play app-signing SHA-256 fingerprint.
+- [ ] `https://habit-compass.onrender.com/.well-known/assetlinks.json` is deployed, public, valid
+      JSON, HTTPS-only, and served without redirects.
+- [ ] Android domain verification is tested on an installed release build.
+- [ ] Production OAuth, email confirmation, recovery, email-change, and deletion callback flows are
+      tested through the verified App Link.
 
 ## Premium And RevenueCat Checklist
 
@@ -288,9 +323,12 @@ enabling:
 - RevenueCat, Google/Google Play, and any enabled Sentry transfer safeguards and subprocessors need
   production confirmation.
 - Play Console Data Safety and data-deletion answers are unresolved.
-- External deletion template behavior, hosted redirect allow-list, and production verification
-  testing are unresolved.
-- Immediate deletion function secrets and production testing are unresolved.
+- Play Console Privacy Policy URL, account-deletion URL, subscriptions, pricing, cancellation
+  disclosures, and refund disclosures are unresolved.
+- Android App Links require the Play app-signing SHA-256 fingerprint, deployed `assetlinks.json`,
+  verification, and production callback testing.
+- External deletion template behavior and production verification testing are unresolved.
+- Immediate deletion production testing is unresolved.
 - Hosted legacy scheduled/pending deletion Edge Functions remain a release risk until removed,
   blocked, or confirmed undeployed in the Supabase project.
 - Sentry/crash-reporting release status is unresolved.

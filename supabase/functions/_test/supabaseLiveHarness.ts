@@ -216,6 +216,7 @@ export const startSupabaseFunctions = async (
     `FEEDBACK_SUPABASE_SERVICE_ROLE_KEY=${status.SERVICE_ROLE_KEY}`,
     'REVENUECAT_SECRET_API_KEY=fake-revenuecat-secret',
     'ACCOUNT_DELETION_REAUTH_MAX_AGE_SECONDS=600',
+    'EXTERNAL_ACCOUNT_DELETION_HASH_SECRET=fake-external-deletion-hash-secret',
   ]
 
   if (revenueCatApiBaseUrl) {

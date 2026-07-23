@@ -5,6 +5,7 @@ import {
   getRevenueCatApiBaseUrl,
   loadRevenueCatCustomer,
 } from '../_shared/revenuecat.ts'
+import { verifyRevenueCatWebhookRequest } from '../_shared/revenuecatWebhookSecurity.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,8 +25,6 @@ type RevenueCatEvent = {
 type RevenueCatWebhookBody = {
   event?: RevenueCatEvent
 }
-
-const textEncoder = new TextEncoder()
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -49,69 +48,6 @@ const getErrorStatus = (error: unknown) => {
     : null
 }
 
-const toHex = (buffer: ArrayBuffer) =>
-  [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-
-const safeEqual = (left: string, right: string) => {
-  if (left.length !== right.length) {
-    return false
-  }
-
-  let result = 0
-  for (let index = 0; index < left.length; index += 1) {
-    result |= left.charCodeAt(index) ^ right.charCodeAt(index)
-  }
-  return result === 0
-}
-
-const parseSignatureHeader = (header: string) =>
-  Object.fromEntries(
-    header
-      .split(',')
-      .map((part) => part.trim().split('='))
-      .filter((parts): parts is [string, string] => parts.length === 2),
-  )
-
-const verifyRevenueCatSignature = async (
-  rawBody: string,
-  signatureHeader: string | null,
-  signingSecret: string | null,
-) => {
-  if (!signingSecret) {
-    return true
-  }
-  if (!signatureHeader) {
-    return false
-  }
-
-  const parts = parseSignatureHeader(signatureHeader)
-  const timestamp = parts.t
-  const expectedSignature = parts.v1
-  if (!timestamp || !expectedSignature) {
-    return false
-  }
-
-  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp))
-  if (!Number.isFinite(ageSeconds) || ageSeconds > 300) {
-    return false
-  }
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    textEncoder.encode(signingSecret),
-    { hash: 'SHA-256', name: 'HMAC' },
-    false,
-    ['sign'],
-  )
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    textEncoder.encode(`${timestamp}.${rawBody}`),
-  )
-
-  return safeEqual(toHex(signature), expectedSignature)
-}
-
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -122,20 +58,19 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const webhookAuthorization = Deno.env.get('REVENUECAT_WEBHOOK_AUTHORIZATION')
-    if (webhookAuthorization && request.headers.get('Authorization') !== webhookAuthorization) {
-      return jsonResponse({ error: 'Unauthorized.' }, 401)
-    }
-
     const rawBody = await request.text()
-    const signatureValid = await verifyRevenueCatSignature(
+    const webhookValid = await verifyRevenueCatWebhookRequest({
+      authorizationHeader: request.headers.get('Authorization'),
       rawBody,
-      request.headers.get('X-RevenueCat-Webhook-Signature'),
-      Deno.env.get('REVENUECAT_WEBHOOK_SIGNING_SECRET'),
-    )
+      secrets: {
+        authorization: Deno.env.get('REVENUECAT_WEBHOOK_AUTHORIZATION'),
+        signingSecret: Deno.env.get('REVENUECAT_WEBHOOK_SIGNING_SECRET'),
+      },
+      signatureHeader: request.headers.get('X-RevenueCat-Webhook-Signature'),
+    })
 
-    if (!signatureValid) {
-      return jsonResponse({ error: 'Invalid signature.' }, 401)
+    if (!webhookValid) {
+      return jsonResponse({ error: 'Unauthorized webhook.' }, 401)
     }
 
     const body = JSON.parse(rawBody) as RevenueCatWebhookBody

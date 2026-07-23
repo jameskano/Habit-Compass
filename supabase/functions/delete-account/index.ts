@@ -10,6 +10,11 @@ import {
   runAccountDeletionWorkflow,
   type AccountDeletionStatus,
 } from '../_shared/accountDeletionWorkflow.ts'
+import {
+  externalAccountDeletionHashSecretEnvKey,
+  hashExternalDeletionLookupValue,
+  normalizeExternalDeletionEmail,
+} from '../_shared/externalDeletionRequestHashing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -68,23 +73,22 @@ const isFreshJwt = (authorization: string) => {
   return Math.floor(Date.now() / 1000) - issuedAt <= maxAgeSeconds
 }
 
-const hashText = async (value: string) => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
-
 const consumeExternalDeletionChallenge = async (
   serviceClient: ReturnType<typeof createClient>,
   email: string,
   challenge: string | undefined,
+  lookupHashSecret: string,
 ) => {
   if (!challenge || challenge.length > 120) {
     return null
   }
 
   const now = new Date().toISOString()
-  const emailHash = await hashText(email.trim().toLowerCase())
-  const challengeHash = await hashText(challenge)
+  const emailHash = await hashExternalDeletionLookupValue(
+    normalizeExternalDeletionEmail(email),
+    lookupHashSecret,
+  )
+  const challengeHash = await hashExternalDeletionLookupValue(challenge, lookupHashSecret)
   const { data: request, error: requestError } = await serviceClient
     .from('external_account_deletion_requests')
     .select('id')
@@ -284,9 +288,15 @@ Deno.serve(async (request) => {
     }
 
     if (reauthProvider === 'external_email_otp') {
+      const lookupHashSecret = getRequiredEnv(externalAccountDeletionHashSecretEnvKey)
       externalDeletionRequestId =
         user.email && isFreshJwt(authorization)
-          ? await consumeExternalDeletionChallenge(serviceClient, user.email, deletionChallenge)
+          ? await consumeExternalDeletionChallenge(
+              serviceClient,
+              user.email,
+              deletionChallenge,
+              lookupHashSecret,
+            )
           : null
 
       if (!externalDeletionRequestId) {

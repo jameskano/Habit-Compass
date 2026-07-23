@@ -56,6 +56,20 @@ describe('auth redirects', () => {
     expect(toInternalAuthCallbackRoute('habitcompass://auth/callback?flow=unknown')).toBeNull()
   })
 
+  it('normalizes the verified Android App Link auth callback host', () => {
+    expect(
+      toInternalAuthCallbackRoute(
+        'https://habit-compass.onrender.com/auth/callback?code=abc&flow=signup',
+      ),
+    ).toEqual({
+      pathname: '/auth/callback',
+      search: {
+        code: 'abc',
+        flow: 'signup',
+      },
+    })
+  })
+
   it('merges hash callback params without exposing unrelated params', () => {
     expect(
       toInternalAuthCallbackRoute(

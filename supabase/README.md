@@ -81,3 +81,19 @@ Auth Phase 1 also expects:
 4. Run `pnpm exec supabase db advisors` when local services support it.
 
 Keep schema changes additive after first deployment and update `docs/database/schema-plan.md` and `docs/database/rls-plan.md` whenever behavior or ownership rules change.
+
+## Edge Function Secrets
+
+Production account deletion requires these server-only Supabase Edge Function secrets:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `PUBLIC_SITE_URL`
+- `REVENUECAT_SECRET_API_KEY`
+- `EXTERNAL_ACCOUNT_DELETION_HASH_SECRET`
+
+`EXTERNAL_ACCOUNT_DELETION_HASH_SECRET` is used only by `request-external-account-deletion` and
+`delete-account` to create keyed lookup hashes for external deletion request emails, request IPs,
+and one-time challenge tokens. Use the same long random value for both functions. Do not expose it
+through Vite, Android resources, Render public env vars, or client code.
