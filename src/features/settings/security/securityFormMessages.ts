@@ -23,6 +23,14 @@ export const getPasswordErrorId = (field: PasswordFieldName, message?: string) =
     return 'settings.security.changePassword.error.sameAsCurrent'
   }
 
+  if (message === 'password_too_short') {
+    return 'settings.security.changePassword.error.tooShort'
+  }
+
+  if (message === 'password_too_long') {
+    return 'settings.security.changePassword.error.tooLong'
+  }
+
   return field === 'currentPassword'
     ? 'settings.security.changePassword.error.currentRequired'
     : 'settings.security.changePassword.error.newRequired'

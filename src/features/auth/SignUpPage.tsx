@@ -116,7 +116,7 @@ export const SignUpPage = () => {
           />
         </FormField>
         <p className="text-sm text-muted-foreground">
-          <FormattedMessage id="auth.signUp.passwordRequirement" />
+          <FormattedMessage id="auth.password.policyHint" />
         </p>
         <label className="flex gap-3 text-sm leading-6">
           <Checkbox {...form.register('legalAccepted')} aria-describedby="sign-up-legal-error" />

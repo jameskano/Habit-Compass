@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { buildChangeEmailSchema, ChangePasswordSchema } from './securityForms'
 
+const getFirstIssueMessage = (result: {
+  error?: { issues: { message: string }[] }
+  success: boolean
+}) => result.error?.issues[0]?.message
+
 describe('auth security form validation', () => {
   it('accepts a new valid email and rejects invalid or unchanged emails', () => {
     const schema = buildChangeEmailSchema('person@example.com')
@@ -52,5 +57,46 @@ describe('auth security form validation', () => {
         confirmPassword: 'current-password',
       }).success,
     ).toBe(false)
+  })
+
+  it('validates changed passwords against the configured length policy', () => {
+    const currentPassword = 'current-password'
+    const twelveCharacterPassword = 'abcdefghijkl'
+    const elevenCharacterPassword = 'abcdefghijk'
+    const sixtyFourCharacterPassword = 'a'.repeat(64)
+    const sixtyFiveCharacterPassword = 'a'.repeat(65)
+
+    expect(
+      ChangePasswordSchema.safeParse({
+        currentPassword,
+        newPassword: twelveCharacterPassword,
+        confirmPassword: twelveCharacterPassword,
+      }).success,
+    ).toBe(true)
+    expect(
+      ChangePasswordSchema.safeParse({
+        currentPassword,
+        newPassword: sixtyFourCharacterPassword,
+        confirmPassword: sixtyFourCharacterPassword,
+      }).success,
+    ).toBe(true)
+    expect(
+      getFirstIssueMessage(
+        ChangePasswordSchema.safeParse({
+          currentPassword,
+          newPassword: elevenCharacterPassword,
+          confirmPassword: elevenCharacterPassword,
+        }),
+      ),
+    ).toBe('password_too_short')
+    expect(
+      getFirstIssueMessage(
+        ChangePasswordSchema.safeParse({
+          currentPassword,
+          newPassword: sixtyFiveCharacterPassword,
+          confirmPassword: sixtyFiveCharacterPassword,
+        }),
+      ),
+    ).toBe('password_too_long')
   })
 })

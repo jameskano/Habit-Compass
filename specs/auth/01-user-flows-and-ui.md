@@ -160,6 +160,10 @@ Do not add a magic-link-only flow.
 
 There is no confirm-password field during registration.
 
+Password requirements copy:
+
+> Use 12-64 characters. Longer passphrases are welcome.
+
 ### Behavior
 
 - Legal acknowledgement must be selected before starting registration.
@@ -249,6 +253,10 @@ The deep link/callback creates a recovery session.
 - Password visibility controls.
 - Password requirements.
 - Primary `Update password`.
+
+Password requirements copy:
+
+> Use 12-64 characters. Longer passphrases are welcome.
 
 ### Behavior
 

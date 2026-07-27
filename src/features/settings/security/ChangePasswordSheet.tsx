@@ -133,6 +133,9 @@ export const ChangePasswordSheet = ({ open, onOpenChange }: ChangePasswordSheetP
                 : intl.formatMessage({ id: 'settings.security.changePassword.showPassword' })
             }
           />
+          <p className="text-sm text-muted-foreground">
+            <FormattedMessage id="settings.security.changePassword.passwordRequirement" />
+          </p>
           <PasswordInput
             autoComplete="new-password"
             errorMessage={form.formState.errors.confirmPassword?.message}

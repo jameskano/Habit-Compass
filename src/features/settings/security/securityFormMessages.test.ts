@@ -19,6 +19,12 @@ describe('security form messages', () => {
     expect(getPasswordErrorId('newPassword', 'same_as_current')).toBe(
       'settings.security.changePassword.error.sameAsCurrent',
     )
+    expect(getPasswordErrorId('newPassword', 'password_too_short')).toBe(
+      'settings.security.changePassword.error.tooShort',
+    )
+    expect(getPasswordErrorId('newPassword', 'password_too_long')).toBe(
+      'settings.security.changePassword.error.tooLong',
+    )
     expect(getPasswordErrorId('currentPassword')).toBe(
       'settings.security.changePassword.error.currentRequired',
     )

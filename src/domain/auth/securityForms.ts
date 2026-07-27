@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { buildPasswordPolicySchema } from './passwordPolicy'
+
 const trimString = (value: unknown) => (typeof value === 'string' ? value.trim() : value)
 
 export const buildChangeEmailSchema = (currentEmail: string | null | undefined) =>
@@ -21,7 +23,7 @@ export const buildChangeEmailSchema = (currentEmail: string | null | undefined) 
 export const ChangePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'required'),
-    newPassword: z.string().min(1, 'required'),
+    newPassword: buildPasswordPolicySchema(),
     confirmPassword: z.string().min(1, 'required'),
   })
   .superRefine((value, context) => {

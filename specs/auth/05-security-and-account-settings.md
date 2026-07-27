@@ -50,6 +50,9 @@ Each password field has an independent visibility toggle.
 
 - All fields required.
 - New password matches configured policy.
+- Configured policy is 12-64 characters with no lowercase, uppercase, number, or symbol
+  composition requirement.
+- Common-password or compromised-password rejection is out of scope for this release.
 - Confirmation equals new password.
 - New password differs from current password.
 - Trim neither password.

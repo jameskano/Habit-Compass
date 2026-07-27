@@ -94,12 +94,51 @@ describe('authForms', () => {
     ).toBe('password_too_short')
   })
 
+  it('validates signup and reset passwords against the configured length policy', () => {
+    const twelveCharacterPassword = 'abcdefghijkl'
+    const elevenCharacterPassword = 'abcdefghijk'
+    const sixtyFourCharacterPassword = 'a'.repeat(64)
+    const sixtyFiveCharacterPassword = 'a'.repeat(65)
+
+    expect(
+      SignUpSchema.safeParse({
+        email: 'person@example.com',
+        legalAccepted: true,
+        password: twelveCharacterPassword,
+      }).success,
+    ).toBe(true)
+    expect(
+      SignUpSchema.safeParse({
+        email: 'person@example.com',
+        legalAccepted: true,
+        password: sixtyFourCharacterPassword,
+      }).success,
+    ).toBe(true)
+    expect(
+      getFirstIssueMessage(
+        SignUpSchema.safeParse({
+          email: 'person@example.com',
+          legalAccepted: true,
+          password: elevenCharacterPassword,
+        }),
+      ),
+    ).toBe('password_too_short')
+    expect(
+      getFirstIssueMessage(
+        ResetPasswordSchema.safeParse({
+          confirmPassword: sixtyFiveCharacterPassword,
+          newPassword: sixtyFiveCharacterPassword,
+        }),
+      ),
+    ).toBe('password_too_long')
+  })
+
   it('requires legal acknowledgement for signup', () => {
     expect(
       SignUpSchema.safeParse({
         email: 'person@example.com',
         legalAccepted: false,
-        password: 'password-1',
+        password: 'password-1234',
       }).success,
     ).toBe(false)
   })

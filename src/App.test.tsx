@@ -202,6 +202,9 @@ describe('app shell', () => {
     render(<App />)
 
     await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 })
+    expect(
+      screen.getByText('Use 12-64 characters. Longer passphrases are welcome.'),
+    ).toBeInTheDocument()
     await user.type(screen.getByLabelText('Email'), 'new@example.com')
     await user.type(screen.getByLabelText('Password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Create account' }))
@@ -329,6 +332,9 @@ describe('app shell', () => {
 
     expect(
       await screen.findByRole('heading', { name: 'Reset password', level: 1 }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Use 12-64 characters. Longer passphrases are welcome.'),
     ).toBeInTheDocument()
 
     unmount()
@@ -1665,6 +1671,9 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('button', { name: /Change password/ }))
     const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    expect(
+      within(dialog).getByText('Use 12-64 characters. Longer passphrases are welcome.'),
+    ).toBeInTheDocument()
 
     await user.type(within(dialog).getByLabelText('Current password'), 'wrong-password')
     await user.type(within(dialog).getByLabelText('New password'), 'new-password')

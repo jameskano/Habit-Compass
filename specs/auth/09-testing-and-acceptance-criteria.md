@@ -166,6 +166,7 @@ Test:
 - Email trimming.
 - Password strings are not trimmed.
 - Password policy.
+- Password policy accepts 12-64 characters and rejects shorter or longer values.
 - Registration acknowledgement required.
 - New password mismatch.
 - Current/new same password.
