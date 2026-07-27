@@ -71,7 +71,9 @@ export default defineConfig(({ mode }) => {
   const sentryProject = getFirstEnvValue(env, ['SENTRY_PROJECT'])
   const sentryReleaseName =
     getFirstEnvValue(env, ['SENTRY_RELEASE']) ?? process.env.RENDER_GIT_COMMIT
-  const shouldUploadSentrySourceMaps = Boolean(sentryAuthToken && sentryOrg && sentryProject)
+  const shouldUploadSentrySourceMaps = Boolean(
+    mode === 'production' && sentryAuthToken && sentryOrg && sentryProject,
+  )
 
   return {
     cacheDir: getEnvValue(env, 'VITE_CACHE_DIR') ?? 'node_modules/.vite',
