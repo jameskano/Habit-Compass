@@ -25,7 +25,7 @@ describe('legal documents', () => {
         const document = getLegalDocument(kind, locale)
 
         expect(document.body).toContain('Jaime Canovas')
-        expect(document.body).toContain('jaimecanovasdesign@gmail.com')
+        expect(document.body).toContain('habitcompassapp@gmail.com')
         expect(document.body).toContain('Spain')
         expect(document.body).toContain('`1.0.0`')
         expect(document.body).toContain('`16`')

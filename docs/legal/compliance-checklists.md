@@ -73,7 +73,7 @@ Implemented or present in the repo:
 Confirmed public legal document facts:
 
 - Provider/controller: Jaime Canovas.
-- Privacy/support contact: jaimecanovasdesign@gmail.com.
+- Privacy/support contact: habitcompassapp@gmail.com.
 - Country of establishment: Spain.
 - Terms and Privacy Policy version: 1.0.0.
 - Effective date: July 15, 2026.

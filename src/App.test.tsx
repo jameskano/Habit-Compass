@@ -1985,9 +1985,13 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
-    expect(await screen.findByText('1.0.0')).toBeInTheDocument()
     expect(await screen.findByText('July 15, 2026')).toBeInTheDocument()
-    expect(screen.getByText(/legal document included with the app/)).toBeInTheDocument()
+    expect(screen.getAllByTestId('legal-document-card')).toHaveLength(1)
+    expect(screen.queryByText('1.0.0')).not.toBeInTheDocument()
+    expect(screen.queryByText(/legal document included with the app/)).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('https://habit-compass.onrender.com/legal/privacy-policy'),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
 
     await act(async () => {
@@ -1997,7 +2001,11 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
-    expect(screen.getByText('1.0.0')).toBeInTheDocument()
+    expect(screen.getAllByTestId('legal-document-card')).toHaveLength(1)
+    expect(screen.queryByText('1.0.0')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('https://habit-compass.onrender.com/legal/terms'),
+    ).not.toBeInTheDocument()
     expect(screen.getByText(/Paid Premium subscription details are shown/i)).toBeInTheDocument()
   })
 

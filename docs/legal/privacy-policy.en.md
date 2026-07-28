@@ -6,7 +6,7 @@ Effective date: `July 15, 2026`
 
 Controller: `Jaime Canovas`
 
-Contact: `jaimecanovasdesign@gmail.com`
+Contact: `habitcompassapp@gmail.com`
 
 Country of establishment: `Spain`
 
@@ -26,9 +26,9 @@ focus, Big Rocks, categories, and rule-based suggestions.
 
 The data controller is `Jaime Canovas`, established in `Spain`.
 
-Privacy contact: `jaimecanovasdesign@gmail.com`
+Privacy contact: `habitcompassapp@gmail.com`
 
-General support contact: `jaimecanovasdesign@gmail.com`
+General support contact: `habitcompassapp@gmail.com`
 
 ## 3. Data We Collect Or Process
 
@@ -276,7 +276,7 @@ Depending on where you live, you may have rights to:
 
 If you are in Spain, the relevant supervisory authority may be the Agencia Espanola de Proteccion de
 Datos (AEPD), subject to your circumstances. You can contact us first at
-`jaimecanovasdesign@gmail.com`.
+`habitcompassapp@gmail.com`.
 
 ## 12. Security
 
@@ -321,6 +321,6 @@ requested separately from general Privacy Policy presentation.
 
 ## 17. Contact
 
-Privacy questions: `jaimecanovasdesign@gmail.com`
+Privacy questions: `habitcompassapp@gmail.com`
 
-Support: `jaimecanovasdesign@gmail.com`
+Support: `habitcompassapp@gmail.com`

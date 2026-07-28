@@ -6,7 +6,7 @@ Fecha de entrada en vigor: `July 15, 2026`
 
 Responsable del tratamiento: `Jaime Canovas`
 
-Contacto: `jaimecanovasdesign@gmail.com`
+Contacto: `habitcompassapp@gmail.com`
 
 Pais de establecimiento: `Spain`
 
@@ -28,9 +28,9 @@ en reglas.
 
 El responsable del tratamiento es `Jaime Canovas`, establecido en `Spain`.
 
-Contacto de privacidad: `jaimecanovasdesign@gmail.com`
+Contacto de privacidad: `habitcompassapp@gmail.com`
 
-Contacto general de soporte: `jaimecanovasdesign@gmail.com`
+Contacto general de soporte: `habitcompassapp@gmail.com`
 
 ## 3. Datos Que Recogemos O Tratamos
 
@@ -295,7 +295,7 @@ Segun donde vivas, puedes tener derecho a:
 
 Si estas en Espana, la autoridad de control relevante puede ser la Agencia Espanola de Proteccion de
 Datos (AEPD), segun tus circunstancias. Tambien puedes contactar primero en
-`jaimecanovasdesign@gmail.com`.
+`habitcompassapp@gmail.com`.
 
 ## 12. Seguridad
 
@@ -342,6 +342,6 @@ Politica de Privacidad.
 
 ## 17. Contacto
 
-Cuestiones de privacidad: `jaimecanovasdesign@gmail.com`
+Cuestiones de privacidad: `habitcompassapp@gmail.com`
 
-Soporte: `jaimecanovasdesign@gmail.com`
+Soporte: `habitcompassapp@gmail.com`

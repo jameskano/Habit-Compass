@@ -6,7 +6,7 @@ Effective date: `July 15, 2026`
 
 Provider: `Jaime Canovas`
 
-Support: `jaimecanovasdesign@gmail.com`
+Support: `habitcompassapp@gmail.com`
 
 Hosted Terms URL: `https://habit-compass.onrender.com/legal/terms`
 
@@ -24,7 +24,7 @@ Habit Compass is provided by `Jaime Canovas`, established in `Spain`.
 
 Support contact:
 
-`jaimecanovasdesign@gmail.com`
+`habitcompassapp@gmail.com`
 
 ## 3. Eligibility
 
@@ -181,4 +181,4 @@ after account creation or if a material Terms update requires reacceptance.
 
 Questions about these Terms:
 
-`jaimecanovasdesign@gmail.com`
+`habitcompassapp@gmail.com`

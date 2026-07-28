@@ -23,9 +23,13 @@ export const useDataExportAction = () => {
         onError: () => {
           setStatus('error')
         },
-        onSuccess: (file) => {
-          downloadExportFile(file)
-          setStatus('success')
+        onSuccess: async (file) => {
+          try {
+            const didStartDownload = await downloadExportFile(file)
+            setStatus(didStartDownload ? 'success' : 'error')
+          } catch {
+            setStatus('error')
+          }
         },
       })
     },

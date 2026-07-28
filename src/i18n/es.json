@@ -765,7 +765,7 @@
   "settings.dataPrivacy.export.csv.title": "Exportar como CSV",
   "settings.dataPrivacy.export.json.title": "Exportar como JSON",
   "settings.dataPrivacy.export.status.offline": "Parece que no tienes conexión. Intenta exportar de nuevo cuando estés online.",
-  "settings.dataPrivacy.export.status.success": "Exportación lista. La descarga debería comenzar automáticamente.",
+  "settings.dataPrivacy.export.status.success": "Exportación guardada.",
   "settings.dataPrivacy.export.status.error": "No se pudo generar la exportación. Inténtalo de nuevo.",
   "settings.legal.privacy.title": "Política de Privacidad",
   "settings.legal.privacy.description": "Lee la Politica de Privacidad actual.",

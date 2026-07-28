@@ -6,7 +6,7 @@ Fecha de entrada en vigor: `July 15, 2026`
 
 Proveedor: `Jaime Canovas`
 
-Soporte: `jaimecanovasdesign@gmail.com`
+Soporte: `habitcompassapp@gmail.com`
 
 URL publica de los Terminos: `https://habit-compass.onrender.com/legal/terms`
 
@@ -24,7 +24,7 @@ Habit Compass es proporcionado por `Jaime Canovas`, establecido en `Spain`.
 
 Contacto de soporte:
 
-`jaimecanovasdesign@gmail.com`
+`habitcompassapp@gmail.com`
 
 ## 3. Requisitos De Edad
 
@@ -189,4 +189,4 @@ actualizacion material de Terminos requiere nueva aceptacion.
 
 Preguntas sobre estos Terminos:
 
-`jaimecanovasdesign@gmail.com`
+`habitcompassapp@gmail.com`
