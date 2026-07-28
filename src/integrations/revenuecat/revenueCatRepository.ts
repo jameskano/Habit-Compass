@@ -150,12 +150,12 @@ const isUserCancelledPurchase = (cause: unknown) =>
 
 const getPurchases = async () => {
   const { Purchases } = await import('@revenuecat/purchases-capacitor')
-  return Purchases
+  return { Purchases }
 }
 
 const getRevenueCatUI = async () => {
   const { RevenueCatUI } = await import('@revenuecat/purchases-capacitor-ui')
-  return RevenueCatUI
+  return { RevenueCatUI }
 }
 
 const ensureConfigured = async (userId: string) => {
@@ -163,7 +163,7 @@ const ensureConfigured = async (userId: string) => {
     return null
   }
 
-  const Purchases = await getPurchases()
+  const { Purchases } = await getPurchases()
 
   if (configuredUserId !== userId) {
     await Purchases.configure({
@@ -181,7 +181,7 @@ const getCurrentNativeOffering = async (): Promise<PurchasesOffering | null> => 
     return null
   }
 
-  const Purchases = await getPurchases()
+  const { Purchases } = await getPurchases()
   const offerings = await Purchases.getOfferings()
   return offerings.current
 }
@@ -191,7 +191,7 @@ const getCurrentSnapshot = async () => {
     return emptySubscriptionSnapshot
   }
 
-  const Purchases = await getPurchases()
+  const { Purchases } = await getPurchases()
   const { customerInfo } = await Purchases.getCustomerInfo()
   return mapCustomerInfoToSnapshot(customerInfo)
 }
@@ -283,7 +283,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     }
 
     try {
-      const Purchases = await getPurchases()
+      const { Purchases } = await getPurchases()
       const offering = await getCurrentNativeOffering()
       const aPackage = offering ? findPackageByProductId(offering, productId) : null
 
@@ -312,7 +312,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     }
 
     try {
-      const Purchases = await getPurchases()
+      const { Purchases } = await getPurchases()
       const { customerInfo } = await Purchases.restorePurchases()
       await syncServerSubscription()
       return ok(mapCustomerInfoToSnapshot(customerInfo))
@@ -327,7 +327,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     }
 
     try {
-      const RevenueCatUI = await getRevenueCatUI()
+      const { RevenueCatUI } = await getRevenueCatUI()
       const result = await RevenueCatUI.presentPaywallIfNeeded({
         displayCloseButton: true,
         requiredEntitlementIdentifier: revenueCatEntitlementId,
@@ -349,7 +349,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     }
 
     try {
-      const RevenueCatUI = await getRevenueCatUI()
+      const { RevenueCatUI } = await getRevenueCatUI()
       await RevenueCatUI.presentCustomerCenter()
       await syncServerSubscription()
       return ok(null)
@@ -365,7 +365,7 @@ export const revenueCatRepository: SubscriptionRepository = {
     }
 
     try {
-      const Purchases = await getPurchases()
+      const { Purchases } = await getPurchases()
       await Purchases.logOut()
       configuredUserId = null
       return ok(null)

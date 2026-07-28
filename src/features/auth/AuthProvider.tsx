@@ -17,6 +17,25 @@ type AuthProviderProps = {
   children: ReactNode
 }
 
+const subscriptionIdentityStartupTimeoutMs = 3_000
+
+const waitForBestEffort = async (operation: Promise<unknown>, timeoutMs: number) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+  try {
+    await Promise.race([
+      operation.catch(() => undefined),
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(resolve, timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+  }
+}
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient()
   const [state, setState] = useState<AuthLifecycleState>({ status: 'initializing' })
@@ -29,7 +48,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [])
 
   const identifySubscriptionUser = useCallback(async (userId: string) => {
-    await subscriptionRepository.identifyUser(userId).catch(() => undefined)
+    await waitForBestEffort(
+      subscriptionRepository.identifyUser(userId),
+      subscriptionIdentityStartupTimeoutMs,
+    )
   }, [])
 
   const refreshAccountContext = useCallback(async () => {
