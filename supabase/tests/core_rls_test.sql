@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(20);
+select plan(24);
 
 insert into auth.users (
   id,
@@ -416,6 +416,52 @@ select lives_ok(
     )
   $$,
   'authenticated user can insert their own suggestion event linked to owned targets'
+);
+
+select lives_ok(
+  $$ select public.delete_category_with_reassignment('00000000-0000-0000-0000-000000000211') $$,
+  'authenticated user can delete a custom category with reassignment'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.categories
+    where id = '00000000-0000-0000-0000-000000000211'
+  ),
+  0,
+  'custom category delete physically removes the category row'
+);
+
+select is(
+  (
+    select public.habits.category_id
+    from public.habits
+    join public.categories on public.categories.id = public.habits.category_id
+    where public.habits.id = '00000000-0000-0000-0000-000000000221'
+  ),
+  (
+    select public.categories.id
+    from public.categories
+    where public.categories.user_id = '00000000-0000-0000-0000-000000000201'
+      and public.categories.default_key = 'uncategorized'
+  ),
+  'custom category delete reassigns linked habits to Uncategorized'
+);
+
+select is(
+  (
+    select array[
+      public.tasks.category_id,
+      public.recurrent_tasks.category_id
+    ]::uuid[]
+    from public.tasks
+    cross join public.recurrent_tasks
+    where public.tasks.id = '00000000-0000-0000-0000-000000000231'
+      and public.recurrent_tasks.id = '00000000-0000-0000-0000-000000000241'
+  ),
+  array[null, null]::uuid[],
+  'custom category delete clears linked task and recurrent task categories'
 );
 
 select * from finish();

@@ -7,10 +7,13 @@ import type { DayOfWeek } from '@/domain/recurrent-tasks'
 import {
   useArchiveRecurrentTaskMutation,
   useDeleteRecurrentTaskMutation,
+  useRestoreRecurrentTaskMutation,
   useUpdateRecurrentTaskMutation,
 } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 
+import { getItemLimitKindFromError } from '../limits/itemLimitErrors'
+import { useItemLimitGate } from '../limits/useItemLimitGate'
 import { NO_RECURRENT_TASK_CATEGORY_VALUE } from './recurrentTaskEdit.constants'
 import {
   RecurrentTaskEditValuesSchema,
@@ -38,8 +41,14 @@ export const useRecurrentTaskEditForm = ({
   const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
   const updateMutation = useUpdateRecurrentTaskMutation()
   const archiveMutation = useArchiveRecurrentTaskMutation()
+  const restoreMutation = useRestoreRecurrentTaskMutation()
   const deleteMutation = useDeleteRecurrentTaskMutation()
-  const pending = updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
+  const limitGate = useItemLimitGate()
+  const pending =
+    updateMutation.isPending ||
+    archiveMutation.isPending ||
+    restoreMutation.isPending ||
+    deleteMutation.isPending
   const form = useForm<RecurrentTaskEditValues>({
     resolver: zodResolver(RecurrentTaskEditValuesSchema),
     defaultValues: valuesForRecurrentTask(task),
@@ -112,6 +121,7 @@ export const useRecurrentTaskEditForm = ({
     updateMutation.mutate(input, {
       onSuccess: () => {
         if (values.endsOn && values.endsOn < today) {
+          onClose()
           archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
           return
         }
@@ -197,7 +207,32 @@ export const useRecurrentTaskEditForm = ({
   }
 
   const archiveTask = () => {
+    onClose()
     archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
+  }
+
+  const reactivateTask = () => {
+    if (!limitGate.canUse('recurrentTask')) {
+      limitGate.openLimitDialog('recurrentTask', 'restore')
+      return
+    }
+
+    onClose()
+    restoreMutation.mutate(task.id, {
+      onError: (error) => {
+        const limitKind = getItemLimitKindFromError(error)
+
+        if (limitKind) {
+          limitGate.openLimitDialog(limitKind, 'restore')
+        }
+      },
+      onSuccess: () => {
+        appToast.success({
+          id: 'page.items.recurrent.reactivated',
+          values: { task: task.title },
+        })
+      },
+    })
   }
 
   const deleteTask = () => {
@@ -217,8 +252,11 @@ export const useRecurrentTaskEditForm = ({
     handlePriorityChange,
     handleRecurrenceKindChange,
     handleWeekdayChange,
+    limitDialogState: limitGate.dialogState,
+    onCloseLimitDialog: limitGate.closeLimitDialog,
     openCategoryCreation,
     pending,
+    reactivateTask,
     recurrenceKind,
     selectCreatedCategory,
     selectedCategoryId,

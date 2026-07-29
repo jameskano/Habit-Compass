@@ -169,6 +169,38 @@ test('task swipe completion keeps the mobile viewport and toast contained', asyn
   expect(toastBounds.x + toastBounds.width).toBeLessThanOrEqual(viewportWidth)
 })
 
+test('category color palette scroll stays inside the bottom sheet', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: 'Category' })
+    .click()
+
+  const sheet = page.getByRole('dialog', { name: 'Create category' })
+  const palette = sheet.getByLabel('Category colors')
+  await expect(sheet.getByRole('heading', { name: 'Create category' })).toBeVisible()
+
+  await palette.evaluate((node) => {
+    node.scrollLeft = node.scrollWidth
+  })
+  const sheetScrollTop = await sheet.evaluate((node) => node.scrollTop)
+  const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth)
+
+  await sheet.getByRole('button', { name: 'Graphite' }).click()
+
+  await expect(sheet.getByRole('button', { name: 'Graphite' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect.poll(() => sheet.evaluate((node) => node.scrollTop)).toBe(sheetScrollTop)
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+    .toBeLessThanOrEqual(viewportWidth)
+})
+
 test('habit overlay, legend, and stats periods use the revised presentation', async ({ page }) => {
   await page.goto('/items')
 

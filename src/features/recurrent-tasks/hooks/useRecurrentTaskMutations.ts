@@ -102,6 +102,18 @@ export const useArchiveRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   })
 }
 
+export const useRestoreRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
+  const invalidate = useInvalidateRecurrentTasks(userId)
+  const { mutationError } = useAppToast()
+
+  return useMutation({
+    mutationFn: async (recurrentTaskId: EntityId) =>
+      unwrapResult(await recurrentTasksRepository.restore({ userId, recurrentTaskId })),
+    onSuccess: invalidate,
+    onError: mutationError,
+  })
+}
+
 export const useDeleteRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()

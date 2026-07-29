@@ -381,6 +381,10 @@ Danger/archive section:
 - Archive
 - Delete
 
+When the recurrent task is archived, replace Archive with Reactivate instead of disabling the
+archive action. Reactivating unarchives the recurrent task and returns it to the active recurrent
+task list, subject to the same active recurrent-task limits as creation.
+
 Task and recurrent-task edit overlays display only the item title in their visible header.
 
 ## Calendar/stats for recurrent tasks

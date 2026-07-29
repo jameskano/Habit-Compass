@@ -27,7 +27,7 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 
 - As a user, I can create a task that repeats daily or on a small set of patterns.
 - As a user, I can complete a single occurrence without completing all future ones.
-- As a user, I can archive or delete the parent recurrent task.
+- As a user, I can archive, reactivate, or delete the parent recurrent task.
 
 ## Functional Requirements
 
@@ -53,6 +53,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Saving an end date before today archives the parent recurrent task after confirmation in the edit flow.
 - Read logic derives overdue pending/missed presentation without writing automatic missed occurrences.
 - Parent recurrent tasks must support only active and archived lifecycle state.
+- Archived parent recurrent tasks remain readable and can be reactivated. While archived, only
+  reactivation and confirmed physical deletion may mutate them.
 - Delete physically removes a parent recurrent task after explicit confirmation.
 
 ## Non-Functional Requirements
@@ -88,6 +90,7 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Active schedule state.
 - Occurrence pending/completed/skipped/missed state.
 - Archived parent recurrent task state.
+- Reactivating archived parent recurrent task state.
 
 ## Edge Cases
 
@@ -102,6 +105,7 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - A recurrent task can model the supported recurrence kinds.
 - An occurrence can be completed independently from future occurrences.
 - Archive/delete apply to the parent recurrent task.
+- Archived recurrent tasks can be reactivated from their edit flow.
 - `customFutureRule` exists only as a descriptive future hook.
 
 ## Test Plan

@@ -4,6 +4,7 @@ import { CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent } from '@/shared/ui/dialog'
 
+import { ItemLimitDialog } from '../limits/ItemLimitDialog'
 import { RecurrentTaskConfirmationDialog } from './RecurrentTaskConfirmationDialog'
 import { RecurrentTaskEditDangerSection } from './RecurrentTaskEditDangerSection'
 import { RecurrentTaskEditHeader } from './RecurrentTaskEditHeader'
@@ -16,6 +17,7 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
   const { task, categories, onClose } = props
   const intl = useIntl()
   const taskEdit = useRecurrentTaskEditForm(props)
+  const archived = task.lifecycleStatus === 'archived'
 
   return (
     <Dialog
@@ -62,7 +64,11 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
               onEndDateChange={taskEdit.handleEndDateChange}
               onPriorityChange={taskEdit.handlePriorityChange}
             />
-            <Button type="submit" className="w-full rounded-xl" disabled={taskEdit.pending}>
+            <Button
+              type="submit"
+              className="w-full rounded-xl"
+              disabled={archived || taskEdit.pending}
+            >
               {intl.formatMessage({ id: 'page.items.recurrent.edit.save' })}
             </Button>
           </form>
@@ -72,8 +78,16 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
             pending={taskEdit.pending}
             onArchive={taskEdit.archiveTask}
             onDelete={() => taskEdit.setConfirmingDelete(true)}
+            onReactivate={taskEdit.reactivateTask}
           />
         </div>
+        {taskEdit.limitDialogState ? (
+          <ItemLimitDialog
+            action={taskEdit.limitDialogState.action}
+            kind={taskEdit.limitDialogState.kind}
+            onClose={taskEdit.onCloseLimitDialog}
+          />
+        ) : null}
         <RecurrentTaskConfirmationDialog
           open={taskEdit.confirmingDelete}
           pending={taskEdit.pending}

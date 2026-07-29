@@ -10,6 +10,7 @@ import {
   type CategoryIconKey,
 } from '@/domain/categories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
+import { useAppToast } from '@/shared/hooks/useAppToast'
 
 import {
   useCreateCategoryMutation,
@@ -34,6 +35,7 @@ export const useCategoryFormSheet = ({
   onDeleted,
 }: CategoryFormSheetProps) => {
   const intl = useIntl()
+  const appToast = useAppToast()
   const createMutation = useCreateCategoryMutation()
   const updateMutation = useUpdateCategoryMutation()
   const deleteMutation = useDeleteCategoryMutation()
@@ -117,6 +119,7 @@ export const useCategoryFormSheet = ({
         },
         {
           onSuccess: (createdCategory) => {
+            appToast.success({ id: 'category.toast.created' })
             onCreated?.(createdCategory)
             onOpenChange(false)
           },
@@ -136,7 +139,12 @@ export const useCategoryFormSheet = ({
         iconName,
         colorToken,
       },
-      { onSuccess: () => onOpenChange(false) },
+      {
+        onSuccess: () => {
+          appToast.success({ id: 'category.toast.saved' })
+          onOpenChange(false)
+        },
+      },
     )
   }
 
@@ -153,6 +161,7 @@ export const useCategoryFormSheet = ({
     deleteMutation.mutate(editingCategory.id, {
       onSuccess: () => {
         setShowDeleteConfirm(false)
+        appToast.success({ id: 'category.toast.deleted' })
         onDeleted?.()
         onOpenChange(false)
       },
