@@ -2,10 +2,40 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(10);
+select plan(14);
 
 select has_table('public', 'subscription_entitlements', 'subscription entitlements table exists');
 select has_table('public', 'revenuecat_webhook_events', 'RevenueCat webhook events table exists');
+
+select is(
+  (
+    select prosecdef
+    from pg_proc
+    where oid = 'app_private.enforce_free_item_limits()'::regprocedure
+  ),
+  true,
+  'free item limit trigger function runs as security definer'
+);
+
+select is(
+  has_function_privilege(
+    'authenticated',
+    'app_private.enforce_free_item_limits()',
+    'execute'
+  ),
+  true,
+  'authenticated role can execute the free item limit trigger function'
+);
+
+select is(
+  has_function_privilege(
+    'authenticated',
+    'app_private.user_has_active_premium(uuid)',
+    'execute'
+  ),
+  false,
+  'authenticated role cannot execute private entitlement helper directly'
+);
 
 insert into auth.users (
   id,
@@ -37,6 +67,18 @@ values
     'authenticated',
     'authenticated',
     'revenuecat-user-b@example.com',
+    'encrypted-password',
+    timezone('utc', now()),
+    '{}'::jsonb,
+    '{}'::jsonb,
+    timezone('utc', now()),
+    timezone('utc', now())
+  ),
+  (
+    '00000000-0000-0000-0000-000000000603',
+    'authenticated',
+    'authenticated',
+    'revenuecat-free-user@example.com',
     'encrypted-password',
     timezone('utc', now()),
     '{}'::jsonb,
@@ -125,6 +167,48 @@ select throws_ok(
   '42501',
   null,
   'authenticated client cannot update entitlement mirrors'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000603', true);
+
+select lives_ok(
+  $$
+    insert into public.profiles (id, display_name)
+    values ('00000000-0000-0000-0000-000000000603', 'RevenueCat Free User');
+
+    insert into public.categories (
+      id,
+      user_id,
+      name,
+      color,
+      icon,
+      sort_order
+    )
+    values (
+      '00000000-0000-0000-0000-000000000611',
+      '00000000-0000-0000-0000-000000000603',
+      'Free User Category',
+      'blue',
+      'star',
+      0
+    );
+
+    insert into public.habits (
+      id,
+      user_id,
+      category_id,
+      title,
+      tracking_type
+    )
+    values (
+      '00000000-0000-0000-0000-000000000621',
+      '00000000-0000-0000-0000-000000000603',
+      '00000000-0000-0000-0000-000000000611',
+      'Below Limit Habit',
+      'binary'
+    );
+  $$,
+  'authenticated free user below the limit can insert a habit through the private limit trigger'
 );
 
 reset role;
