@@ -167,6 +167,7 @@ export const HabitDetail = ({
                             return
                           }
                           appToast.success({ id: 'page.items.habit.detail.saved' })
+                          onClose()
                         },
                       })
                     }

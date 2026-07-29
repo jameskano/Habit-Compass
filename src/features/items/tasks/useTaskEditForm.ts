@@ -14,7 +14,13 @@ import { TaskEditValuesSchema, type TaskEditValues } from './taskEdit.schema'
 import type { TaskEditProps } from './taskEdit.types'
 import { buildTaskUpdateInput, getTaskCategoryOptions, valuesForTask } from './taskEdit.utils'
 
-export const useTaskEditForm = ({ task, categories, onArchived, onDeleted }: TaskEditProps) => {
+export const useTaskEditForm = ({
+  task,
+  categories,
+  onClose,
+  onArchived,
+  onDeleted,
+}: TaskEditProps) => {
   const appToast = useAppToast()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [creatingCategory, setCreatingCategory] = useState(false)
@@ -90,7 +96,10 @@ export const useTaskEditForm = ({ task, categories, onArchived, onDeleted }: Tas
     const input = buildTaskUpdateInput(task.id, values, categoryId)
 
     updateMutation.mutate(input, {
-      onSuccess: () => appToast.success({ id: 'page.items.task.edit.saved' }),
+      onSuccess: () => {
+        appToast.success({ id: 'page.items.task.edit.saved' })
+        onClose()
+      },
     })
   })
 

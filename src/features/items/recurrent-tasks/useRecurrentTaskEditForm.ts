@@ -27,6 +27,7 @@ export const useRecurrentTaskEditForm = ({
   task,
   categories,
   today,
+  onClose,
   onArchived,
   onDeleted,
 }: RecurrentTaskEditProps) => {
@@ -115,6 +116,7 @@ export const useRecurrentTaskEditForm = ({
           return
         }
         appToast.success({ id: 'page.items.recurrent.edit.saved' })
+        onClose()
       },
     })
   })

@@ -1096,11 +1096,12 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Options for Read before bed' }))
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
-    const detail = screen.getByRole('dialog', { name: 'Habit detail for Read before bed' })
+    let detail = await screen.findByRole('dialog', { name: 'Habit detail for Read before bed' })
+    const prioritySelect = await within(detail).findByRole('combobox', { name: 'Priority' })
 
     await chooseSelectOption(
       user,
-      within(detail).getByRole('combobox', { name: 'Priority' }),
+      prioritySelect,
       'High',
     )
     expect(within(detail).getByRole('combobox', { name: 'Priority' })).toHaveClass('bg-orange-400')
@@ -1145,7 +1146,12 @@ describe('app shell', () => {
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
 
     expect(await screen.findByText('Habit changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Read for ten minutes')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Habit detail for Read before bed' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Read for ten minutes')).toBeInTheDocument()
     const updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-read')
     expect(updatedHabit?.description).toBe('Ten minutes before sleep.')
     expect(updatedHabit?.notes).toBe('Keep it light.')
@@ -1157,7 +1163,13 @@ describe('app shell', () => {
       minimumMinutes: 10,
     })
 
-    fireEvent.change(minimumInput, { target: { value: '' } })
+    await user.click(
+      await screen.findByRole('button', { name: 'Options for Read for ten minutes' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
+    detail = await screen.findByRole('dialog', { name: 'Habit detail for Read for ten minutes' })
+    const updatedMinimumInput = within(detail).getByLabelText('Minimum') as HTMLInputElement
+    fireEvent.change(updatedMinimumInput, { target: { value: '' } })
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     await waitFor(() => {
       const habitWithoutMinimum = cloneMockState().habits.find((habit) => habit.id === 'habit-read')
@@ -1181,7 +1193,9 @@ describe('app shell', () => {
       await screen.findByRole('button', { name: 'Options for Drink water after lunch' }),
     )
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
-    const detail = screen.getByRole('dialog', { name: 'Habit detail for Drink water after lunch' })
+    const detail = await screen.findByRole('dialog', {
+      name: 'Habit detail for Drink water after lunch',
+    })
     const standardInput = within(detail).getByLabelText(
       'Standard completion - optional',
     ) as HTMLInputElement
@@ -1197,6 +1211,11 @@ describe('app shell', () => {
     await user.type(minimumInput, 'Drink one glass')
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Habit changes saved.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
+      ).not.toBeInTheDocument()
+    })
     let updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-water')
     expect(updatedHabit?.usesCompletionLevels).toBe(true)
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['minimum', 'standard'])
@@ -1206,8 +1225,18 @@ describe('app shell', () => {
       minimumDescription: 'Drink one glass',
     })
 
-    await user.clear(minimumInput)
-    await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Options for Drink water after lunch' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
+    const reopenedDetail = screen.getByRole('dialog', {
+      name: 'Habit detail for Drink water after lunch',
+    })
+    const reopenedMinimumInput = within(reopenedDetail).getByLabelText(
+      'Minimum',
+    ) as HTMLInputElement
+    await user.clear(reopenedMinimumInput)
+    await user.click(within(reopenedDetail).getByRole('button', { name: 'Save changes' }))
     updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-water')
     expect(updatedHabit?.usesCompletionLevels).toBe(false)
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['standard'])
@@ -1334,10 +1363,17 @@ describe('app shell', () => {
     await user.type(within(editDialog).getByLabelText('Notes'), 'Use the drying rack.')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Task changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Fold laundry')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Edit task Start laundry' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Fold laundry')).toBeInTheDocument()
     const updatedTask = cloneMockState().tasks.find((task) => task.id === 'task-laundry')
     expect(updatedTask?.description).toBe('Clothes from the washer.')
     expect(updatedTask?.notes).toBe('Use the drying rack.')
+    await user.click(await screen.findByRole('button', { name: 'Edit Fold laundry' }))
+    editDialog = await screen.findByRole('dialog', { name: 'Edit task Fold laundry' })
     await user.click(within(editDialog).getByRole('button', { name: 'Archive' }))
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Edit Fold laundry' })).not.toBeInTheDocument()
@@ -1439,13 +1475,24 @@ describe('app shell', () => {
     await user.type(within(editDialog).getByLabelText('Notes'), 'Use the blue watering can.')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Recurrent task changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Water balcony plants')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Edit recurrent task Water the plants' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Water balcony plants')).toBeInTheDocument()
     const updatedRecurrentTask = cloneMockState().recurrentTasks.find(
       (task) => task.id === 'recurrent-plants',
     )
     expect(updatedRecurrentTask?.description).toBe('Small balcony pots.')
     expect(updatedRecurrentTask?.notes).toBe('Use the blue watering can.')
-    await user.click(within(editDialog).getByRole('button', { name: 'Archive' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Edit recurrent task Water balcony plants' }),
+    )
+    const updatedEditDialog = await screen.findByRole('dialog', {
+      name: 'Edit recurrent task Water balcony plants',
+    })
+    await user.click(within(updatedEditDialog).getByRole('button', { name: 'Archive' }))
     await waitFor(() => {
       expect(
         screen.queryByRole('button', { name: 'Edit recurrent task Water balcony plants' }),
