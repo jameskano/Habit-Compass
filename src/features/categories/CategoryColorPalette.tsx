@@ -42,6 +42,7 @@ export const CategoryColorPalette = ({
     <div>
       <p className="text-sm font-medium">{intl.formatMessage({ id: 'category.form.color' })}</p>
       <div
+        data-category-color-palette
         ref={paletteRef}
         className="mt-2 flex touch-pan-x snap-x gap-3 overflow-x-auto overscroll-x-contain overscroll-y-none pb-2"
         aria-label={intl.formatMessage({ id: 'category.form.colorPalette' })}

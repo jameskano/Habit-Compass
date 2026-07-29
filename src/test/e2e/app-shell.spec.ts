@@ -181,7 +181,25 @@ test('category color palette scroll stays inside the bottom sheet', async ({ pag
 
   const sheet = page.getByRole('dialog', { name: 'Create category' })
   const palette = sheet.getByLabel('Category colors')
-  await expect(sheet.getByRole('heading', { name: 'Create category' })).toBeVisible()
+  const sheetTitle = sheet.getByRole('heading', { name: 'Create category' })
+  await expect(sheetTitle).toBeVisible()
+  await expect(sheet).toHaveCSS('overflow-x', 'hidden')
+
+  const titleBounds = await sheetTitle.boundingBox()
+  if (!titleBounds) {
+    throw new Error('Expected the category sheet title to be visible.')
+  }
+
+  await page.mouse.move(
+    titleBounds.x + titleBounds.width - 8,
+    titleBounds.y + titleBounds.height / 2,
+  )
+  await page.mouse.down()
+  await page.mouse.move(titleBounds.x + 8, titleBounds.y + titleBounds.height / 2)
+  await page.mouse.up()
+
+  await expect(sheetTitle).toBeVisible()
+  await expect.poll(() => sheet.evaluate((node) => node.scrollLeft)).toBe(0)
 
   await palette.evaluate((node) => {
     node.scrollLeft = node.scrollWidth
