@@ -293,7 +293,7 @@ Segun donde vivas, puedes tener derecho a:
 - Retirar el consentimiento cuando el tratamiento se base en consentimiento.
 - Presentar una reclamacion ante una autoridad de control.
 
-Si estas en Espana, la autoridad de control relevante puede ser la Agencia Espanola de Proteccion de
+Si estas en España, la autoridad de control relevante puede ser la Agencia Española de Proteccion de
 Datos (AEPD), segun tus circunstancias. Tambien puedes contactar primero en
 `habitcompassapp@gmail.com`.
 

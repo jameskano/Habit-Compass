@@ -171,7 +171,7 @@ derechos obligatorios de consumidores.
 
 ## 16. Ley Aplicable Y Conflictos
 
-Estos Terminos se rigen por las leyes de Espana, sin limitar las protecciones obligatorias de
+Estos Terminos se rigen por las leyes de España, sin limitar las protecciones obligatorias de
 consumo que se apliquen donde vivas. Si eres consumidor, puedes tener derecho a presentar
 reclamaciones ante los tribunales u organismos de resolucion de conflictos disponibles bajo la
 legislacion de consumo obligatoria.

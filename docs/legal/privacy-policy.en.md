@@ -274,7 +274,7 @@ Depending on where you live, you may have rights to:
 - Withdraw consent where processing is based on consent.
 - Complain to a supervisory authority.
 
-If you are in Spain, the relevant supervisory authority may be the Agencia Espanola de Proteccion de
+If you are in Spain, the relevant supervisory authority may be the Agencia Española de Proteccion de
 Datos (AEPD), subject to your circumstances. You can contact us first at
 `habitcompassapp@gmail.com`.
 

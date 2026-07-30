@@ -101,7 +101,7 @@ Options:
 
 - System default
 - English
-- Espanol
+- Spanish
 
 Default: System default.
 
