@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 
-import { MOCK_USER_ID } from '@/integrations/mock/mockData'
+import { useAuth } from '@/features/auth/authContext'
 
 import { FeedbackFormSchema, type FeedbackFormValues } from './supportFeedback.schema'
 import {
@@ -20,6 +20,7 @@ type UseSupportFeedbackFormInput = {
 }
 
 export const useSupportFeedbackForm = ({ locale, pathname }: UseSupportFeedbackFormInput) => {
+  const { state: authState } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileErrorId, setFileErrorId] = useState<string | null>(null)
   const [status, setStatus] = useState<SupportFeedbackStatus>('idle')
@@ -54,6 +55,11 @@ export const useSupportFeedbackForm = ({ locale, pathname }: UseSupportFeedbackF
   const submit = form.handleSubmit((values) => {
     setStatus('idle')
 
+    if (authState.status !== 'authenticated') {
+      setStatus('error')
+      return
+    }
+
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       setStatus('offline')
       return
@@ -61,7 +67,7 @@ export const useSupportFeedbackForm = ({ locale, pathname }: UseSupportFeedbackF
 
     submitFeedback.mutate(
       {
-        userId: MOCK_USER_ID,
+        userId: authState.user.id,
         type: values.type,
         message: values.message,
         replyEmail: values.replyEmail ?? null,
@@ -85,7 +91,7 @@ export const useSupportFeedbackForm = ({ locale, pathname }: UseSupportFeedbackF
     fileErrorId,
     form,
     handleFileChange,
-    isPending: submitFeedback.isPending,
+    isPending: submitFeedback.isPending || authState.status !== 'authenticated',
     removeSelectedFile,
     selectedFile,
     status,

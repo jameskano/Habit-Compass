@@ -133,7 +133,8 @@ Goal: implement language behavior fully.
 
 Work:
 
-- Migrate current `locale` / `profiles.language` handling to support `system | en | es`.
+- Keep `locale` / `profiles.language` support for `system | en | es`; new profile rows default to
+  `system`.
 - Resolve `system` from device/browser language.
 - Fall back to English for unsupported languages.
 - Update React Intl runtime behavior immediately after changes.

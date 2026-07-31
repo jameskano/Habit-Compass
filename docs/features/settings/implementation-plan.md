@@ -83,8 +83,6 @@ Definition of done:
 
 Dependencies:
 
-- Decide migration path from current `profiles.language: en | es` and TypeScript `locale` to support
-  `system | en | es`.
 - Confirm device-locale detection for web and Android.
 
 Likely files:
@@ -105,7 +103,7 @@ Likely files:
 
 Data migrations:
 
-- Future Supabase migration to allow `system` language value and extensible locale identifiers.
+- `profiles.language` already allows `system | en | es` and defaults new profile rows to `system`.
 - Consider expanding week-start constraints only when more weekdays are supported.
 
 Frontend/backend work:

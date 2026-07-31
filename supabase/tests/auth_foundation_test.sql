@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(39);
+select plan(42);
 
 select has_table('public', 'user_account_capabilities', 'capability table exists');
 select has_table('public', 'legal_document_versions', 'legal document versions table exists');
@@ -201,6 +201,36 @@ select is(
   ),
   1,
   'authenticated user can see only their own provisioned profile'
+);
+
+select is(
+  (
+    select language
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  'system',
+  'provisioning defaults language to system'
+);
+
+select is(
+  (
+    select theme_preference
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  'system',
+  'provisioning defaults theme to system'
+);
+
+select is(
+  (
+    select first_day_of_week
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  1::smallint,
+  'provisioning defaults week start to Monday'
 );
 
 select is(

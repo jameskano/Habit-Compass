@@ -5,6 +5,7 @@ import type { CreateFeedbackSubmissionInput } from '@/domain/feedback'
 import { supabaseFeedbackRepository } from './feedbackRepository'
 
 const testState = vi.hoisted(() => ({
+  getUser: vi.fn(),
   getSupabaseClient: vi.fn(),
   insert: vi.fn(),
   invoke: vi.fn(),
@@ -15,6 +16,9 @@ vi.mock('../client', () => ({
 }))
 
 const createSupabaseClient = () => ({
+  auth: {
+    getUser: testState.getUser,
+  },
   from: vi.fn(() => ({
     insert: testState.insert,
   })),
@@ -42,9 +46,28 @@ const createInput = (): CreateFeedbackSubmissionInput => ({
 describe('supabaseFeedbackRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    testState.getUser.mockResolvedValue({
+      data: { user: { id: '00000000-0000-0000-0000-000000000901' } },
+      error: null,
+    })
     testState.insert.mockResolvedValue({ error: null })
     testState.invoke.mockResolvedValue({ error: null })
     testState.getSupabaseClient.mockReturnValue(createSupabaseClient())
+  })
+
+  it('stores feedback under the signed-in Supabase user id', async () => {
+    const result = await supabaseFeedbackRepository.submit({
+      ...createInput(),
+      userId: 'mock-user-1',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(testState.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: '00000000-0000-0000-0000-000000000901',
+      }),
+    )
+    expect(result.ok && result.data.userId).toBe('00000000-0000-0000-0000-000000000901')
   })
 
   it('invokes notify-feedback after storing feedback', async () => {

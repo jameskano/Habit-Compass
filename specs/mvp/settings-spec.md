@@ -119,10 +119,8 @@ Model requirement:
 
 - Current database field: `profiles.language`.
 - Current TypeScript field: `locale`.
-- Current implementation stores only `en | es`; future implementation must migrate the existing
-  field/model to allow `system` before exposing System default.
-- Future accepted values should be equivalent to `system | en | es`, with future language codes
-  accepted by schema migration when added.
+- Current implementation stores `system | en | es`; new profile rows default to `system`.
+- Future language codes may be accepted by schema migration when added.
 
 ### Theme
 
@@ -140,6 +138,9 @@ Behavior:
 - `system` follows Android/device appearance. Web fallback uses `prefers-color-scheme`.
 - Theme changes must not require app restart.
 - Status bar and Android system UI should follow the resolved theme once native integration exists.
+- RevenueCat Paywall and Customer Center presentation must follow the app theme preference:
+  `system` follows Android/device appearance, while explicit `light` or `dark` applies that native
+  appearance before RevenueCat UI opens.
 - Persist stable theme identifiers, not display labels.
 - Current database field: `profiles.theme_preference`.
 - Current TypeScript field: `theme`.
@@ -254,6 +255,9 @@ Future behavior:
 
 - The row may open a RevenueCat-backed paywall.
 - Active subscribers should see plan or management status instead of acquisition-only UI.
+- RevenueCat Paywall and Customer Center language must follow the app language preference:
+  `system` follows the Android/device language, while explicit supported languages use the matching
+  RevenueCat UI locale.
 - Subscription management must lead to Google Play subscription management where required.
 - Account deletion must follow `/specs/auth/06-revenuecat-and-account-deletion.md`.
 - Free users may be limited to 5 active habits, 10 active incomplete one-time tasks, and 5 active

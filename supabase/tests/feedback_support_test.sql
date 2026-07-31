@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(24);
+select plan(26);
 
 select has_table('public', 'feedback_submissions', 'feedback submissions table exists');
 select has_table('public', 'feedback_attachments', 'feedback attachments table exists');
@@ -10,6 +10,31 @@ select has_column('public', 'feedback_submissions', 'notification_status', 'feed
 select has_column('public', 'feedback_submissions', 'notification_attempted_at', 'feedback notification attempted timestamp column exists');
 select has_column('public', 'feedback_submissions', 'notification_sent_at', 'feedback notification sent timestamp column exists');
 select has_column('public', 'feedback_submissions', 'notification_failure_code', 'feedback notification failure code column exists');
+select ok(
+  exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname = 'feedback_submission_belongs_to_current_user'
+      and p.pronargs = 1
+      and p.proargtypes[0] = 'uuid'::regtype
+      and p.prosecdef
+  ),
+  'feedback submission ownership helper exists'
+);
+
+select like(
+  (
+    select with_check
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'feedback_attachments'
+      and policyname = 'feedback_attachments_insert_own'
+  ),
+  '%feedback_submission_belongs_to_current_user(feedback_submission_id)%',
+  'feedback attachment insert policy checks parent ownership through the helper'
+);
 
 select is(
   (

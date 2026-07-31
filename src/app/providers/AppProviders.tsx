@@ -4,6 +4,7 @@ import { IntlProvider } from 'react-intl'
 
 import { getDeviceLocale, resolveAppLocale } from '@/domain/settings'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { applyRevenueCatDisplayPreferences } from '@/integrations/revenuecat/revenueCatDisplayPreferences'
 import { Toaster } from '@/shared/ui/sonner'
 
 import { useAppPreferencesStore } from '../state/appPreferencesStore'
@@ -19,11 +20,16 @@ type AppProvidersProps = {
 export const AppProviders = ({ children }: AppProvidersProps) => {
   const [queryClient] = useState(createAppQueryClient)
   const locale = useAppPreferencesStore((state) => state.locale)
+  const theme = useAppPreferencesStore((state) => state.theme)
   const resolvedLocale = resolveAppLocale(locale, getDeviceLocale())
 
   useEffect(() => {
     document.documentElement.lang = resolvedLocale
   }, [resolvedLocale])
+
+  useEffect(() => {
+    void applyRevenueCatDisplayPreferences({ locale, theme }).catch(() => undefined)
+  }, [locale, theme])
 
   return (
     <IntlProvider locale={resolvedLocale} messages={getMessages(resolvedLocale)}>

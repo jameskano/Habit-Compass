@@ -86,6 +86,11 @@ If the user already has the required entitlement, the paywall should not be show
 may be exposed for active subscribers when it is configured and supported by the active RevenueCat
 plan.
 
+Before presenting the hosted Paywall or Customer Center, the app must apply the current Settings
+language and theme preferences to native Android display state. If the app preference is `system`,
+RevenueCat UI follows the Android/device language or appearance. If the user selected an explicit
+supported language or explicit light/dark theme, RevenueCat UI must follow that app preference.
+
 Premium product behavior, free active-item limits, and future AI-insights positioning are specified
 in `/specs/mvp/premium-spec.md`. Paywall copy must stay aligned with that spec and must not promise
 unimplemented AI behavior as currently available.

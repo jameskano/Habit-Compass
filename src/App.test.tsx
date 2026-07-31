@@ -40,11 +40,13 @@ describe('app shell', () => {
 
   beforeEach(async () => {
     resetMockState()
+    window.localStorage.clear()
     window.sessionStorage.clear()
     useTodayOrderStore.getState().resetOrderStore()
     useAppPreferencesStore.setState({
       theme: 'system',
       locale: 'en',
+      weekStartsOn: 1,
       featureToggles: {
         mood: true,
         weeklyPlanning: true,
@@ -1608,6 +1610,9 @@ describe('app shell', () => {
     })
     expect(useAppPreferencesStore.getState().theme).toBe('dark')
     expect(document.documentElement).toHaveClass('dark')
+    await waitFor(() => {
+      expect(getMockState().appSettings.theme).toBe('dark')
+    })
 
     await user.click(screen.getByRole('button', { name: /Week starts on/ }))
     const weekStartsOnDialog = screen.getByRole('dialog', { name: 'Week starts on' })
@@ -1618,16 +1623,22 @@ describe('app shell', () => {
     })
     expect(useAppPreferencesStore.getState().weekStartsOn).toBe(0)
     expect(screen.getByRole('button', { name: /Week starts on/ })).toHaveTextContent('Sunday')
+    await waitFor(() => {
+      expect(getMockState().appSettings.weekStartsOn).toBe(0)
+    })
 
     await user.click(screen.getByRole('button', { name: /Language/ }))
     const languageDialog = screen.getByRole('dialog', { name: 'Language' })
     expect(languageDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
-    await user.click(screen.getByRole('button', { name: 'Espanol' }))
+    await user.click(screen.getByRole('button', { name: 'Spanish' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Language' })).not.toBeInTheDocument()
     })
     expect(useAppPreferencesStore.getState().locale).toBe('es')
     expect(document.documentElement).toHaveAttribute('lang', 'es')
+    await waitFor(() => {
+      expect(getMockState().appSettings.locale).toBe('es')
+    })
     expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
   })
 

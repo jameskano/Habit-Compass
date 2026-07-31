@@ -93,10 +93,9 @@ are present in the current migration set; remaining items stay planned until the
 
 - `profiles.language`
   - Type: stable locale identifier such as `system`, `en`, or `es`.
-  - Current default: `en`.
-  - Future default after System default support: `system`.
+  - Current default: `system`.
   - Nullability: not null after migration/backfill.
-  - Source of truth: user profile row; React Intl resolves future `system` at runtime.
+  - Source of truth: user profile row; React Intl resolves `system` at runtime.
   - Extensibility: add locale codes without changing the storage shape.
 - `profiles.theme_preference`
   - Type: stable theme identifier such as `system`, `light`, or `dark`.

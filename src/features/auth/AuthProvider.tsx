@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import type { AuthLifecycleState } from './authState.types'
 import {
   authRepository,
@@ -109,16 +110,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const capabilities = unwrapResult(await authRepository.ensureUserProvisioned())
       const legalStatus = unwrapResult(await authRepository.getCurrentLegalStatus())
-      const onboardingStatus = unwrapResult(await settingsRepository.getOnboardingStatus())
+      const profileSettings = unwrapResult(await settingsRepository.getProfileSettings())
 
       if (refreshVersion !== stateVersionRef.current) {
         return
       }
 
+      useAppPreferencesStore.getState().hydrateProfilePreferences({
+        locale: profileSettings.locale,
+        theme: profileSettings.theme,
+        weekStartsOn: profileSettings.weekStartsOn,
+      })
+
       setState({
         capabilities,
         legalStatus,
-        onboardingCompletedAt: onboardingStatus.onboardingCompletedAt,
+        onboardingCompletedAt: profileSettings.onboardingCompletedAt,
         status: 'authenticated',
         user,
       })

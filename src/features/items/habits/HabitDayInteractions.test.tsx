@@ -289,6 +289,7 @@ describe('habit day Items interactions', () => {
   })
 
   it('shows the habit title and locale-formatted date in the completion sheet', async () => {
+    getMockState().appSettings.locale = 'es'
     useAppPreferencesStore.setState({ locale: 'es' })
     const habit = getHabit('habit-water')
     renderStrip(habit)

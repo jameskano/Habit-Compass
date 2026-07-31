@@ -23,7 +23,19 @@ import { supabaseSettingsRepository } from './supabase/repositories/settingsRepo
 import { supabaseTasksRepository } from './supabase/repositories/tasksRepository'
 import { revenueCatRepository } from './revenuecat/revenueCatRepository'
 
-const repositorySource = import.meta.env.VITE_APP_DATA_SOURCE === 'supabase' ? 'supabase' : 'mock'
+const isConfiguredEnvValue = (value: string | undefined) => Boolean(value && !value.startsWith('${'))
+
+const requestedRepositorySource = import.meta.env.VITE_APP_DATA_SOURCE
+const hasSupabaseConfig =
+  isConfiguredEnvValue(import.meta.env.VITE_SUPABASE_URL) &&
+  (isConfiguredEnvValue(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
+    isConfiguredEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY))
+
+const repositorySource =
+  requestedRepositorySource === 'supabase' ||
+  (requestedRepositorySource !== 'mock' && hasSupabaseConfig)
+    ? 'supabase'
+    : 'mock'
 
 export const habitsRepository =
   repositorySource === 'supabase' ? supabaseHabitsRepository : mockHabitsRepository
