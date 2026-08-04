@@ -1,10 +1,14 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import { mockCategoriesRepository } from '@/integrations/mock/mockCategoriesRepository'
 import { getMockState, MOCK_USER_ID, resetMockState } from '@/integrations/mock/mockData'
+import {
+  clearNativeBackHandlersForTest,
+  runNativeBackHandlers,
+} from '@/shared/nativeBack/nativeBackRegistry'
 import { unwrapResult } from '@/shared/utils/result'
 import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
 
@@ -27,6 +31,7 @@ vi.mock('sonner', () => ({
 describe('CategoryFormSheet', () => {
   beforeEach(() => {
     resetMockState()
+    clearNativeBackHandlersForTest()
     vi.clearAllMocks()
   })
 
@@ -133,5 +138,28 @@ describe('CategoryFormSheet', () => {
     expect(onDeleted).toHaveBeenCalled()
     expect(onOpenChange).toHaveBeenCalledWith(false)
     expect(getMockState().categories.some((current) => current.id === category.id)).toBe(false)
+  })
+
+  it('shows discard confirmation instead of closing dirty form on native back', async () => {
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+
+    renderWithAppProviders(
+      <CategoryFormSheet
+        open
+        mode="create"
+        categories={getMockState().categories}
+        onOpenChange={onOpenChange}
+      />,
+    )
+
+    await user.type(screen.getByLabelText('Name'), 'Home base')
+
+    await act(async () => {
+      expect(runNativeBackHandlers()).toBe(true)
+    })
+
+    expect(onOpenChange).not.toHaveBeenCalled()
+    expect(await screen.findByRole('alertdialog', { name: 'Discard changes?' })).toBeInTheDocument()
   })
 })

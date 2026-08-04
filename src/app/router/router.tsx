@@ -17,6 +17,7 @@ import { AuthDeepLinkHandler } from '@/features/auth/AuthDeepLinkHandler'
 import { LegalAcceptancePage } from '@/features/auth/LegalAcceptancePage'
 import { ErrorPage } from '@/features/error/ErrorPage'
 import { NotFoundPage } from '@/features/not-found/NotFoundPage'
+import { NativeBackCoordinator } from '@/shared/nativeBack/NativeBackCoordinator'
 import { TodayPage } from '../../features/today/TodayPage'
 import { RoutePendingState } from '../../shared/ui/LazyLoadingFallbacks'
 
@@ -97,6 +98,7 @@ const ExternalAccountDeletionPage = lazyRouteComponent(
 const rootRoute = createRootRoute({
   component: () => (
     <>
+      <NativeBackCoordinator />
       <AuthDeepLinkHandler />
       <Outlet />
     </>

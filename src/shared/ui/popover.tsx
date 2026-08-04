@@ -1,9 +1,25 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { type ComponentPropsWithoutRef, type ElementRef, forwardRef } from 'react'
 
+import { useNativeBackHandler } from '@/shared/nativeBack/useNativeBackHandler'
 import { cn } from '@/shared/utils/cn'
 
-const Popover = PopoverPrimitive.Root
+const Popover = ({
+  onOpenChange,
+  open,
+  ...props
+}: ComponentPropsWithoutRef<typeof PopoverPrimitive.Root>) => {
+  useNativeBackHandler({
+    enabled: open === true && Boolean(onOpenChange),
+    onBack: () => {
+      onOpenChange?.(false)
+      return true
+    },
+    priority: 150,
+  })
+
+  return <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />
+}
 const PopoverTrigger = PopoverPrimitive.Trigger
 const PopoverAnchor = PopoverPrimitive.Anchor
 

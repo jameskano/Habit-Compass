@@ -328,9 +328,20 @@ Requirements:
 
 - Settings entry point remains the app shell Settings control.
 - Screen headers follow current route conventions.
-- Android back returns to the previous Settings or app screen.
-- Bottom sheets dismiss through explicit close, system back, or scrim tap unless a form has entered
-  meaningful unsaved content.
+- Android hardware back uses native app semantics instead of raw browser history replay.
+- On Android, hardware back from `/today`, `/week`, or `/items` minimizes the app.
+- On Android, hardware back from `/settings` returns to the last visited main section (`/today`,
+  `/week`, or `/items`) for the current app session, falling back to `/today` after cold start or
+  reload.
+- On Android, hardware back from Settings subpages such as Categories, Security, Data and privacy,
+  Support, and Settings legal-document routes returns to `/settings`.
+- On Android, switching between `/today`, `/week`, and `/items` from bottom navigation does not add
+  browser-history entries. Web/browser navigation keeps normal browser history behavior.
+- Bottom sheets and dialogs dismiss through explicit close, system back, or scrim tap unless a form
+  has entered meaningful unsaved content.
+- Open sheets, dialogs, selects, and menu-like transient layers consume Android hardware back before
+  route navigation. Dirty forms must block or show the existing discard confirmation instead of
+  silently losing edits.
 - Preference sheets have no unsaved state because selections apply immediately.
 - Destructive dialogs return focus to the invoking control after dismissal.
 - Loading, empty, error, and offline states must be localized.
