@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  hasRevenueCatWebhookVerifier,
-  verifyRevenueCatWebhookRequest,
-} from './revenuecatWebhookSecurity'
+import { verifyRevenueCatWebhookRequest } from './revenuecatWebhookSecurity'
 
 const toHex = (buffer: ArrayBuffer) =>
   [...new Uint8Array(buffer)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
@@ -30,37 +27,13 @@ const createSignatureHeader = async ({
 }
 
 describe('RevenueCat webhook security', () => {
-  it('fails closed when no webhook verifier is configured', async () => {
-    const secrets = { authorization: null, signingSecret: null }
+  it('fails closed when no webhook signing secret is configured', async () => {
+    const secrets = { signingSecret: null }
 
-    expect(hasRevenueCatWebhookVerifier(secrets)).toBe(false)
     await expect(
       verifyRevenueCatWebhookRequest({
-        authorizationHeader: null,
         rawBody: '{}',
         secrets,
-        signatureHeader: null,
-      }),
-    ).resolves.toBe(false)
-  })
-
-  it('accepts the configured authorization header when no signing secret is configured', async () => {
-    await expect(
-      verifyRevenueCatWebhookRequest({
-        authorizationHeader: 'Bearer webhook-secret',
-        rawBody: '{}',
-        secrets: { authorization: 'Bearer webhook-secret', signingSecret: null },
-        signatureHeader: null,
-      }),
-    ).resolves.toBe(true)
-  })
-
-  it('rejects a missing or mismatched authorization header', async () => {
-    await expect(
-      verifyRevenueCatWebhookRequest({
-        authorizationHeader: 'Bearer wrong-secret',
-        rawBody: '{}',
-        secrets: { authorization: 'Bearer webhook-secret', signingSecret: null },
         signatureHeader: null,
       }),
     ).resolves.toBe(false)
@@ -78,15 +51,14 @@ describe('RevenueCat webhook security', () => {
 
     await expect(
       verifyRevenueCatWebhookRequest({
-        authorizationHeader: null,
         rawBody,
-        secrets: { authorization: null, signingSecret },
+        secrets: { signingSecret },
         signatureHeader,
       }),
     ).resolves.toBe(true)
   })
 
-  it('requires both configured verifiers when authorization and signing secret are configured', async () => {
+  it('does not require an authorization header when the signature is valid', async () => {
     const rawBody = '{"event":{"id":"event-1"}}'
     const signingSecret = 'revenuecat-signing-secret'
     const timestamp = Math.floor(Date.now() / 1000)
@@ -98,18 +70,8 @@ describe('RevenueCat webhook security', () => {
 
     await expect(
       verifyRevenueCatWebhookRequest({
-        authorizationHeader: null,
         rawBody,
-        secrets: { authorization: 'Bearer webhook-secret', signingSecret },
-        signatureHeader,
-      }),
-    ).resolves.toBe(false)
-
-    await expect(
-      verifyRevenueCatWebhookRequest({
-        authorizationHeader: 'Bearer webhook-secret',
-        rawBody,
-        secrets: { authorization: 'Bearer webhook-secret', signingSecret },
+        secrets: { signingSecret },
         signatureHeader,
       }),
     ).resolves.toBe(true)

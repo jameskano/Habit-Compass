@@ -1,5 +1,4 @@
 export type RevenueCatWebhookSecrets = {
-  authorization: string | null
   signingSecret: string | null
 }
 
@@ -27,11 +26,6 @@ const parseSignatureHeader = (header: string) =>
       .map((part) => part.trim().split('='))
       .filter((parts): parts is [string, string] => parts.length === 2),
   )
-
-export const hasRevenueCatWebhookVerifier = ({
-  authorization,
-  signingSecret,
-}: RevenueCatWebhookSecrets) => Boolean(authorization || signingSecret)
 
 export const verifyRevenueCatSignature = async (
   rawBody: string,
@@ -71,27 +65,13 @@ export const verifyRevenueCatSignature = async (
 }
 
 export const verifyRevenueCatWebhookRequest = async ({
-  authorizationHeader,
   rawBody,
   secrets,
   signatureHeader,
 }: {
-  authorizationHeader: string | null
   rawBody: string
   secrets: RevenueCatWebhookSecrets
   signatureHeader: string | null
 }) => {
-  if (!hasRevenueCatWebhookVerifier(secrets)) {
-    return false
-  }
-
-  if (secrets.authorization && authorizationHeader !== secrets.authorization) {
-    return false
-  }
-
-  if (secrets.signingSecret) {
-    return verifyRevenueCatSignature(rawBody, signatureHeader, secrets.signingSecret)
-  }
-
-  return true
+  return verifyRevenueCatSignature(rawBody, signatureHeader, secrets.signingSecret)
 }

@@ -60,10 +60,8 @@ Deno.serve(async (request) => {
   try {
     const rawBody = await request.text()
     const webhookValid = await verifyRevenueCatWebhookRequest({
-      authorizationHeader: request.headers.get('Authorization'),
       rawBody,
       secrets: {
-        authorization: Deno.env.get('REVENUECAT_WEBHOOK_AUTHORIZATION'),
         signingSecret: Deno.env.get('REVENUECAT_WEBHOOK_SIGNING_SECRET'),
       },
       signatureHeader: request.headers.get('X-RevenueCat-Webhook-Signature'),
