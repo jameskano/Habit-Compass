@@ -3,14 +3,44 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   type ComponentPropsWithoutRef,
   type ElementRef,
+  type Ref,
+  createContext,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from 'react'
 
-import { registerOpenSelectCloser } from '@/shared/ui/selectOpenRegistry'
+import {
+  consumeSelectCloseAutoFocusPrevention,
+  openSelectTriggerAtPoint,
+  registerOpenSelectCloser,
+  registerSelectTrigger,
+} from '@/shared/ui/selectOpenRegistry'
 import { cn } from '@/shared/utils/cn'
+
+type SelectContextValue = {
+  open: () => void
+  triggerRef: React.MutableRefObject<ElementRef<typeof SelectPrimitive.Trigger> | null>
+}
+
+const SelectContext = createContext<SelectContextValue | null>(null)
+
+const setRef = <T,>(ref: Ref<T> | undefined, value: T | null) => {
+  if (!ref) {
+    return
+  }
+
+  if (typeof ref === 'function') {
+    ref(value)
+    return
+  }
+
+  ref.current = value
+}
 
 const Select = ({
   defaultOpen,
@@ -19,6 +49,7 @@ const Select = ({
   ...props
 }: ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => {
   const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false)
+  const triggerRef = useRef<ElementRef<typeof SelectPrimitive.Trigger> | null>(null)
   const resolvedOpen = open ?? internalOpen
   const setOpen = useCallback(
     (nextOpen: boolean) => {
@@ -29,7 +60,12 @@ const Select = ({
     },
     [onOpenChange, open],
   )
+  const openSelect = useCallback(() => setOpen(true), [setOpen])
   const close = useCallback(() => setOpen(false), [setOpen])
+  const selectContextValue = useMemo(
+    () => ({ open: openSelect, triggerRef }),
+    [openSelect, triggerRef],
+  )
 
   useEffect(() => {
     if (!resolvedOpen) {
@@ -39,7 +75,11 @@ const Select = ({
     return registerOpenSelectCloser(close)
   }, [close, resolvedOpen])
 
-  return <SelectPrimitive.Root {...props} open={resolvedOpen} onOpenChange={setOpen} />
+  return (
+    <SelectContext.Provider value={selectContextValue}>
+      <SelectPrimitive.Root {...props} open={resolvedOpen} onOpenChange={setOpen} />
+    </SelectContext.Provider>
+  )
 }
 
 const SelectGroup = SelectPrimitive.Group
@@ -48,21 +88,50 @@ const SelectValue = SelectPrimitive.Value
 const SelectTrigger = forwardRef<
   ElementRef<typeof SelectPrimitive.Trigger>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      'flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
-      className,
-    )}
-    {...props}
-  >
-    {children}
-    <SelectPrimitive.Icon asChild>
-      <ChevronDown aria-hidden="true" size={16} />
-    </SelectPrimitive.Icon>
-  </SelectPrimitive.Trigger>
-))
+>(({ className, children, ...props }, ref) => {
+  const selectContext = useContext(SelectContext)
+  const [triggerElement, setTriggerElement] = useState<ElementRef<
+    typeof SelectPrimitive.Trigger
+  > | null>(null)
+  const setTriggerRef = useCallback(
+    (element: ElementRef<typeof SelectPrimitive.Trigger> | null) => {
+      setTriggerElement(element)
+      setRef(ref, element)
+
+      if (selectContext) {
+        selectContext.triggerRef.current = element
+      }
+    },
+    [ref, selectContext],
+  )
+
+  useEffect(() => {
+    if (!selectContext || !triggerElement) {
+      return
+    }
+
+    return registerSelectTrigger({
+      element: triggerElement,
+      open: selectContext.open,
+    })
+  }, [selectContext, triggerElement])
+
+  return (
+    <SelectPrimitive.Trigger
+      ref={setTriggerRef}
+      className={cn(
+        'flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown aria-hidden="true" size={16} />
+      </SelectPrimitive.Icon>
+    </SelectPrimitive.Trigger>
+  )
+})
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
 
 const SelectScrollUpButton = forwardRef<
@@ -96,33 +165,68 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 const SelectContent = forwardRef<
   ElementRef<typeof SelectPrimitive.Content>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = 'popper', ...props }, ref) => (
-  <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
-      ref={ref}
-      className={cn(
-        'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-md border border-border bg-background text-foreground shadow-md',
-        position === 'popper' &&
-          'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
-        className,
-      )}
-      position={position}
-      {...props}
-    >
-      <SelectScrollUpButton />
-      <SelectPrimitive.Viewport
-        className={cn(
-          'p-1',
-          position === 'popper' &&
-            'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
-        )}
-      >
-        {children}
-      </SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-))
+>(
+  (
+    { className, children, onCloseAutoFocus, onPointerDownOutside, position = 'popper', ...props },
+    ref,
+  ) => {
+    const selectContext = useContext(SelectContext)
+
+    return (
+      <SelectPrimitive.Portal>
+        <SelectPrimitive.Content
+          ref={ref}
+          className={cn(
+            'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-md border border-border bg-background text-foreground shadow-md',
+            position === 'popper' &&
+              'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+            className,
+          )}
+          onCloseAutoFocus={(event) => {
+            onCloseAutoFocus?.(event)
+
+            if (!event.defaultPrevented && consumeSelectCloseAutoFocusPrevention()) {
+              event.preventDefault()
+            }
+          }}
+          onPointerDownOutside={(event) => {
+            onPointerDownOutside?.(event)
+
+            if (event.defaultPrevented || !selectContext) {
+              return
+            }
+
+            const originalEvent = event.detail.originalEvent
+
+            if (
+              openSelectTriggerAtPoint(
+                originalEvent.clientX,
+                originalEvent.clientY,
+                selectContext.triggerRef.current,
+              )
+            ) {
+              event.preventDefault()
+            }
+          }}
+          position={position}
+          {...props}
+        >
+          <SelectScrollUpButton />
+          <SelectPrimitive.Viewport
+            className={cn(
+              'p-1',
+              position === 'popper' &&
+                'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+            )}
+          >
+            {children}
+          </SelectPrimitive.Viewport>
+          <SelectScrollDownButton />
+        </SelectPrimitive.Content>
+      </SelectPrimitive.Portal>
+    )
+  },
+)
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectItem = forwardRef<

@@ -5,6 +5,7 @@ import {
   getRevenueCatApiBaseUrl,
   loadRevenueCatCustomer,
 } from '../_shared/revenuecat.ts'
+import { resolveRevenueCatSupabaseUserId } from '../_shared/revenuecatWebhookIdentity.ts'
 import { verifyRevenueCatWebhookRequest } from '../_shared/revenuecatWebhookSecurity.ts'
 
 const corsHeaders = {
@@ -19,6 +20,7 @@ type RevenueCatEvent = {
   app_user_id?: string
   environment?: string
   id?: string
+  original_app_user_id?: string
   type?: string
 }
 
@@ -39,8 +41,6 @@ const getRequiredEnv = (key: string) => {
   }
   return value
 }
-
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const getErrorStatus = (error: unknown) => {
   return typeof error === 'object' && error !== null && 'status' in error
@@ -73,19 +73,22 @@ Deno.serve(async (request) => {
 
     const body = JSON.parse(rawBody) as RevenueCatWebhookBody
     const event = body.event
-    const appUserId = event?.app_user_id
     const eventId = event?.id
     const eventType = event?.type
 
-    if (!appUserId || !eventId || !eventType) {
+    if (!event || !eventId || !eventType) {
       return jsonResponse({ error: 'Invalid RevenueCat event.' }, 400)
     }
 
-    if (!uuidPattern.test(appUserId)) {
-      return jsonResponse({ error: 'Invalid RevenueCat App User ID.' }, 400)
+    const userId = resolveRevenueCatSupabaseUserId(event)
+    if (!userId) {
+      console.warn('RevenueCat webhook ignored: no Supabase UUID identity found.', {
+        eventId,
+        eventType,
+      })
+      return jsonResponse({ ignored: true, processed: true, reason: 'unresolved_app_user_id' })
     }
 
-    const userId = appUserId
     const supabaseUrl = getRequiredEnv('SUPABASE_URL')
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
     const revenueCatSecretKey = getRequiredEnv('REVENUECAT_SECRET_API_KEY')
@@ -109,7 +112,7 @@ Deno.serve(async (request) => {
 
     const { error: eventError } = await serviceClient.from('revenuecat_webhook_events').upsert(
       {
-        app_user_id: appUserId,
+        app_user_id: event.app_user_id?.trim() || userId,
         environment: event.environment ?? null,
         event_type: eventType,
         id: eventId,
