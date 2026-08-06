@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   buildEntitlementRow,
+  buildEntitlementRowFromWebhookEvent,
   buildRevenueCatCancellationUrl,
   buildRevenueCatSubscriberUrl,
   cancelGooglePlayRenewal,
@@ -130,5 +131,44 @@ describe('RevenueCat server contract helpers', () => {
       user_id: userId,
       will_renew: true,
     })
+  })
+
+  it('maps the premium entitlement mirror from a signed RevenueCat webhook event', () => {
+    const row = buildEntitlementRowFromWebhookEvent(
+      userId,
+      {
+        entitlement_ids: [premiumEntitlementId],
+        environment: 'SANDBOX',
+        expiration_at_ms: Date.parse('2099-01-01T00:00:00Z'),
+        product_id: 'monthly_initial_01',
+        store: 'TEST_STORE',
+        type: 'RENEWAL',
+      },
+      '2026-07-20T00:00:00.000Z',
+    )
+
+    expect(row).toEqual({
+      entitlement_id: premiumEntitlementId,
+      environment: 'SANDBOX',
+      expiration_at: '2099-01-01T00:00:00.000Z',
+      has_active_entitlement: true,
+      management_url: null,
+      product_id: 'monthly_initial_01',
+      store: 'TEST_STORE',
+      synced_at: '2026-07-20T00:00:00.000Z',
+      updated_at: '2026-07-20T00:00:00.000Z',
+      user_id: userId,
+      will_renew: true,
+    })
+  })
+
+  it('ignores webhook events that do not mention the premium entitlement', () => {
+    expect(
+      buildEntitlementRowFromWebhookEvent(userId, {
+        entitlement_ids: null,
+        product_id: 'monthly_initial_01',
+        type: 'RENEWAL',
+      }),
+    ).toBeNull()
   })
 })

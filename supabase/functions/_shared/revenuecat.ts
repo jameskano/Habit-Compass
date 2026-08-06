@@ -22,6 +22,16 @@ export type RevenueCatSubscriberResponse = {
   }
 }
 
+export type RevenueCatEntitlementWebhookEvent = {
+  entitlement_id?: string | null
+  entitlement_ids?: string[] | null
+  environment?: string | null
+  expiration_at_ms?: number | null
+  product_id?: string | null
+  store?: string | null
+  type?: string | null
+}
+
 export type RevenueCatEntitlementRow = {
   entitlement_id: string
   environment: string | null
@@ -179,4 +189,51 @@ export const buildEntitlementRow = (
     user_id: userId,
     will_renew: subscription ? !subscription.unsubscribe_detected_at : null,
   }
+}
+
+const nonRenewingEventTypes = new Set([
+  'BILLING_ISSUE',
+  'CANCELLATION',
+  'EXPIRATION',
+  'PRODUCT_CHANGE',
+  'REFUND',
+])
+
+const getWebhookEntitlementIds = (event: RevenueCatEntitlementWebhookEvent) => [
+  ...(event.entitlement_ids ?? []),
+  ...(event.entitlement_id ? [event.entitlement_id] : []),
+]
+
+const formatRevenueCatTimestamp = (timestampMs: number | null | undefined) =>
+  typeof timestampMs === 'number' && Number.isFinite(timestampMs)
+    ? new Date(timestampMs).toISOString()
+    : null
+
+export const buildEntitlementRowFromWebhookEvent = (
+  userId: string,
+  event: RevenueCatEntitlementWebhookEvent,
+  syncedAt = new Date().toISOString(),
+) => {
+  const entitlementIds = getWebhookEntitlementIds(event)
+  if (!entitlementIds.includes(premiumEntitlementId)) {
+    return null
+  }
+
+  const expirationAt = formatRevenueCatTimestamp(event.expiration_at_ms)
+  const hasActiveEntitlement = isActiveExpiration(expirationAt)
+  const eventType = event.type ?? null
+
+  return {
+    entitlement_id: premiumEntitlementId,
+    environment: event.environment ?? null,
+    expiration_at: expirationAt,
+    has_active_entitlement: hasActiveEntitlement,
+    management_url: null,
+    product_id: event.product_id ?? null,
+    store: event.store ?? null,
+    synced_at: syncedAt,
+    updated_at: syncedAt,
+    user_id: userId,
+    will_renew: hasActiveEntitlement ? !nonRenewingEventTypes.has(eventType ?? '') : false,
+  } satisfies RevenueCatEntitlementRow
 }

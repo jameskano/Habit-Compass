@@ -3,6 +3,8 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   type ComponentPropsWithoutRef,
   type ElementRef,
+  type MouseEvent,
+  type PointerEvent,
   type Ref,
   createContext,
   forwardRef,
@@ -28,6 +30,37 @@ type SelectContextValue = {
 }
 
 const SelectContext = createContext<SelectContextValue | null>(null)
+
+const editableInputTypes = new Set([
+  'date',
+  'datetime-local',
+  'email',
+  'month',
+  'number',
+  'password',
+  'search',
+  'tel',
+  'text',
+  'time',
+  'url',
+  'week',
+])
+
+const isEditableElement = (element: Element | null): element is HTMLElement => {
+  if (!element || !(element instanceof HTMLElement)) {
+    return false
+  }
+
+  if (element instanceof HTMLTextAreaElement) {
+    return !element.disabled && !element.readOnly
+  }
+
+  if (element instanceof HTMLInputElement) {
+    return !element.disabled && !element.readOnly && editableInputTypes.has(element.type)
+  }
+
+  return element.isContentEditable
+}
 
 const setRef = <T,>(ref: Ref<T> | undefined, value: T | null) => {
   if (!ref) {
@@ -88,8 +121,11 @@ const SelectValue = SelectPrimitive.Value
 const SelectTrigger = forwardRef<
   ElementRef<typeof SelectPrimitive.Trigger>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, onClick, onPointerDown, ...props }, ref) => {
   const selectContext = useContext(SelectContext)
+  const delayedOpenCleanupRef = useRef<(() => void) | null>(null)
+  const lastPointerTypeRef = useRef<string | null>(null)
+  const pointerDownEditableRef = useRef<HTMLElement | null>(null)
   const [triggerElement, setTriggerElement] = useState<ElementRef<
     typeof SelectPrimitive.Trigger
   > | null>(null)
@@ -116,6 +152,112 @@ const SelectTrigger = forwardRef<
     })
   }, [selectContext, triggerElement])
 
+  useEffect(() => {
+    return () => {
+      delayedOpenCleanupRef.current?.()
+    }
+  }, [])
+
+  const scheduleOpenAfterViewportSettles = useCallback(
+    (editableElement: HTMLElement) => {
+      if (!selectContext || !triggerElement) {
+        return
+      }
+
+      editableElement.blur()
+      delayedOpenCleanupRef.current?.()
+
+      const visualViewport = window.visualViewport
+      let settledTimeout: number | null = null
+      let fallbackTimeout: number | null = null
+      let cancelled = false
+
+      const clearPendingTimeouts = () => {
+        if (settledTimeout !== null) {
+          window.clearTimeout(settledTimeout)
+        }
+
+        if (fallbackTimeout !== null) {
+          window.clearTimeout(fallbackTimeout)
+        }
+      }
+
+      const cleanup = () => {
+        cancelled = true
+        clearPendingTimeouts()
+        visualViewport?.removeEventListener('resize', queueOpen)
+      }
+
+      const openAfterKeyboardDismiss = () => {
+        if (cancelled) {
+          return
+        }
+
+        clearPendingTimeouts()
+        visualViewport?.removeEventListener('resize', queueOpen)
+        delayedOpenCleanupRef.current = null
+
+        window.requestAnimationFrame(() => {
+          triggerElement.focus({ preventScroll: true })
+          selectContext.open()
+        })
+      }
+
+      const queueOpen = () => {
+        if (settledTimeout !== null) {
+          window.clearTimeout(settledTimeout)
+        }
+
+        settledTimeout = window.setTimeout(openAfterKeyboardDismiss, 120)
+      }
+
+      if (!visualViewport) {
+        settledTimeout = window.setTimeout(openAfterKeyboardDismiss, 180)
+        delayedOpenCleanupRef.current = cleanup
+        return
+      }
+
+      visualViewport.addEventListener('resize', queueOpen)
+      queueOpen()
+      fallbackTimeout = window.setTimeout(openAfterKeyboardDismiss, 500)
+      delayedOpenCleanupRef.current = cleanup
+    },
+    [selectContext, triggerElement],
+  )
+
+  const shouldDelayTouchOpen = () =>
+    lastPointerTypeRef.current !== null &&
+    lastPointerTypeRef.current !== 'mouse' &&
+    pointerDownEditableRef.current !== null
+
+  const handlePointerDown = (event: PointerEvent<ElementRef<typeof SelectPrimitive.Trigger>>) => {
+    lastPointerTypeRef.current = event.pointerType
+    const activeElement = document.activeElement
+    pointerDownEditableRef.current =
+      isEditableElement(activeElement) && !event.currentTarget.contains(activeElement)
+        ? activeElement
+        : null
+
+    onPointerDown?.(event)
+  }
+
+  const handleClick = (event: MouseEvent<ElementRef<typeof SelectPrimitive.Trigger>>) => {
+    onClick?.(event)
+
+    if (event.defaultPrevented || !shouldDelayTouchOpen()) {
+      return
+    }
+
+    event.preventDefault()
+
+    const editableElement = pointerDownEditableRef.current
+    pointerDownEditableRef.current = null
+
+    if (editableElement) {
+      scheduleOpenAfterViewportSettles(editableElement)
+    }
+  }
+
   return (
     <SelectPrimitive.Trigger
       ref={setTriggerRef}
@@ -123,6 +265,8 @@ const SelectTrigger = forwardRef<
         'flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
         className,
       )}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
       {...props}
     >
       {children}

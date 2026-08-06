@@ -2,6 +2,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import {
   buildEntitlementRow,
+  buildEntitlementRowFromWebhookEvent,
   getRevenueCatApiBaseUrl,
   loadRevenueCatCustomer,
 } from '../_shared/revenuecat.ts'
@@ -18,9 +19,14 @@ const corsHeaders = {
 type RevenueCatEvent = {
   aliases?: string[]
   app_user_id?: string
+  entitlement_id?: string | null
+  entitlement_ids?: string[] | null
   environment?: string
+  expiration_at_ms?: number | null
   id?: string
   original_app_user_id?: string
+  product_id?: string | null
+  store?: string | null
   type?: string
 }
 
@@ -125,13 +131,27 @@ Deno.serve(async (request) => {
       throw eventError
     }
 
-    const customer = await loadRevenueCatCustomer(
-      fetch,
-      revenueCatApiBaseUrl,
-      revenueCatSecretKey,
-      userId,
-    )
-    const row = buildEntitlementRow(userId, customer, event.environment ?? null)
+    let row
+    try {
+      const customer = await loadRevenueCatCustomer(
+        fetch,
+        revenueCatApiBaseUrl,
+        revenueCatSecretKey,
+        userId,
+      )
+      row = buildEntitlementRow(userId, customer, event.environment ?? null)
+    } catch (error) {
+      row = buildEntitlementRowFromWebhookEvent(userId, event)
+      if (!row) {
+        throw error
+      }
+
+      console.warn('RevenueCat customer lookup failed; synced entitlement from webhook event.', {
+        eventId,
+        eventType,
+      })
+    }
+
     const { error: entitlementError } = await serviceClient
       .from('subscription_entitlements')
       .upsert(row, { onConflict: 'user_id,entitlement_id' })
