@@ -71,10 +71,8 @@ export const createHabitLog = (overrides: HabitLogFixtureOverrides = {}): HabitL
     loggedAt: '2026-05-21T08:00:00.000Z',
     status: 'completed',
     completionLevel: null,
-    repetitions: null,
-    durationMinutes: null,
-    quantity: null,
-    quantityUnitLabel: null,
+    amount: null,
+    unitLabel: null,
     notes: null,
     ...overrides,
   }

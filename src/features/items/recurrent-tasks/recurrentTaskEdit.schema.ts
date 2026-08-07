@@ -20,7 +20,6 @@ export const RecurrentTaskEditValuesSchema = z
     customDescription: z.string(),
     categoryId: z.string(),
     priority: z.enum(itemPriorities),
-    carryForward: z.boolean(),
     description: z.string(),
     notes: z.string(),
     startsOn: z.string().min(1),

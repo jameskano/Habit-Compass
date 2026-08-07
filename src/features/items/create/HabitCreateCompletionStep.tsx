@@ -4,16 +4,11 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { CREATE_ITEM_INPUT_CLASS } from './createItem.constants'
-import type {
-  HabitCompletionMode,
-  HabitMeasurableKind,
-  HabitMeasurementScope,
-} from './createItem.types'
+import type { HabitCompletionMode, HabitMeasurementScope } from './createItem.types'
 import { PeriodSelect } from './PeriodSelect'
 
 type HabitCreateCompletionStepProps = {
   completionMode: HabitCompletionMode
-  measurableKind: HabitMeasurableKind
   scope: HabitMeasurementScope
   period: 'day' | 'week' | 'month' | 'year'
   standardText: string
@@ -22,7 +17,6 @@ type HabitCreateCompletionStepProps = {
   minimumAmount: number | ''
   unitLabel: string
   onCompletionModeChange: (value: HabitCompletionMode) => void
-  onMeasurableKindChange: (value: HabitMeasurableKind) => void
   onScopeChange: (value: HabitMeasurementScope) => void
   onPeriodChange: (value: 'day' | 'week' | 'month' | 'year') => void
   onStandardTextChange: (value: string) => void
@@ -34,11 +28,9 @@ type HabitCreateCompletionStepProps = {
 
 export const HabitCreateCompletionStep = ({
   completionMode,
-  measurableKind,
   minimumAmount,
   minimumText,
   onCompletionModeChange,
-  onMeasurableKindChange,
   onMinimumAmountChange,
   onMinimumTextChange,
   onPeriodChange,
@@ -97,25 +89,6 @@ export const HabitCreateCompletionStep = ({
       ) : (
         <>
           <label className="text-sm font-medium">
-            {intl.formatMessage({ id: 'page.items.create.habit.measureKind' })}
-            <Select
-              value={measurableKind}
-              onValueChange={(value) => onMeasurableKindChange(value as HabitMeasurableKind)}
-            >
-              <SelectTrigger className={CREATE_ITEM_INPUT_CLASS}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="quantity">
-                  {intl.formatMessage({ id: 'page.items.create.habit.quantity' })}
-                </SelectItem>
-                <SelectItem value="time">
-                  {intl.formatMessage({ id: 'page.items.create.habit.time' })}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="text-sm font-medium">
             {intl.formatMessage({ id: 'page.items.create.habit.scope' })}
             <Select
               value={scope}
@@ -159,16 +132,14 @@ export const HabitCreateCompletionStep = ({
               className={CREATE_ITEM_INPUT_CLASS}
             />
           </label>
-          {measurableKind === 'quantity' ? (
-            <label className="text-sm font-medium">
-              {intl.formatMessage({ id: 'page.items.create.habit.unit' })}
-              <Input
-                value={unitLabel}
-                onChange={(event) => onUnitLabelChange(event.target.value)}
-                className={CREATE_ITEM_INPUT_CLASS}
-              />
-            </label>
-          ) : null}
+          <label className="text-sm font-medium">
+            {intl.formatMessage({ id: 'page.items.create.habit.unit' })}
+            <Input
+              value={unitLabel}
+              onChange={(event) => onUnitLabelChange(event.target.value)}
+              className={CREATE_ITEM_INPUT_CLASS}
+            />
+          </label>
         </>
       )}
     </section>

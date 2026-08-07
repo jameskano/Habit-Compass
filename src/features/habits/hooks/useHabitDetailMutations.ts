@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { formatISO } from 'date-fns'
 
 import type { CreateHabitInput, Habit, UpdateHabitInput } from '@/domain/habits'
 import { habitsRepository } from '@/integrations/repositories'
@@ -6,6 +7,8 @@ import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
+
+const todayAsISODate = () => formatISO(new Date(), { representation: 'date' }) as ISODateString
 
 const applyOptimisticHabitOrder = (
   habits: Habit[] | undefined,
@@ -72,9 +75,19 @@ export const useResetHabitProgressMutation = (userId = MOCK_USER_ID) => {
 
   return useMutation({
     mutationFn: async (habitId: EntityId) =>
-      unwrapResult(await habitsRepository.hardResetLogs({ userId, habitId, confirmed: true })),
+      unwrapResult(
+        await habitsRepository.hardResetLogs({
+          userId,
+          habitId,
+          confirmed: true,
+          resetDate: todayAsISODate(),
+        }),
+      ),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['habits', userId] }),
+        queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] }),
+      ])
     },
     onError: mutationError,
   })

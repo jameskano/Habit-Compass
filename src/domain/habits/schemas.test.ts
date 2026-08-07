@@ -35,9 +35,10 @@ describe('HabitGoalConfigSchema', () => {
     ).toBe(true)
     expect(
       HabitGoalConfigSchema.safeParse({
-        trackingType: 'timePerSession',
-        targetMinutes: 20,
-        minimumMinutes: 20,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        minimumAmount: 20,
+        unitLabel: 'minutes',
       }).success,
     ).toBe(true)
   })
@@ -60,16 +61,17 @@ describe('HabitGoalConfigSchema', () => {
   it('rejects zero and negative numeric minimum targets', () => {
     expect(
       HabitGoalConfigSchema.safeParse({
-        trackingType: 'timePerSession',
-        targetMinutes: 20,
-        minimumMinutes: 0,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        minimumAmount: 0,
+        unitLabel: 'minutes',
       }).success,
     ).toBe(false)
     expect(
       HabitGoalConfigSchema.safeParse({
-        trackingType: 'quantityPerSession',
-        targetQuantity: 20,
-        minimumQuantity: -1,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        minimumAmount: -1,
         unitLabel: 'pages',
       }).success,
     ).toBe(false)

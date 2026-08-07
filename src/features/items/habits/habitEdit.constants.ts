@@ -6,7 +6,5 @@ export const NO_HABIT_CATEGORY_VALUE = '__none__'
 
 export const PERIOD_BASED_TRACKING_TYPES = new Set<HabitTrackingType>([
   'timesPerPeriod',
-  'repetitionsPerPeriod',
-  'totalTimePerPeriod',
-  'totalQuantityPerPeriod',
+  'totalMeasurablePerPeriod',
 ])

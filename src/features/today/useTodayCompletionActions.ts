@@ -125,7 +125,7 @@ export const useTodayCompletionActions = (input: UseTodayCompletionActionsInput)
         logDate: selectedDate,
         status: 'completed',
         value: amount,
-        unit: metadata.unit,
+        unitLabel: metadata.unitLabel,
       },
       { onSuccess },
     )

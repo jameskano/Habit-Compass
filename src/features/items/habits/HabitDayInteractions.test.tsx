@@ -98,7 +98,7 @@ describe('habit day Items interactions', () => {
       loggedForDate: mockData.today,
       status: 'skipped',
       completionLevel: null,
-      durationMinutes: null,
+      amount: null,
     })
     view.rerender(
       <AppProviders>
@@ -196,7 +196,7 @@ describe('habit day Items interactions', () => {
     await user.click(screen.getByRole('button', { name: 'Save amount' }))
     await waitFor(() => {
       expect(
-        getLogs(habit.id).find((log) => log.loggedForDate === mockData.today)?.durationMinutes,
+        getLogs(habit.id).find((log) => log.loggedForDate === mockData.today)?.amount,
       ).toBe(45)
     })
 
@@ -232,8 +232,8 @@ describe('habit day Items interactions', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((item) => item.textContent),
-    ).toEqual(['Input quantity/time', 'Skip day', 'Clear log'])
-    await user.click(within(menu).getByRole('menuitem', { name: 'Input quantity/time' }))
+    ).toEqual(['Enter amount', 'Skip day', 'Clear log'])
+    await user.click(within(menu).getByRole('menuitem', { name: 'Enter amount' }))
     const input = screen.getByLabelText('Amount')
     await user.clear(input)
     await user.type(input, '-1')

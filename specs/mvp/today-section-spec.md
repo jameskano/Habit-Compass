@@ -49,6 +49,10 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 - Today list cards use the same initial waterfall reveal as Items lists.
 - Habits show a small `Habit` chip. Tasks and recurrent tasks do not show type chips.
 - Tapping the card body and tapping the completion control run the same primary action.
+- Long item titles on Today cards and Today action sheets use single-line truncation with an ellipsis.
+  The full item title remains available through accessible names and the visible title's browser
+  tooltip.
+- Today cards and their reorder handles must stay inside the available viewport width.
 
 ## Completion Rules
 

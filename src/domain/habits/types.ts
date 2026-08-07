@@ -50,46 +50,25 @@ export type TimesPerPeriodGoalConfig = HabitFrequencyConfig & {
   minimumCount?: number
 }
 
-export type RepetitionsPerPeriodGoalConfig = HabitFrequencyConfig & {
-  trackingType: 'repetitionsPerPeriod'
-  targetRepetitions: number
-  minimumRepetitions?: number
-}
-
-export type TimePerSessionGoalConfig = {
-  trackingType: 'timePerSession'
-  targetMinutes: number
-  minimumMinutes?: number
-}
-
-export type TotalTimePerPeriodGoalConfig = HabitFrequencyConfig & {
-  trackingType: 'totalTimePerPeriod'
-  targetMinutes: number
-  minimumMinutes?: number
-}
-
-export type QuantityPerSessionGoalConfig = {
-  trackingType: 'quantityPerSession'
-  targetQuantity: number
-  minimumQuantity?: number
+export type MeasurablePerSessionGoalConfig = {
+  trackingType: 'measurablePerSession'
+  targetAmount: number
+  minimumAmount?: number
   unitLabel: string
 }
 
-export type TotalQuantityPerPeriodGoalConfig = HabitFrequencyConfig & {
-  trackingType: 'totalQuantityPerPeriod'
-  targetQuantity: number
-  minimumQuantity?: number
+export type TotalMeasurablePerPeriodGoalConfig = HabitFrequencyConfig & {
+  trackingType: 'totalMeasurablePerPeriod'
+  targetAmount: number
+  minimumAmount?: number
   unitLabel: string
 }
 
 export type HabitGoalConfig =
   | BinaryHabitGoalConfig
   | TimesPerPeriodGoalConfig
-  | RepetitionsPerPeriodGoalConfig
-  | TimePerSessionGoalConfig
-  | TotalTimePerPeriodGoalConfig
-  | QuantityPerSessionGoalConfig
-  | TotalQuantityPerPeriodGoalConfig
+  | MeasurablePerSessionGoalConfig
+  | TotalMeasurablePerPeriodGoalConfig
 
 export type DailyHabitScheduleRule = {
   kind: 'daily'
@@ -173,9 +152,7 @@ export type HabitLog = ItemEntityFields & {
   loggedAt: ISODateTimeString
   status: HabitLogStatus
   completionLevel?: HabitCompletionLevel | null
-  repetitions?: number | null
-  durationMinutes?: number | null
-  quantity?: number | null
-  quantityUnitLabel?: string | null
+  amount?: number | null
+  unitLabel?: string | null
   notes?: string | null
 }

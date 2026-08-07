@@ -1,4 +1,4 @@
-import type { Task, TasksRepository } from '@/domain/tasks'
+import { shouldAutoArchiveCompletedTask, type Task, type TasksRepository } from '@/domain/tasks'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 
@@ -146,7 +146,7 @@ export const supabaseTasksRepository: TasksRepository = {
     })
   },
 
-  async setCompletionStatus({ taskId, status }) {
+  async setCompletionStatus({ taskId, status, today }) {
     return execute(async () => {
       const { data, error } = await getSupabaseClient()
         .from('tasks')
@@ -160,7 +160,44 @@ export const supabaseTasksRepository: TasksRepository = {
 
       if (error) return err(toSupabaseError('Could not update task completion.', error))
       if (!data) return err(createNotFoundError('Task', taskId))
-      return ok(mapTask(data as TaskRow))
+      const task = mapTask(data as TaskRow)
+      if (status !== 'completed' || !shouldAutoArchiveCompletedTask(task, today)) {
+        return ok(task)
+      }
+
+      const archivedAt = new Date().toISOString()
+      const archived = await getSupabaseClient()
+        .from('tasks')
+        .update({ archived_at: archivedAt, updated_at: archivedAt })
+        .eq('id', taskId)
+        .select('*')
+        .maybeSingle()
+
+      if (archived.error) {
+        return err(toSupabaseError('Could not archive completed past-due task.', archived.error))
+      }
+      if (!archived.data) return err(createNotFoundError('Task', taskId))
+      return ok(mapTask(archived.data as TaskRow))
+    })
+  },
+
+  async archiveCompletedPastDue({ today }) {
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
+
+      const archivedAt = new Date().toISOString()
+      const { data, error } = await getSupabaseClient()
+        .from('tasks')
+        .update({ archived_at: archivedAt, updated_at: archivedAt })
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .eq('status', 'completed')
+        .lt('due_date', today)
+        .select('*')
+
+      if (error) return err(toSupabaseError('Could not archive completed past-due tasks.', error))
+      return ok((data as TaskRow[]).map(mapTask))
     })
   },
 

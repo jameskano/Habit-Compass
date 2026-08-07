@@ -43,14 +43,12 @@ export const RecurrentTaskCreate = ({ onClose, onLimitReached }: CreateDialogPro
             description={recurrentTaskCreate.description}
             startsOn={recurrentTaskCreate.startsOn}
             endsOn={recurrentTaskCreate.endsOn}
-            carryForward={recurrentTaskCreate.carryForward}
             onTitleChange={recurrentTaskCreate.setTitle}
             onCategoryIdChange={recurrentTaskCreate.setCategoryId}
             onPriorityChange={recurrentTaskCreate.setPriority}
             onDescriptionChange={recurrentTaskCreate.setDescription}
             onStartsOnChange={recurrentTaskCreate.setStartsOn}
             onEndsOnChange={recurrentTaskCreate.setEndsOn}
-            onCarryForwardChange={recurrentTaskCreate.setCarryForward}
             onCreateCategory={() => recurrentTaskCreate.setCreatingCategory(true)}
           />
         )}

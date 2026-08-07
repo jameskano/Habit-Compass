@@ -70,9 +70,10 @@ export const calculateHabitStats = (input: {
   weekStartsOn?: WeekStartsOn
 }): HabitStats => {
   const { habit, from, to, today, weekStartsOn = 1 } = input
-  const logs = filterEligibleHabitLogs(habit, input.logs).filter((log) =>
-    isWithinRange(log.loggedForDate, from, to),
-  )
+  const logs = filterEligibleHabitLogs(
+    habit,
+    input.logs.filter((log) => log.habitId === habit.id),
+  ).filter((log) => isWithinRange(log.loggedForDate, from, to))
   if (getHabitTargetScope(habit) === 'period') {
     const periodStarts = new Set<ISODateString>()
     for (const log of logs) {

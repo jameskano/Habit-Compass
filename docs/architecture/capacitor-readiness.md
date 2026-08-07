@@ -1,34 +1,30 @@
 # Capacitor Readiness
 
-Habit Compass is Capacitor-ready. Native platform work remains scoped, but `/specs/auth` authorizes
-the Android auth/deep-link work required for authentication callbacks, OAuth returns, and account
-deletion compliance.
+Habit Compass is Capacitor-ready with an Android project checked in. Native platform work remains
+scoped, but `/specs/auth` authorizes the Android auth/deep-link work required for authentication
+callbacks, OAuth returns, and account deletion compliance.
 
 ## Current State
 
 - Capacitor packages are available in `package.json`.
-- Integration folders exist for future native-facing capabilities.
+- The `android/` native project is initialized for Android Studio.
+- `pnpm build:android:local` builds the Vite mobile bundle and syncs Android.
 - No `ios/` native platform folder should be committed without a separate iOS spec.
-- Android native files may be added when implementing the auth deep-link scope in `/specs/auth`.
 
-## When To Initialize
+## Android Emulator Readiness
 
-Initialize Capacitor native platforms only after:
+For Supabase-backed emulator validation:
 
-- The web MVP routes and data model are stable.
-- A mobile release spec exists, or the implementation is limited to the Android auth/deep-link scope in `/specs/auth`.
-- Theme, routing, offline expectations, and safe-area behavior are reviewed.
-- CI expectations for native builds are documented.
+- `.env.local` must set `VITE_APP_DATA_SOURCE=supabase`, `VITE_SUPABASE_URL`, and
+  `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- The target Supabase database must have all committed migrations applied before testing.
+- Run `pnpm build:android:local`.
+- Run `pnpm exec cap doctor android`.
+- Run `.\gradlew.bat assembleDebug` from `android/`.
+- Open `android/` in Android Studio and run the `app` configuration on an emulator.
 
-## Future Commands
+## Future Platforms
 
-Use these only after the mobile release spec is approved, or during the Android auth implementation phase approved by `/specs/auth`:
-
-```sh
-pnpm exec cap init
-pnpm exec cap add android
-pnpm exec cap add ios
-pnpm exec cap sync
-```
-
-Do not add push notifications, calendar integration, or unrelated native-only behavior during initialization unless the active spec requires it. Payment/subscription identity and deletion requirements are limited to `/specs/auth` until a broader Premium spec exists.
+Do not add iOS, push notifications, calendar integration, or unrelated native-only behavior unless
+the active spec requires it. Payment/subscription identity and deletion requirements are limited to
+`/specs/auth` until a broader Premium spec exists.

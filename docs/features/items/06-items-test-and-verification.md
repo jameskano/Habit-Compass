@@ -40,7 +40,7 @@ Test:
 
 - Completed standard log → `completed_standard`
 - Completed minimum log → `completed_minimum`
-- Quantity/time progress below valid completion → `progress_logged`
+- Measurable progress below valid completion → `progress_logged`
 - Skipped log → `skipped`
 - Scheduled past date without log → `missed`
 - Scheduled today without log → `today_pending`
@@ -71,7 +71,7 @@ score = 2
 percentage = 66.6%
 ```
 
-Test time/quantity:
+Test measurable amount:
 
 ```txt
 minimum target = 10 minutes
@@ -110,15 +110,7 @@ Test:
 
 ## Recurrent task occurrence behavior
 
-Test carry-forward true:
-
-```txt
-scheduled date passed
-not completed
-status remains pending/overdue
-```
-
-Test carry-forward false:
+Test missed recurrent occurrence:
 
 ```txt
 scheduled date passed
@@ -213,10 +205,9 @@ manual skip sets status skipped
 - Priority is rendered as an accessible colored dot.
 - Tap opens edit.
 - Swipe left edits.
-- Swipe right only completes due/overdue occurrence.
+- Swipe right only completes the current due occurrence.
 - Completing an occurrence shows a success toast.
-- Carry-forward true keeps overdue pending.
-- Carry-forward false can mark missed after date passes.
+- Past incomplete occurrences derive missed instead of carrying forward.
 - Skipped is manual.
 
 ## Mobile usability

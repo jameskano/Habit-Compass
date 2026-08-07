@@ -54,14 +54,16 @@ export const HabitDayActionSheet = ({
         aria-describedby={undefined}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <SheetTitle className="text-xl font-semibold">{habit.title}</SheetTitle>
+          <div className="min-w-0 flex-1">
+            <SheetTitle className="truncate text-xl font-semibold" title={habit.title}>
+              {habit.title}
+            </SheetTitle>
             <p className="mt-1 text-sm text-muted-foreground">{formattedDate}</p>
           </div>
           <Button
             variant="ghost"
             type="button"
-            className="h-10 w-10 rounded-full border border-border/70 p-0"
+            className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
             aria-label={intl.formatMessage({ id: 'action.close' })}
             onClick={onClose}
           >

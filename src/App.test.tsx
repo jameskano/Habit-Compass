@@ -1101,11 +1101,7 @@ describe('app shell', () => {
     let detail = await screen.findByRole('dialog', { name: 'Habit detail for Read before bed' })
     const prioritySelect = await within(detail).findByRole('combobox', { name: 'Priority' })
 
-    await chooseSelectOption(
-      user,
-      prioritySelect,
-      'High',
-    )
+    await chooseSelectOption(user, prioritySelect, 'High')
     expect(within(detail).getByRole('combobox', { name: 'Priority' })).toHaveClass('bg-orange-400')
     expect(
       within(detail).queryByLabelText('Use minimum and standard completion'),
@@ -1161,8 +1157,8 @@ describe('app shell', () => {
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['minimum', 'standard'])
     expect(updatedHabit?.defaultCompletionLevel).toBe('standard')
     expect(updatedHabit?.goalConfig).toMatchObject({
-      trackingType: 'timePerSession',
-      minimumMinutes: 10,
+      trackingType: 'measurablePerSession',
+      minimumAmount: 10,
     })
 
     await user.click(
@@ -1178,8 +1174,9 @@ describe('app shell', () => {
       expect(habitWithoutMinimum?.usesCompletionLevels).toBe(false)
       expect(habitWithoutMinimum?.enabledCompletionLevels).toEqual(['standard'])
       expect(habitWithoutMinimum?.goalConfig).toEqual({
-        trackingType: 'timePerSession',
-        targetMinutes: 20,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        unitLabel: 'minutes',
       })
     })
   })
@@ -1325,13 +1322,14 @@ describe('app shell', () => {
     fireEvent.click(overdueTask)
 
     await waitFor(() => {
-      expect(
-        within(screen.getByRole('button', { name: 'Edit Call the clinic' })).getByText('Completed'),
-      ).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Edit Call the clinic' })).not.toBeInTheDocument()
     })
     expect(await screen.findByText('Call the clinic was completed.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show archived Tasks' }))
     expect(
-      within(screen.getByRole('button', { name: 'Edit Call the clinic' })).getByText('Completed'),
+      within(await screen.findByRole('button', { name: 'Edit Call the clinic' })).getByText(
+        'Completed',
+      ),
     ).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: /Edit task Call/ })).not.toBeInTheDocument()
   })

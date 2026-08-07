@@ -80,8 +80,8 @@ export const HabitEditValuesSchema = BaseHabitEditValuesSchema.superRefine((valu
       })
     }
     if (
-      (value.trackingType === 'quantityPerSession' ||
-        value.trackingType === 'totalQuantityPerPeriod') &&
+      (value.trackingType === 'measurablePerSession' ||
+        value.trackingType === 'totalMeasurablePerPeriod') &&
       !value.unitLabel.trim()
     ) {
       context.addIssue({ code: 'custom', path: ['unitLabel'], message: 'unitRequired' })

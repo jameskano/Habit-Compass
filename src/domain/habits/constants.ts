@@ -2,11 +2,8 @@ export const habitPeriods = ['day', 'week', 'month', 'year', 'custom'] as const
 export const habitTrackingTypes = [
   'binary',
   'timesPerPeriod',
-  'repetitionsPerPeriod',
-  'timePerSession',
-  'totalTimePerPeriod',
-  'quantityPerSession',
-  'totalQuantityPerPeriod',
+  'measurablePerSession',
+  'totalMeasurablePerPeriod',
 ] as const
 export const habitCompletionLevels = ['minimum', 'standard'] as const
 export const habitResetModes = ['soft', 'hard'] as const

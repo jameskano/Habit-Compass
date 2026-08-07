@@ -68,6 +68,10 @@ const countCompletions = (logs: HabitLog[], from: ISODateString, to: ISODateStri
   ).length
 }
 
+const filterLogsForHabit = (habit: Habit, logs: HabitLog[]) => {
+  return logs.filter((log) => log.habitId === habit.id)
+}
+
 const getFlexibleStatsStart = (habit: Habit, today: ISODateString, weekStartsOn: WeekStartsOn) => {
   const goal = habit.goalConfig
   if (!('period' in goal)) {
@@ -93,7 +97,7 @@ export const calculateHabitDetailStats = (input: {
   weekStartsOn?: WeekStartsOn
 }): HabitDetailStats => {
   const { habit, logs, today, weekStartsOn = 1 } = input
-  const eligibleLogs = filterEligibleHabitLogs(habit, logs)
+  const eligibleLogs = filterEligibleHabitLogs(habit, filterLogsForHabit(habit, logs))
   const from =
     habit.scheduleRule.kind === 'flexiblePeriod'
       ? getFlexibleStatsStart(habit, today, weekStartsOn)
@@ -127,7 +131,7 @@ export const createHabitCompletionBars = (input: {
   weekStartsOn?: WeekStartsOn
 }): HabitCompletionBar[] => {
   const { habit, period, today, startsOn, weekStartsOn = 1 } = input
-  const logs = filterEligibleHabitLogs(habit, input.logs)
+  const logs = filterEligibleHabitLogs(habit, filterLogsForHabit(habit, input.logs))
 
   if (period === 'week') {
     const from = startOfWeek(today, weekStartsOn)

@@ -7,7 +7,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## User Value
 
 - A simple user can create a binary habit and mark it done quickly.
-- A more advanced user can track frequency, repetitions, time, quantity, and optional minimum/standard levels without changing the core product.
+- A more advanced user can track frequency, any numeric amount with a user-defined unit, and optional minimum/standard levels without changing the core product.
 
 ## Scope
 
@@ -27,7 +27,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## User Stories
 
 - As a user, I can create a simple binary habit and complete it quickly.
-- As a user, I can track a habit by times per period, repetitions, time, or quantity.
+- As a user, I can track a habit by times per period or by a measurable amount with my own unit.
 - As a user, I can optionally use minimum and standard completion levels.
 - As a user, I can archive or soft reset a habit instead of deleting it immediately.
 
@@ -36,11 +36,8 @@ Users need a habit model that works for the simplest possible case, while still 
 - A habit must support these goal types:
   - `binary`
   - `timesPerPeriod`
-  - `repetitionsPerPeriod`
-  - `timePerSession`
-  - `totalTimePerPeriod`
-  - `quantityPerSession`
-  - `totalQuantityPerPeriod`
+  - `measurablePerSession`
+  - `totalMeasurablePerPeriod`
 - Period-based goals must support `day`, `week`, `month`, `year`, and `custom`.
 - Habit creation uses a three-step flow: completion setup, frequency, then details.
 - New and edited habits require a category selection. Production storage backfills and preserves a
@@ -49,14 +46,13 @@ Users need a habit model that works for the simplest possible case, while still 
 - A habit always supports standard completion; minimum completion exists only when configured for that habit.
 - Binary habits use manual minimum/standard completion. Standard and minimum descriptions are
   optional text; minimum is offered only when a non-empty minimum description is configured.
-- Quantity/time habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
-- New measurable habits expose quantity or time tracking with session or period scope. Legacy
-  repetition and custom-period configurations remain editable when encountered.
+- Measurable habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
+- New measurable habits expose a single amount plus user-defined unit label with session or period scope.
 - Flexible `X times per period` creation is available only for binary habits, with limits of
   `7` per week, `28` per month, and `365` per year.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
-- Below-minimum quantity/time logs are visible as progress but score `0` for completion stats.
-- Period-based quantity/time habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
+- Below-minimum measurable logs are visible as progress but score `0` for completion stats.
+- Period-based measurable habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
 - Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
 - Habits persist an order value and a schedule rule bounded by a start date and optional end date.
@@ -66,7 +62,10 @@ Users need a habit model that works for the simplest possible case, while still 
 - Saving an end date before today archives the habit after confirmation in the edit flow.
 - Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.
 - Reset is soft by default.
-- Hard reset requires explicit confirmation.
+- Hard reset requires explicit confirmation, removes habit logs/history, and restarts the
+  habit's date window by setting `startsOn` to the reset date. If the habit already has an
+  `endsOn` before the reset date, `startsOn` is clamped to `endsOn`; hard reset does not clear or
+  move `endsOn`.
 - Habits can be archived or physically deleted after explicit confirmation in MVP.
 - Habit lifecycle status is limited to `active` and `archived`.
 - Archiving opens a dated inactivity period and reactivating closes it. Inactivity periods use half-open `[startsOn, resumesOn)` bounds so the archive day is excluded and the reactivation day is active again.
@@ -107,10 +106,8 @@ Users need a habit model that works for the simplest possible case, while still 
   - `loggedAt`
   - `status`
   - `completionLevel`
-  - `repetitions`
-  - `durationMinutes`
-  - `quantity`
-  - `quantityUnitLabel`
+  - `amount`
+  - `unitLabel`
   - `notes`
 - `HabitInactivityPeriod`
   - `reason`: `archived` or future-compatible `paused`

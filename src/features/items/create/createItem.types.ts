@@ -41,6 +41,5 @@ export type FrequencyValues = {
 }
 
 export type HabitCompletionMode = 'binary' | 'measurable'
-export type HabitMeasurableKind = 'quantity' | 'time'
 export type HabitMeasurementScope = 'session' | 'period'
 export type StateSetter<T> = Dispatch<SetStateAction<T>>

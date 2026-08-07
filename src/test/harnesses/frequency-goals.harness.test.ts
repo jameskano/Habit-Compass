@@ -61,16 +61,14 @@ describe('frequency goals harness', () => {
     expect(result.isComplete).toBe(false)
   })
 
-  it('covers repetitions per period', () => {
+  it('covers custom measurable totals per period', () => {
     const habit = createHabit({
-      trackingType: 'repetitionsPerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'week',
-      targetRepetitions: 30,
+      targetAmount: 30,
+      unitLabel: 'repetitions',
     })
-    const logs = [
-      createHabitLog({ repetitions: 10 }),
-      createHabitLog({ id: 'rep-2', repetitions: 8 }),
-    ]
+    const logs = [createHabitLog({ amount: 10 }), createHabitLog({ id: 'rep-2', amount: 8 })]
 
     const result = evaluateHabitProgress({
       habit,
@@ -80,15 +78,16 @@ describe('frequency goals harness', () => {
     })
 
     expect(result.actual).toBe(18)
-    expect(result.unit).toBe('repetitions')
+    expect(result.unit).toBe('custom')
   })
 
-  it('covers time per session', () => {
-    const habit = createHabit({ trackingType: 'timePerSession', targetMinutes: 30 })
-    const logs = [
-      createHabitLog({ durationMinutes: 20 }),
-      createHabitLog({ id: 'time-2', durationMinutes: 35 }),
-    ]
+  it('covers measurable per session', () => {
+    const habit = createHabit({
+      trackingType: 'measurablePerSession',
+      targetAmount: 30,
+      unitLabel: 'minutes',
+    })
+    const logs = [createHabitLog({ amount: 20 }), createHabitLog({ id: 'time-2', amount: 35 })]
 
     const result = evaluateHabitProgress({
       habit,
@@ -101,16 +100,14 @@ describe('frequency goals harness', () => {
     expect(result.isComplete).toBe(true)
   })
 
-  it('covers total time per week', () => {
+  it('covers total measurable per week', () => {
     const habit = createHabit({
-      trackingType: 'totalTimePerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'week',
-      targetMinutes: 120,
+      targetAmount: 120,
+      unitLabel: 'minutes',
     })
-    const logs = [
-      createHabitLog({ durationMinutes: 45 }),
-      createHabitLog({ id: 'ttw-2', durationMinutes: 60 }),
-    ]
+    const logs = [createHabitLog({ amount: 45 }), createHabitLog({ id: 'ttw-2', amount: 60 })]
 
     const result = evaluateHabitProgress({
       habit,
@@ -122,16 +119,13 @@ describe('frequency goals harness', () => {
     expect(result.actual).toBe(105)
   })
 
-  it('covers quantity per session', () => {
+  it('covers custom units per session', () => {
     const habit = createHabit({
-      trackingType: 'quantityPerSession',
-      targetQuantity: 10,
+      trackingType: 'measurablePerSession',
+      targetAmount: 10,
       unitLabel: 'pages',
     })
-    const logs = [
-      createHabitLog({ quantity: 6, quantityUnitLabel: 'pages' }),
-      createHabitLog({ id: 'qps-2', quantity: 11, quantityUnitLabel: 'pages' }),
-    ]
+    const logs = [createHabitLog({ amount: 6 }), createHabitLog({ id: 'qps-2', amount: 11 })]
 
     const result = evaluateHabitProgress({
       habit,
@@ -144,17 +138,14 @@ describe('frequency goals harness', () => {
     expect(result.isComplete).toBe(true)
   })
 
-  it('covers total quantity per month', () => {
+  it('covers total custom units per month', () => {
     const habit = createHabit({
-      trackingType: 'totalQuantityPerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'month',
-      targetQuantity: 100,
+      targetAmount: 100,
       unitLabel: 'ounces',
     })
-    const logs = [
-      createHabitLog({ quantity: 25, quantityUnitLabel: 'ounces' }),
-      createHabitLog({ id: 'tqm-2', quantity: 40, quantityUnitLabel: 'ounces' }),
-    ]
+    const logs = [createHabitLog({ amount: 25 }), createHabitLog({ id: 'tqm-2', amount: 40 })]
 
     const result = evaluateHabitProgress({
       habit,
@@ -164,7 +155,7 @@ describe('frequency goals harness', () => {
     })
 
     expect(result.actual).toBe(65)
-    expect(result.unit).toBe('quantity')
+    expect(result.unit).toBe('custom')
   })
 
   it('keeps flexible period goals out of per-day occurrence counting', () => {

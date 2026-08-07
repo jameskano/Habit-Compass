@@ -53,9 +53,10 @@ describe('habit day interactions', () => {
     expect(
       isHabitDayActionable({
         habit: createHabit({
-          trackingType: 'repetitionsPerPeriod',
+          trackingType: 'totalMeasurablePerPeriod',
           period: 'week',
-          targetRepetitions: 100,
+          targetAmount: 100,
+          unitLabel: 'repetitions',
         }),
         date: '2026-05-21',
         today: '2026-05-21',
@@ -65,31 +66,33 @@ describe('habit day interactions', () => {
 
   it('maps numeric goal inputs and existing raw values', () => {
     const repetitionsHabit = createHabit({
-      trackingType: 'repetitionsPerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'week',
-      targetRepetitions: 100,
+      targetAmount: 100,
+      unitLabel: 'repetitions',
     })
-    const timeHabit = createHabit({ trackingType: 'timePerSession', targetMinutes: 20 })
+    const timeHabit = createHabit({
+      trackingType: 'measurablePerSession',
+      targetAmount: 20,
+      unitLabel: 'minutes',
+    })
     const quantityHabit = createHabit({
-      trackingType: 'quantityPerSession',
-      targetQuantity: 10,
+      trackingType: 'measurablePerSession',
+      targetAmount: 10,
       unitLabel: 'pages',
     })
 
     expect(getHabitAmountInputMetadata(repetitionsHabit)).toEqual({
-      unit: 'repetitions',
-      quantityUnitLabel: null,
+      unitLabel: 'repetitions',
     })
     expect(getHabitAmountInputMetadata(timeHabit)).toEqual({
-      unit: 'minutes',
-      quantityUnitLabel: null,
+      unitLabel: 'minutes',
     })
     expect(getHabitAmountInputMetadata(quantityHabit)).toEqual({
-      unit: 'quantity',
-      quantityUnitLabel: 'pages',
+      unitLabel: 'pages',
     })
-    expect(getHabitLogAmount(repetitionsHabit, createHabitLog({ repetitions: 140 }))).toBe(140)
-    expect(getHabitLogAmount(timeHabit, createHabitLog({ durationMinutes: 45 }))).toBe(45)
-    expect(getHabitLogAmount(quantityHabit, createHabitLog({ quantity: 18 }))).toBe(18)
+    expect(getHabitLogAmount(repetitionsHabit, createHabitLog({ amount: 140 }))).toBe(140)
+    expect(getHabitLogAmount(timeHabit, createHabitLog({ amount: 45 }))).toBe(45)
+    expect(getHabitLogAmount(quantityHabit, createHabitLog({ amount: 18 }))).toBe(18)
   })
 })

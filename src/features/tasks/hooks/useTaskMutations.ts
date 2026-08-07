@@ -1,11 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { formatISO } from 'date-fns'
 
 import type { CreateTaskInput, TaskCompletionStatus, UpdateTaskInput } from '@/domain/tasks'
 import { tasksRepository } from '@/integrations/repositories'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { useAppToast } from '@/shared/hooks/useAppToast'
-import type { EntityId } from '@/shared/types'
+import type { EntityId, ISODateString } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
+
+const todayAsISODate = () => formatISO(new Date(), { representation: 'date' }) as ISODateString
 
 const useInvalidateTasks = (userId: string) => {
   const queryClient = useQueryClient()
@@ -51,6 +54,7 @@ export const useCompleteTaskMutation = (userId = MOCK_USER_ID) => {
           userId,
           taskId: input.taskId,
           status: input.status ?? 'completed',
+          today: todayAsISODate(),
         }),
       ),
     onSuccess: invalidateTasks,

@@ -173,25 +173,19 @@ export const formatTaskMeta = (intl: TodayIntl, task: Task, selectedDate: ISODat
   return intl.formatMessage({ id: 'page.today.item.task.today' })
 }
 
-export const shortUnitLabel = (intl: TodayIntl, habit: Habit) => {
+export const shortUnitLabel = (habit: Habit) => {
   const metadata = getHabitAmountInputMetadata(habit)
   if (!metadata) {
     return ''
   }
-  if (metadata.unit === 'minutes') {
-    return intl.formatMessage({ id: 'page.today.amount.unit.minutes.short' })
-  }
-  if (metadata.unit === 'repetitions') {
-    return intl.formatMessage({ id: 'page.today.amount.unit.repetitions.short' })
-  }
-  return metadata.quantityUnitLabel ?? ''
+  return metadata.unitLabel
 }
 
-export const amountText = (intl: TodayIntl, item: TodayItem) => {
+export const amountText = (item: TodayItem) => {
   if (item.type !== 'habit' || !item.amount || item.amount <= 0) {
     return null
   }
-  const unit = shortUnitLabel(intl, item.habit)
+  const unit = shortUnitLabel(item.habit)
   return unit ? `${item.amount} ${unit}` : `${item.amount}`
 }
 
@@ -212,7 +206,7 @@ export const amountHelperLines = (
     'period' in habit.goalConfig && habit.goalConfig.period !== 'day'
       ? `page.today.amount.period.${habit.goalConfig.period}`
       : 'page.today.amount.period.day'
-  const unit = shortUnitLabel(intl, habit)
+  const unit = shortUnitLabel(habit)
   const value = unit
     ? `${completion.rawProgressValue} / ${completion.standardTargetValue} ${unit}`
     : `${completion.rawProgressValue} / ${completion.standardTargetValue}`

@@ -118,7 +118,7 @@ export const HabitStatsTab = ({ habit, logs, today }: HabitStatsTabProps) => {
           {bars.map((bar) => (
             <div
               key={bar.from}
-              className="flex min-w-9 flex-1 flex-col items-center justify-end gap-1.5"
+              className="flex w-9 shrink-0 flex-col items-center justify-end gap-1.5"
             >
               <span className="text-xs font-semibold text-muted-foreground">
                 {bar.completionEvents}

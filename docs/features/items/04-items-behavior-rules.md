@@ -81,6 +81,10 @@ Reset progress removes habit logs/history while keeping the habit itself.
 
 It requires confirmation.
 
+After confirmation, the habit restarts from the reset date by moving its start date to today. If the
+habit already has an end date before today, the start date is set to that end date instead. Reset
+does not clear or move the end date.
+
 ## Habit completion
 
 Habits support:
@@ -97,7 +101,7 @@ Binary habits use manual completion levels:
 - Standard-only binary habits allow complete and skip.
 - Binary habits with a non-empty minimum text configured allow complete as minimum, complete as standard, and skip.
 
-Quantity/time habits derive completion levels from logged values:
+Measurable habits derive completion levels from logged amounts:
 
 - Below minimum is `progress_logged` and scores `0`.
 - Minimum reached is `completed_minimum` and scores `0.5`.
@@ -107,7 +111,7 @@ Quantity/time habits derive completion levels from logged values:
   minimum displays as an empty input; negative values and values above the standard target are
   invalid.
 
-Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
+Period-based measurable habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 
 ### Habit day interaction rules
 
@@ -135,10 +139,10 @@ Binary habit long press behavior:
 - Long press offers Complete, Skip day, and Clear log.
 - Period-level minimum/standard result remains derived from completion-event count.
 
-Repetition, time, and quantity habit behavior:
+Measurable habit behavior:
 
 - Tap opens amount entry, including from skipped days.
-- Long press offers Input quantity/time, Skip day, and Clear log.
+- Long press offers Enter amount, Skip day, and Clear log.
 - Existing numeric values prefill the input.
 - Values above the standard target are preserved as raw progress.
 - Negative values are invalid.
@@ -256,9 +260,17 @@ Actions:
 
 Completing a task sets `completedAt`.
 
-It does not set `status = archived` automatically.
+If the task's due date is before the user's current local date, completing it archives it
+immediately. If the task is due today, it remains active until the day passes and the next in-app
+cleanup runs.
 
 Completed and archived are different.
+
+## Auto-archive completed tasks
+
+The app runs an in-app cleanup when task lists load. Active completed tasks with `dueDate < today`
+move to archived tasks. Pending, skipped, missed, already archived, future-due, today-due, and
+legacy undated tasks are not auto-archived.
 
 ## Archive task
 
@@ -299,7 +311,7 @@ Defaults:
 - Priority: `medium`
 - Status: `active`
 - Start date: today
-- Carry forward: true
+- Carry forward: not exposed; recurrent task occurrences do not carry forward.
 
 ## Occurrence generation
 
@@ -314,36 +326,12 @@ At minimum, the app should be able to know:
 Avoid building a complex scheduler in the first pass if the rest of the app is not ready. Keep pure utility functions testable.
 Reading recurrent occurrences must not persist automatic missed records; missed presentation can be derived until a deliberate write action exists.
 
-## Carry forward true
-
-If a recurrent task occurrence is not completed and the scheduled date passes:
-
-- It remains `pending`.
-- UI displays it as overdue.
-- It does not automatically become missed.
-
-This is for responsibilities that still need doing.
-
-Examples:
-
-- Pay bill.
-- Clean bathroom.
-- Send invoice.
-
-## Carry forward false
+## Missed recurrent occurrence
 
 If a recurrent task occurrence is not completed and the scheduled date passes:
 
 - It becomes `missed`.
 - Next occurrence is generated or becomes active.
-
-This is for time-bound repeated actions where the moment passed.
-
-Examples:
-
-- Weekly review.
-- Call family on Sunday.
-- Take trash out on collection day.
 
 ## Skipped recurrent task
 
@@ -353,7 +341,7 @@ It means the user intentionally skipped an occurrence and does not want it treat
 
 ## Complete recurrent task in Items
 
-Swipe right may complete only if there is a due or overdue occurrence.
+Swipe right may complete only if there is a due occurrence.
 
 Do not allow ambiguous completion of a future occurrence unless there is a clear product decision later.
 

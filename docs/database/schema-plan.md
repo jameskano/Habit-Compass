@@ -44,7 +44,7 @@ The first Supabase schema for Habit Compass is defined across:
   - Category links are required and must reference the same user.
 - `habit_logs`
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
-  - Stores log date, logged timestamp, completion level, optional numeric progress fields, unit label, and note.
+  - Stores log date, logged timestamp, completion level, optional generic numeric amount, user-defined unit label, and note.
   - Unique per user, habit, and log date.
 - `habit_inactivity_periods`
   - Dated half-open `[starts_on, resumes_on)` inactive intervals for habits.
@@ -195,7 +195,7 @@ records from the current `first_day_of_week` value.
 - `habits.schedule_config`
   - Stores explicit expectation rules or `flexiblePeriod`; flexible schedules calculate progress without deriving missed individual dates.
 - `habits.goal_config`
-  - Stores goal variants such as binary, times-per-period, repetitions, time, and quantity targets.
+  - Stores goal variants such as binary, times-per-period, measurable-per-session, and total-measurable-per-period targets.
 - `habits.minimum_config`, `standard_config`
   - Optional completion-level overrides. Null keeps the habit simple.
 - `recurrent_tasks.recurrence_config`

@@ -214,7 +214,7 @@ export const HabitDayInteractions = ({
                 logDate: amountDate,
                 status: 'completed',
                 value: amount,
-                unit: amountMetadata.unit,
+                unitLabel: amountMetadata.unitLabel,
               },
               { onSuccess: () => setAmountDate(null) },
             )

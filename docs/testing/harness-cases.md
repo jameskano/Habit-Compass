@@ -8,11 +8,8 @@ Habit Compass harness coverage currently focuses on deterministic non-UI logic t
   - binary daily habits
   - times per week
   - times per month
-  - repetitions per period
-  - time per session
-  - total time per week
-  - quantity per session
-  - total quantity per month
+  - measurable amount per session
+  - total measurable amount per period
   - specific days of week
   - future advanced recurrence placeholder
 - Habit completion evaluation:

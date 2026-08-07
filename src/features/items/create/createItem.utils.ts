@@ -12,13 +12,11 @@ import {
 import type {
   FrequencyValues,
   HabitCompletionMode,
-  HabitMeasurableKind,
   HabitMeasurementScope,
 } from './createItem.types'
 
 type HabitGoalDraft = {
   completionMode: HabitCompletionMode
-  measurableKind: HabitMeasurableKind
   scope: HabitMeasurementScope
   period: Exclude<HabitPeriod, 'custom'>
   standardText: string
@@ -154,7 +152,6 @@ export const validateFrequency = (frequency: FrequencyValues) => {
 export const buildHabitGoal = ({
   completionMode,
   frequency,
-  measurableKind,
   minimumAmount,
   minimumText,
   period,
@@ -179,40 +176,24 @@ export const buildHabitGoal = ({
   }
 
   const minimum = minimumAmount !== '' && minimumAmount > 0 ? minimumAmount : undefined
-  if (measurableKind === 'time') {
-    return scope === 'session'
-      ? {
-          trackingType: 'timePerSession',
-          targetMinutes: standardAmount,
-          ...(minimum ? { minimumMinutes: minimum } : {}),
-        }
-      : {
-          trackingType: 'totalTimePerPeriod',
-          period,
-          targetMinutes: standardAmount,
-          ...(minimum ? { minimumMinutes: minimum } : {}),
-        }
-  }
-
   return scope === 'session'
     ? {
-        trackingType: 'quantityPerSession',
-        targetQuantity: standardAmount,
+        trackingType: 'measurablePerSession',
+        targetAmount: standardAmount,
         unitLabel: unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
     : {
-        trackingType: 'totalQuantityPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         period,
-        targetQuantity: standardAmount,
+        targetAmount: standardAmount,
         unitLabel: unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
 }
 
 export const isHabitCompletionValid = ({
   completionMode,
-  measurableKind,
   minimumAmount,
   standardAmount,
   unitLabel,
@@ -223,7 +204,7 @@ export const isHabitCompletionValid = ({
       standardAmount <= 0 ||
       (minimumAmount !== '' && minimumAmount < 0) ||
       (minimumAmount !== '' && minimumAmount > standardAmount) ||
-      (measurableKind === 'quantity' && !unitLabel.trim())
+      !unitLabel.trim()
     )
   )
 }

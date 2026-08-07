@@ -116,10 +116,12 @@ export const HabitOptionsSheet = ({
             <SheetTitle className="sr-only">
               {intl.formatMessage({ id: 'page.items.habit.menu.title' }, { habit: habit.title })}
             </SheetTitle>
-            <h2 className="text-xl font-semibold">{habit.title}</h2>
+            <h2 className="min-w-0 flex-1 truncate text-xl font-semibold" title={habit.title}>
+              {habit.title}
+            </h2>
             <Button
               variant="ghost"
-              className="h-10 w-10 rounded-full border border-border/70 p-0"
+              className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
               aria-label={intl.formatMessage({ id: 'action.close' })}
               onClick={onClose}
             >

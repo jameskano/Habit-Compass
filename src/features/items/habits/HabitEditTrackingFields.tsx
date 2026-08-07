@@ -30,9 +30,9 @@ export const HabitEditTrackingFields = memo(
     const unitLabel = useWatch({ control: form.control, name: 'unitLabel' })
     const minimumUnitLabel = getMinimumUnitLabel(selectedTrackingType, unitLabel)
     const minimumError = errors.minimumAmount?.message
-    const usesQuantityUnit =
-      selectedTrackingType === 'quantityPerSession' ||
-      selectedTrackingType === 'totalQuantityPerPeriod'
+    const usesMeasurableUnit =
+      selectedTrackingType === 'measurablePerSession' ||
+      selectedTrackingType === 'totalMeasurablePerPeriod'
     const usesPeriod = PERIOD_BASED_TRACKING_TYPES.has(selectedTrackingType)
 
     return (
@@ -64,7 +64,7 @@ export const HabitEditTrackingFields = memo(
           </label>
         ) : (
           <>
-            {usesQuantityUnit ? (
+            {usesMeasurableUnit ? (
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.create.habit.unit' })}
                 <Input {...form.register('unitLabel')} className={HABIT_EDIT_INPUT_CLASS} />

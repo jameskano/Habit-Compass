@@ -18,7 +18,7 @@ export const ItemWaterfallReveal = forwardRef<HTMLDivElement, ItemWaterfallRevea
       <div
         ref={ref}
         data-item-waterfall-index={index}
-        className={cn(revealing && 'item-waterfall-enter', className)}
+        className={cn('min-w-0 w-full max-w-full', revealing && 'item-waterfall-enter', className)}
         style={
           revealing
             ? {

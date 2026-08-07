@@ -193,8 +193,7 @@ export interface HabitCompletionLog {
   level?: HabitCompletionLevel
 
   amount?: number
-  unit?: HabitTargetUnit
-  customUnit?: string
+  unitLabel?: string
 
   createdAt: string
   updatedAt: string
@@ -224,7 +223,7 @@ Meanings:
 
 - `completed_minimum`: user did enough to keep the habit alive.
 - `completed_standard`: user reached the normal target.
-- `progress_logged`: user logged quantity/time progress, but not enough to count as a valid completion.
+- `progress_logged`: user logged measurable progress, but not enough to count as a valid completion.
 - `today_pending`: scheduled for today and not completed yet.
 - `missed`: scheduled in the past and not completed.
 - `skipped`: manually skipped and should not punish stats.
@@ -247,7 +246,7 @@ missed = 0
 skipped = excluded from denominator
 ```
 
-For session-based time/quantity habits:
+For session-based measurable habits:
 
 ```txt
 if minimum exists:
@@ -260,7 +259,7 @@ if minimum does not exist:
   amount >= standard = completed_standard, score 1
 ```
 
-For period-based time/quantity habits:
+For period-based measurable habits:
 
 ```txt
 score once per period using the period total.
@@ -396,7 +395,7 @@ export interface RecurrentTask {
   startsOn: string // YYYY-MM-DD
   endsOn?: string // YYYY-MM-DD
 
-  carryForward: boolean
+  carryForward: boolean // stored for compatibility; recurrent-task execution ignores it
 
   order: number
 
@@ -431,18 +430,10 @@ export interface RecurrentTaskOccurrence {
 }
 ```
 
-### Carry-forward behavior for recurrent tasks
+### Missed behavior for recurrent tasks
 
-If `carryForward = true`:
-
-- An undone occurrence remains `pending` after its scheduled date.
-- The UI can display it as overdue.
-- It does not automatically become missed.
-
-If `carryForward = false`:
-
-- An undone occurrence becomes `missed` after its scheduled date passes.
-- The next occurrence can be generated normally.
+Recurrent task occurrences do not carry forward. An undone occurrence becomes `missed` after its
+scheduled date passes, and the next occurrence can be generated normally.
 
 Skipped is always manual.
 

@@ -4,11 +4,8 @@ import type { Habit, HabitLog } from '../types'
 import { isHabitInactiveOnDate } from './habitInactivity'
 import { isHabitScheduledOnDate } from './habitSchedule'
 
-export type HabitAmountUnit = 'repetitions' | 'minutes' | 'quantity'
-
 export type HabitAmountInputMetadata = {
-  unit: HabitAmountUnit
-  quantityUnitLabel: string | null
+  unitLabel: string
 }
 
 const isWithinHabitDateWindow = (habit: Habit, date: ISODateString) => {
@@ -36,14 +33,9 @@ export const isHabitDayActionable = (input: {
 
 export const getHabitAmountInputMetadata = (habit: Habit): HabitAmountInputMetadata | null => {
   switch (habit.goalConfig.trackingType) {
-    case 'repetitionsPerPeriod':
-      return { unit: 'repetitions', quantityUnitLabel: null }
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return { unit: 'minutes', quantityUnitLabel: null }
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return { unit: 'quantity', quantityUnitLabel: habit.goalConfig.unitLabel }
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return { unitLabel: habit.goalConfig.unitLabel }
     case 'binary':
     case 'timesPerPeriod':
       return null
@@ -56,14 +48,9 @@ export const getHabitLogAmount = (habit: Habit, log?: HabitLog | null) => {
   }
 
   switch (habit.goalConfig.trackingType) {
-    case 'repetitionsPerPeriod':
-      return log.repetitions ?? null
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return log.durationMinutes ?? null
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return log.quantity ?? null
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return log.amount ?? null
     case 'binary':
     case 'timesPerPeriod':
       return null

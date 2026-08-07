@@ -44,7 +44,10 @@ export const deriveHabitDayState = ({
     return 'inactive'
   }
 
-  const eligibleLogs = filterEligibleHabitLogs(habit, logs)
+  const eligibleLogs = filterEligibleHabitLogs(
+    habit,
+    logs.filter((log) => log.habitId === habit.id),
+  )
   const log = eligibleLogs.find((entry) => entry.loggedForDate === date)
 
   if (log?.status === 'skipped') {

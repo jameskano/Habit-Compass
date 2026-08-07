@@ -36,7 +36,6 @@ export const useRecurrentTaskCreateForm = (
   const [description, setDescription] = useState('')
   const [startsOn, setStartsOn] = useState(todayAsISODate)
   const [endsOn, setEndsOn] = useState('')
-  const [carryForward, setCarryForward] = useState(true)
   const [error, setError] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
 
@@ -61,7 +60,7 @@ export const useRecurrentTaskCreateForm = (
         recurrenceRule: buildRecurrence(frequency),
         categoryId: categoryId || null,
         priority,
-        carryForward,
+        carryForward: false,
         description: description.trim() || null,
         notes: null,
         startsOn,
@@ -87,7 +86,6 @@ export const useRecurrentTaskCreateForm = (
   }
 
   return {
-    carryForward,
     categories,
     categoryId,
     continueFlow,
@@ -99,7 +97,6 @@ export const useRecurrentTaskCreateForm = (
     isPending: mutation.isPending,
     priority,
     selectCreatedCategory,
-    setCarryForward,
     setCategoryId,
     setCreatingCategory,
     setDescription,

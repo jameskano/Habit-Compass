@@ -42,6 +42,11 @@ Users need one-off tasks that are fast to capture and complete without requiring
 - Tasks keep an `order` value for storage compatibility, but the Items task list is grouped and ordered by due date instead of drag and drop.
 - A task must support `pending`, `completed`, `skipped`, and `missed` completion status.
 - A task must support only active and archived lifecycle state.
+- Active completed tasks with a due date before the user's current local date must be
+  automatically archived by in-app cleanup.
+- Completing an overdue active task archives it immediately.
+- Completing a task due today keeps it active until the day passes.
+- Legacy undated tasks are never automatically archived.
 - Delete physically removes a task after explicit confirmation.
 
 ## Non-Functional Requirements
@@ -86,6 +91,8 @@ Users need one-off tasks that are fast to capture and complete without requiring
 - A task can optionally include notes and a category.
 - A task can be completed or skipped without becoming a habit.
 - Archive and delete are separate domain actions.
+- Completed past-due tasks are moved to archived tasks automatically without removing manual
+  archive, restore, or delete behavior.
 
 ## Test Plan
 

@@ -69,6 +69,7 @@ export const RecurrentTaskCard = ({
 }: RecurrentTaskCardProps) => {
   const intl = useIntl()
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
+  const frequency = formatFrequency(intl, task)
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.recurrent.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${task.priority}` })}`
   const isCompleted = occurrence?.status === 'completed'
 
@@ -111,7 +112,7 @@ export const RecurrentTaskCard = ({
       onPointerCancel={swipeMotion.handlePointerCancel}
       style={swipeMotion.style}
       className={cn(
-        'relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
+        'relative min-w-0 w-full max-w-full touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
         swipeMotion.isDragging && 'transition-none',
       )}
     >
@@ -126,13 +127,25 @@ export const RecurrentTaskCard = ({
         )}
         aria-hidden="true"
       />
-      <div className="ml-1 space-y-3">
+      <div className="ml-1 min-w-0 space-y-3">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
-            <h3 className="truncate text-base font-semibold tracking-tight">{task.title}</h3>
-            <p className="text-sm text-muted-foreground">{formatFrequency(intl, task)}</p>
+            <h3
+              className="min-w-0 truncate text-base font-semibold tracking-tight"
+              title={task.title}
+            >
+              {task.title}
+            </h3>
+            <p className="min-w-0 truncate text-sm text-muted-foreground" title={frequency}>
+              {frequency}
+            </p>
             {task.description ? (
-              <p className="line-clamp-2 text-sm text-muted-foreground">{task.description}</p>
+              <p
+                className="line-clamp-2 min-w-0 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]"
+                title={task.description}
+              >
+                {task.description}
+              </p>
             ) : null}
           </div>
           <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">

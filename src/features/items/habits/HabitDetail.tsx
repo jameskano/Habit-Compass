@@ -51,7 +51,7 @@ export const HabitDetail = ({
   const appToast = useAppToast()
   const [activeTab, setActiveTab] = useState(initialTab)
   const [confirmation, setConfirmation] = useState<HabitDangerAction | null>(null)
-  const logsQuery = useHabitLogsRangeQuery({ from: habit.startsOn, to: today })
+  const logsQuery = useHabitLogsRangeQuery({ habitId: habit.id, from: habit.startsOn, to: today })
   const updateMutation = useUpdateHabitMutation()
   const archiveMutation = useArchiveHabitMutation()
   const resetMutation = useResetHabitProgressMutation()
@@ -104,10 +104,15 @@ export const HabitDetail = ({
             {intl.formatMessage({ id: 'page.items.habit.detail.title' }, { habit: habit.title })}
           </DialogTitle>
           <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight">{habit.title}</h2>
+            <h2
+              className="min-w-0 flex-1 truncate text-xl font-semibold tracking-tight"
+              title={habit.title}
+            >
+              {habit.title}
+            </h2>
             <Button
               variant="ghost"
-              className="h-10 w-10 rounded-full border border-border/70 p-0"
+              className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
               aria-label={intl.formatMessage({ id: 'action.close' })}
               onClick={onClose}
             >

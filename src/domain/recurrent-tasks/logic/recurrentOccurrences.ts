@@ -115,7 +115,9 @@ export const deriveRecurrentOccurrences = (input: {
     )
     const overdue = scheduledForDate < input.today
     const status =
-      storedOccurrence?.status ?? (overdue && !input.task.carryForward ? 'missed' : 'pending')
+      overdue && storedOccurrence?.status === 'pending'
+        ? 'missed'
+        : (storedOccurrence?.status ?? (overdue ? 'missed' : 'pending'))
 
     return {
       recurrentTaskId: input.task.id,

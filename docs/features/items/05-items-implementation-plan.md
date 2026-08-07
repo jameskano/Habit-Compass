@@ -152,10 +152,10 @@ Implement:
 - Priority text/badge.
 - Drag reorder if simple.
 - Tap/swipe left edit.
-- Swipe right complete only if due/overdue.
+- Swipe right complete only if due.
 - Recurrent task form.
 - Occurrence model/use logic.
-- Carry-forward behavior.
+- Missed occurrence behavior.
 
 Suggested files:
 

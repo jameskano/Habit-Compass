@@ -1,4 +1,4 @@
-import type { ISODateTimeString } from '@/shared/types'
+import type { ISODateString, ISODateTimeString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
 
@@ -7,6 +7,10 @@ export type HabitResetResult = {
   logs: HabitLog[]
   mode: 'soft' | 'hard'
   historyPreserved: boolean
+}
+
+export const getHardResetStartsOn = (habit: Habit, resetDate: ISODateString): ISODateString => {
+  return habit.endsOn && habit.endsOn < resetDate ? habit.endsOn : resetDate
 }
 
 export const resetHabitStats = (
@@ -31,6 +35,7 @@ export const hardResetHabitStats = (
   _logs: HabitLog[],
   resetAt: ISODateTimeString,
   confirmHardReset: boolean,
+  resetDate = resetAt.slice(0, 10) as ISODateString,
 ): HabitResetResult => {
   if (!confirmHardReset) {
     throw new Error('Hard reset requires explicit confirmation.')
@@ -39,6 +44,7 @@ export const hardResetHabitStats = (
   return {
     habit: {
       ...habit,
+      startsOn: getHardResetStartsOn(habit, resetDate),
       updatedAt: resetAt,
       resetMode: 'hard',
     },

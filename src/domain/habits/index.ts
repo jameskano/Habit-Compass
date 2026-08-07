@@ -22,12 +22,9 @@ export {
   HabitScheduleRuleSchema,
   HabitSchema,
   HabitTrackingTypeSchema,
-  QuantityPerSessionGoalConfigSchema,
-  RepetitionsPerPeriodGoalConfigSchema,
-  TimePerSessionGoalConfigSchema,
+  MeasurablePerSessionGoalConfigSchema,
   TimesPerPeriodGoalConfigSchema,
-  TotalQuantityPerPeriodGoalConfigSchema,
-  TotalTimePerPeriodGoalConfigSchema,
+  TotalMeasurablePerPeriodGoalConfigSchema,
 } from './schemas'
 export type {
   BinaryHabitGoalConfig,
@@ -45,12 +42,9 @@ export type {
   HabitScheduleKind,
   HabitScheduleRule,
   HabitTrackingType,
-  QuantityPerSessionGoalConfig,
-  RepetitionsPerPeriodGoalConfig,
-  TimePerSessionGoalConfig,
+  MeasurablePerSessionGoalConfig,
   TimesPerPeriodGoalConfig,
-  TotalQuantityPerPeriodGoalConfig,
-  TotalTimePerPeriodGoalConfig,
+  TotalMeasurablePerPeriodGoalConfig,
 } from './types'
 export type {
   CreateHabitInput,
@@ -65,7 +59,7 @@ export {
   getHabitLogAmount,
   isHabitDayActionable,
 } from './logic/habitDayInteractions'
-export type { HabitAmountInputMetadata, HabitAmountUnit } from './logic/habitDayInteractions'
+export type { HabitAmountInputMetadata } from './logic/habitDayInteractions'
 export {
   doesHabitInactivityOverlapRange,
   filterEligibleHabitLogs,

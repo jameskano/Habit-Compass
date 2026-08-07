@@ -97,8 +97,8 @@ Recurrent tasks care about:
 
 - Frequency.
 - Next due date.
-- Whether an occurrence is pending, overdue, completed, skipped, or missed.
-- Carry-forward behavior.
+- Whether an occurrence is pending, completed, skipped, or missed.
+- Missed occurrence behavior.
 
 Recurrent tasks do not need stats or full calendar views in the MVP. Their data model should allow history later.
 

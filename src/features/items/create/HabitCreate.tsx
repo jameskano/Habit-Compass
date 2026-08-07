@@ -31,7 +31,6 @@ export const HabitCreate = ({ onClose, onLimitReached }: CreateDialogProps) => {
         {habitCreate.step === 1 ? (
           <HabitCreateCompletionStep
             completionMode={habitCreate.completionMode}
-            measurableKind={habitCreate.measurableKind}
             scope={habitCreate.scope}
             period={habitCreate.period}
             standardText={habitCreate.standardText}
@@ -40,7 +39,6 @@ export const HabitCreate = ({ onClose, onLimitReached }: CreateDialogProps) => {
             minimumAmount={habitCreate.minimumAmount}
             unitLabel={habitCreate.unitLabel}
             onCompletionModeChange={habitCreate.setCompletionMode}
-            onMeasurableKindChange={habitCreate.setMeasurableKind}
             onScopeChange={habitCreate.setScope}
             onPeriodChange={habitCreate.setPeriod}
             onStandardTextChange={habitCreate.setStandardText}

@@ -4,7 +4,6 @@ import { useIntl } from 'react-intl'
 import type { Category } from '@/domain/categories'
 import { CategoryCreateButton } from '@/features/categories/CategoryCreateButton'
 import { itemPriorities } from '@/shared/types'
-import { Checkbox } from '@/shared/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
@@ -123,10 +122,6 @@ export const RecurrentTaskEditOptionalSection = ({
           warningDescriptionId="page.items.recurrent.edit.endDateWarning.description"
         />
       </div>
-      <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
-        <span>{intl.formatMessage({ id: 'page.items.recurrent.edit.carryForward' })}</span>
-        <Checkbox {...form.register('carryForward')} />
-      </label>
       <label className="block text-sm font-medium">
         {intl.formatMessage({ id: 'page.items.recurrent.edit.notes' })}
         <Textarea

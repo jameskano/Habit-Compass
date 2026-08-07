@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Task } from './types'
 import { TaskSchema } from './schemas'
 import { sortTasks } from './logic/taskOrdering'
+import { shouldAutoArchiveCompletedTask } from './logic/taskAutoArchive'
 
 const task = (overrides: Partial<Task> = {}): Task => {
   return {
@@ -50,5 +51,49 @@ describe('tasks domain', () => {
       'undated',
       'done',
     ])
+  })
+
+  it('identifies completed active past-due tasks for automatic archive', () => {
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({ completionStatus: 'completed', dueDate: '2026-05-20' }),
+        '2026-05-21',
+      ),
+    ).toBe(true)
+
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({ completionStatus: 'completed', dueDate: '2026-05-21' }),
+        '2026-05-21',
+      ),
+    ).toBe(false)
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({ completionStatus: 'completed', dueDate: '2026-05-22' }),
+        '2026-05-21',
+      ),
+    ).toBe(false)
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({ completionStatus: 'pending', dueDate: '2026-05-20' }),
+        '2026-05-21',
+      ),
+    ).toBe(false)
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({
+          completionStatus: 'completed',
+          dueDate: '2026-05-20',
+          lifecycleStatus: 'archived',
+        }),
+        '2026-05-21',
+      ),
+    ).toBe(false)
+    expect(
+      shouldAutoArchiveCompletedTask(
+        task({ completionStatus: 'completed', dueDate: null }),
+        '2026-05-21',
+      ),
+    ).toBe(false)
   })
 })

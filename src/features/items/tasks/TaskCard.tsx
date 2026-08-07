@@ -64,7 +64,7 @@ export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskC
       onPointerCancel={swipeMotion.handlePointerCancel}
       style={swipeMotion.style}
       className={cn(
-        'relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
+        'relative min-w-0 w-full max-w-full touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
         swipeMotion.isDragging && 'transition-none',
       )}
     >
@@ -75,19 +75,25 @@ export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskC
         )}
         aria-hidden="true"
       />
-      <div className="ml-1 space-y-3">
+      <div className="ml-1 min-w-0 space-y-3">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <h3
               className={cn(
-                'truncate text-base font-semibold tracking-tight',
+                'min-w-0 truncate text-base font-semibold tracking-tight',
                 isCompleted && 'text-muted-foreground',
               )}
+              title={task.title}
             >
               {task.title}
             </h3>
             {task.description ? (
-              <p className="line-clamp-2 text-sm text-muted-foreground">{task.description}</p>
+              <p
+                className="line-clamp-2 min-w-0 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]"
+                title={task.description}
+              >
+                {task.description}
+              </p>
             ) : null}
           </div>
           <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">

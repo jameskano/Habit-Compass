@@ -61,6 +61,7 @@ Each habit card should show:
 
 The last day in the 7-day strip is today.
 Day cells are capped at 40px and centered when wider cards provide extra room.
+Cards and their reorder handles must stay inside the available viewport width on mobile and desktop.
 
 The frequency summary should be short and human-readable:
 
@@ -70,6 +71,10 @@ The frequency summary should be short and human-readable:
 - Every 2 days.
 - First Monday/month.
 - 30 min, 3 times/week.
+
+Habit names on cards use single-line truncation with an ellipsis when they are too long for the
+available width. The full name remains available through the control's accessible name and the
+visible title's browser tooltip.
 
 ## Category and priority visual
 
@@ -151,12 +156,12 @@ Binary habits:
 - Tap toggles one completion event for the selected day.
 - Long press opens Complete, Skip day, and Clear log actions.
 
-Repetition, time, and quantity habits:
+Measurable habits:
 
 - Tap opens an amount-entry sheet, prefilled with the selected day's existing value when present.
-- Long press opens Input quantity/time, Skip day, and Clear log actions.
+- Long press opens Enter amount, Skip day, and Clear log actions.
 - Amount entry accepts raw values above the standard target, rejects negative values inline, and treats `0` as clear log.
-- The amount-entry sheet displays repetitions, minutes, or the configured quantity unit. Domain logic derives progress, minimum, and standard day states.
+- The amount-entry sheet displays the habit's custom unit label. Domain logic derives progress, minimum, and standard day states from the logged amount.
 
 ## Habit detail screen
 
@@ -167,6 +172,10 @@ Calendar | Stats | Edit
 ```
 
 Its header displays only the habit name, without an additional detail eyebrow.
+
+Long habit names in the detail header, options menu, day-action sheet, and amount-entry sheet use
+single-line truncation with an ellipsis. The full habit name remains available through the dialog or
+sheet accessible name and the visible title's browser tooltip.
 
 ### Calendar tab
 
@@ -201,6 +210,7 @@ Stats should be simple:
    - Month: twelve monthly bars for the current year.
    - Year: yearly bars from the habit start year through the current year, including empty years.
    - Each bar represents number of completions.
+   - Bars keep a consistent standard width across week, month, and year views, regardless of how many bars are shown.
    - Tiny number above each bar.
 
 Do not create a separate global stats page for this MVP.
@@ -239,7 +249,7 @@ Default values:
 - Priority: medium
 - Start date: today
 - Status: active
-- Target: binary, unless the user chooses quantity/time
+- Target: binary, unless the user chooses measurable amount
 
 Item create/edit date controls use the same calendar-icon presentation with a non-native calendar
 picker. Existing habit and recurrent-task edit start dates remain read-only, and their end-date
@@ -268,6 +278,9 @@ Task row/card:
 ```
 
 No checkbox in the Items list.
+
+Long task titles on cards and edit overlay headers use single-line truncation with an ellipsis. The
+full title remains available through accessible names and the visible title's browser tooltip.
 
 ## Task actions
 
@@ -351,12 +364,16 @@ Optionally show next due date if it helps:
 Next: Saturday
 ```
 
+Long recurrent-task titles on cards and edit overlay headers use single-line truncation with an
+ellipsis. The full title remains available through accessible names and the visible title's browser
+tooltip.
+
 ## Recurrent task actions
 
 - Tap: edit.
 - Swipe left: edit.
 - Drag: reorder.
-- Swipe right: complete only if the current occurrence is due/overdue; otherwise avoid ambiguous completion.
+- Swipe right: complete only if the current occurrence is due; otherwise avoid ambiguous completion.
 - Archive/delete from edit/options.
 
 ## Recurrent task edit form
@@ -370,7 +387,6 @@ Optional:
 
 - Category
 - Priority
-- Carry forward if not completed
 - Notes
 - Description
 - Start date

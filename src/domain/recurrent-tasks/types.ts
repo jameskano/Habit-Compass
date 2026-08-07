@@ -77,6 +77,7 @@ export type RecurrentTask = ItemEntityFields & {
   notes?: string | null
   categoryId?: EntityId | null
   priority: ItemPriority
+  // Persisted for compatibility with existing data/export shape; recurrent task execution ignores it.
   carryForward: boolean
   order: number
   lifecycleStatus: LifecycleStatus

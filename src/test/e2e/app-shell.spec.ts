@@ -169,6 +169,43 @@ test('task swipe completion keeps the mobile viewport and toast contained', asyn
   expect(toastBounds.x + toastBounds.width).toBeLessThanOrEqual(viewportWidth)
 })
 
+test('item cards and reorder handles stay inside the mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const assertViewportContained = async () => {
+    const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth)
+
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth))
+      .toBeLessThanOrEqual(viewportWidth)
+
+    for (const handle of await page.getByRole('button', { name: /^Drag to reorder / }).all()) {
+      const bounds = await handle.boundingBox()
+      if (!bounds) {
+        throw new Error('Expected reorder handle to be visible.')
+      }
+
+      expect(bounds.x).toBeGreaterThanOrEqual(0)
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewportWidth)
+    }
+  }
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Today', level: 1, exact: true })).toBeVisible()
+  await assertViewportContained()
+
+  await page.goto('/items')
+  await expect(page.getByRole('heading', { name: 'Habits' })).toBeVisible()
+  await assertViewportContained()
+
+  await page.getByRole('tab', { name: 'Tasks', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible()
+  await assertViewportContained()
+
+  await page.getByRole('tab', { name: 'Recurrent Tasks' }).click()
+  await expect(page.getByRole('heading', { name: 'Recurrent Tasks' })).toBeVisible()
+  await assertViewportContained()
+})
+
 test('category color palette scroll stays inside the bottom sheet', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
@@ -235,7 +272,19 @@ test('habit overlay, legend, and stats periods use the revised presentation', as
 
   const chart = detail.getByLabel('Completion chart')
   await detail.getByRole('tab', { name: 'Month' }).click()
-  await expect(chart.locator('span[title]')).toHaveCount(12)
+  const chartBars = chart.locator('span[title]')
+  await expect(chartBars).toHaveCount(12)
+  const monthBarBounds = await chartBars.first().boundingBox()
+  if (!monthBarBounds) {
+    throw new Error('Expected the first month stats bar to be visible.')
+  }
+
   await detail.getByRole('tab', { name: 'Year' }).click()
-  await expect(chart.locator('span[title]')).toHaveCount(1)
+  await expect(chartBars).toHaveCount(1)
+  const yearBarBounds = await chartBars.first().boundingBox()
+  if (!yearBarBounds) {
+    throw new Error('Expected the year stats bar to be visible.')
+  }
+
+  expect(Math.abs(yearBarBounds.width - monthBarBounds.width)).toBeLessThanOrEqual(1)
 })

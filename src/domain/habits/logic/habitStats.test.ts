@@ -52,7 +52,12 @@ describe('calculateHabitStats', () => {
 
   it('does not score below-minimum session progress as valid completion', () => {
     const habit = createCompletionLevelHabit(
-      { trackingType: 'timePerSession', targetMinutes: 30, minimumMinutes: 10 },
+      {
+        trackingType: 'measurablePerSession',
+        targetAmount: 30,
+        minimumAmount: 10,
+        unitLabel: 'minutes',
+      },
       ['minimum', 'standard'],
       { startsOn: '2026-05-18', scheduleRule: { kind: 'daily' } },
     )
@@ -60,9 +65,9 @@ describe('calculateHabitStats', () => {
     const result = calculateHabitStats({
       habit,
       logs: [
-        createHabitLog({ id: 'below', loggedForDate: '2026-05-18', durationMinutes: 5 }),
-        createHabitLog({ id: 'minimum', loggedForDate: '2026-05-19', durationMinutes: 10 }),
-        createHabitLog({ id: 'standard', loggedForDate: '2026-05-20', durationMinutes: 30 }),
+        createHabitLog({ id: 'below', loggedForDate: '2026-05-18', amount: 5 }),
+        createHabitLog({ id: 'minimum', loggedForDate: '2026-05-19', amount: 10 }),
+        createHabitLog({ id: 'standard', loggedForDate: '2026-05-20', amount: 30 }),
         createHabitLog({ id: 'skipped', loggedForDate: '2026-05-21', status: 'skipped' }),
       ],
       from: '2026-05-18',
@@ -76,24 +81,25 @@ describe('calculateHabitStats', () => {
     expect(result.completionPercentage).toBe(50)
   })
 
-  it('scores period quantity/time targets once per period', () => {
+  it('scores period measurable targets once per period', () => {
     const habit = createCompletionLevelHabit(
       {
-        trackingType: 'repetitionsPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         period: 'week',
-        targetRepetitions: 100,
-        minimumRepetitions: 50,
+        targetAmount: 100,
+        minimumAmount: 50,
+        unitLabel: 'repetitions',
       },
       ['minimum', 'standard'],
       { startsOn: '2026-05-18' },
     )
-    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', repetitions: 30 })
+    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', amount: 30 })
     const wednesday = createHabitLog({
       id: 'wednesday',
       loggedForDate: '2026-05-20',
-      repetitions: 20,
+      amount: 20,
     })
-    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', repetitions: 50 })
+    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', amount: 50 })
 
     expect(
       calculateHabitStats({

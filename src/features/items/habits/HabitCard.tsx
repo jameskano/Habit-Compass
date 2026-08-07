@@ -107,6 +107,7 @@ export const HabitCard = ({
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
   const stats = calculateHabitStats({ habit, logs, from, to: today, today, weekStartsOn })
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
+  const frequency = formatFrequency(intl, habit)
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${habit.priority}` })}`
 
   const swipeMotion = useSwipeCardMotion({
@@ -135,7 +136,7 @@ export const HabitCard = ({
       data-habit-card
       style={swipeMotion.style}
       className={cn(
-        'group relative touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
+        'group relative min-w-0 w-full max-w-full touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
         swipeMotion.isDragging && 'transition-none',
       )}
     >
@@ -153,11 +154,18 @@ export const HabitCard = ({
         className="absolute inset-0 z-0 rounded-[1.35rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       />
       <div className="absolute inset-y-0 left-0 w-1 bg-primary/55" aria-hidden="true" />
-      <div className="pointer-events-none relative z-10 ml-1">
+      <div className="pointer-events-none relative z-10 ml-1 min-w-0">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
-            <h3 className="truncate text-base font-semibold tracking-tight">{habit.title}</h3>
-            <p className="text-xs text-muted-foreground">{formatFrequency(intl, habit)}</p>
+            <h3
+              className="min-w-0 truncate text-base font-semibold tracking-tight"
+              title={habit.title}
+            >
+              {habit.title}
+            </h3>
+            <p className="min-w-0 truncate text-xs text-muted-foreground" title={frequency}>
+              {frequency}
+            </p>
           </div>
           <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
             {category && CategoryIcon ? (

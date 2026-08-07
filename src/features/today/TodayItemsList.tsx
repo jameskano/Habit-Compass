@@ -66,7 +66,7 @@ export const TodayItemsList = ({
           <TodayItemCard
             type={item.type}
             title={item.title}
-            amountText={amountText(intl, item)}
+            amountText={amountText(item)}
             meta={meta}
             category={category}
             fallbackCategoryLabel={fallbackCategoryLabel}

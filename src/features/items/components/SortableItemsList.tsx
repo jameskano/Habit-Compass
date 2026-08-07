@@ -62,7 +62,7 @@ const SortableItemShell = ({
       index={index}
       revealing={revealCards}
       className={cn(
-        'relative rounded-[1.35rem] transition-shadow duration-150',
+        'relative min-w-0 w-full max-w-full rounded-[1.35rem] transition-shadow duration-150',
         (isDragSource || isDropping) && 'z-10',
         isDropTarget && !isDragSource && 'shadow-[0_0_0_2px_hsl(var(--primary)/0.45)]',
       )}
@@ -78,7 +78,7 @@ const SortableItemShell = ({
         onPointerUp={(event) => event.stopPropagation()}
         onPointerCancel={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
-        className="absolute -right-3 -top-3 z-20 h-9 min-h-9 w-9 touch-none rounded-full border border-border/70 bg-background/95 p-0 text-muted-foreground shadow-sm active:cursor-grabbing"
+        className="absolute -top-3 right-2 z-20 h-9 min-h-9 w-9 touch-none rounded-full border border-border/70 bg-background/95 p-0 text-muted-foreground shadow-sm active:cursor-grabbing"
       >
         <GripVertical aria-hidden="true" size={17} />
       </Button>
@@ -145,7 +145,7 @@ export const SortableItemsList = <T extends { id: EntityId; title: string }>({
   }
 
   const cards = (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-2">
       {items.map((item, index) =>
         disabled ? (
           <ItemWaterfallReveal key={item.id} index={index} revealing={revealCards}>

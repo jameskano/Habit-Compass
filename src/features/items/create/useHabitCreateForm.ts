@@ -20,11 +20,7 @@ import {
   isHabitFrequencyStepValid,
   todayAsISODate,
 } from './createItem.utils'
-import type {
-  HabitCompletionMode,
-  HabitMeasurableKind,
-  HabitMeasurementScope,
-} from './createItem.types'
+import type { HabitCompletionMode, HabitMeasurementScope } from './createItem.types'
 
 export const useHabitCreateForm = (
   onClose: () => void,
@@ -37,7 +33,6 @@ export const useHabitCreateForm = (
   const categories = useCategoriesQuery().data ?? []
   const [step, setStep] = useState(1)
   const [completionMode, setCompletionMode] = useState<HabitCompletionMode>('binary')
-  const [measurableKind, setMeasurableKind] = useState<HabitMeasurableKind>('quantity')
   const [scope, setScope] = useState<HabitMeasurementScope>('session')
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
   const [standardText, setStandardText] = useState('')
@@ -58,7 +53,6 @@ export const useHabitCreateForm = (
   const getGoalDraft = () => ({
     completionMode,
     frequency,
-    measurableKind,
     minimumAmount,
     minimumText,
     period,
@@ -146,7 +140,6 @@ export const useHabitCreateForm = (
     error,
     frequency,
     isPending: mutation.isPending,
-    measurableKind,
     minimumAmount,
     minimumText,
     period,
@@ -159,7 +152,6 @@ export const useHabitCreateForm = (
     setDescription,
     setEndsOn,
     setFrequency,
-    setMeasurableKind,
     setMinimumAmount,
     setMinimumText,
     setPeriod,

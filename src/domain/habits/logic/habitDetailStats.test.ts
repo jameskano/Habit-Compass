@@ -153,4 +153,63 @@ describe('habit detail stats', () => {
       }).reduce((total, bar) => total + bar.completionEvents, 0),
     ).toBe(1)
   })
+
+  it('ignores logs from other habits in summary counts, percentage, and chart bars', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        id: 'habit-focus',
+        startsOn: '2026-05-18',
+        scheduleRule: { kind: 'daily' },
+      },
+    )
+    const logs = [
+      createHabitLog({ id: 'own', habitId: 'habit-focus', loggedForDate: '2026-05-18' }),
+      createHabitLog({ id: 'foreign-week', habitId: 'habit-other', loggedForDate: '2026-05-19' }),
+      createHabitLog({
+        id: 'foreign-month',
+        habitId: 'habit-other',
+        loggedForDate: '2026-05-01',
+      }),
+      createHabitLog({
+        id: 'foreign-year',
+        habitId: 'habit-other',
+        loggedForDate: '2026-01-01',
+      }),
+    ]
+
+    const summary = calculateHabitDetailStats({ habit, logs, today: '2026-05-21' })
+
+    expect(summary.completionPercentage).toBe(33)
+    expect(summary.completionsThisWeek).toBe(1)
+    expect(summary.completionsThisMonth).toBe(1)
+    expect(summary.completionsThisYear).toBe(1)
+    expect(summary.totalCompletions).toBe(1)
+
+    const weeklyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'week',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+    const monthlyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'month',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+    const yearlyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'year',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+
+    expect(weeklyBars.reduce((total, bar) => total + bar.completionEvents, 0)).toBe(1)
+    expect(monthlyBars[4].completionEvents).toBe(1)
+    expect(yearlyBars[0].completionEvents).toBe(1)
+  })
 })

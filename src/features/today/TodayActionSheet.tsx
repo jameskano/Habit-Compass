@@ -52,11 +52,13 @@ export const TodayActionSheet = ({
           <SheetTitle className="sr-only">
             {intl.formatMessage({ id: 'page.today.menu.title' }, { item: title })}
           </SheetTitle>
-          <h2 className="text-xl font-semibold">{title}</h2>
+          <h2 className="min-w-0 flex-1 truncate text-xl font-semibold" title={title}>
+            {title}
+          </h2>
           <Button
             variant="ghost"
             type="button"
-            className="h-10 w-10 rounded-full border border-border/70 p-0"
+            className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
             aria-label={intl.formatMessage({ id: 'action.close' })}
             onClick={onClose}
           >

@@ -47,7 +47,8 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Recurrent tasks remain binary-only and do not expose flexible times-per-period recurrence.
 - `customFutureRule` remains editable for legacy data but is not offered during creation.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
-- Recurrent tasks have priority `low`, `medium`, or `high`, stored order, and carry-forward behavior.
+- Recurrent tasks have priority `low`, `medium`, and `high`, and stored order.
+- Recurrent task occurrences do not carry forward. If a scheduled occurrence passes incomplete, read logic derives it as `missed` without writing an automatic occurrence record.
 - Recurrent tasks may include a description for item clarification and separate notes for extra user information.
 - The parent schedule is bounded by `startsOn` and optional `endsOn`.
 - Saving an end date before today archives the parent recurrent task after confirmation in the edit flow.
@@ -71,7 +72,7 @@ Users need repeatable tasks that regenerate over time without forcing them into 
   - `notes`
   - `categoryId`
   - `priority`
-  - `carryForward`
+  - `carryForward` legacy persisted compatibility field; current recurrent-task behavior ignores it
   - `order`
   - `lifecycleStatus`
   - `startsOn`
@@ -113,4 +114,4 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - Schema tests for each recurrence rule.
 - Unit tests for invalid day-of-week and day-of-month payloads.
 - Schema tests for recurrent task occurrence statuses.
-- Unit tests for carry-forward occurrence derivation without read-side writes.
+- Unit tests for missed occurrence derivation without read-side writes.

@@ -15,14 +15,9 @@ const getStandardTarget = (goalConfig: Exclude<HabitGoalConfig, { trackingType: 
   switch (goalConfig.trackingType) {
     case 'timesPerPeriod':
       return goalConfig.targetCount
-    case 'repetitionsPerPeriod':
-      return goalConfig.targetRepetitions
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return goalConfig.targetMinutes
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return goalConfig.targetQuantity
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return goalConfig.targetAmount
   }
 }
 
@@ -32,14 +27,9 @@ const getMinimumAmount = (goalConfig: HabitGoalConfig) => {
       return 0
     case 'timesPerPeriod':
       return goalConfig.minimumCount ?? 0
-    case 'repetitionsPerPeriod':
-      return goalConfig.minimumRepetitions ?? 0
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return goalConfig.minimumMinutes ?? 0
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return goalConfig.minimumQuantity ?? 0
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return goalConfig.minimumAmount ?? 0
   }
 }
 
@@ -59,11 +49,8 @@ export const getMinimumUnitLabel = (
   unitLabel: string,
 ) => {
   switch (trackingType) {
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return 'min'
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
       return unitLabel
     default:
       return ''
@@ -91,40 +78,20 @@ export const buildHabitGoalConfig = (values: HabitEditValues): HabitGoalConfig =
         targetCount: values.standardAmount,
         ...(minimum ? { minimumCount: minimum } : {}),
       }
-    case 'repetitionsPerPeriod':
+    case 'measurablePerSession':
       return {
-        trackingType: 'repetitionsPerPeriod',
-        ...periodConfig(values),
-        targetRepetitions: values.standardAmount,
-        ...(minimum ? { minimumRepetitions: minimum } : {}),
-      }
-    case 'timePerSession':
-      return {
-        trackingType: 'timePerSession',
-        targetMinutes: values.standardAmount,
-        ...(minimum ? { minimumMinutes: minimum } : {}),
-      }
-    case 'totalTimePerPeriod':
-      return {
-        trackingType: 'totalTimePerPeriod',
-        ...periodConfig(values),
-        targetMinutes: values.standardAmount,
-        ...(minimum ? { minimumMinutes: minimum } : {}),
-      }
-    case 'quantityPerSession':
-      return {
-        trackingType: 'quantityPerSession',
-        targetQuantity: values.standardAmount,
+        trackingType: 'measurablePerSession',
+        targetAmount: values.standardAmount,
         unitLabel: values.unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
-    case 'totalQuantityPerPeriod':
+    case 'totalMeasurablePerPeriod':
       return {
-        trackingType: 'totalQuantityPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         ...periodConfig(values),
-        targetQuantity: values.standardAmount,
+        targetAmount: values.standardAmount,
         unitLabel: values.unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
   }
 }
@@ -172,8 +139,8 @@ export const valuesForHabit = (habit: Habit): HabitEditValues => {
       habit.goalConfig.trackingType === 'binary' ? (habit.goalConfig.minimumDescription ?? '') : '',
     minimumAmount: minimumAmount > 0 ? minimumAmount : (undefined as unknown as number),
     unitLabel:
-      habit.goalConfig.trackingType === 'quantityPerSession' ||
-      habit.goalConfig.trackingType === 'totalQuantityPerPeriod'
+      habit.goalConfig.trackingType === 'measurablePerSession' ||
+      habit.goalConfig.trackingType === 'totalMeasurablePerPeriod'
         ? habit.goalConfig.unitLabel
         : '',
     period: 'period' in habit.goalConfig ? habit.goalConfig.period : 'week',
