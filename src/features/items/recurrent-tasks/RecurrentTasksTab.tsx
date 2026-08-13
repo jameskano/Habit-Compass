@@ -21,6 +21,7 @@ import { PendingState } from '@/shared/ui/PendingState'
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
+import { sortArchivedItems } from '../archiveOrdering.utils'
 import { RecurrentTaskCard } from './RecurrentTaskCard'
 
 const RecurrentTaskEdit = lazy(() =>
@@ -69,21 +70,23 @@ export const RecurrentTasksTab = ({
   const normalizedSearch = searchText.trim().toLowerCase()
   const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
 
-  const orderedTasks = useMemo(
-    () =>
-      [...tasks].sort((left, right) => {
-        const order = left.order - right.order
-        if (order !== 0) {
-          return order
-        }
-        const priority = priorityRank[right.priority] - priorityRank[left.priority]
-        if (priority !== 0) {
-          return priority
-        }
-        return left.startsOn.localeCompare(right.startsOn)
-      }),
-    [tasks],
-  )
+  const orderedTasks = useMemo(() => {
+    if (showingArchived) {
+      return sortArchivedItems(tasks)
+    }
+
+    return [...tasks].sort((left, right) => {
+      const order = left.order - right.order
+      if (order !== 0) {
+        return order
+      }
+      const priority = priorityRank[right.priority] - priorityRank[left.priority]
+      if (priority !== 0) {
+        return priority
+      }
+      return left.startsOn.localeCompare(right.startsOn)
+    })
+  }, [showingArchived, tasks])
 
   const displayTasks = useMemo(() => {
     const stored = occurrencesQuery.data ?? []
@@ -183,6 +186,7 @@ export const RecurrentTasksTab = ({
           reorderLabelId="page.items.recurrent.action.reorder"
           onReorder={reorderRecurrentTasks}
           revealCards={revealCards}
+          disabled={showingArchived}
         >
           {({ task, occurrence }) => (
             <RecurrentTaskCard

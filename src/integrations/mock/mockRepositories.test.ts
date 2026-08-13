@@ -168,6 +168,42 @@ describe('mock repositories', () => {
     )
   })
 
+  it('reactivates archived incomplete tasks as pending and rejects archived completed tasks', async () => {
+    const incompleteTask = getMockState().tasks.find((task) => task.id === 'task-clinic')
+    const completedTask = getMockState().tasks.find((task) => task.id === 'task-rent')
+
+    if (!incompleteTask || !completedTask) {
+      throw new Error('Expected task fixtures')
+    }
+
+    incompleteTask.lifecycleStatus = 'archived'
+    incompleteTask.completionStatus = 'skipped'
+    incompleteTask.archivedAt = new Date().toISOString()
+    completedTask.lifecycleStatus = 'archived'
+    completedTask.archivedAt = new Date().toISOString()
+
+    const reactivated = await mockTasksRepository.restore({
+      userId: mockData.currentUserId,
+      taskId: incompleteTask.id,
+    })
+    const rejected = await mockTasksRepository.restore({
+      userId: mockData.currentUserId,
+      taskId: completedTask.id,
+    })
+
+    expect(reactivated.ok && reactivated.data).toMatchObject({
+      lifecycleStatus: 'active',
+      completionStatus: 'pending',
+      completedAt: null,
+      archivedAt: null,
+    })
+    expect(rejected.ok).toBe(false)
+    expect(completedTask).toMatchObject({
+      lifecycleStatus: 'archived',
+      completionStatus: 'completed',
+    })
+  })
+
   it('physically deletes a habit and its completion logs', async () => {
     const result = await mockHabitsRepository.delete({
       userId: mockData.currentUserId,

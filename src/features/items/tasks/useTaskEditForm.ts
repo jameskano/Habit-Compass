@@ -6,10 +6,13 @@ import type { Category } from '@/domain/categories'
 import {
   useArchiveTaskMutation,
   useDeleteTaskMutation,
+  useRestoreTaskMutation,
   useUpdateTaskMutation,
 } from '@/features/tasks/hooks/useTaskMutations'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 
+import { getItemLimitKindFromError } from '../limits/itemLimitErrors'
+import { useItemLimitGate } from '../limits/useItemLimitGate'
 import { TaskEditValuesSchema, type TaskEditValues } from './taskEdit.schema'
 import type { TaskEditProps } from './taskEdit.types'
 import { buildTaskUpdateInput, getTaskCategoryOptions, valuesForTask } from './taskEdit.utils'
@@ -28,8 +31,14 @@ export const useTaskEditForm = ({
   const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
   const updateMutation = useUpdateTaskMutation()
   const archiveMutation = useArchiveTaskMutation()
+  const restoreMutation = useRestoreTaskMutation()
   const deleteMutation = useDeleteTaskMutation()
-  const pending = updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
+  const limitGate = useItemLimitGate()
+  const pending =
+    updateMutation.isPending ||
+    archiveMutation.isPending ||
+    restoreMutation.isPending ||
+    deleteMutation.isPending
   const form = useForm<TaskEditValues>({
     resolver: zodResolver(TaskEditValuesSchema),
     defaultValues: valuesForTask(task),
@@ -158,6 +167,30 @@ export const useTaskEditForm = ({
     archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
   }
 
+  const reactivateTask = () => {
+    if (!limitGate.canUse('task')) {
+      limitGate.openLimitDialog('task', 'restore')
+      return
+    }
+
+    restoreMutation.mutate(task.id, {
+      onError: (error) => {
+        const limitKind = getItemLimitKindFromError(error)
+
+        if (limitKind) {
+          limitGate.openLimitDialog(limitKind, 'restore')
+        }
+      },
+      onSuccess: () => {
+        appToast.success({
+          id: 'page.items.task.reactivated',
+          values: { task: task.title },
+        })
+        onClose()
+      },
+    })
+  }
+
   const deleteTask = () => {
     deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
   }
@@ -173,8 +206,11 @@ export const useTaskEditForm = ({
     handleCategorySheetOpenChange,
     handleDueDateChange,
     handlePriorityChange,
+    limitDialogState: limitGate.dialogState,
+    onCloseLimitDialog: limitGate.closeLimitDialog,
     openCategoryCreation,
     pending,
+    reactivateTask,
     selectCreatedCategory,
     selectedCategoryId,
     selectedDueDate,

@@ -3,7 +3,7 @@ import { type IntlShape, useIntl } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import {
-  calculateHabitStats,
+  calculateHabitDetailStats,
   getHabitFrequencySummary,
   type Habit,
   type HabitDayOfWeek,
@@ -28,7 +28,6 @@ type HabitCardProps = {
   category?: Category
   logs: HabitLog[]
   dates: ISODateString[]
-  from: ISODateString
   today: ISODateString
   archived: boolean
   onOpenOptions: () => void
@@ -95,7 +94,6 @@ export const HabitCard = ({
   category,
   logs,
   dates,
-  from,
   today,
   archived,
   onOpenOptions,
@@ -105,7 +103,7 @@ export const HabitCard = ({
 }: HabitCardProps) => {
   const intl = useIntl()
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
-  const stats = calculateHabitStats({ habit, logs, from, to: today, today, weekStartsOn })
+  const stats = calculateHabitDetailStats({ habit, logs, today, weekStartsOn })
   const CategoryIcon = category ? getCategoryIcon(category.iconName) : null
   const frequency = formatFrequency(intl, habit)
   const priorityLabel = `${intl.formatMessage({ id: 'page.items.habit.edit.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${habit.priority}` })}`

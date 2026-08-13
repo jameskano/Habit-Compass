@@ -1,4 +1,9 @@
-import { shouldAutoArchiveCompletedTask, type Task, type TasksRepository } from '@/domain/tasks'
+import {
+  reactivateTask,
+  shouldAutoArchiveCompletedTask,
+  type Task,
+  type TasksRepository,
+} from '@/domain/tasks'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 
@@ -226,15 +231,46 @@ export const supabaseTasksRepository: TasksRepository = {
 
   async restore({ taskId }) {
     return execute(async () => {
+      const current = await getSupabaseClient()
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .maybeSingle()
+
+      if (current.error) return err(toSupabaseError('Could not load task.', current.error))
+      if (!current.data) return err(createNotFoundError('Task', taskId))
+
+      const reactivatedTask = reactivateTask(
+        mapTask(current.data as TaskRow),
+        new Date().toISOString(),
+      )
+
+      if (!reactivatedTask) {
+        return err(
+          createAppError('validation', 'Only archived incomplete tasks can be reactivated.'),
+        )
+      }
+
       const { data, error } = await getSupabaseClient()
         .from('tasks')
-        .update({ archived_at: null })
+        .update({
+          archived_at: null,
+          completed_at: null,
+          status: 'pending',
+          updated_at: reactivatedTask.updatedAt,
+        })
         .eq('id', taskId)
+        .not('archived_at', 'is', null)
+        .neq('status', 'completed')
         .select('*')
         .maybeSingle()
 
       if (error) return err(toSupabaseError('Could not restore task.', error))
-      if (!data) return err(createNotFoundError('Task', taskId))
+      if (!data) {
+        return err(
+          createAppError('validation', 'Only archived incomplete tasks can be reactivated.'),
+        )
+      }
       return ok(mapTask(data as TaskRow))
     })
   },

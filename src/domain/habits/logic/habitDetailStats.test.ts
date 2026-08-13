@@ -18,28 +18,30 @@ describe('habit detail stats', () => {
       ],
     })
 
-    expect(result.completionPercentage).toBe(50)
+    expect(result.completionPercentage).toBe(67)
     expect(result.completionsThisWeek).toBe(2)
     expect(result.completionsThisMonth).toBe(2)
     expect(result.completionsThisYear).toBe(2)
     expect(result.totalCompletions).toBe(2)
   })
 
-  it('uses the current flexible goal period instead of deriving empty-day failure', () => {
+  it('calculates flexible goal percentage across every lifetime period', () => {
     const result = calculateHabitDetailStats({
       habit: createHabit(
         { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
-        { startsOn: '2026-01-01' },
+        { startsOn: '2026-05-11' },
       ),
       today: '2026-05-21',
       logs: [
+        createHabitLog({ id: 'old-one', loggedForDate: '2026-05-11' }),
+        createHabitLog({ id: 'old-two', loggedForDate: '2026-05-13' }),
+        createHabitLog({ id: 'old-three', loggedForDate: '2026-05-15' }),
         createHabitLog({ id: 'current', loggedForDate: '2026-05-20' }),
-        createHabitLog({ id: 'old', loggedForDate: '2026-04-03' }),
       ],
     })
 
-    expect(result.completionPercentage).toBe(0)
-    expect(result.totalCompletions).toBe(2)
+    expect(result.completionPercentage).toBe(50)
+    expect(result.totalCompletions).toBe(4)
     expect(result.currentStreak).toBeNull()
   })
 

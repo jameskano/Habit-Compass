@@ -519,17 +519,19 @@ describe('app shell', () => {
     render(<App />)
 
     const habitCard = await screen.findByRole('button', {
-      name: 'Complete or edit Move for 20 minutes',
+      name: 'Complete or edit Drink water after lunch',
     })
+    await user.click(habitCard)
+    expect(await within(habitCard).findByLabelText('Completed')).toBeInTheDocument()
     fireEvent.contextMenu(habitCard)
 
     expect(
-      screen.getByRole('dialog', { name: 'Actions for Move for 20 minutes' }),
+      screen.getByRole('dialog', { name: 'Actions for Drink water after lunch' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
     const resetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     expect(
-      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+      screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
     ).not.toBeInTheDocument()
 
     await user.click(within(resetDialog).getByRole('button', { name: 'Cancel' }))
@@ -546,8 +548,10 @@ describe('app shell', () => {
     expect(
       await screen.findByText('Progress reset. The habit remains available.'),
     ).toBeInTheDocument()
+    expect(await within(habitCard).findByLabelText('Not completed')).toBeInTheDocument()
+    expect(within(habitCard).queryByLabelText('Completed')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+      screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
     ).not.toBeInTheDocument()
   })
 

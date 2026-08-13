@@ -1,6 +1,11 @@
 import { err, ok, type Result } from '@/shared/utils/result'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
-import { shouldAutoArchiveCompletedTask, type Task, type TasksRepository } from '@/domain/tasks'
+import {
+  reactivateTask,
+  shouldAutoArchiveCompletedTask,
+  type Task,
+  type TasksRepository,
+} from '@/domain/tasks'
 
 import { getMockState } from './mockData'
 
@@ -135,12 +140,19 @@ export const mockTasksRepository: TasksRepository = {
   },
 
   async restore({ taskId }) {
-    return updateTaskInState(taskId, (task) => ({
-      ...task,
-      lifecycleStatus: 'active',
-      archivedAt: null,
-      updatedAt: new Date().toISOString(),
-    }))
+    const task = getMockState().tasks.find((entry) => entry.id === taskId)
+
+    if (!task) {
+      return err(createNotFoundError('Task', taskId))
+    }
+
+    const reactivatedTask = reactivateTask(task, new Date().toISOString())
+
+    if (!reactivatedTask) {
+      return err(createAppError('validation', 'Only archived incomplete tasks can be reactivated.'))
+    }
+
+    return updateTaskInState(taskId, () => reactivatedTask)
   },
 
   async reorder({ userId, orderedTaskIds }) {

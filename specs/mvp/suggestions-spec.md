@@ -93,6 +93,13 @@ protect context when a day is overloaded.
 - Applied suggestion state.
 - Dismissed suggestion state.
 
+## Current UI Availability
+
+The Today suggestion card is intentionally hidden from the current product. Its reusable card,
+rule-based support-nudge logic, and domain model remain in the codebase for a future, separately
+specified suggestion experience, including possible AI-assisted support. No suggestion UI is
+currently rendered on Today.
+
 ## Edge Cases
 
 - A suggestion can exist without a habit target.

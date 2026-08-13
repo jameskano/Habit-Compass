@@ -52,6 +52,10 @@ Users need a habit model that works for the simplest possible case, while still 
   `7` per week, `28` per month, and `365` per year.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
 - Below-minimum measurable logs are visible as progress but score `0` for completion stats.
+- Minimum and standard completions count equally as completed opportunities in the habit's lifetime
+  completion percentage.
+- Skipped and missed scheduled opportunities both remain in the lifetime completion-percentage
+  denominator. They remain visually distinct and retain different streak behavior.
 - Period-based measurable habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
 - Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
@@ -139,6 +143,8 @@ Users need a habit model that works for the simplest possible case, while still 
 - Soft reset is modeled separately from hard reset.
 - Archive and delete are both available in the domain contract.
 - Archived dates remain excluded from derived stats across any number of archive/reactivation cycles.
+- A habit with minimum completion on every eligible opportunity has a `100%` lifetime completion
+  percentage, the same as a habit with standard completion on every opportunity.
 
 ## Test Plan
 
@@ -147,5 +153,5 @@ Users need a habit model that works for the simplest possible case, while still 
 - Unit tests for invalid zero or negative targets.
 - Unit tests ensuring custom period rules require a valid custom day count.
 - Unit tests for deriving a missed day from schedule, date, and absent logs.
-- Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped exclusions, and explicit-schedule streaks.
+- Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped percentage inclusion, and explicit-schedule streaks.
 - Unit tests for archive/reactivation boundaries, repeated inactivity periods, archived mutation guards, and future-compatible paused periods.

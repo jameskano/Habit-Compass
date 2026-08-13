@@ -38,6 +38,10 @@ Creation flows:
 - Recurrent task: executable frequency, details.
 - Category: create/edit bottom sheet with name, icon picker, and horizontal color palette.
 
+Weekday toggle buttons in create and edit forms preserve their selected treatment after touch.
+Their hover treatment is limited to devices with hover support and a fine pointer, matching the
+bottom navigation interaction pattern.
+
 Habit, task, and recurrent-task create/edit forms show `Create category` below their category
 selector. Opening it must not unmount or reset the interrupted item form, and successful creation
 selects the new category.
@@ -56,7 +60,7 @@ Each habit card should show:
 
 [Last 7 days, ending today]
 
-[Compact percentage] [Compact streak number] [Calendar icon] [Options icon]
+[Compact lifetime percentage] [Compact streak number] [Calendar icon] [Options icon]
 ```
 
 The last day in the 7-day strip is today.
@@ -199,7 +203,8 @@ Calendar cells use the same 40px maximum as the card strip. The visible legend i
 
 Stats should be simple:
 
-1. Circular percentage chart with percentage in the middle.
+1. Circular lifetime percentage chart with percentage in the middle. This is the same lifetime
+   percentage shown on the habit card.
 2. Basic stats:
    - Completions this week.
    - Completions this month.
@@ -302,6 +307,9 @@ The archive icon can show:
 
 But internally, completed and archived are different.
 
+Archived incomplete tasks show an `Archived` status and offer Reactivate. Archived completed tasks
+show `Completed` and do not offer Reactivate.
+
 ## Task edit form
 
 Required:
@@ -319,8 +327,13 @@ Optional:
 
 Danger/archive section:
 
-- Archive
+- Archive for active tasks.
+- Reactivate for archived incomplete tasks.
+- No Archive or Reactivate action for archived completed tasks.
 - Delete
+
+Reactivating returns the task to the active list as pending and is subject to the same active task
+limit as creation.
 
 Recommended field label:
 

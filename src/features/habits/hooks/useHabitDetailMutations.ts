@@ -86,6 +86,7 @@ export const useResetHabitProgressMutation = (userId = MOCK_USER_ID) => {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['habits', userId] }),
+        queryClient.invalidateQueries({ queryKey: ['habits', 'today', userId] }),
         queryClient.invalidateQueries({ queryKey: ['habit-logs', userId] }),
       ])
     },

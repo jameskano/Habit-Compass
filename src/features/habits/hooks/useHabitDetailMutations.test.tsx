@@ -40,7 +40,7 @@ describe('habit detail mutations', () => {
     vi.restoreAllMocks()
   })
 
-  it('hard reset passes today and invalidates habits plus habit logs', async () => {
+  it('hard reset passes today and invalidates habit lists, Today data, and habit logs', async () => {
     const queryClient = createQueryClient()
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
     const habit = cloneMockState().habits.find((entry) => entry.id === 'habit-read')
@@ -66,6 +66,9 @@ describe('habit detail mutations', () => {
       resetDate: '2026-07-14',
     })
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['habits', MOCK_USER_ID] })
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: ['habits', 'today', MOCK_USER_ID],
+    })
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['habit-logs', MOCK_USER_ID] })
   })
 })

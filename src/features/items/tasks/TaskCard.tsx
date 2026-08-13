@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Archive, Check } from 'lucide-react'
 import { type KeyboardEvent } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -125,6 +125,11 @@ export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskC
             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
               <Check aria-hidden="true" size={13} />
               {intl.formatMessage({ id: 'page.items.task.status.completed' })}
+            </span>
+          ) : archived ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+              <Archive aria-hidden="true" size={13} />
+              {intl.formatMessage({ id: 'page.items.task.status.archived' })}
             </span>
           ) : null}
         </footer>

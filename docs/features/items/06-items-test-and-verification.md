@@ -49,6 +49,9 @@ Test:
 
 ## Habit percentage
 
+Verify that the habit card and Stats tab use the same lifetime window rather than the last seven
+days or only the current flexible scoring period.
+
 Test explicit schedule:
 
 ```txt
@@ -56,7 +59,7 @@ Test explicit schedule:
 2 standard completions
 1 minimum completion
 1 missed
-percentage = 2.5 / 4 = 62.5%
+percentage = 3 / 4 = 75%
 ```
 
 Test skipped:
@@ -66,9 +69,17 @@ Test skipped:
 2 standard completions
 1 skipped
 1 missed
-expected = 3
-score = 2
-percentage = 66.6%
+expected = 4
+completed = 2
+percentage = 50%
+```
+
+Test all minimum:
+
+```txt
+4 scheduled days
+4 minimum completions
+percentage = 4 / 4 = 100%
 ```
 
 Test measurable amount:
@@ -107,6 +118,16 @@ Test:
 - Today before future.
 - Future sorted ascending.
 - Archived/completed excluded from active list unless archive view is active.
+
+## Archive sorting
+
+Test that habit, task, and recurrent-task archive views:
+
+- Show newer `archivedAt` timestamps before older timestamps.
+- Preserve newest-first order after search or category filtering.
+- Put legacy archived records without `archivedAt` last.
+- Do not expose manual reorder controls.
+- Leave active-list ordering unchanged.
 
 ## Recurrent task occurrence behavior
 
@@ -197,6 +218,11 @@ manual skip sets status skipped
 - Completing a task shows a success toast.
 - Completed task gets completedAt.
 - Completed and archived are not treated as the same internally.
+- Archived pending, skipped, and missed tasks offer Reactivate and return to active pending state.
+- Archived completed tasks show Completed and do not offer Reactivate.
+- Reactivation preserves task details, clears archivedAt/completedAt, and remains blocked at the
+  active task limit.
+- Direct repository reactivation rejects archived completed tasks without changing them.
 - Delete requires confirmation.
 
 ## Recurrent tasks

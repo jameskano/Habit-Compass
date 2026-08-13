@@ -4,6 +4,7 @@ import type { Task } from './types'
 import { TaskSchema } from './schemas'
 import { sortTasks } from './logic/taskOrdering'
 import { shouldAutoArchiveCompletedTask } from './logic/taskAutoArchive'
+import { canReactivateTask, reactivateTask } from './logic/taskReactivation'
 
 const task = (overrides: Partial<Task> = {}): Task => {
   return {
@@ -95,5 +96,29 @@ describe('tasks domain', () => {
         '2026-05-21',
       ),
     ).toBe(false)
+  })
+
+  it('reactivates only archived incomplete tasks and resets them to pending', () => {
+    const archivedMissedTask = task({
+      lifecycleStatus: 'archived',
+      completionStatus: 'missed',
+      archivedAt: '2026-05-20T10:00:00.000Z',
+    })
+
+    expect(canReactivateTask(archivedMissedTask)).toBe(true)
+    expect(reactivateTask(archivedMissedTask, '2026-05-21T10:00:00.000Z')).toMatchObject({
+      lifecycleStatus: 'active',
+      completionStatus: 'pending',
+      completedAt: null,
+      archivedAt: null,
+      updatedAt: '2026-05-21T10:00:00.000Z',
+    })
+    expect(canReactivateTask(task({ lifecycleStatus: 'active' }))).toBe(false)
+    expect(
+      reactivateTask(
+        task({ lifecycleStatus: 'archived', completionStatus: 'completed' }),
+        '2026-05-21T10:00:00.000Z',
+      ),
+    ).toBeNull()
   })
 })

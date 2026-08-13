@@ -62,7 +62,6 @@ describe('long item name truncation', () => {
           habit={habit}
           logs={[]}
           dates={recentDates()}
-          from={habit.startsOn}
           today={mockData.today}
           archived={false}
           onOpenOptions={vi.fn()}

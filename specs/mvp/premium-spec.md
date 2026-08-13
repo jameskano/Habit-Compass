@@ -82,6 +82,8 @@ scarcity, shame, or punitive streak language.
   the user's history and must not be deleted to satisfy limits.
 - Reactivating an archived item or reopening a completed task must respect the same active-item
   limits as creating a new active item.
+- Reopening a completed one-time task means undoing completion while the task is still active.
+  Archived completed tasks are historical and cannot be reactivated or reopened.
 - Item-limit checks must run before opening creation UI, again before client-side save, and at the
   database layer for inserts or updates that would increase the active/open item count.
 - Existing active/open items may still be edited when the user is already at the limit, provided the

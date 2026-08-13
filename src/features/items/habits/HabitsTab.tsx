@@ -23,6 +23,7 @@ import { PendingState } from '@/shared/ui/PendingState'
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { SortableItemsList } from '../components/SortableItemsList'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
+import { sortArchivedItems } from '../archiveOrdering.utils'
 import { HabitCard } from './HabitCard'
 import type { HabitDetailTab } from './HabitDetail'
 import { HabitOptionsSheet } from './HabitOptionsSheet'
@@ -53,9 +54,12 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
     () => Array.from({ length: 7 }, (_, index) => asISODate(subDays(parseISO(today), 6 - index))),
     [today],
   )
-  const from = dates[0]
+  const logsFrom = habits.reduce(
+    (earliest, habit) => (habit.startsOn < earliest ? habit.startsOn : earliest),
+    today,
+  )
   const categoriesQuery = useCategoriesQuery()
-  const logsQuery = useHabitLogsRangeQuery({ from, to: today })
+  const logsQuery = useHabitLogsRangeQuery({ from: logsFrom, to: today })
   const archiveMutation = useArchiveHabitMutation()
   const reorderMutation = useReorderHabitsMutation()
   const resetMutation = useResetHabitProgressMutation()
@@ -81,7 +85,9 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
   const categoriesById = new Map(
     (categoriesQuery.data ?? []).map((category) => [category.id, category]),
   )
-  const orderedHabits = [...habits].sort((left, right) => left.order - right.order)
+  const orderedHabits = showingArchived
+    ? sortArchivedItems(habits)
+    : [...habits].sort((left, right) => left.order - right.order)
   const normalizedSearch = searchText.trim().toLowerCase()
   const hasFilters = normalizedSearch.length > 0 || categoryId.length > 0
   const visibleHabits = orderedHabits.filter(
@@ -222,7 +228,6 @@ export const HabitsTab = ({ habits, showingArchived, onToggleArchive }: HabitsTa
               category={habit.categoryId ? categoriesById.get(habit.categoryId) : undefined}
               logs={(logsQuery.data ?? []).filter((log) => log.habitId === habit.id)}
               dates={dates}
-              from={from}
               today={today}
               archived={showingArchived}
               onOpenOptions={() => setSelectedHabitId(habit.id)}

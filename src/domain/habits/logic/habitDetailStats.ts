@@ -72,24 +72,6 @@ const filterLogsForHabit = (habit: Habit, logs: HabitLog[]) => {
   return logs.filter((log) => log.habitId === habit.id)
 }
 
-const getFlexibleStatsStart = (habit: Habit, today: ISODateString, weekStartsOn: WeekStartsOn) => {
-  const goal = habit.goalConfig
-  if (!('period' in goal)) {
-    return habit.startsOn
-  }
-
-  const startsOn =
-    goal.period === 'day'
-      ? today
-      : goal.period === 'week'
-        ? startOfWeek(today, weekStartsOn)
-        : goal.period === 'month'
-          ? startOfMonth(today)
-          : addDays(today, -Math.max((goal.customPeriodDays ?? 1) - 1, 0))
-
-  return startsOn < habit.startsOn ? habit.startsOn : startsOn
-}
-
 export const calculateHabitDetailStats = (input: {
   habit: Habit
   logs: HabitLog[]
@@ -98,14 +80,10 @@ export const calculateHabitDetailStats = (input: {
 }): HabitDetailStats => {
   const { habit, logs, today, weekStartsOn = 1 } = input
   const eligibleLogs = filterEligibleHabitLogs(habit, filterLogsForHabit(habit, logs))
-  const from =
-    habit.scheduleRule.kind === 'flexiblePeriod'
-      ? getFlexibleStatsStart(habit, today, weekStartsOn)
-      : habit.startsOn
   const stats = calculateHabitStats({
     habit,
     logs: eligibleLogs,
-    from,
+    from: habit.startsOn,
     to: today,
     today,
     weekStartsOn,

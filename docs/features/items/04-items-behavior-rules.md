@@ -168,7 +168,7 @@ Skipped days are stored as logs.
 Skipped days:
 
 - Do not count as completion.
-- Do not count against percentage denominator.
+- Remain in the percentage denominator as incomplete opportunities, like missed days.
 - Do not break streak.
 - Do not increment streak.
 
@@ -184,15 +184,22 @@ Not scheduled days are derived from frequency and should not be displayed as mis
 
 # Habit stats behavior
 
+The percentage shown on both the habit card and the habit Stats tab is calculated across the
+habit's full lifetime, from `startsOn` through today or an earlier `endsOn`. The last-seven-days
+strip and the week/month/year chart controls do not change this percentage window.
+Minimum and standard completions each count as one completed opportunity for this percentage.
+Below-minimum progress remains incomplete.
+
 ## Explicit schedule stats
 
 For daily/specific days/interval/monthly pattern:
 
 ```txt
-percentage = total completion score / expected score
+percentage = completed opportunities / expected opportunities
 ```
 
-Where expected score is scheduled days minus skipped scheduled days.
+Expected opportunities include both skipped and missed scheduled days. Inactive scheduled days and
+pending today remain excluded.
 
 Inactive scheduled days are also excluded. Ignore malformed logs recorded inside inactive dates.
 
@@ -201,8 +208,12 @@ Inactive scheduled days are also excluded. Ignore malformed logs recorded inside
 For `times_per_period`:
 
 ```txt
-percentage = valid period completion score / expected period score
+percentage = completed periods / expected periods
 ```
+
+The lifetime percentage combines every eligible scoring period that intersects the habit lifetime,
+including periods without logs. The current partial period is included. Calendar week boundaries
+respect `weekStartsOn`.
 
 A flexible times-per-period habit should not mark every non-completed day as missed.
 
@@ -275,6 +286,12 @@ legacy undated tasks are not auto-archived.
 ## Archive task
 
 Archiving hides the task from active list without marking it as done.
+
+## Reactivate task
+
+Archived pending, skipped, and missed tasks can be reactivated. Reactivation clears the archive and
+completion timestamps, resets the task to pending, preserves its details, and respects the active
+incomplete task limit. Archived completed tasks remain historical and cannot be reactivated.
 
 ## Delete task
 

@@ -4,7 +4,7 @@ import { createCompletionLevelHabit, createHabit, createHabitLog } from './habit
 import { calculateHabitStats } from './habitStats'
 
 describe('calculateHabitStats', () => {
-  it('scores explicit schedules, excludes skipped days, and calculates streaks', () => {
+  it('scores explicit schedules, includes skipped days in percentage, and calculates streaks', () => {
     const habit = createCompletionLevelHabit({ trackingType: 'binary' }, ['minimum', 'standard'], {
       startsOn: '2026-05-18',
       scheduleRule: { kind: 'daily' },
@@ -24,10 +24,70 @@ describe('calculateHabitStats', () => {
 
     expect(result.completionEvents).toBe(2)
     expect(result.completionScore).toBe(1.5)
-    expect(result.expectedScore).toBe(2)
-    expect(result.completionPercentage).toBe(75)
+    expect(result.expectedScore).toBe(3)
+    expect(result.completionPercentage).toBe(67)
     expect(result.currentStreak).toBe(2)
     expect(result.bestStreak).toBe(2)
+  })
+
+  it('treats all minimum completions as 100 percent complete', () => {
+    const habit = createCompletionLevelHabit({ trackingType: 'binary' }, ['minimum', 'standard'], {
+      startsOn: '2026-05-18',
+      scheduleRule: { kind: 'daily' },
+    })
+    const result = calculateHabitStats({
+      habit,
+      logs: [
+        createHabitLog({ id: 'one', loggedForDate: '2026-05-18', completionLevel: 'minimum' }),
+        createHabitLog({ id: 'two', loggedForDate: '2026-05-19', completionLevel: 'minimum' }),
+        createHabitLog({ id: 'three', loggedForDate: '2026-05-20', completionLevel: 'minimum' }),
+      ],
+      from: '2026-05-18',
+      to: '2026-05-20',
+      today: '2026-05-20',
+    })
+
+    expect(result.completionScore).toBe(1.5)
+    expect(result.completionEvents).toBe(3)
+    expect(result.expectedScore).toBe(3)
+    expect(result.completionPercentage).toBe(100)
+  })
+
+  it('keeps skipped scheduled days in the completion-percentage denominator', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      { startsOn: '2026-05-18', scheduleRule: { kind: 'daily' } },
+    )
+    const result = calculateHabitStats({
+      habit,
+      logs: [
+        createHabitLog({ id: 'completed', loggedForDate: '2026-05-18' }),
+        ...(
+          [
+            '2026-05-19',
+            '2026-05-20',
+            '2026-05-21',
+            '2026-05-22',
+            '2026-05-23',
+            '2026-05-24',
+          ] as const
+        ).map((date, index) =>
+          createHabitLog({
+            id: `skipped-${index}`,
+            loggedForDate: date,
+            status: 'skipped',
+          }),
+        ),
+      ],
+      from: '2026-05-18',
+      to: '2026-05-24',
+      today: '2026-05-24',
+    })
+
+    expect(result.completionEvents).toBe(1)
+    expect(result.expectedScore).toBe(7)
+    expect(result.completionPercentage).toBe(14)
+    expect(result.currentStreak).toBe(1)
   })
 
   it('reports flexible period progress without per-day streaks', () => {
@@ -46,7 +106,7 @@ describe('calculateHabitStats', () => {
     })
 
     expect(result.completionScore).toBe(0.5)
-    expect(result.completionPercentage).toBe(50)
+    expect(result.completionPercentage).toBe(100)
     expect(result.currentStreak).toBeNull()
   })
 
@@ -77,7 +137,7 @@ describe('calculateHabitStats', () => {
 
     expect(result.completionEvents).toBe(2)
     expect(result.completionScore).toBe(1.5)
-    expect(result.expectedScore).toBe(3)
+    expect(result.expectedScore).toBe(4)
     expect(result.completionPercentage).toBe(50)
   })
 

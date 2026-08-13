@@ -12,7 +12,6 @@ import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 import { PendingState } from '@/shared/ui/PendingState'
-import { SuggestionCard } from '@/shared/ui/SuggestionCard'
 
 import { TodayActionSheet } from './TodayActionSheet'
 import { TodayDateNavigator } from './TodayDateNavigator'
@@ -30,7 +29,6 @@ import { useTodayCompletionActions } from './useTodayCompletionActions'
 import { useTodayMenuActions } from './useTodayMenuActions'
 import { useTodayPageData } from './useTodayPageData'
 import { useTodayShellActions } from './useTodayShellActions'
-import { useTodaySupportNudge } from './useTodaySupportNudge'
 
 const HabitConfirmationDialog = lazy(() =>
   import('@/features/items/habits/HabitConfirmationDialog').then((module) => ({
@@ -101,11 +99,6 @@ export const TodayPage = () => {
     completionEnabled,
     openAmountInput: setAmountHabitId,
   })
-  const supportNudge = useTodaySupportNudge({
-    items: todayData.orderedItems,
-    selectedDate,
-    today: actualToday,
-  })
 
   const closeMenu = () => {
     setSelectedMenuItemId(null)
@@ -136,23 +129,6 @@ export const TodayPage = () => {
       buildVisibleTodayOrder(todayData.orderedItems, visibleOrderedIds),
     )
   }
-  const applySupportNudgeMinimum = () => {
-    if (!supportNudge || !completionEnabled) {
-      return
-    }
-
-    const targetItem = todayData.orderedItems.find(
-      (item) => item.type === 'habit' && item.habit.id === supportNudge.targetHabitId,
-    )
-    if (targetItem?.type !== 'habit') {
-      supportNudge.dismiss()
-      return
-    }
-
-    completionActions.upsertHabitCompleted(targetItem.habit, 'minimum')
-    supportNudge.dismiss()
-  }
-
   if (todayData.isLoading) {
     return (
       <section className="space-y-6">
@@ -183,17 +159,6 @@ export const TodayPage = () => {
         activeCategories={todayData.activeCategories}
         onFiltersChange={setFilters}
       />
-
-      {supportNudge ? (
-        <SuggestionCard
-          titleId={supportNudge.titleId}
-          descriptionId={supportNudge.descriptionId}
-          actionId={supportNudge.actionId}
-          dismissLabelId={supportNudge.dismissLabelId}
-          onAction={applySupportNudgeMinimum}
-          onDismiss={supportNudge.dismiss}
-        />
-      ) : null}
 
       {todayData.visibleItems.length === 0 ? (
         <EmptyState titleId={emptyState.titleId} descriptionId={emptyState.descriptionId} />

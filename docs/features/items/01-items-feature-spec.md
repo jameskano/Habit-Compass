@@ -187,6 +187,11 @@ If users want to keep an item and its history, they should archive it. If they d
 
 Archived habits can be reactivated from the archive view. Their archived dates stay excluded from stats.
 
+Across habits, tasks, and recurrent tasks, archive views order items by `archivedAt` descending so
+the most recently archived item appears first. Search and category filters preserve that order.
+Archive views do not allow manual reordering. Archived records without an archive timestamp appear
+after timestamped records, while equal timestamps preserve their existing relative order.
+
 ## MVP decisions locked
 
 - Items section has three tabs.
@@ -206,4 +211,5 @@ Archived habits can be reactivated from the archive view. Their archived dates s
 - Minimum completion should be light green.
 - Standard completion should be stronger green.
 - The archive filter uses the primary active treatment while archived content is shown.
+- All archive views show the most recently archived items first and do not allow manual reordering.
 - Habit calendar legends omit future, not-scheduled, and pending-today entries while cells still display those states.

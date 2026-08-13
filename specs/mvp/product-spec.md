@@ -20,7 +20,7 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Users can archive or delete items.
 - Soft reset is the default reset behavior.
 - Simple contextual stats are shown where useful.
-- Rule-based suggestions can appear when simple patterns are detected.
+- Rule-based suggestion infrastructure is retained for future use; no suggestion card is currently shown.
 - Today summary item cards show category, priority, schedule/due metadata, and completion state
   while keeping item management behavior in Items.
 - Settings includes Categories, Preferences, Data and privacy, Support and feedback, account actions,

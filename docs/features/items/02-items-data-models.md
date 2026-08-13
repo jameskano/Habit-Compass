@@ -243,7 +243,7 @@ For binary habits:
 standard completion = 1.0
 minimum completion = 0.5
 missed = 0
-skipped = excluded from denominator
+skipped = 0 for percentage
 ```
 
 For session-based measurable habits:
@@ -274,20 +274,21 @@ If no minimum target exists, never produce `completed_minimum`.
 For explicit schedules such as daily, specific days, interval, or monthly pattern:
 
 ```txt
-completion percentage = total completion score / total expected score
+completion percentage = completed opportunities / total expected opportunities
 ```
 
 Where:
 
 - Expected scheduled day = 1 expected point.
-- Skipped scheduled day = excluded from denominator.
-- Missed scheduled day = 0 points.
+- Skipped scheduled day = an incomplete opportunity, like missed, for percentage purposes.
+- Minimum and standard completion each count as one completed opportunity.
+- Missed or below-minimum scheduled day = an incomplete opportunity.
 - Inactive scheduled day = excluded from the denominator and streak evaluation.
 
 For flexible period schedules:
 
 ```txt
-completion percentage for period = valid period score / 1
+completion percentage for period = completed periods / expected periods
 ```
 
 If any inactive date overlaps a flexible weekly, monthly, or custom period, omit that period from scoring rather than prorating its target.
@@ -310,7 +311,7 @@ Use two separate ideas:
 export interface HabitStats {
   completionEvents: number // number of valid completions
   completionScore: number // sum of valid completion scores
-  expectedScore: number // denominator after skipped exclusions
+  expectedScore: number // eligible scheduled opportunities, including skipped and missed
   completionPercentage: number
   currentStreak: number
   bestStreak: number
@@ -319,7 +320,8 @@ export interface HabitStats {
 
 For the UI text “completions this week/month/year/total”, use `completionEvents`.
 
-For percentages, use `completionScore / expectedScore`.
+For percentages, use `completionEvents / expectedScore`. Minimum and standard completions are equal
+for this percentage even though `completionScore` preserves their weighted distinction.
 
 ### Streak
 
@@ -369,8 +371,12 @@ export interface Task {
 Completed tasks are not the same as archived tasks:
 
 - Completed means the user did the task.
-- Archived means the user wants to hide/keep the task without marking it as done.
+- Archived means the task is hidden from active use, either by user choice or by completed-task
+  cleanup.
 - Deleted means real deletion after confirmation.
+
+Archived incomplete tasks can be reactivated and return as pending. Archived completed tasks are
+historical and cannot be reactivated.
 
 ---
 
