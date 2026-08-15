@@ -70,11 +70,11 @@ Cards and their reorder handles must stay inside the available viewport width on
 The frequency summary should be short and human-readable:
 
 - Every day.
-- 3 times/week.
+- 3 days/week.
 - Mon, Wed, Fri.
 - Every 2 days.
 - First Monday/month.
-- 30 min, 3 times/week.
+- 30 min, 3 days/week.
 
 Habit names on cards use single-line truncation with an ellipsis when they are too long for the
 available width. The full name remains available through the control's accessible name and the
@@ -146,7 +146,7 @@ Reset progress should preserve the habit but clear logs/history after confirmati
 
 ### Habit day interactions
 
-Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are muted and disabled. Active `flexiblePeriod` days remain actionable even when their empty display state is `not_scheduled`.
+Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are muted and disabled. Active `certainDaysPerPeriod` dates remain actionable until the period target is reached, even when their empty display state is `not_scheduled`.
 
 Binary habits:
 
@@ -155,7 +155,7 @@ Binary habits:
 - Long press opens Complete, Skip day, and Mark as undone actions.
 - When minimum is configured, the long-press sheet replaces Complete with Complete standard and adds Complete minimum.
 
-`timesPerPeriod` habits:
+`certainDaysPerPeriod` habits:
 
 - Tap toggles one completion event for the selected day.
 - Long press opens Complete, Skip day, and Clear log actions.

@@ -18,9 +18,10 @@ type HabitEditDetailsSectionProps = {
   onCategoryChange: (value: string) => void
   onCreateCategory: () => void
   onEndDateChange: (value: string) => void
+  onCompletionModeChange: (value: string) => void
   onPeriodChange: (value: string) => void
   onPriorityChange: (value: string) => void
-  onTrackingTypeChange: (value: string) => void
+  onScopeChange: (value: string) => void
 }
 
 export const HabitEditDetailsSection = memo(
@@ -31,9 +32,10 @@ export const HabitEditDetailsSection = memo(
     onCategoryChange,
     onCreateCategory,
     onEndDateChange,
+    onCompletionModeChange,
     onPeriodChange,
     onPriorityChange,
-    onTrackingTypeChange,
+    onScopeChange,
   }: HabitEditDetailsSectionProps) => {
     const intl = useIntl()
     const { errors } = useFormState({ control: form.control, name: 'endsOn' })
@@ -55,8 +57,9 @@ export const HabitEditDetailsSection = memo(
         />
         <HabitEditTrackingFields
           form={form}
+          onCompletionModeChange={onCompletionModeChange}
           onPeriodChange={onPeriodChange}
-          onTrackingTypeChange={onTrackingTypeChange}
+          onScopeChange={onScopeChange}
         />
         <label className="block text-sm font-medium">
           {intl.formatMessage({ id: 'page.items.habit.edit.description' })}

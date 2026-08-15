@@ -5,6 +5,7 @@ import {
   HabitCompletionLevelSchema,
   HabitGoalConfigSchema,
   HabitLogStatusSchema,
+  HabitScheduleRuleSchema,
   HabitSchema,
 } from './schemas'
 
@@ -43,16 +44,17 @@ describe('HabitGoalConfigSchema', () => {
     ).toBe(true)
   })
 
-  it('parses a frequency goal with a custom period', () => {
+  it('parses a total measurable goal with a custom period', () => {
     const goal = HabitGoalConfigSchema.parse({
-      trackingType: 'timesPerPeriod',
-      targetCount: 3,
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'custom',
       customPeriodDays: 10,
+      targetAmount: 30,
+      unitLabel: 'minutes',
     })
 
-    if (goal.trackingType !== 'timesPerPeriod') {
-      throw new Error('Expected a timesPerPeriod goal')
+    if (goal.trackingType !== 'totalMeasurablePerPeriod') {
+      throw new Error('Expected a total measurable period goal')
     }
 
     expect(goal.customPeriodDays).toBe(10)
@@ -77,14 +79,14 @@ describe('HabitGoalConfigSchema', () => {
     ).toBe(false)
   })
 
-  it('enforces times-per-period limits for week, month, and year', () => {
-    for (const [period, targetCount] of [
+  it('enforces certain-days schedule limits for week, month, and year', () => {
+    for (const [period, targetDays] of [
       ['week', 8],
       ['month', 29],
       ['year', 366],
     ] as const) {
       expect(
-        HabitGoalConfigSchema.safeParse({ trackingType: 'timesPerPeriod', period, targetCount })
+        HabitScheduleRuleSchema.safeParse({ kind: 'certainDaysPerPeriod', period, targetDays })
           .success,
       ).toBe(false)
     }
@@ -118,7 +120,10 @@ describe('HabitSchema schedules', () => {
     ).toBe(true)
     expect(
       HabitSchema.safeParse(
-        createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }),
+        createHabit(
+          { trackingType: 'binary' },
+          { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
+        ),
       ).success,
     ).toBe(true)
     for (const scheduleRule of [
@@ -147,7 +152,7 @@ describe('HabitSchema schedules', () => {
     ).toBe(false)
   })
 
-  it('rejects ended-before-start and flexible non-period habits', () => {
+  it('rejects incompatible schedule, goal, and tracking configurations', () => {
     expect(
       HabitSchema.safeParse(createHabit({ trackingType: 'binary' }, { endsOn: '2025-12-31' }))
         .success,
@@ -156,6 +161,38 @@ describe('HabitSchema schedules', () => {
       HabitSchema.safeParse(
         createHabit({ trackingType: 'binary' }, { scheduleRule: { kind: 'flexiblePeriod' } }),
       ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          {
+            trackingType: 'totalMeasurablePerPeriod',
+            period: 'week',
+            targetAmount: 100,
+            unitLabel: 'minutes',
+          },
+          { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
+        ),
+      ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse(
+        createHabit(
+          {
+            trackingType: 'totalMeasurablePerPeriod',
+            period: 'week',
+            targetAmount: 100,
+            unitLabel: 'minutes',
+          },
+          { scheduleRule: { kind: 'daily' } },
+        ),
+      ).success,
+    ).toBe(false)
+    expect(
+      HabitSchema.safeParse({
+        ...createHabit({ trackingType: 'binary' }),
+        trackingType: 'measurablePerSession',
+      }).success,
     ).toBe(false)
   })
 

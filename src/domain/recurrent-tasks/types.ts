@@ -55,11 +55,6 @@ export type FirstWeekdayOfMonthRecurrenceRule = {
   weekday: DayOfWeek
 }
 
-export type CustomFutureRecurrenceRule = {
-  kind: 'customFutureRule'
-  description: string
-}
-
 export type RecurrenceRule =
   | DailyRecurrenceRule
   | SpecificDaysOfWeekRecurrenceRule
@@ -69,7 +64,6 @@ export type RecurrenceRule =
   | EveryXWeeksRecurrenceRule
   | EveryXMonthsRecurrenceRule
   | FirstWeekdayOfMonthRecurrenceRule
-  | CustomFutureRecurrenceRule
 
 export type RecurrentTask = ItemEntityFields & {
   title: string
@@ -92,5 +86,3 @@ export type RecurrentTaskOccurrence = ItemEntityFields & {
   status: RecurrentTaskOccurrenceStatus
   completedAt?: ISODateTimeString | null
 }
-
-// Custom recurrence is intentionally descriptive only in MVP. Do not infer execution rules from it yet.

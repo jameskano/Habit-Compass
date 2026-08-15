@@ -74,6 +74,7 @@ export const isHabitScheduledOnDate = (habit: Habit, date: ISODateString) => {
     }
     case 'firstWeekdayOfMonth':
       return isFirstWeekdayOfMonth(date, habit.scheduleRule.weekday)
+    case 'certainDaysPerPeriod':
     case 'flexiblePeriod':
       return false
   }
@@ -84,7 +85,11 @@ export const enumerateHabitScheduledDates = (
   from: ISODateString,
   to: ISODateString,
 ) => {
-  if (habit.scheduleRule.kind === 'flexiblePeriod' || to < from) {
+  if (
+    habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+    habit.scheduleRule.kind === 'flexiblePeriod' ||
+    to < from
+  ) {
     return []
   }
 

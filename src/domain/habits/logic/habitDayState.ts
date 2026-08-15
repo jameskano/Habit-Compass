@@ -1,6 +1,7 @@
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import { getCertainDaysPeriodState } from './habitCertainDays'
 import {
   evaluateHabitCompletionForLogs,
   getHabitLogProgressValue,
@@ -74,12 +75,25 @@ export const deriveHabitDayState = ({
     return 'progress_logged'
   }
 
-  if (!isHabitScheduledOnDate(habit, date)) {
+  if (
+    habit.scheduleRule.kind !== 'certainDaysPerPeriod' &&
+    habit.scheduleRule.kind !== 'flexiblePeriod' &&
+    !isHabitScheduledOnDate(habit, date)
+  ) {
     return 'not_scheduled'
   }
 
   if (hasHabitProgressOnDate(habit, eligibleLogs, date)) {
     return 'progress_logged'
+  }
+
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    const period = getCertainDaysPeriodState({ habit, logs: eligibleLogs, date, weekStartsOn })
+    return period?.isTargetReached || date < today ? 'not_scheduled' : 'today_pending'
+  }
+
+  if (habit.scheduleRule.kind === 'flexiblePeriod') {
+    return date === today ? 'today_pending' : 'not_scheduled'
   }
 
   return date === today ? 'today_pending' : 'missed'

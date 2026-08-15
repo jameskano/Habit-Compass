@@ -34,8 +34,8 @@ Defaults:
 - Start date: today
 - Target: binary
 
-Creation is a three-step flow: completion setup, frequency, then details. Flexible times-per-period
-frequency is available for binary habits only. Explicit schedules support selected weekdays,
+Creation is a three-step flow: completion setup, frequency, then details. Certain-days-per-period
+frequency is available for binary and measurable-per-session habits. Explicit schedules support selected weekdays,
 selected month days, selected yearly month/day pairs, anchored day/week/month intervals, and the
 existing first-weekday-of-month pattern.
 
@@ -118,7 +118,8 @@ Period-based measurable habits evaluate minimum and standard at the period level
 Habit day cells in the Items card strip and habit calendar use the same behavior:
 
 - Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are disabled.
-- Active `flexiblePeriod` dates inside the habit date window remain actionable even when empty cells render as `not_scheduled`.
+- Active `certainDaysPerPeriod` dates inside the habit date window remain actionable while the
+  period target is open, even when empty cells render as `not_scheduled`.
 - Successful day changes use the updated day state/color as feedback without a toast.
 - Failed day mutations keep the generic localized error toast.
 
@@ -133,11 +134,12 @@ Binary habit long press behavior:
 - Without minimum: Complete, Skip day, Mark as undone.
 - With minimum: Complete standard, Complete minimum, Skip day, Mark as undone.
 
-`timesPerPeriod` remains an event-count goal:
+`certainDaysPerPeriod` remains a frequency:
 
-- Tap toggles one standard completion event for the selected date.
-- Long press offers Complete, Skip day, and Clear log.
-- Period-level minimum/standard result remains derived from completion-event count.
+- A binary or measurable-per-session completion qualifies at most one distinct date.
+- Minimum and standard completion qualify; skipped and below-minimum progress do not.
+- Empty dates are not missed. Once the effective target is reached, remaining unlogged dates are
+  disabled; existing logged dates remain editable and removing a qualifying log reopens the period.
 
 Measurable habit behavior:
 
@@ -203,26 +205,27 @@ pending today remain excluded.
 
 Inactive scheduled days are also excluded. Ignore malformed logs recorded inside inactive dates.
 
-## Flexible times-per-period stats
+## Certain-days-per-period stats
 
-For `times_per_period`:
+For `certainDaysPerPeriod`:
 
 ```txt
-percentage = completed periods / expected periods
+percentage = qualifying days / effective target days
 ```
 
-The lifetime percentage combines every eligible scoring period that intersects the habit lifetime,
-including periods without logs. The current partial period is included. Calendar week boundaries
-respect `weekStartsOn`.
+The lifetime percentage combines qualifying and effective target days across every eligible period,
+including the current partial period. Calendar week boundaries respect `weekStartsOn`. The effective
+target is capped by the number of active dates in lifecycle-shortened periods.
 
-A flexible times-per-period habit should not mark every non-completed day as missed.
+A certain-days-per-period habit does not mark individual empty dates as missed.
 
-If an inactive interval overlaps a flexible scoring period, omit that whole period from scoring.
+Inactive dates reduce the available dates used to cap the effective target. Periods with no active
+dates are omitted.
 
 Example:
 
 ```txt
-Habit = 3 times/week.
+Habit = 3 days/week.
 User completes Monday and Thursday.
 Tuesday is not automatically missed because the habit is flexible inside the week.
 At the end of the week, if only 2/3 were completed, the period is incomplete.
@@ -321,7 +324,7 @@ Required:
 - Frequency
 
 Creation is a two-step flow. Recurrent tasks are binary-only and use executable dated recurrence
-rules; they do not expose flexible times-per-period scheduling.
+rules; they do not expose certain-days-per-period scheduling.
 
 Defaults:
 

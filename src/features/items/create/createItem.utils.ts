@@ -67,8 +67,12 @@ export const buildSchedule = (frequency: FrequencyValues): HabitScheduleRule => 
   switch (frequency.kind) {
     case 'daily':
       return { kind: 'daily' }
-    case 'timesPerPeriod':
-      return { kind: 'flexiblePeriod' }
+    case 'certainDaysPerPeriod':
+      return {
+        kind: 'certainDaysPerPeriod',
+        targetDays: frequency.targetCount,
+        period: frequency.period,
+      }
     case 'specificDaysOfWeek':
       return { kind: 'specificDaysOfWeek', daysOfWeek: frequency.daysOfWeek }
     case 'specificDaysOfMonth':
@@ -114,6 +118,7 @@ export const buildRecurrence = (frequency: FrequencyValues): RecurrenceRule => {
       return schedule
     case 'everyXWeeks':
       return { ...schedule, daysOfWeek: [...schedule.daysOfWeek] }
+    case 'certainDaysPerPeriod':
     case 'flexiblePeriod':
       return { kind: 'daily' }
   }
@@ -144,14 +149,13 @@ export const validateFrequency = (frequency: FrequencyValues) => {
           ? 365
           : 1
   return (
-    frequency.kind !== 'timesPerPeriod' ||
+    frequency.kind !== 'certainDaysPerPeriod' ||
     (frequency.targetCount >= 1 && frequency.targetCount <= maximum)
   )
 }
 
 export const buildHabitGoal = ({
   completionMode,
-  frequency,
   minimumAmount,
   minimumText,
   period,
@@ -161,13 +165,6 @@ export const buildHabitGoal = ({
   unitLabel,
 }: HabitGoalDraft): HabitGoalConfig => {
   if (completionMode === 'binary') {
-    if (frequency.kind === 'timesPerPeriod') {
-      return {
-        trackingType: 'timesPerPeriod',
-        period: frequency.period,
-        targetCount: frequency.targetCount,
-      }
-    }
     return {
       trackingType: 'binary',
       ...(standardText.trim() ? { standardDescription: standardText.trim() } : {}),

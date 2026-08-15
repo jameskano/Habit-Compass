@@ -85,7 +85,6 @@ export const getHabitTargetScope = (habit: Habit): HabitTargetScope => {
       return 'binary'
     case 'measurablePerSession':
       return 'session'
-    case 'timesPerPeriod':
     case 'totalMeasurablePerPeriod':
       return 'period'
   }
@@ -95,8 +94,6 @@ export const getHabitStandardTargetValue = (habit: Habit) => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 1
-    case 'timesPerPeriod':
-      return habit.goalConfig.targetCount
     case 'measurablePerSession':
     case 'totalMeasurablePerPeriod':
       return habit.goalConfig.targetAmount
@@ -111,8 +108,6 @@ export const getHabitMinimumTargetValue = (habit: Habit): number | null => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 1
-    case 'timesPerPeriod':
-      return habit.goalConfig.minimumCount ?? null
     case 'measurablePerSession':
     case 'totalMeasurablePerPeriod':
       return habit.goalConfig.minimumAmount ?? null
@@ -124,30 +119,38 @@ export const getHabitPeriodBounds = (
   date: ISODateString,
   weekStartsOn: WeekStartsOn = 1,
 ) => {
-  if (!('period' in habit.goalConfig)) {
+  const period =
+    habit.scheduleRule.kind === 'certainDaysPerPeriod'
+      ? habit.scheduleRule.period
+      : 'period' in habit.goalConfig
+        ? habit.goalConfig.period
+        : null
+
+  if (!period) {
     return { periodStart: date, periodEnd: date }
   }
 
-  if (habit.goalConfig.period === 'day') {
+  if (period === 'day') {
     return { periodStart: date, periodEnd: date }
   }
 
-  if (habit.goalConfig.period === 'week') {
+  if (period === 'week') {
     return {
       periodStart: startOfWeek(date, weekStartsOn),
       periodEnd: endOfWeek(date, weekStartsOn),
     }
   }
 
-  if (habit.goalConfig.period === 'month') {
+  if (period === 'month') {
     return { periodStart: startOfMonth(date), periodEnd: endOfMonth(date) }
   }
 
-  if (habit.goalConfig.period === 'year') {
+  if (period === 'year') {
     return { periodStart: startOfYear(date), periodEnd: endOfYear(date) }
   }
 
-  const periodLength = habit.goalConfig.customPeriodDays ?? 1
+  const periodLength =
+    'customPeriodDays' in habit.goalConfig ? (habit.goalConfig.customPeriodDays ?? 1) : 1
   const elapsed = Math.max(0, differenceInDays(date, habit.startsOn))
   const offset = elapsed % periodLength
   const periodStart = addDays(date, -offset)
@@ -161,7 +164,6 @@ export const getHabitLogProgressValue = (habit: Habit, log: HabitLog) => {
 
   switch (habit.goalConfig.trackingType) {
     case 'binary':
-    case 'timesPerPeriod':
       return 1
     case 'measurablePerSession':
     case 'totalMeasurablePerPeriod':

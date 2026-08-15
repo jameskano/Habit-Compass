@@ -1,6 +1,5 @@
 export { dayOfWeekValues, recurrenceKinds, recurrentTaskOccurrenceStatuses } from './constants'
 export {
-  CustomFutureRecurrenceRuleSchema,
   DailyRecurrenceRuleSchema,
   DayOfWeekSchema,
   EveryXDaysRecurrenceRuleSchema,
@@ -17,7 +16,6 @@ export {
   SpecificDaysOfYearRecurrenceRuleSchema,
 } from './schemas'
 export type {
-  CustomFutureRecurrenceRule,
   DailyRecurrenceRule,
   DayOfWeek,
   EveryXDaysRecurrenceRule,

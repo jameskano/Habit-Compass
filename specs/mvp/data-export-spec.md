@@ -242,6 +242,9 @@ Requirements:
 - Include Big Rocks nested under weekly records or as a clearly related array.
 - Include mood and reflections when stored or referenced by weekly records.
 - Exclude Settings preferences and authentication/account data.
+- Export habit completion goals and frequency rules as separate contracts. A flexible habit
+  frequency is represented by `scheduleRule.kind: "certainDaysPerPeriod"` with `targetDays` and a
+  `week | month | year` period; it is never exported as a `timesPerPeriod` goal.
 
 ## Weekly Records In Exports
 

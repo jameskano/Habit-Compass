@@ -89,6 +89,9 @@ export const useTodayCompletionActions = (input: UseTodayCompletionActionsInput)
     }
 
     if (item.type === 'habit') {
+      if (item.actionDisabled) {
+        return
+      }
       if (isMeasurableHabit(item.habit)) {
         openAmountInput(item.habit.id)
         return

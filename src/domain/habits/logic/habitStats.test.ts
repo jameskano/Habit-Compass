@@ -90,11 +90,15 @@ describe('calculateHabitStats', () => {
     expect(result.currentStreak).toBe(1)
   })
 
-  it('reports flexible period progress without per-day streaks', () => {
+  it('reports proportional certain-days progress and completed-day streaks', () => {
     const result = calculateHabitStats({
       habit: createCompletionLevelHabit(
-        { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3, minimumCount: 1 },
+        { trackingType: 'binary', minimumDescription: 'Minimum' },
         ['minimum', 'standard'],
+        {
+          startsOn: '2026-05-18',
+          scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
+        },
       ),
       logs: [
         createHabitLog({ id: 'one', loggedForDate: '2026-05-18' }),
@@ -105,9 +109,9 @@ describe('calculateHabitStats', () => {
       today: '2026-05-21',
     })
 
-    expect(result.completionScore).toBe(0.5)
-    expect(result.completionPercentage).toBe(100)
-    expect(result.currentStreak).toBeNull()
+    expect(result.completionScore).toBe(1.5)
+    expect(result.completionPercentage).toBe(67)
+    expect(result.currentStreak).toBe(2)
   })
 
   it('does not score below-minimum session progress as valid completion', () => {
@@ -221,12 +225,13 @@ describe('calculateHabitStats', () => {
     expect(result.bestStreak).toBe(2)
   })
 
-  it('omits flexible scoring periods that overlap inactive days', () => {
+  it('caps certain-days targets by active dates without dropping partially active periods', () => {
     const result = calculateHabitStats({
       habit: createHabit(
-        { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+        { trackingType: 'binary' },
         {
           startsOn: '2026-05-18',
+          scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
           inactivityPeriods: [
             { reason: 'archived', startsOn: '2026-05-20', resumesOn: '2026-05-21' },
           ],
@@ -241,17 +246,16 @@ describe('calculateHabitStats', () => {
       today: '2026-05-22',
     })
 
-    expect(result.completionEvents).toBe(0)
-    expect(result.expectedScore).toBe(0)
-    expect(result.completionPercentage).toBe(0)
+    expect(result.completionEvents).toBe(2)
+    expect(result.expectedScore).toBe(3)
+    expect(result.completionPercentage).toBe(67)
   })
 
   it('regroups flexible weekly scoring at year boundaries from the selected week start', () => {
-    const habit = createHabit({
-      trackingType: 'timesPerPeriod',
-      period: 'week',
-      targetCount: 2,
-    })
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 2 } },
+    )
     const logs = [
       createHabitLog({ id: 'sunday', loggedForDate: '2026-12-27' }),
       createHabitLog({ id: 'friday', loggedForDate: '2027-01-01' }),
@@ -274,10 +278,64 @@ describe('calculateHabitStats', () => {
       weekStartsOn: 0,
     })
 
-    expect(mondayStart.completionScore).toBe(0)
-    expect(mondayStart.expectedScore).toBe(2)
-    expect(sundayStart.completionScore).toBe(1)
-    expect(sundayStart.expectedScore).toBe(1)
+    expect(mondayStart.completionScore).toBe(2)
+    expect(mondayStart.expectedScore).toBe(4)
+    expect(mondayStart.completionPercentage).toBe(50)
+    expect(sundayStart.completionScore).toBe(2)
+    expect(sundayStart.expectedScore).toBe(2)
     expect(sundayStart.completionPercentage).toBe(100)
+  })
+
+  it('resets the current flexible streak after a failed closed period but not an open period', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        startsOn: '2026-05-04',
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 2 },
+      },
+    )
+    const logs = [
+      createHabitLog({ id: 'week-one-a', loggedForDate: '2026-05-04' }),
+      createHabitLog({ id: 'week-one-b', loggedForDate: '2026-05-06' }),
+      createHabitLog({ id: 'failed-week', loggedForDate: '2026-05-11' }),
+      createHabitLog({ id: 'open-week', loggedForDate: '2026-05-18' }),
+    ]
+
+    const result = calculateHabitStats({
+      habit,
+      logs,
+      from: '2026-05-04',
+      to: '2026-05-24',
+      today: '2026-05-20',
+    })
+
+    expect(result.currentStreak).toBe(1)
+    expect(result.bestStreak).toBe(3)
+  })
+
+  it('carries a successful streak through an unfinished period and caps historical excess', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        startsOn: '2026-05-11',
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 2 },
+      },
+    )
+    const result = calculateHabitStats({
+      habit,
+      logs: [
+        createHabitLog({ id: 'excess-a', loggedForDate: '2026-05-11' }),
+        createHabitLog({ id: 'excess-b', loggedForDate: '2026-05-12' }),
+        createHabitLog({ id: 'excess-c', loggedForDate: '2026-05-13' }),
+      ],
+      from: '2026-05-11',
+      to: '2026-05-24',
+      today: '2026-05-20',
+    })
+
+    expect(result.completionEvents).toBe(3)
+    expect(result.completionPercentage).toBe(50)
+    expect(result.currentStreak).toBe(2)
+    expect(result.bestStreak).toBe(2)
   })
 })

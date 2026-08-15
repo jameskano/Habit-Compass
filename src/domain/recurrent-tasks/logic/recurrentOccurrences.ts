@@ -77,8 +77,6 @@ export const isRecurrentTaskScheduledOnDate = (task: RecurrentTask, date: ISODat
     }
     case 'firstWeekdayOfMonth':
       return weekday === task.recurrenceRule.weekday && toUtcDate(date).getUTCDate() <= 7
-    case 'customFutureRule':
-      return false
   }
 }
 

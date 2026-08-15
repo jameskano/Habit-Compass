@@ -247,7 +247,7 @@ comment on column public.habits.standard_config is
 'Optional JSONB override describing the default expected version of a habit when layered completion levels are enabled.';
 
 comment on column public.recurrent_tasks.recurrence_config is
-'JSONB contract for supported recurrence rules: daily, specificDaysOfWeek, everyXDays, everyXWeeks, everyXMonths, firstWeekdayOfMonth, and customFutureRule as descriptive-only future placeholder.';
+'JSONB contract for supported executable recurrence rules: daily, specificDaysOfWeek, specificDaysOfMonth, specificDaysOfYear, everyXDays, everyXWeeks, everyXMonths, and firstWeekdayOfMonth.';
 
 comment on table public.suggestion_events is
 'Rule-based MVP suggestion records. AI-generated suggestions require a future migration and separate review gate.';

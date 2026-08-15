@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createHabit, createHabitLog, habitSchedules } from '@/domain/habits/logic/habitFixtures'
+import { createHabit, createHabitLog } from '@/domain/habits/logic/habitFixtures'
 import { evaluateHabitProgress } from '@/domain/habits/logic/evaluateHabitProgress'
 
 describe('frequency goals harness', () => {
@@ -19,10 +19,12 @@ describe('frequency goals harness', () => {
     expect(result.actual).toBe(1)
   })
 
-  it('covers X times per week and specific days of week', () => {
+  it('covers certain days per week', () => {
     const habit = createHabit(
-      { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
-      { scheduleRule: habitSchedules.mondayWednesdayFriday },
+      { trackingType: 'binary' },
+      {
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
+      },
     )
     const logs = [
       createHabitLog({ loggedForDate: '2026-05-18' }),
@@ -38,11 +40,16 @@ describe('frequency goals harness', () => {
 
     expect(result.actual).toBe(2)
     expect(result.target).toBe(3)
-    expect(result.scheduledOccurrenceCount).toBe(3)
+    expect(result.scheduledOccurrenceCount).toBeNull()
   })
 
-  it('covers X times per month', () => {
-    const habit = createHabit({ trackingType: 'timesPerPeriod', period: 'month', targetCount: 8 })
+  it('covers certain days per month', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'month', targetDays: 8 },
+      },
+    )
     const logs = Array.from({ length: 5 }, (_, index) =>
       createHabitLog({
         id: `month-${index}`,
@@ -158,8 +165,13 @@ describe('frequency goals harness', () => {
     expect(result.unit).toBe('custom')
   })
 
-  it('keeps flexible period goals out of per-day occurrence counting', () => {
-    const habit = createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 })
+  it('keeps certain-days frequencies out of explicit occurrence counting', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
+      },
+    )
 
     const result = evaluateHabitProgress({
       habit,

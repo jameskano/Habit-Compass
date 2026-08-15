@@ -23,7 +23,6 @@ export {
   HabitSchema,
   HabitTrackingTypeSchema,
   MeasurablePerSessionGoalConfigSchema,
-  TimesPerPeriodGoalConfigSchema,
   TotalMeasurablePerPeriodGoalConfigSchema,
 } from './schemas'
 export type {
@@ -43,7 +42,6 @@ export type {
   HabitScheduleRule,
   HabitTrackingType,
   MeasurablePerSessionGoalConfig,
-  TimesPerPeriodGoalConfig,
   TotalMeasurablePerPeriodGoalConfig,
 } from './types'
 export type {
@@ -54,6 +52,7 @@ export type {
 } from './repository'
 export { deriveHabitDayState } from './logic/habitDayState'
 export type { HabitDayState } from './logic/habitDayState'
+export { getCertainDaysPeriodState } from './logic/habitCertainDays'
 export {
   getHabitAmountInputMetadata,
   getHabitLogAmount,

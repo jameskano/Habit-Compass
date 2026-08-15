@@ -68,35 +68,6 @@ export const BinaryHabitGoalConfigSchema = z.object({
   minimumDescription: z.string().trim().min(1).optional(),
 })
 
-export const TimesPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
-  trackingType: z.literal('timesPerPeriod'),
-  targetCount: z.number().positive(),
-  minimumCount: z.number().positive().optional(),
-}).superRefine((value, context) => {
-  const maximum =
-    value.period === 'week'
-      ? 7
-      : value.period === 'month'
-        ? 28
-        : value.period === 'year'
-          ? 365
-          : null
-  if (maximum !== null && value.targetCount > maximum) {
-    context.addIssue({
-      code: 'custom',
-      path: ['targetCount'],
-      message: `Target count must be at most ${maximum}.`,
-    })
-  }
-  if (value.minimumCount !== undefined && value.minimumCount > value.targetCount) {
-    context.addIssue({
-      code: 'custom',
-      path: ['minimumCount'],
-      message: 'Minimum must not exceed standard target.',
-    })
-  }
-})
-
 export const MeasurablePerSessionGoalConfigSchema = z
   .object({
     trackingType: z.literal('measurablePerSession'),
@@ -127,7 +98,6 @@ export const TotalMeasurablePerPeriodGoalConfigSchema = HabitFrequencyConfigSche
 
 export const HabitGoalConfigSchema = z.discriminatedUnion('trackingType', [
   BinaryHabitGoalConfigSchema,
-  TimesPerPeriodGoalConfigSchema,
   MeasurablePerSessionGoalConfigSchema,
   TotalMeasurablePerPeriodGoalConfigSchema,
 ])
@@ -164,12 +134,23 @@ export const HabitScheduleRuleSchema = z.discriminatedUnion('kind', [
     kind: z.literal('firstWeekdayOfMonth'),
     weekday: HabitDayOfWeekSchema,
   }),
+  z
+    .object({
+      kind: z.literal('certainDaysPerPeriod'),
+      targetDays: z.number().int().positive(),
+      period: z.enum(['week', 'month', 'year']),
+    })
+    .superRefine((value, context) => {
+      const maximum = value.period === 'week' ? 7 : value.period === 'month' ? 28 : 365
+      if (value.targetDays > maximum) {
+        context.addIssue({
+          code: 'custom',
+          path: ['targetDays'],
+          message: `Target days must be at most ${maximum}.`,
+        })
+      }
+    }),
   z.object({ kind: z.literal('flexiblePeriod') }),
-])
-
-const PeriodBasedHabitTypes = new Set([
-  'timesPerPeriod',
-  'totalMeasurablePerPeriod',
 ])
 
 export const HabitSchema = ItemEntityFieldsSchema.extend({
@@ -191,6 +172,14 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
   resetMode: HabitResetModeSchema,
   inactivityPeriods: z.array(HabitInactivityPeriodSchema),
 }).superRefine((habit, context) => {
+  if (habit.trackingType !== habit.goalConfig.trackingType) {
+    context.addIssue({
+      code: 'custom',
+      path: ['trackingType'],
+      message: 'Tracking type must match the goal configuration.',
+    })
+  }
+
   if (habit.endsOn && habit.endsOn < habit.startsOn) {
     context.addIssue({
       code: 'custom',
@@ -201,12 +190,35 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
 
   if (
     habit.scheduleRule.kind === 'flexiblePeriod' &&
-    !PeriodBasedHabitTypes.has(habit.goalConfig.trackingType)
+    habit.goalConfig.trackingType !== 'totalMeasurablePerPeriod'
   ) {
     context.addIssue({
       code: 'custom',
       path: ['scheduleRule'],
-      message: 'Flexible-period schedules require a period-based goal.',
+      message: 'Flexible-period schedules require a total measurable period goal.',
+    })
+  }
+
+  if (
+    habit.goalConfig.trackingType === 'totalMeasurablePerPeriod' &&
+    habit.scheduleRule.kind !== 'flexiblePeriod'
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['scheduleRule'],
+      message: 'Total measurable period goals require an internal flexible-period schedule.',
+    })
+  }
+
+  if (
+    habit.scheduleRule.kind === 'certainDaysPerPeriod' &&
+    habit.goalConfig.trackingType !== 'binary' &&
+    habit.goalConfig.trackingType !== 'measurablePerSession'
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['scheduleRule'],
+      message: 'Certain-days schedules require a binary or measurable-per-session goal.',
     })
   }
 

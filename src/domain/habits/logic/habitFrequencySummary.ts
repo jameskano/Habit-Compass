@@ -38,6 +38,11 @@ export const getHabitFrequencySummary = (rule: HabitScheduleRule): FrequencySumm
       }
     case 'firstWeekdayOfMonth':
       return { messageId: 'items.frequency.firstWeekday', values: { weekday: rule.weekday } }
+    case 'certainDaysPerPeriod':
+      return {
+        messageId: 'items.frequency.certainDaysPerPeriod',
+        values: { count: rule.targetDays, period: rule.period },
+      }
     case 'flexiblePeriod':
       return { messageId: 'items.frequency.flexiblePeriod' }
   }

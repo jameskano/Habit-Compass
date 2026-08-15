@@ -14,7 +14,9 @@ import { getMockState } from './mockData'
 const isTodayHabitDue = (habit: Habit, date: string) => {
   return (
     habit.lifecycleStatus === 'active' &&
-    (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date))
+    (habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+      habit.scheduleRule.kind === 'flexiblePeriod' ||
+      isHabitScheduledOnDate(habit, date))
   )
 }
 

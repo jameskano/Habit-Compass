@@ -32,7 +32,7 @@ export const RecurrentTaskCreate = ({ onClose, onLimitReached }: CreateDialogPro
             <FrequencyFields
               value={recurrentTaskCreate.frequency}
               onChange={recurrentTaskCreate.setFrequency}
-              includeTimesPerPeriod={false}
+              includeCertainDaysPerPeriod={false}
             />
           </section>
         ) : (

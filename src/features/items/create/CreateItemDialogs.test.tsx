@@ -62,12 +62,32 @@ describe('CreateItemDialogs', () => {
     expect(screen.getByLabelText('Minimum amount - optional')).toHaveValue(null)
   })
 
+  it('shows Certain days per period with Days and Period for binary and session-measurable habits', async () => {
+    const user = userEvent.setup()
+    const view = renderWithAppProviders(<CreateItemDialogs kind="habit" onClose={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('combobox', { name: 'Frequency' }))
+    await user.click(screen.getByRole('option', { name: 'Certain days per period' }))
+    expect(screen.getByLabelText('Days')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Period' })).toBeInTheDocument()
+
+    view.unmount()
+    renderWithAppProviders(<CreateItemDialogs kind="habit" onClose={vi.fn()} />)
+    await user.click(screen.getByRole('combobox', { name: 'Completion type' }))
+    await user.click(screen.getByRole('option', { name: 'Measurable' }))
+    await user.type(screen.getByLabelText('Unit'), 'minutes')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('combobox', { name: 'Frequency' }))
+    expect(screen.getByRole('option', { name: 'Certain days per period' })).toBeInTheDocument()
+  })
+
   it('keeps recurrent creation binary-only and uses two steps', async () => {
     const user = userEvent.setup()
     renderWithAppProviders(<CreateItemDialogs kind="recurrentTask" onClose={vi.fn()} />)
 
     expect(screen.getByText('Step 1 of 2')).toBeInTheDocument()
-    expect(screen.queryByText('Certain times per period')).not.toBeInTheDocument()
+    expect(screen.queryByText('Certain days per period')).not.toBeInTheDocument()
     expect(screen.queryByText('Completion type')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Continue' }))
     expect(screen.getByText('Step 2 of 2')).toBeInTheDocument()

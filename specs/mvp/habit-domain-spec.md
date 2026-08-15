@@ -27,7 +27,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## User Stories
 
 - As a user, I can create a simple binary habit and complete it quickly.
-- As a user, I can track a habit by times per period or by a measurable amount with my own unit.
+- As a user, I can schedule a binary or per-session measurable habit on a flexible number of days per period.
 - As a user, I can optionally use minimum and standard completion levels.
 - As a user, I can archive or soft reset a habit instead of deleting it immediately.
 
@@ -35,7 +35,6 @@ Users need a habit model that works for the simplest possible case, while still 
 
 - A habit must support these goal types:
   - `binary`
-  - `timesPerPeriod`
   - `measurablePerSession`
   - `totalMeasurablePerPeriod`
 - Period-based goals must support `day`, `week`, `month`, `year`, and `custom`.
@@ -48,8 +47,12 @@ Users need a habit model that works for the simplest possible case, while still 
   optional text; minimum is offered only when a non-empty minimum description is configured.
 - Measurable habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
 - New measurable habits expose a single amount plus user-defined unit label with session or period scope.
-- Flexible `X times per period` creation is available only for binary habits, with limits of
-  `7` per week, `28` per month, and `365` per year.
+- `certainDaysPerPeriod` is a habit schedule, not a goal. It is available for binary and
+  measurable-per-session habits with limits of `7` per week, `28` per month, and `365` per year.
+- Each qualifying date contributes at most one day toward a certain-days period. Minimum and
+  standard completions qualify; skipped and below-minimum progress do not.
+- Empty dates in a certain-days period are never individually missed. Once the effective target is
+  reached, remaining unlogged dates in the period are disabled until a qualifying log is removed.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
 - Below-minimum measurable logs are visible as progress but score `0` for completion stats.
 - Minimum and standard completions count equally as completed opportunities in the habit's lifetime
@@ -64,7 +67,9 @@ Users need a habit model that works for the simplest possible case, while still 
   pairs, anchored day/week/month intervals, and the existing first-weekday-of-month pattern.
 - Habits may include a description for item clarification and separate notes for extra user information.
 - Saving an end date before today archives the habit after confirmation in the edit flow.
-- Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.
+- Explicit schedules derive day states. Certain-days schedules calculate proportional period
+  progress without deriving missed days per date. Internal `flexiblePeriod` scheduling remains only
+  for total-measurable-per-period goals.
 - Reset is soft by default.
 - Hard reset requires explicit confirmation, removes habit logs/history, and restarts the
   habit's date window by setting `startsOn` to the reset date. If the habit already has an
@@ -130,6 +135,8 @@ Users need a habit model that works for the simplest possible case, while still 
 ## Edge Cases
 
 - A custom period must not be accepted without a valid period length.
+- Certain-days schedules accept only week, month, and year periods and positive whole-day targets
+  within their period limits.
 - Numeric goals must reject zero and negative targets.
 - Completion levels must remain optional for binary habits.
 - Delete must not be the default reset path.
@@ -137,7 +144,8 @@ Users need a habit model that works for the simplest possible case, while still 
 ## Acceptance Criteria
 
 - A binary habit can be created without advanced settings.
-- A period-based habit can express target plus period.
+- A binary or measurable-per-session habit can use a certain-days-per-period frequency independently
+  from its daily completion goal.
 - Minimum can be enabled or ignored; if minimum is not configured, `completed_minimum` is never derived.
 - Habit logs represent only completed and skipped outcomes; missed state is derived.
 - Soft reset is modeled separately from hard reset.

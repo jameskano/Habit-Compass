@@ -30,7 +30,10 @@ export const createHabit = (
     startsOn: '2026-01-01',
     endsOn: null,
     order: 0,
-    scheduleRule: 'period' in goalConfig ? { kind: 'flexiblePeriod' } : { kind: 'daily' },
+    scheduleRule:
+      goalConfig.trackingType === 'totalMeasurablePerPeriod'
+        ? { kind: 'flexiblePeriod' }
+        : { kind: 'daily' },
     trackingType: goalConfig.trackingType,
     goalConfig,
     usesCompletionLevels: false,

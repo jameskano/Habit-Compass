@@ -170,9 +170,29 @@ export const useHabitEditForm = ({ habit, categories, today, onSave }: HabitEdit
     [form],
   )
 
-  const handleTrackingTypeChange = useCallback(
+  const handleCompletionModeChange = useCallback(
     (value: string) => {
-      form.setValue('trackingType', value as HabitEditValues['trackingType'], {
+      const trackingType = value === 'binary' ? 'binary' : 'measurablePerSession'
+      form.setValue('trackingType', trackingType, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      if (form.getValues('scheduleKind') === 'flexiblePeriod') {
+        form.setValue('scheduleKind', 'daily', { shouldDirty: true, shouldValidate: true })
+      }
+    },
+    [form],
+  )
+
+  const handleScopeChange = useCallback(
+    (value: string) => {
+      const trackingType =
+        value === 'period' ? 'totalMeasurablePerPeriod' : 'measurablePerSession'
+      form.setValue('trackingType', trackingType, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      form.setValue('scheduleKind', value === 'period' ? 'flexiblePeriod' : 'daily', {
         shouldDirty: true,
         shouldValidate: true,
       })
@@ -202,12 +222,13 @@ export const useHabitEditForm = ({ habit, categories, today, onSave }: HabitEdit
     creatingCategory,
     form,
     handleCategoryChange,
+    handleCompletionModeChange,
     handleCategorySheetOpenChange,
     handleEndDateChange,
     handlePeriodChange,
     handlePriorityChange,
+    handleScopeChange,
     handleScheduleKindChange,
-    handleTrackingTypeChange,
     handleWeekdayChange,
     openCategoryCreation,
     selectCreatedCategory,

@@ -27,7 +27,7 @@ Preferences:
 Stats and habits:
 
 - Weekly habit period bounds use configured week start.
-- `X times per week` scoring uses configured week start.
+- `X days per week` scoring uses configured week start.
 - Weekly habit charts use configured week start.
 - Completion logs remain date-based.
 

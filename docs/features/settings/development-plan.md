@@ -221,7 +221,7 @@ Goal: make derived weekly analytics follow the current week-start preference.
 
 Work:
 
-- Audit weekly habit stats, charts, and `X times per week` calculations.
+- Audit weekly habit stats, charts, and `X days per week` calculations.
 - Pass `weekStartsOn` into every weekly boundary calculation.
 - Keep completion logs stored by explicit local date.
 - Add tests for month and year boundary switches.

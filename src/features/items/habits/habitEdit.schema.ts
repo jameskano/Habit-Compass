@@ -24,6 +24,8 @@ export const BaseHabitEditValuesSchema = z.object({
   intervalMonths: z.number().int().positive(),
   dayOfMonth: z.number().int().min(1).max(31),
   weekday: z.number().int().min(0).max(6),
+  targetDays: z.number().int().positive(),
+  frequencyPeriod: z.enum(['week', 'month', 'year']),
   startsOn: z.string().min(1),
   endsOn: z.string(),
   description: z.string(),
@@ -55,11 +57,24 @@ export const HabitEditValuesSchema = BaseHabitEditValuesSchema.superRefine((valu
     context.addIssue({ code: 'custom', path: ['daysOfYear'], message: 'chooseDay' })
   }
 
+  if (value.scheduleKind === 'flexiblePeriod' && value.trackingType !== 'totalMeasurablePerPeriod') {
+    context.addIssue({ code: 'custom', path: ['scheduleKind'], message: 'invalidSchedule' })
+  }
+
   if (
-    value.scheduleKind === 'flexiblePeriod' &&
-    !PERIOD_BASED_TRACKING_TYPES.has(value.trackingType)
+    value.scheduleKind === 'certainDaysPerPeriod' &&
+    value.trackingType !== 'binary' &&
+    value.trackingType !== 'measurablePerSession'
   ) {
     context.addIssue({ code: 'custom', path: ['scheduleKind'], message: 'invalidSchedule' })
+  }
+
+  if (value.scheduleKind === 'certainDaysPerPeriod') {
+    const maximum =
+      value.frequencyPeriod === 'week' ? 7 : value.frequencyPeriod === 'month' ? 28 : 365
+    if (value.targetDays > maximum) {
+      context.addIssue({ code: 'custom', path: ['targetDays'], message: 'invalidStandard' })
+    }
   }
 
   if (value.trackingType !== 'binary') {
@@ -92,19 +107,6 @@ export const HabitEditValuesSchema = BaseHabitEditValuesSchema.superRefine((valu
       value.customPeriodDays < 1
     ) {
       context.addIssue({ code: 'custom', path: ['customPeriodDays'], message: 'invalidPeriod' })
-    }
-    if (value.trackingType === 'timesPerPeriod' && value.period !== 'custom') {
-      const maximum =
-        value.period === 'week'
-          ? 7
-          : value.period === 'month'
-            ? 28
-            : value.period === 'year'
-              ? 365
-              : 1
-      if (value.standardAmount > maximum) {
-        context.addIssue({ code: 'custom', path: ['standardAmount'], message: 'invalidStandard' })
-      }
     }
   }
 })

@@ -73,7 +73,9 @@ export const TodayItemsList = ({
             priority={item.priority}
             priorityLabel={`${intl.formatMessage({ id: 'page.today.item.priority' })}: ${intl.formatMessage({ id: `page.items.priority.${item.priority}` })}`}
             state={item.state}
-            disabled={!completionEnabled}
+            disabled={
+              !completionEnabled || (item.type === 'habit' && item.actionDisabled)
+            }
             onPrimaryAction={() => onPrimaryAction(item)}
             onOpenMenu={() => onOpenMenu(item.id)}
             key={`${item.type}:${sourceId}`}

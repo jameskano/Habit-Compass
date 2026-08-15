@@ -2,23 +2,24 @@ import { memo } from 'react'
 import { useFormState, useWatch, type UseFormReturn } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 
-import { habitPeriods, habitTrackingTypes } from '@/domain/habits'
+import { habitPeriods } from '@/domain/habits'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
-import { HABIT_EDIT_INPUT_CLASS, PERIOD_BASED_TRACKING_TYPES } from './habitEdit.constants'
+import { HABIT_EDIT_INPUT_CLASS } from './habitEdit.constants'
 import type { HabitEditValues } from './habitEdit.schema'
 import { getMinimumUnitLabel } from './habitEdit.utils'
 import { HabitEditMinimumField } from './HabitEditMinimumField'
 
 type HabitEditTrackingFieldsProps = {
   form: UseFormReturn<HabitEditValues>
+  onCompletionModeChange: (value: string) => void
   onPeriodChange: (value: string) => void
-  onTrackingTypeChange: (value: string) => void
+  onScopeChange: (value: string) => void
 }
 
 export const HabitEditTrackingFields = memo(
-  ({ form, onPeriodChange, onTrackingTypeChange }: HabitEditTrackingFieldsProps) => {
+  ({ form, onCompletionModeChange, onPeriodChange, onScopeChange }: HabitEditTrackingFieldsProps) => {
     const intl = useIntl()
     const { errors } = useFormState({
       control: form.control,
@@ -30,16 +31,18 @@ export const HabitEditTrackingFields = memo(
     const unitLabel = useWatch({ control: form.control, name: 'unitLabel' })
     const minimumUnitLabel = getMinimumUnitLabel(selectedTrackingType, unitLabel)
     const minimumError = errors.minimumAmount?.message
+    const completionMode = selectedTrackingType === 'binary' ? 'binary' : 'measurable'
+    const scope = selectedTrackingType === 'totalMeasurablePerPeriod' ? 'period' : 'session'
     const usesMeasurableUnit =
       selectedTrackingType === 'measurablePerSession' ||
       selectedTrackingType === 'totalMeasurablePerPeriod'
-    const usesPeriod = PERIOD_BASED_TRACKING_TYPES.has(selectedTrackingType)
+    const usesPeriod = selectedTrackingType === 'totalMeasurablePerPeriod'
 
     return (
       <>
         <label className="block text-sm font-medium">
           {intl.formatMessage({ id: 'page.items.habit.edit.trackingType' })}
-          <Select value={selectedTrackingType} onValueChange={onTrackingTypeChange}>
+          <Select value={completionMode} onValueChange={onCompletionModeChange}>
             <SelectTrigger
               aria-label={intl.formatMessage({ id: 'page.items.habit.edit.trackingType' })}
               className={HABIT_EDIT_INPUT_CLASS}
@@ -47,13 +50,12 @@ export const HabitEditTrackingFields = memo(
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {habitTrackingTypes.map((trackingType) => (
-                <SelectItem key={trackingType} value={trackingType}>
-                  {intl.formatMessage({
-                    id: `page.items.habit.edit.trackingType.${trackingType}`,
-                  })}
-                </SelectItem>
-              ))}
+              <SelectItem value="binary">
+                {intl.formatMessage({ id: 'page.items.create.habit.binary' })}
+              </SelectItem>
+              <SelectItem value="measurable">
+                {intl.formatMessage({ id: 'page.items.create.habit.measurable' })}
+              </SelectItem>
             </SelectContent>
           </Select>
         </label>
@@ -64,6 +66,22 @@ export const HabitEditTrackingFields = memo(
           </label>
         ) : (
           <>
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.habit.scope' })}
+              <Select value={scope} onValueChange={onScopeChange}>
+                <SelectTrigger className={HABIT_EDIT_INPUT_CLASS}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="session">
+                    {intl.formatMessage({ id: 'page.items.create.habit.session' })}
+                  </SelectItem>
+                  <SelectItem value="period">
+                    {intl.formatMessage({ id: 'page.items.create.habit.period' })}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </label>
             {usesMeasurableUnit ? (
               <label className="block text-sm font-medium">
                 {intl.formatMessage({ id: 'page.items.create.habit.unit' })}

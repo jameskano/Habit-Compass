@@ -44,12 +44,6 @@ export type BinaryHabitGoalConfig = {
   minimumDescription?: string
 }
 
-export type TimesPerPeriodGoalConfig = HabitFrequencyConfig & {
-  trackingType: 'timesPerPeriod'
-  targetCount: number
-  minimumCount?: number
-}
-
 export type MeasurablePerSessionGoalConfig = {
   trackingType: 'measurablePerSession'
   targetAmount: number
@@ -66,7 +60,6 @@ export type TotalMeasurablePerPeriodGoalConfig = HabitFrequencyConfig & {
 
 export type HabitGoalConfig =
   | BinaryHabitGoalConfig
-  | TimesPerPeriodGoalConfig
   | MeasurablePerSessionGoalConfig
   | TotalMeasurablePerPeriodGoalConfig
 
@@ -115,6 +108,12 @@ export type FlexiblePeriodHabitScheduleRule = {
   kind: 'flexiblePeriod'
 }
 
+export type CertainDaysPerPeriodHabitScheduleRule = {
+  kind: 'certainDaysPerPeriod'
+  targetDays: number
+  period: 'week' | 'month' | 'year'
+}
+
 export type HabitScheduleRule =
   | DailyHabitScheduleRule
   | SpecificDaysHabitScheduleRule
@@ -124,6 +123,7 @@ export type HabitScheduleRule =
   | EveryXWeeksHabitScheduleRule
   | EveryXMonthsHabitScheduleRule
   | FirstWeekdayOfMonthHabitScheduleRule
+  | CertainDaysPerPeriodHabitScheduleRule
   | FlexiblePeriodHabitScheduleRule
 
 export type Habit = ItemEntityFields & {

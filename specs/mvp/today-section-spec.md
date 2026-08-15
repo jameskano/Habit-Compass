@@ -77,4 +77,5 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 - Measurable amount entry includes period progress, target, and minimum when configured.
 - Empty states distinguish today, another date, and no search results.
 - Drag ordering is available from the handle and does not conflict with long press.
+- Manual order for a selected date survives closing and reopening the app; loading or error states do not discard it.
 - User-facing strings are localized.

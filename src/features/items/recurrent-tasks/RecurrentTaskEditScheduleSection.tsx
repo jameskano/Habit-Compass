@@ -61,7 +61,7 @@ export const RecurrentTaskEditScheduleSection = ({
           <SelectContent>
             {recurrenceKinds.map((kind) => (
               <SelectItem key={kind} value={kind}>
-                {intl.formatMessage({ id: `page.items.recurrent.edit.schedule.${kind}` })}
+                {intl.formatMessage({ id: `page.items.create.frequency.${kind}` })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -181,15 +181,6 @@ export const RecurrentTaskEditScheduleSection = ({
               ))}
             </SelectContent>
           </Select>
-        </label>
-      ) : null}
-      {recurrenceKind === 'customFutureRule' ? (
-        <label className="block text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.recurrent.edit.customDescription' })}
-          <Input
-            {...form.register('customDescription')}
-            className={RECURRENT_TASK_EDIT_INPUT_CLASS}
-          />
         </label>
       ) : null}
     </section>

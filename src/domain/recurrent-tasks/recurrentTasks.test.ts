@@ -40,7 +40,7 @@ describe('recurrent tasks domain', () => {
     expect(RecurrentTaskSchema.safeParse(task({ endsOn: '2026-04-30' })).success).toBe(false)
   })
 
-  it('evaluates every executable recurrence rule but not custom placeholders', () => {
+  it('evaluates every supported recurrence rule', () => {
     const executableCases: Array<{ rule: RecurrentTask['recurrenceRule']; date: ISODateString }> = [
       { rule: { kind: 'daily' }, date: '2026-05-03' },
       { rule: { kind: 'specificDaysOfWeek', daysOfWeek: [1] }, date: '2026-05-04' },
@@ -60,13 +60,6 @@ describe('recurrent tasks domain', () => {
         true,
       )
     }
-
-    expect(
-      isRecurrentTaskScheduledOnDate(
-        task({ recurrenceRule: { kind: 'customFutureRule', description: 'Later' } }),
-        '2026-05-03',
-      ),
-    ).toBe(false)
   })
 
   it('rejects invalid weekday and month-day recurrence payloads', () => {

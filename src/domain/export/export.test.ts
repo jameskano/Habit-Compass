@@ -67,6 +67,11 @@ describe('data export transformations', () => {
     expect(jsonExport.schemaVersion).toBe(EXPORT_SCHEMA_VERSION)
     expect(jsonExport.generatedAt).toBe('2026-02-03T04:05:06.000Z')
     expect(jsonExport.data.habits[0].archivedAt).toBe('2026-01-10T00:00:00.000Z')
+    expect(jsonExport.data.habits[0]).toMatchObject({
+      trackingType: 'binary',
+      goalConfig: { trackingType: 'binary' },
+      scheduleRule: { kind: 'certainDaysPerPeriod', targetDays: 3, period: 'week' },
+    })
     expect(jsonExport.data.habitInactivityPeriods).toEqual([
       {
         id: 'habit-move-inactivity-1',

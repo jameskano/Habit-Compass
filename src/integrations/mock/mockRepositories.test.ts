@@ -339,7 +339,9 @@ describe('mock repositories', () => {
   it('removes future minimum support without deleting historical minimum logs', async () => {
     const updated = await mockHabitsRepository.update({
       id: 'habit-move',
-      goalConfig: { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+      trackingType: 'binary',
+      goalConfig: { trackingType: 'binary' },
+      scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
       usesCompletionLevels: false,
       enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,

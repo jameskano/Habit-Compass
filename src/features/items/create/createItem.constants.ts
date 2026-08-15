@@ -6,7 +6,7 @@ export const WEEKDAY_VALUES = [0, 1, 2, 3, 4, 5, 6] as const
 
 export const FREQUENCY_KINDS: FrequencyKind[] = [
   'daily',
-  'timesPerPeriod',
+  'certainDaysPerPeriod',
   'specificDaysOfWeek',
   'specificDaysOfMonth',
   'specificDaysOfYear',
@@ -16,4 +16,6 @@ export const FREQUENCY_KINDS: FrequencyKind[] = [
   'firstWeekdayOfMonth',
 ]
 
-export const RECURRENT_FREQUENCY_KINDS = FREQUENCY_KINDS.filter((kind) => kind !== 'timesPerPeriod')
+export const RECURRENT_FREQUENCY_KINDS = FREQUENCY_KINDS.filter(
+  (kind) => kind !== 'certainDaysPerPeriod',
+)

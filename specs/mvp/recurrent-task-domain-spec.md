@@ -40,12 +40,9 @@ Users need repeatable tasks that regenerate over time without forcing them into 
   - `everyXWeeks`
   - `everyXMonths`
   - `firstWeekdayOfMonth`
-  - `customFutureRule`
 - MVP execution logic must only rely on the structured rules above.
-- `customFutureRule` may exist as a descriptive placeholder only.
 - New recurrent-task creation uses a two-step flow: executable frequency, then details.
-- Recurrent tasks remain binary-only and do not expose flexible times-per-period recurrence.
-- `customFutureRule` remains editable for legacy data but is not offered during creation.
+- Recurrent tasks remain binary-only and do not expose certain-days-per-period recurrence.
 - Occurrences must support `pending`, `completed`, `skipped`, and `missed`.
 - Recurrent tasks have priority `low`, `medium`, and `high`, and stored order.
 - Recurrent task occurrences do not carry forward. If a scheduled occurrence passes incomplete, read logic derives it as `missed` without writing an automatic occurrence record.
@@ -99,7 +96,6 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - `specificDaysOfMonth` and `specificDaysOfYear` must contain at least one valid date.
 - A yearly date uses a validated `{ month, day }` pair. Dates absent from a shorter month are skipped safely.
 - Month-based rules must reject invalid day-of-month values.
-- A future custom rule must not be interpreted as an executable schedule yet.
 
 ## Acceptance Criteria
 
@@ -107,7 +103,6 @@ Users need repeatable tasks that regenerate over time without forcing them into 
 - An occurrence can be completed independently from future occurrences.
 - Archive/delete apply to the parent recurrent task.
 - Archived recurrent tasks can be reactivated from their edit flow.
-- `customFutureRule` exists only as a descriptive future hook.
 
 ## Test Plan
 

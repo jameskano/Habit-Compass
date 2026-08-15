@@ -29,10 +29,10 @@ Test that frequency rules produce readable labels:
 
 - Daily → `Every day`
 - Specific days → `Mon, Wed, Fri`
-- Times per period → `3 times/week`
+- Certain days per period → `3 days/week`
 - Interval → `Every 2 days`
 - Monthly pattern → `First Monday/month`
-- Time target → `30 min, 3 times/week`
+- Measurable-per-session target with a certain-days frequency → `30 min, 3 days/week`
 
 ## Habit day state
 

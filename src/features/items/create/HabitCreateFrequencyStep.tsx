@@ -37,7 +37,9 @@ export const HabitCreateFrequencyStep = ({
         <FrequencyFields
           value={frequency}
           onChange={onFrequencyChange}
-          includeTimesPerPeriod={completionMode === 'binary'}
+          includeCertainDaysPerPeriod={
+            completionMode === 'binary' || (completionMode === 'measurable' && scope === 'session')
+          }
         />
       )}
     </section>

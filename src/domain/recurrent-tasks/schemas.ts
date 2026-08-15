@@ -67,11 +67,6 @@ export const FirstWeekdayOfMonthRecurrenceRuleSchema = z.object({
   weekday: DayOfWeekSchema,
 })
 
-export const CustomFutureRecurrenceRuleSchema = z.object({
-  kind: z.literal('customFutureRule'),
-  description: z.string().min(1),
-})
-
 export const RecurrenceRuleSchema = z.discriminatedUnion('kind', [
   DailyRecurrenceRuleSchema,
   SpecificDaysOfWeekRecurrenceRuleSchema,
@@ -81,7 +76,6 @@ export const RecurrenceRuleSchema = z.discriminatedUnion('kind', [
   EveryXWeeksRecurrenceRuleSchema,
   EveryXMonthsRecurrenceRuleSchema,
   FirstWeekdayOfMonthRecurrenceRuleSchema,
-  CustomFutureRecurrenceRuleSchema,
 ])
 
 export const RecurrentTaskSchema = ItemEntityFieldsSchema.extend({

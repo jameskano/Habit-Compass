@@ -45,7 +45,7 @@ test('add menu opens the four focused creation flows', async ({ page }) => {
     .click()
   await expect(page.getByRole('heading', { name: 'Create recurrent task' })).toBeVisible()
   await expect(page.getByText('Step 1 of 2')).toBeVisible()
-  await expect(page.getByText('Certain times per period')).toHaveCount(0)
+  await expect(page.getByText('Certain days per period')).toHaveCount(0)
   await page.getByRole('button', { name: 'Close' }).click()
 
   await page.getByRole('button', { name: 'Add item' }).click()

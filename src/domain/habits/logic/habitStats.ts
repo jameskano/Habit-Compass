@@ -1,6 +1,7 @@
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import { getCertainDaysPeriodState } from './habitCertainDays'
 import {
   evaluateHabitCompletionForLogs,
   getHabitPeriodBounds,
@@ -87,6 +88,74 @@ const calculateStreaks = (states: HabitDayState[]) => {
   return { current, best }
 }
 
+const calculateCertainDaysStats = (input: {
+  habit: Habit
+  logs: HabitLog[]
+  from: ISODateString
+  to: ISODateString
+  today: ISODateString
+  weekStartsOn: WeekStartsOn
+}): HabitStats => {
+  const { habit, logs, from, to, today, weekStartsOn } = input
+  const periodStarts = enumerateHabitPeriodStarts(
+    habit,
+    from,
+    to < today ? to : today,
+    weekStartsOn,
+  )
+  let expectedScore = 0
+  let creditedCompletionDays = 0
+  let currentStreak = 0
+  let bestStreak = 0
+
+  for (const periodStart of periodStarts) {
+    const period = getCertainDaysPeriodState({ habit, logs, date: periodStart, weekStartsOn })
+    if (!period || period.effectiveTargetDays === 0) {
+      continue
+    }
+
+    const qualifyingDays = period.qualifyingDates.filter(
+      (date) => date >= from && date <= to && date <= today,
+    ).length
+    const creditedDays = Math.min(qualifyingDays, period.effectiveTargetDays)
+    expectedScore += period.effectiveTargetDays
+    creditedCompletionDays += creditedDays
+    currentStreak += creditedDays
+    bestStreak = Math.max(bestStreak, currentStreak)
+
+    const scoringEnd =
+      habit.endsOn && habit.endsOn < period.periodEnd ? habit.endsOn : period.periodEnd
+    const isClosed = scoringEnd < today
+    if (isClosed && qualifyingDays < period.effectiveTargetDays) {
+      currentStreak = 0
+    }
+  }
+
+  const completedDates = [...new Set(logs.map((log) => log.loggedForDate))].filter(
+    (date) =>
+      date >= from &&
+      date <= to &&
+      date <= today &&
+      evaluateHabitCompletionForLogs({ habit, logs, date, weekStartsOn }).validCompletionScore > 0,
+  )
+  const completionScore = completedDates.reduce(
+    (total, date) =>
+      total +
+      evaluateHabitCompletionForLogs({ habit, logs, date, weekStartsOn }).validCompletionScore,
+    0,
+  )
+
+  return {
+    completionEvents: completedDates.length,
+    completionScore,
+    expectedScore,
+    completionPercentage:
+      expectedScore > 0 ? Math.round((creditedCompletionDays / expectedScore) * 100) : 0,
+    currentStreak,
+    bestStreak,
+  }
+}
+
 export const calculateHabitStats = (input: {
   habit: Habit
   logs: HabitLog[]
@@ -100,6 +169,11 @@ export const calculateHabitStats = (input: {
     habit,
     input.logs.filter((log) => log.habitId === habit.id),
   ).filter((log) => isWithinRange(log.loggedForDate, from, to))
+
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    return calculateCertainDaysStats({ habit, logs, from, to, today, weekStartsOn })
+  }
+
   if (getHabitTargetScope(habit) === 'period') {
     const periodStarts = enumerateHabitPeriodStarts(
       habit,

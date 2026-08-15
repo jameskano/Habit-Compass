@@ -16,16 +16,16 @@ import { WeekdaySelect } from './WeekdaySelect'
 type FrequencyFieldsProps = {
   value: FrequencyValues
   onChange: (value: FrequencyValues) => void
-  includeTimesPerPeriod: boolean
+  includeCertainDaysPerPeriod: boolean
 }
 
 export const FrequencyFields = ({
   value,
   onChange,
-  includeTimesPerPeriod,
+  includeCertainDaysPerPeriod,
 }: FrequencyFieldsProps) => {
   const intl = useIntl()
-  const kinds = includeTimesPerPeriod ? FREQUENCY_KINDS : RECURRENT_FREQUENCY_KINDS
+  const kinds = includeCertainDaysPerPeriod ? FREQUENCY_KINDS : RECURRENT_FREQUENCY_KINDS
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,13 +47,14 @@ export const FrequencyFields = ({
           </SelectContent>
         </Select>
       </label>
-      {value.kind === 'timesPerPeriod' ? (
+      {value.kind === 'certainDaysPerPeriod' ? (
         <div className="grid grid-cols-2 gap-3">
           <label className="text-sm font-medium">
-            {intl.formatMessage({ id: 'page.items.create.frequency.count' })}
+            {intl.formatMessage({ id: 'page.items.create.frequency.days' })}
             <Input
               type="number"
               min={1}
+              max={value.period === 'week' ? 7 : value.period === 'month' ? 28 : 365}
               value={value.targetCount}
               onChange={(event) => onChange({ ...value, targetCount: Number(event.target.value) })}
               className={CREATE_ITEM_INPUT_CLASS}
@@ -61,7 +62,9 @@ export const FrequencyFields = ({
           </label>
           <PeriodSelect
             value={value.period}
-            onChange={(period) => onChange({ ...value, period })}
+            onChange={(period) =>
+              onChange({ ...value, period: period as FrequencyValues['period'] })
+            }
           />
         </div>
       ) : null}

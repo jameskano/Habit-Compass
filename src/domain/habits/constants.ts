@@ -1,7 +1,6 @@
 export const habitPeriods = ['day', 'week', 'month', 'year', 'custom'] as const
 export const habitTrackingTypes = [
   'binary',
-  'timesPerPeriod',
   'measurablePerSession',
   'totalMeasurablePerPeriod',
 ] as const
@@ -17,6 +16,7 @@ export const habitScheduleKinds = [
   'everyXWeeks',
   'everyXMonths',
   'firstWeekdayOfMonth',
+  'certainDaysPerPeriod',
   'flexiblePeriod',
 ] as const
 export const habitDayOfWeekValues = [0, 1, 2, 3, 4, 5, 6] as const

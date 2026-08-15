@@ -45,14 +45,25 @@ const formatWeekdays = (intl: IntlShape, days: readonly HabitDayOfWeek[]) => {
 const formatFrequency = (intl: IntlShape, habit: Habit) => {
   const descriptor = getHabitFrequencySummary(habit.scheduleRule)
 
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    return intl.formatMessage(
+      { id: 'items.frequency.certainDaysPerPeriod' },
+      {
+        count: habit.scheduleRule.targetDays,
+        period: intl.formatMessage({ id: `items.period.${habit.scheduleRule.period}` }),
+      },
+    )
+  }
+
   if (
     habit.scheduleRule.kind === 'flexiblePeriod' &&
-    habit.goalConfig.trackingType === 'timesPerPeriod'
+    habit.goalConfig.trackingType === 'totalMeasurablePerPeriod'
   ) {
     return intl.formatMessage(
-      { id: 'items.frequency.timesPerPeriod' },
+      { id: 'items.frequency.measurablePerPeriod' },
       {
-        count: habit.goalConfig.targetCount,
+        amount: habit.goalConfig.targetAmount,
+        unit: habit.goalConfig.unitLabel,
         period: intl.formatMessage({ id: `items.period.${habit.goalConfig.period}` }),
       },
     )

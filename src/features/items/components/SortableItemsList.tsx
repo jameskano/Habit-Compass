@@ -78,7 +78,7 @@ const SortableItemShell = ({
         onPointerUp={(event) => event.stopPropagation()}
         onPointerCancel={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
-        className="absolute -top-3 right-2 z-20 h-9 min-h-9 w-9 touch-none rounded-full border border-border/70 bg-background/95 p-0 text-muted-foreground shadow-sm active:cursor-grabbing"
+        className="absolute -top-3 right-2 z-20 h-8 min-h-8 w-8 touch-none rounded-full border border-border/70 bg-background/95 p-0 text-muted-foreground shadow-sm active:cursor-grabbing"
       >
         <GripVertical aria-hidden="true" size={17} />
       </Button>

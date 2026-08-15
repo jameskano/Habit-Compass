@@ -124,6 +124,8 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
     categoriesQuery.isLoading
   const isError =
     habitsQuery.isError || tasksQuery.isError || recurrentQuery.isError || categoriesQuery.isError
+  const hasCompleteItemSnapshot =
+    habitsQuery.isSuccess && tasksQuery.isSuccess && recurrentQuery.isSuccess
   const revealCards = useItemWaterfallReveal(!isLoading && !isError)
   const hasFilters =
     filters.type !== 'all' ||
@@ -132,11 +134,15 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
     filters.searchText.trim().length > 0
 
   useEffect(() => {
+    if (!hasCompleteItemSnapshot) {
+      return
+    }
+
     pruneOrderForDate(
       selectedDate,
       rawItems.map((item) => item.id),
     )
-  }, [pruneOrderForDate, rawItems, selectedDate])
+  }, [hasCompleteItemSnapshot, pruneOrderForDate, rawItems, selectedDate])
 
   return {
     activeCategories,

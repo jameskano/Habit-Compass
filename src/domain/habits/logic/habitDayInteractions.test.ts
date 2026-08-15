@@ -64,6 +64,43 @@ describe('habit day interactions', () => {
     ).toBe(true)
   })
 
+  it('locks empty dates at the certain-days quota and reopens them after a completion is reduced', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 2 },
+      },
+    )
+    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18' })
+    const tuesday = createHabitLog({ id: 'tuesday', loggedForDate: '2026-05-19' })
+    const logs = [monday, tuesday]
+
+    expect(
+      isHabitDayActionable({
+        habit,
+        logs,
+        date: '2026-05-20',
+        today: '2026-05-21',
+      }),
+    ).toBe(false)
+    expect(
+      isHabitDayActionable({
+        habit,
+        logs,
+        date: '2026-05-19',
+        today: '2026-05-21',
+      }),
+    ).toBe(true)
+    expect(
+      isHabitDayActionable({
+        habit,
+        logs: [monday, { ...tuesday, status: 'skipped' }],
+        date: '2026-05-20',
+        today: '2026-05-21',
+      }),
+    ).toBe(true)
+  })
+
   it('maps numeric goal inputs and existing raw values', () => {
     const repetitionsHabit = createHabit({
       trackingType: 'totalMeasurablePerPeriod',

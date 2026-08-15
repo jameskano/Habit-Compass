@@ -5,6 +5,7 @@ import {
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import { getCertainDaysPeriodState } from './habitCertainDays'
 import {
   evaluateHabitCompletionForLogs,
   getHabitLogProgressValue,
@@ -58,7 +59,10 @@ const getRelevantLogs = (
     isDateWithinRange(log.loggedForDate, periodStart, periodEnd),
   )
 
-  if (habit.scheduleRule.kind === 'flexiblePeriod') {
+  if (
+    habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+    habit.scheduleRule.kind === 'flexiblePeriod'
+  ) {
     return logsInRange
   }
 
@@ -109,6 +113,38 @@ export const evaluateHabitProgress = ({
 }: HabitProgressInput): HabitProgressEvaluation => {
   const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
+
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    const period = getCertainDaysPeriodState({
+      habit,
+      logs: relevantLogs,
+      date: periodStart,
+      weekStartsOn,
+    })
+    const qualifyingDays = period?.qualifyingDates.length ?? 0
+    const targetDays = period?.effectiveTargetDays ?? 0
+    return {
+      ...calculatePeriodProgress(qualifyingDays, targetDays),
+      trackingType: habit.trackingType,
+      unit: 'count',
+      completedLogCount: completedLogs.length,
+      relevantLogCount: relevantLogs.length,
+      scheduledOccurrenceCount: null,
+      recurrenceSupport: 'supported',
+      rawProgressValue: qualifyingDays,
+      standardTargetValue: targetDays,
+      minimumTargetValue: null,
+      validCompletionScore: targetDays > 0 && qualifyingDays >= targetDays ? 1 : 0,
+      derivedCompletionLevel: targetDays > 0 && qualifyingDays >= targetDays ? 'standard' : null,
+      isBelowMinimum: qualifyingDays > 0 && qualifyingDays < targetDays,
+      isMinimumReached: false,
+      isStandardReached: targetDays > 0 && qualifyingDays >= targetDays,
+      targetScope: 'period',
+      periodStart: period?.periodStart ?? periodStart,
+      periodEnd: period?.periodEnd ?? periodEnd,
+    }
+  }
+
   const targetScope = getHabitTargetScope(habit)
   const completion = evaluateHabitCompletionForLogs({
     habit,
@@ -140,18 +176,6 @@ export const evaluateHabitProgress = ({
       return {
         ...calculatePeriodProgress(completion.validCompletionScore, 1),
         trackingType: 'binary',
-        unit: 'count',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
-    case 'timesPerPeriod': {
-      return {
-        ...calculatePeriodProgress(completion.rawProgressValue, getHabitStandardTargetValue(habit)),
-        trackingType: 'timesPerPeriod',
         unit: 'count',
         completedLogCount: completedLogs.length,
         relevantLogCount: relevantLogs.length,

@@ -25,11 +25,14 @@ describe('habit detail stats', () => {
     expect(result.totalCompletions).toBe(2)
   })
 
-  it('calculates flexible goal percentage across every lifetime period', () => {
+  it('calculates proportional certain-days percentage across every lifetime period', () => {
     const result = calculateHabitDetailStats({
       habit: createHabit(
-        { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
-        { startsOn: '2026-05-11' },
+        { trackingType: 'binary' },
+        {
+          startsOn: '2026-05-11',
+          scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
+        },
       ),
       today: '2026-05-21',
       logs: [
@@ -40,9 +43,9 @@ describe('habit detail stats', () => {
       ],
     })
 
-    expect(result.completionPercentage).toBe(50)
+    expect(result.completionPercentage).toBe(67)
     expect(result.totalCompletions).toBe(4)
-    expect(result.currentStreak).toBeNull()
+    expect(result.currentStreak).toBe(4)
   })
 
   it('groups completion events into chart bars without storing derived state', () => {

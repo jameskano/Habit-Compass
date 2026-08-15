@@ -107,10 +107,13 @@ export type HabitScheduleRule =
   | { kind: 'everyXWeeks'; intervalWeeks: number; daysOfWeek: number[] }
   | { kind: 'everyXMonths'; intervalMonths: number; dayOfMonth: number }
   | { kind: 'firstWeekdayOfMonth'; weekday: number }
+  | { kind: 'certainDaysPerPeriod'; targetDays: number; period: 'week' | 'month' | 'year' }
   | { kind: 'flexiblePeriod' }
 ```
 
-`flexiblePeriod` is only valid with an existing period-based `goalConfig`. It does not assign missed state to individual empty dates.
+`certainDaysPerPeriod` is valid only with binary and measurable-per-session goals. It stores a
+frequency target independently from the per-date goal and does not assign missed state to empty
+dates. `flexiblePeriod` remains an internal schedule for total-measurable-per-period goals.
 
 Habits require a category. Deleting a custom category reassigns linked habits to the protected
 Uncategorized category. Tasks and recurrent tasks keep category optional. New and edited tasks

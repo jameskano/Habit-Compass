@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import {
   getHabitAmountInputMetadata,
   getHabitLogAmount,
@@ -42,10 +43,12 @@ export const HabitDayInteractions = ({
   const removeMutation = useRemoveHabitLogMutation()
   const amountMetadata = getHabitAmountInputMetadata(habit)
   const pending = upsertMutation.isPending || removeMutation.isPending
+  const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
 
   const getLogForDate = (date: ISODateString) => logs.find((log) => log.loggedForDate === date)
 
-  const isDayDisabled = (date: ISODateString) => !isHabitDayActionable({ habit, date, today })
+  const isDayDisabled = (date: ISODateString) =>
+    !isHabitDayActionable({ habit, logs, date, today, weekStartsOn })
 
   const upsertCompleted = (date: ISODateString, completionLevel?: HabitCompletionLevel) => {
     upsertMutation.mutate({
@@ -76,15 +79,6 @@ export const HabitDayInteractions = ({
     const log = getLogForDate(date)
     if (habit.goalConfig.trackingType === 'binary') {
       if (log) {
-        clearLog(date)
-      } else {
-        upsertCompleted(date, 'standard')
-      }
-      return
-    }
-
-    if (habit.goalConfig.trackingType === 'timesPerPeriod') {
-      if (log?.status === 'completed') {
         clearLog(date)
       } else {
         upsertCompleted(date, 'standard')
@@ -131,23 +125,6 @@ export const HabitDayInteractions = ({
         },
         {
           labelId: 'page.items.habit.dayAction.undo',
-          onSelect: run(() => clearLog(actionDate)),
-        },
-      ]
-    }
-
-    if (habit.goalConfig.trackingType === 'timesPerPeriod') {
-      return [
-        {
-          labelId: 'page.items.habit.dayAction.complete',
-          onSelect: run(() => upsertCompleted(actionDate, 'standard')),
-        },
-        {
-          labelId: 'page.items.habit.dayAction.skip',
-          onSelect: run(() => skipDay(actionDate)),
-        },
-        {
-          labelId: 'page.items.habit.dayAction.clear',
           onSelect: run(() => clearLog(actionDate)),
         },
       ]

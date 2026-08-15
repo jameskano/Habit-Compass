@@ -193,13 +193,14 @@ records from the current `first_day_of_week` value.
 - `profiles.feature_flags`
   - Stores optional-depth toggles as a JSON object.
 - `habits.schedule_config`
-  - Stores explicit expectation rules or `flexiblePeriod`; flexible schedules calculate progress without deriving missed individual dates.
+  - Stores explicit expectation rules, habit-only `certainDaysPerPeriod` frequencies, or the
+    internal `flexiblePeriod` window used by total-measurable-per-period goals.
 - `habits.goal_config`
-  - Stores goal variants such as binary, times-per-period, measurable-per-session, and total-measurable-per-period targets.
+  - Stores binary, measurable-per-session, and total-measurable-per-period targets.
 - `habits.minimum_config`, `standard_config`
   - Optional completion-level overrides. Null keeps the habit simple.
 - `recurrent_tasks.recurrence_config`
-  - Stores supported recurrence contracts including `customFutureRule` as a descriptive-only future placeholder.
+  - Stores supported executable recurrence contracts.
 
 ## Delete And Archive
 

@@ -191,7 +191,11 @@ export const supabaseHabitsRepository: HabitsRepository = {
 
       return ok(
         (data as HabitRow[]).map(mapHabit).filter((habit) => {
-          return habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date)
+          return (
+            habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+            habit.scheduleRule.kind === 'flexiblePeriod' ||
+            isHabitScheduledOnDate(habit, date)
+          )
         }),
       )
     })

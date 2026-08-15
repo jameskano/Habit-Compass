@@ -100,13 +100,9 @@ describe('deriveHabitDayState', () => {
 
   it('shows recorded flexible-period completions without deriving missed empty dates', () => {
     const flexibleHabit = createCompletionLevelHabit(
-      {
-        trackingType: 'timesPerPeriod',
-        period: 'week',
-        targetCount: 3,
-        minimumCount: 1,
-      },
+      { trackingType: 'binary', minimumDescription: 'Do the minimum' },
       ['minimum', 'standard'],
+      { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
     )
 
     expect(

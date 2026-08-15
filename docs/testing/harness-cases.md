@@ -6,8 +6,8 @@ Habit Compass harness coverage currently focuses on deterministic non-UI logic t
 
 - Frequency and goal evaluation:
   - binary daily habits
-  - times per week
-  - times per month
+  - certain days per week
+  - certain days per month
   - measurable amount per session
   - total measurable amount per period
   - specific days of week

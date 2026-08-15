@@ -431,7 +431,7 @@ describe('app shell', () => {
     expect(waterfallItems.length).toBeGreaterThan(0)
     expect(waterfallItems[0]).toHaveClass('item-waterfall-enter')
     expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
-    expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
+    expect(within(habitCard).getByText('3 days per week')).toBeInTheDocument()
     expect(within(habitCard).getByText('Habit')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
@@ -813,7 +813,7 @@ describe('app shell', () => {
     render(<App />)
 
     expect(await screen.findByText('Move for 20 minutes')).toBeInTheDocument()
-    expect(screen.getByText('3 times per week')).toBeInTheDocument()
+    expect(screen.getByText('3 days per week')).toBeInTheDocument()
     const habitCardButton = screen.getByRole('button', {
       name: 'Open options for Move for 20 minutes',
     })
