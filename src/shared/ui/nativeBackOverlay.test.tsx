@@ -66,4 +66,24 @@ describe('shared overlay native back handling', () => {
     expect(runNativeBackHandlers()).toBe(true)
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
+
+  it('closes an open popover before its parent dialog', () => {
+    const onDialogOpenChange = vi.fn()
+    const onPopoverOpenChange = vi.fn()
+
+    render(
+      <Dialog open onOpenChange={onDialogOpenChange}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>Edit item</DialogTitle>
+          <Popover open onOpenChange={onPopoverOpenChange}>
+            <div />
+          </Popover>
+        </DialogContent>
+      </Dialog>,
+    )
+
+    expect(runNativeBackHandlers()).toBe(true)
+    expect(onPopoverOpenChange).toHaveBeenCalledWith(false)
+    expect(onDialogOpenChange).not.toHaveBeenCalled()
+  })
 })

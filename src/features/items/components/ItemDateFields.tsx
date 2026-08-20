@@ -70,7 +70,7 @@ export const DatePickerField = ({
   return (
     <div className="block text-sm font-medium">
       <label id={inputId}>{intl.formatMessage({ id: labelId })}</label>
-      <Popover open={open} onOpenChange={readOnly ? undefined : setOpen}>
+      <Popover modal open={open} onOpenChange={readOnly ? undefined : setOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
@@ -139,7 +139,7 @@ export const GuardedEndDateField = ({
   return (
     <div className="block text-sm font-medium">
       <label>{intl.formatMessage({ id: labelId })}</label>
-      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+      <Popover modal open={pickerOpen} onOpenChange={setPickerOpen}>
         <PopoverAnchor asChild>
           <Button
             type="button"

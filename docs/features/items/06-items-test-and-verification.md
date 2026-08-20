@@ -205,6 +205,8 @@ manual skip sets status skipped
 - Re-clicking an open dropdown trigger closes only the dropdown and keeps its parent create/edit
   screen open.
 - Item create/edit date controls use the shared calendar-icon presentation.
+- Item date pickers remain open when navigating months or tapping non-day calendar content, and
+  close after selecting a valid day.
 - Habit edit restores binary standard/minimum text and measurable standard/minimum amounts. An
   omitted measurable minimum renders blank and clearing it disables minimum completion.
 

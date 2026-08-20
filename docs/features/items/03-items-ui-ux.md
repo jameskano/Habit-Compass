@@ -266,6 +266,8 @@ Default values:
 Item create/edit date controls use the same calendar-icon presentation with a non-native calendar
 picker. Existing habit and recurrent-task edit start dates remain read-only, and their end-date
 controls retain the archive warning before opening the picker.
+Calendar navigation and other non-day interactions keep the picker open. Selecting a valid day
+closes the picker and applies the selected date.
 
 ---
 

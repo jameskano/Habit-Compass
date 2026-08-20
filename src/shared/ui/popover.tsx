@@ -15,7 +15,7 @@ const Popover = ({
       onOpenChange?.(false)
       return true
     },
-    priority: 150,
+    priority: 250,
   })
 
   return <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />
