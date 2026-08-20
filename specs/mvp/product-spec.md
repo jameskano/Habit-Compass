@@ -39,6 +39,10 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Item management cards reveal in a short staggered sequence when their section is displayed.
 - Filtering, completion, archive updates, and reordering must not restart the reveal sequence.
 - Swipe-enabled item cards follow horizontal pointer movement and return smoothly after release.
+- A valid swipe direction progressively reveals a translated icon-and-label preview beneath the
+  exposed side of the card. The preview uses semantic action color and becomes visually stronger
+  when the action threshold is reached.
+- A direction without an available action does not move the card or reveal an action preview.
 - Reduced-motion preferences disable decorative reveal and title animations and remove animated swipe return.
 
 ## Transient Notifications

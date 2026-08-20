@@ -204,6 +204,14 @@ after timestamped records, while equal timestamps preserve their existing relati
 - Tasks have no checkbox in the Items list.
 - Swipe right on a task means complete.
 - Swipe left or tap on a task means edit.
+- Valid card swipes reveal the pending action behind the exposed side using a localized icon and
+  label. Edit uses a primary/blue treatment, Complete uses green, and Archive uses an
+  amber-neutral treatment.
+- Swipe previews strengthen when the existing 56px action threshold is reached. Releasing below
+  the threshold resets the card without acting.
+- Directions without an available action do not translate the card or reveal a preview.
+- Reduced-motion preferences remove decorative swipe-preview transitions while preserving the
+  threshold state change.
 - Delete is never a swipe action.
 - Archive and complete are different.
 - Missed habit color should be amber/yellow, not red.

@@ -120,6 +120,13 @@ Actions:
 - Calendar icon: open habit detail calendar tab.
 - Options icon: open bottom options menu.
 
+For every enabled card swipe, the newly exposed side shows the pending action with both an icon
+and a localized label. The preview is progressively uncovered as the card follows the pointer and
+becomes visually stronger once the 56px action threshold is crossed. Edit uses a primary/blue
+treatment, Complete uses green, and Archive uses an amber-neutral treatment. A direction with no
+available action does not move or reveal a preview. Reduced-motion mode removes decorative preview
+transitions without removing the threshold distinction.
+
 Bottom options menu order:
 
 1. Calendar

@@ -87,7 +87,7 @@ export const DatePickerField = ({
             <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-auto">
+        <PopoverContent align="start" className="pointer-events-auto z-[60] w-auto">
           <LazyCalendar
             mode="single"
             selected={selectedDate}
@@ -158,7 +158,7 @@ export const GuardedEndDateField = ({
             <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
           </Button>
         </PopoverAnchor>
-        <PopoverContent align="start" className="w-auto">
+        <PopoverContent align="start" className="pointer-events-auto z-[60] w-auto">
           <LazyCalendar
             mode="single"
             selected={isoDateToCalendarDate(value)}

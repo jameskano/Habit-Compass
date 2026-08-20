@@ -56,6 +56,30 @@ test('add menu opens the four focused creation flows', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Create category' })).toBeVisible()
 })
 
+test('item date picker remains interactive inside its creation dialog', async ({ page }) => {
+  await page.goto('/items')
+
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await page
+    .getByRole('dialog', { name: 'Choose what to create' })
+    .getByRole('button', { name: /^Task/ })
+    .click()
+
+  const createDialog = page.getByRole('dialog', { name: 'Create task' })
+  const dateTrigger = createDialog.getByRole('button', { name: 'Choose date' })
+  const initialDate = await dateTrigger.textContent()
+
+  await dateTrigger.click()
+
+  const calendarDialog = page.getByRole('dialog').filter({ has: page.getByRole('grid') })
+  await expect(calendarDialog).toBeVisible()
+  await calendarDialog.getByRole('button', { name: 'Go to the Next Month' }).click()
+  await calendarDialog.getByRole('button', { name: /15th/ }).click()
+
+  await expect(dateTrigger).not.toHaveText(initialDate ?? '')
+  await expect(createDialog).toBeVisible()
+})
+
 test('re-clicking an open item-form dropdown keeps its creation screen open', async ({ page }) => {
   await page.goto('/')
 
@@ -120,11 +144,16 @@ test('item swipe tracks the pointer and the header title uses calm motion', asyn
 
   const habitCard = page.getByRole('button', { name: 'Open options for Read before bed' })
   const habitCardContainer = habitCard.locator('xpath=ancestor::*[@data-habit-card][1]')
+  const editPreview = habitCardContainer.locator('xpath=..').locator('[data-swipe-action="edit"]')
   await habitCard.dispatchEvent('pointerdown', { clientX: 100, clientY: 20 })
   await habitCard.dispatchEvent('pointermove', { clientX: 60, clientY: 20 })
   await expect(habitCardContainer).toHaveCSS('transform', 'matrix(1, 0, 0, 1, -40, 0)')
+  await expect(editPreview).toContainText('Edit')
+  await expect(editPreview).toHaveAttribute('data-active', 'true')
+  await expect(editPreview).toHaveAttribute('data-ready', 'false')
   await habitCard.dispatchEvent('pointerup', { clientX: 60, clientY: 20 })
   await expect(habitCardContainer).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+  await expect(editPreview).toHaveAttribute('data-active', 'false')
 
   await page.getByRole('tab', { name: 'Recurrent Tasks' }).click()
   await expect(page.getByRole('heading', { name: 'Recurrent Tasks' }).locator('span')).toHaveClass(
@@ -138,6 +167,7 @@ test('task swipe completion keeps the mobile viewport and toast contained', asyn
 
   await page.getByRole('tab', { name: 'Tasks', exact: true }).click()
   const taskCard = page.getByRole('button', { name: 'Edit Call the clinic' })
+  const completePreview = taskCard.locator('xpath=..').locator('[data-swipe-action="complete"]')
   await expect(taskCard).toBeVisible()
 
   const viewportWidth = await page.evaluate(() => document.documentElement.clientWidth)
@@ -149,6 +179,10 @@ test('task swipe completion keeps the mobile viewport and toast contained', asyn
   await page.mouse.move(taskBounds.x + 24, taskBounds.y + taskBounds.height / 2)
   await page.mouse.down()
   await page.mouse.move(taskBounds.x + 120, taskBounds.y + taskBounds.height / 2)
+
+  await expect(completePreview).toContainText('Complete')
+  await expect(completePreview).toHaveAttribute('data-active', 'true')
+  await expect(completePreview).toHaveAttribute('data-ready', 'true')
 
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth))

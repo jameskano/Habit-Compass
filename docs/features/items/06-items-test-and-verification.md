@@ -240,6 +240,11 @@ manual skip sets status skipped
 
 - Touch targets are large enough.
 - Swipe gestures do not conflict with vertical scroll.
+- Enabled swipes progressively reveal the correct icon and localized action label on the exposed
+  side of each card.
+- Swipe previews strengthen at the action threshold and reset without acting below it.
+- Directions without an available action neither move the card nor reveal a misleading preview.
+- Swipe previews remain contained within the card bounds in light and dark themes.
 - Drag reorder does not accidentally trigger swipe.
 - Bottom menus/sheets are reachable with one hand.
 - Forms are not visually overwhelming.
@@ -249,4 +254,8 @@ manual skip sets status skipped
 - Icon buttons have accessible labels.
 - Color is not the only way to identify priority/state if practical.
 - Destructive buttons are clearly labeled.
+- Swipe previews communicate actions through text and icon as well as semantic color, and
+  decorative preview content does not duplicate accessible control names.
+- Reduced-motion preferences remove decorative swipe-preview transitions while preserving clear
+  ready/not-ready feedback.
 - Confirmation dialogs are keyboard/screen-reader friendly if web support matters.

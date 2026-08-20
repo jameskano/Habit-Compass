@@ -1,4 +1,4 @@
-import { Archive, Check } from 'lucide-react'
+import { Archive, Check, Pencil } from 'lucide-react'
 import { type KeyboardEvent } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -13,6 +13,7 @@ import {
 } from '@/styles/itemVisualTokens'
 
 import { useSwipeCardMotion } from '../components/useSwipeCardMotion'
+import { SwipeActionPreview } from '../components/SwipeActionPreview'
 
 type TaskCardProps = {
   task: Task
@@ -37,11 +38,7 @@ export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskC
 
   const swipeMotion = useSwipeCardMotion({
     onSwipeLeft: onEdit,
-    onSwipeRight: () => {
-      if (!archived && !isCompleted) {
-        onComplete()
-      }
-    },
+    onSwipeRight: !archived && !isCompleted ? onComplete : undefined,
   })
 
   const handleClick = () => {
@@ -52,88 +49,107 @@ export const TaskCard = ({ task, category, archived, onEdit, onComplete }: TaskC
   }
 
   return (
-    <Card
-      role="button"
-      tabIndex={0}
-      aria-label={intl.formatMessage({ id: 'page.items.task.action.edit' }, { task: task.title })}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      onPointerDown={swipeMotion.handlePointerDown}
-      onPointerMove={swipeMotion.handlePointerMove}
-      onPointerUp={swipeMotion.handlePointerUp}
-      onPointerCancel={swipeMotion.handlePointerCancel}
-      style={swipeMotion.style}
-      className={cn(
-        'relative min-w-0 w-full max-w-full touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md motion-reduce:transition-none',
-        swipeMotion.isDragging && 'transition-none',
-      )}
+    <SwipeActionPreview
+      leftAction={{
+        icon: Pencil,
+        label: intl.formatMessage({ id: 'page.items.swipe.edit' }),
+        tone: 'edit',
+      }}
+      rightAction={
+        !archived && !isCompleted
+          ? {
+              icon: Check,
+              label: intl.formatMessage({ id: 'page.items.swipe.complete' }),
+              tone: 'complete',
+            }
+          : undefined
+      }
+      activeDirection={swipeMotion.activeDirection}
+      actionReady={swipeMotion.actionReady}
     >
-      <div
+      <Card
+        role="button"
+        tabIndex={0}
+        aria-label={intl.formatMessage({ id: 'page.items.task.action.edit' }, { task: task.title })}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        onPointerDown={swipeMotion.handlePointerDown}
+        onPointerMove={swipeMotion.handlePointerMove}
+        onPointerUp={swipeMotion.handlePointerUp}
+        onPointerCancel={swipeMotion.handlePointerCancel}
+        style={swipeMotion.style}
         className={cn(
-          'absolute inset-y-0 left-0 w-1',
-          isCompleted ? 'bg-emerald-500/70' : 'bg-sky-500/60',
+          'relative min-w-0 w-full max-w-full touch-pan-y overflow-hidden rounded-[1.35rem] border-border/80 bg-card p-4 transition-transform duration-200 ease-out motion-reduce:transition-none',
+          swipeMotion.isDragging && 'transition-none',
         )}
-        aria-hidden="true"
-      />
-      <div className="ml-1 min-w-0 space-y-3">
-        <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-1">
-            <h3
-              className={cn(
-                'min-w-0 truncate text-base font-semibold tracking-tight',
-                isCompleted && 'text-muted-foreground',
-              )}
-              title={task.title}
-            >
-              {task.title}
-            </h3>
-            {task.description ? (
-              <p
-                className="line-clamp-2 min-w-0 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]"
-                title={task.description}
-              >
-                {task.description}
-              </p>
-            ) : null}
-          </div>
-          <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
-            {category && CategoryIcon ? (
-              <span
-                aria-label={category.name}
-                title={category.name}
+      >
+        <div
+          className={cn(
+            'absolute inset-y-0 left-0 w-1',
+            isCompleted ? 'bg-emerald-500/70' : 'bg-sky-500/60',
+          )}
+          aria-hidden="true"
+        />
+        <div className="ml-1 min-w-0 space-y-3">
+          <header className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-1">
+              <h3
                 className={cn(
-                  'inline-flex h-8 w-8 items-center justify-center rounded-full border',
-                  getCategoryVisualClasses(category.colorToken),
+                  'min-w-0 truncate text-base font-semibold tracking-tight',
+                  isCompleted && 'text-muted-foreground',
                 )}
+                title={task.title}
               >
-                <CategoryIcon aria-hidden="true" size={14} />
+                {task.title}
+              </h3>
+              {task.description ? (
+                <p
+                  className="line-clamp-2 min-w-0 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]"
+                  title={task.description}
+                >
+                  {task.description}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 flex-nowrap items-center justify-end gap-1.5">
+              {category && CategoryIcon ? (
+                <span
+                  aria-label={category.name}
+                  title={category.name}
+                  className={cn(
+                    'inline-flex h-8 w-8 items-center justify-center rounded-full border',
+                    getCategoryVisualClasses(category.colorToken),
+                  )}
+                >
+                  <CategoryIcon aria-hidden="true" size={14} />
+                </span>
+              ) : null}
+              <span
+                role="img"
+                aria-label={priorityLabel}
+                title={priorityLabel}
+                className={cn(
+                  'inline-block h-6 w-6 rounded-full border',
+                  priorityVisualClasses[task.priority],
+                )}
+              />
+            </div>
+          </header>
+          <footer className="flex min-h-5 items-center justify-end border-t border-border/60 pt-3">
+            {isCompleted ? (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                <Check aria-hidden="true" size={13} />
+                {intl.formatMessage({ id: 'page.items.task.status.completed' })}
+              </span>
+            ) : archived ? (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                <Archive aria-hidden="true" size={13} />
+                {intl.formatMessage({ id: 'page.items.task.status.archived' })}
               </span>
             ) : null}
-            <span
-              role="img"
-              aria-label={priorityLabel}
-              title={priorityLabel}
-              className={cn(
-                'inline-block h-6 w-6 rounded-full border',
-                priorityVisualClasses[task.priority],
-              )}
-            />
-          </div>
-        </header>
-        <footer className="flex min-h-5 items-center justify-end border-t border-border/60 pt-3">
-          {isCompleted ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              <Check aria-hidden="true" size={13} />
-              {intl.formatMessage({ id: 'page.items.task.status.completed' })}
-            </span>
-          ) : archived ? (
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-              <Archive aria-hidden="true" size={13} />
-              {intl.formatMessage({ id: 'page.items.task.status.archived' })}
-            </span>
-          ) : null}
-        </footer>
-      </div>
-    </Card>
+          </footer>
+        </div>
+      </Card>
+    </SwipeActionPreview>
   )
 }
