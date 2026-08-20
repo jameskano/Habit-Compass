@@ -1,4 +1,4 @@
-import { formatISO, parseISO } from 'date-fns'
+import { formatISO } from 'date-fns'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -10,6 +10,7 @@ import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 import { PendingState } from '@/shared/ui/PendingState'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { ItemWaterfallReveal } from '../components/ItemWaterfallReveal'
@@ -49,12 +50,7 @@ const formatDateHeader = (
   const tomorrow = formatISO(addDays(new Date(`${today}T00:00:00`), 1), {
     representation: 'date',
   })
-  const formattedDate = intl.formatDate(parseISO(date), {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'UTC',
-  })
+  const formattedDate = formatFullDate(date)
 
   if (date < today) {
     return intl.formatMessage({ id: 'page.items.task.group.overdue' }, { date: formattedDate })

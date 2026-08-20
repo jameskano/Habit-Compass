@@ -42,7 +42,7 @@ export const TodayDateNavigator = ({
         >
           <span className="min-w-0">
             <span className="block text-base font-semibold leading-snug">
-              {selectedDateLabel(intl, selectedDate)}
+              {selectedDateLabel(selectedDate)}
             </span>
             <span className="block text-xs text-muted-foreground">
               {intl.formatMessage({ id: `page.today.dateMode.${dateMode}` })}

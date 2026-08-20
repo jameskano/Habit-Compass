@@ -195,9 +195,7 @@ describe('habit day Items interactions', () => {
     await user.type(input, '45')
     await user.click(screen.getByRole('button', { name: 'Save amount' }))
     await waitFor(() => {
-      expect(
-        getLogs(habit.id).find((log) => log.loggedForDate === mockData.today)?.amount,
-      ).toBe(45)
+      expect(getLogs(habit.id).find((log) => log.loggedForDate === mockData.today)?.amount).toBe(45)
     })
 
     view.rerender(
@@ -288,7 +286,7 @@ describe('habit day Items interactions', () => {
     expect(parentClick).not.toHaveBeenCalled()
   })
 
-  it('shows the habit title and locale-formatted date in the completion sheet', async () => {
+  it('shows the habit title and fixed-format date in the completion sheet', async () => {
     getMockState().appSettings.locale = 'es'
     useAppPreferencesStore.setState({ locale: 'es' })
     const habit = getHabit('habit-water')
@@ -296,12 +294,8 @@ describe('habit day Items interactions', () => {
 
     await longPress(getTodayButton(habit))
 
-    const formattedDate = new Intl.DateTimeFormat('es', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      timeZone: 'UTC',
-    }).format(parseISO(mockData.today))
+    const [year, month, day] = mockData.today.split('-')
+    const formattedDate = `${day}/${month}/${year}`
     expect(screen.getByRole('heading', { name: habit.title })).toBeInTheDocument()
     expect(screen.getByText(formattedDate)).toBeInTheDocument()
   })
@@ -319,7 +313,8 @@ describe('habit day Items interactions', () => {
         <HabitCalendarTab habit={habit} logs={[]} today={mockData.today} />
       </AppProviders>,
     )
-    await user.click(screen.getByRole('button', { name: `${mockData.today}: Pending today` }))
+    const [year, month, day] = mockData.today.split('-')
+    await user.click(screen.getByRole('button', { name: `${day}/${month}/${year}: Pending today` }))
     await waitFor(() => {
       expect(getLogs(habit.id).find((log) => log.loggedForDate === mockData.today)).toMatchObject({
         status: 'completed',

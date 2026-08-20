@@ -9,7 +9,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
-import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
+import { EndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
 import {
   NO_RECURRENT_TASK_CATEGORY_VALUE,
   RECURRENT_TASK_EDIT_INPUT_CLASS,
@@ -109,7 +109,7 @@ export const RecurrentTaskEditOptionalSection = ({
           labelId="page.items.recurrent.edit.startsOn"
           value={selectedStartsOn}
         />
-        <GuardedEndDateField
+        <EndDateField
           labelId="page.items.recurrent.edit.endsOn"
           value={selectedEndsOn}
           onValueChange={onEndDateChange}
@@ -118,8 +118,6 @@ export const RecurrentTaskEditOptionalSection = ({
               ? intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })
               : undefined
           }
-          warningTitleId="page.items.recurrent.edit.endDateWarning.title"
-          warningDescriptionId="page.items.recurrent.edit.endDateWarning.description"
         />
       </div>
       <label className="block text-sm font-medium">

@@ -45,9 +45,14 @@ Examples:
 
 - `If an account exists for this email, we sent a sign-in code.`
 - `If an account exists for this email, we sent password-reset instructions.`
-- `Check your email for the next step.`
+- `If this email can be registered, we sent a verification link. If you already have an account, sign in using your usual method.`
+- `If a verification email can be sent, we sent another one.`
 
 Do not reveal whether a user exists.
+
+The registration waiting screen must render the same title, explanatory text, and recovery actions
+after a new-email request, an existing Google-account email, or an existing password-account email.
+Do not infer account existence from an obfuscated Supabase user response.
 
 ## 3. Field and form errors
 

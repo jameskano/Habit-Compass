@@ -142,10 +142,11 @@ describe('Items menu backdrop dismissal', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
-  it('elevates the recurrent task edit end-date warning backdrop above the edit dialog', async () => {
+  it('elevates the recurrent task past-end-date save warning above the edit dialog', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
-    const task = getMockState().recurrentTasks[0]
+    const fixtureTask = getMockState().recurrentTasks[0]
+    const task = { ...fixtureTask, endsOn: fixtureTask.startsOn }
 
     renderWithAppProviders(
       <RecurrentTaskEdit
@@ -161,9 +162,9 @@ describe('Items menu backdrop dismissal', () => {
     const editDialog = screen.getByRole('dialog', {
       name: `Edit recurrent task ${task.title}`,
     })
-    await user.click(within(editDialog).getByRole('button', { name: 'Choose end date' }))
+    await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
 
-    const warningDialog = screen.getByRole('dialog', {
+    const warningDialog = screen.getByRole('alertdialog', {
       name: 'End date can archive this recurrent task',
     })
     const overlays = getDialogOverlays()

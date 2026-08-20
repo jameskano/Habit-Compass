@@ -16,6 +16,7 @@ const knownSupabaseCodes: Record<string, AuthErrorCode> = {
   same_password: 'WEAK_PASSWORD',
   validation_failed: 'INVALID_EMAIL',
   weak_password: 'WEAK_PASSWORD',
+  user_already_exists: 'EMAIL_ALREADY_IN_USE',
 }
 
 const appErrorCodeForAuth = (authCode: AuthErrorCode) => {

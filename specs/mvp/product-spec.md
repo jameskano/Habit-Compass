@@ -27,6 +27,17 @@ Habit Compass MVP is a simple daily tracker with optional depth.
   and a Premium Coming Soon placeholder. Security and sign-in appears only for eligible
   email/password accounts.
 
+## MVP Date Presentation
+
+- Every complete calendar date identifying a specific day is displayed as zero-padded
+  `DD/MM/YYYY`, regardless of app language or device locale.
+- The fixed format applies to visible text and accessible labels. Translated surrounding copy and
+  accessibility state such as today or selected remain localized.
+- Partial date context such as month headings, weekday names or initials, calendar day numbers, and
+  compact chart labels remains localized.
+- Dates remain stored and exported in their existing ISO formats. MVP does not include a date-format
+  preference.
+
 ## Items Navigation
 
 - Top-level tabs are `Habits`, `Tasks`, and `Recurrent Tasks` only.

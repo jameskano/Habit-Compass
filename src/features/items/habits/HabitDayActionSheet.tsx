@@ -1,11 +1,11 @@
 import { X } from 'lucide-react'
-import { parseISO } from 'date-fns'
 import { useIntl } from 'react-intl'
 
 import type { Habit } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 export type HabitDaySheetAction = {
   labelId: string
@@ -28,14 +28,7 @@ export const HabitDayActionSheet = ({
   onClose,
 }: HabitDayActionSheetProps) => {
   const intl = useIntl()
-  const formattedDate = date
-    ? intl.formatDate(parseISO(date), {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'UTC',
-      })
-    : ''
+  const formattedDate = formatFullDate(date)
 
   return (
     <Sheet

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import type { Category } from '@/domain/categories'
-import type { DayOfWeek } from '@/domain/recurrent-tasks'
+import type { DayOfWeek, UpdateRecurrentTaskInput } from '@/domain/recurrent-tasks'
 import {
   useArchiveRecurrentTaskMutation,
   useDeleteRecurrentTaskMutation,
@@ -15,6 +15,7 @@ import { useAppToast } from '@/shared/hooks/useAppToast'
 import { getItemLimitKindFromError } from '../limits/itemLimitErrors'
 import { useItemLimitGate } from '../limits/useItemLimitGate'
 import { NO_RECURRENT_TASK_CATEGORY_VALUE } from './recurrentTaskEdit.constants'
+import type { RecurrentTaskConfirmationAction } from './RecurrentTaskConfirmationDialog'
 import {
   RecurrentTaskEditValuesSchema,
   type RecurrentTaskEditValues,
@@ -35,7 +36,9 @@ export const useRecurrentTaskEditForm = ({
   onDeleted,
 }: RecurrentTaskEditProps) => {
   const appToast = useAppToast()
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [confirmation, setConfirmation] = useState<RecurrentTaskConfirmationAction | null>(null)
+  const [pendingPastEndDateSave, setPendingPastEndDateSave] =
+    useState<UpdateRecurrentTaskInput | null>(null)
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categorySelection, setCategorySelection] = useState<string | null>(null)
   const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
@@ -114,21 +117,36 @@ export const useRecurrentTaskEditForm = ({
     previousCategoryIdsRef.current = new Set(categories.map((category) => category.id))
   }, [categories, creatingCategory, selectCategoryForForm])
 
-  const submit = form.handleSubmit((values) => {
-    const categoryId = createdCategorySelection?.id ?? categorySelection ?? values.categoryId
-    const input = buildRecurrentTaskUpdateInput(task.id, values, categoryId)
-
+  const saveTask = (input: UpdateRecurrentTaskInput, archiveAfterSave = false) => {
     updateMutation.mutate(input, {
       onSuccess: () => {
-        if (values.endsOn && values.endsOn < today) {
-          onClose()
-          archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
+        if (archiveAfterSave) {
+          archiveMutation.mutate(task.id, {
+            onSuccess: () => {
+              setConfirmation(null)
+              setPendingPastEndDateSave(null)
+              onArchived(task)
+            },
+          })
           return
         }
         appToast.success({ id: 'page.items.recurrent.edit.saved' })
         onClose()
       },
     })
+  }
+
+  const submit = form.handleSubmit((values) => {
+    const categoryId = createdCategorySelection?.id ?? categorySelection ?? values.categoryId
+    const input = buildRecurrentTaskUpdateInput(task.id, values, categoryId)
+
+    if (values.endsOn && values.endsOn < today) {
+      setPendingPastEndDateSave(input)
+      setConfirmation('pastEndDate')
+      return
+    }
+
+    saveTask(input)
   })
 
   const selectCreatedCategory = (createdCategory: Category) => {
@@ -239,12 +257,26 @@ export const useRecurrentTaskEditForm = ({
     deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
   }
 
+  const confirmAction = () => {
+    if (confirmation === 'delete') {
+      deleteTask()
+    } else if (confirmation === 'pastEndDate' && pendingPastEndDateSave) {
+      saveTask(pendingPastEndDateSave, true)
+    }
+  }
+
+  const cancelConfirmation = () => {
+    setConfirmation(null)
+    setPendingPastEndDateSave(null)
+  }
+
   return {
     archiveTask,
+    cancelConfirmation,
     categoryOptions,
-    confirmingDelete,
+    confirmation,
+    confirmAction,
     creatingCategory,
-    deleteTask,
     form,
     handleCategoryChange,
     handleCategorySheetOpenChange,
@@ -265,7 +297,7 @@ export const useRecurrentTaskEditForm = ({
     selectedPriority,
     selectedStartsOn,
     selectedWeekday,
-    setConfirmingDelete,
+    requestDelete: () => setConfirmation('delete'),
     submit,
     toggleDay,
   }

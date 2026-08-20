@@ -29,7 +29,19 @@ Given an unauthenticated user, when they navigate directly to Today, Items, Week
 
 ### AC-03 Password registration
 
-Given valid email, valid password, and accepted legal acknowledgement, when registration succeeds, the user sees verification instructions and cannot enter the app until verification.
+Given valid email, valid password, and accepted legal acknowledgement, when registration succeeds, the user sees neutral verification instructions and cannot enter the app until verification.
+
+Given an email that already belongs to a Google-only or password-enabled account, when password
+registration returns an obfuscated success or duplicate-email response, the user sees the same
+neutral waiting screen as a new registrant, no duplicate account is created, and the submitted
+password does not replace the existing account password.
+
+Given the neutral waiting screen, when the user chooses Google, the pending legal intent is
+preserved through OAuth; cancelling OAuth returns to the waiting screen, while successful OAuth
+uses the common post-auth flow.
+
+Given any registration waiting state, when resend completes without a reportable transport or rate
+limit error, the success message remains neutral and does not disclose whether an email was sent.
 
 ### AC-04 Email verification
 
@@ -185,7 +197,8 @@ Test:
 - Switching password/code modes preserves email.
 - Forgot-password link placement.
 - Code resend cooldown.
-- Verification screen.
+- Verification screen neutral copy and recovery actions.
+- Verification-screen Google OAuth start and cancellation return.
 - Loading button behavior.
 - Error focus/announcements.
 - Google button visible in both sign-in modes.
@@ -198,6 +211,9 @@ Test:
 Using local Supabase or isolated staging:
 
 - Email sign-up and confirmation.
+- Existing Google-only email submitted through password registration does not create a duplicate or password identity.
+- Existing password-account email submitted through registration does not replace its password.
+- New and existing-email registration attempts expose the same neutral waiting-screen state.
 - Password sign-in.
 - Email OTP with `shouldCreateUser: false`.
 - No user creation for unknown OTP email.

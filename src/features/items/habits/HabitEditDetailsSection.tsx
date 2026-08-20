@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl'
 import type { Category } from '@/domain/categories'
 import { Textarea } from '@/shared/ui/textarea'
 
-import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
+import { EndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
 import { HABIT_EDIT_INPUT_CLASS } from './habitEdit.constants'
 import type { HabitEditValues } from './habitEdit.schema'
 import { HabitEditCategoryPriorityFields } from './HabitEditCategoryPriorityFields'
@@ -74,7 +74,7 @@ export const HabitEditDetailsSection = memo(
             labelId="page.items.habit.edit.startsOn"
             value={selectedStartsOn}
           />
-          <GuardedEndDateField
+          <EndDateField
             labelId="page.items.habit.edit.endsOn"
             value={selectedEndsOn}
             onValueChange={onEndDateChange}
@@ -83,8 +83,6 @@ export const HabitEditDetailsSection = memo(
                 ? intl.formatMessage({ id: 'page.items.habit.edit.error.endDate' })
                 : undefined
             }
-            warningTitleId="page.items.habit.edit.endDateWarning.title"
-            warningDescriptionId="page.items.habit.edit.endDateWarning.description"
           />
         </div>
       </section>

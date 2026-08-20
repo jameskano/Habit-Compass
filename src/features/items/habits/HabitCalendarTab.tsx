@@ -16,6 +16,7 @@ import { useIntl } from 'react-intl'
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import { deriveHabitDayState, type Habit, type HabitDayState, type HabitLog } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
 import { habitDayStateClasses } from '@/styles/itemVisualTokens'
@@ -113,7 +114,7 @@ export const HabitCalendarTab = ({ habit, logs, today }: HabitCalendarTabProps) 
                 return (
                   <li key={date} className="min-w-0">
                     <HabitDayCell
-                      label={`${date}: ${stateLabel}`}
+                      label={`${formatFullDate(date)}: ${stateLabel}`}
                       title={stateLabel}
                       disabled={isDayDisabled(date)}
                       onTap={() => onTapDay(date)}

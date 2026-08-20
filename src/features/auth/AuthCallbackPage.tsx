@@ -66,7 +66,9 @@ export const AuthCallbackPage = () => {
           const returnRoute =
             pendingAuth?.oauthReturnTo ??
             (callback.flow === 'signup' ? '/auth/sign-up' : '/auth/sign-in')
-          clearPendingAuthState()
+          if (returnRoute !== '/auth/verify-email') {
+            clearPendingAuthState()
+          }
           await navigate({ replace: true, to: returnRoute })
           return
         }

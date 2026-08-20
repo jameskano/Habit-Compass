@@ -1,4 +1,4 @@
-import { formatISO, parseISO } from 'date-fns'
+import { formatISO } from 'date-fns'
 
 import {
   evaluateHabitCompletionForLogs,
@@ -22,6 +22,7 @@ import {
   isoDateToCalendarDate,
 } from '@/features/items/components/datePickerUtils'
 import type { ISODateString } from '@/shared/types'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 import type { TodayIntl } from './today.types'
 
@@ -173,11 +174,7 @@ export const formatRecurrentFrequency = (intl: TodayIntl, task: RecurrentTask) =
 
 export const formatTaskMeta = (intl: TodayIntl, task: Task, selectedDate: ISODateString) => {
   if (task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending') {
-    const formattedDate = intl.formatDate(parseISO(task.dueDate), {
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
-    })
+    const formattedDate = formatFullDate(task.dueDate)
     return intl.formatMessage({ id: 'page.today.item.task.overdue' }, { date: formattedDate })
   }
 
@@ -242,13 +239,8 @@ export const amountHelperLines = (
   return lines
 }
 
-export const selectedDateLabel = (intl: TodayIntl, date: ISODateString) => {
-  return intl.formatDate(parseISO(date), {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
+export const selectedDateLabel = (date: ISODateString) => {
+  return formatFullDate(date)
 }
 
 export const getTodayDateModeForDates = (selectedDate: ISODateString, today: ISODateString) => {

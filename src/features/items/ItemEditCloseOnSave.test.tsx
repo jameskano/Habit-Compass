@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -104,5 +104,106 @@ describe('item edit close on save', () => {
     expect(getMockState().habits.find((entry) => entry.id === habit.id)?.title).toBe(
       'Drink water after lunch and dinner',
     )
+  })
+
+  it('confirms a recurrent task past end date on save before updating and archiving', async () => {
+    const user = userEvent.setup()
+    const fixtureTask = getMockState().recurrentTasks.find(
+      (entry) => entry.id === 'recurrent-review',
+    )
+    const onArchived = vi.fn()
+
+    if (!fixtureTask) {
+      throw new Error('Expected recurrent-review fixture')
+    }
+
+    const task = { ...fixtureTask, endsOn: fixtureTask.startsOn }
+    renderWithAppProviders(
+      <RecurrentTaskEdit
+        task={task}
+        categories={getMockState().categories}
+        today={mockData.today}
+        onClose={vi.fn()}
+        onArchived={onArchived}
+        onDeleted={vi.fn()}
+      />,
+    )
+
+    const nameInput = screen.getByLabelText('Name')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Weekly review with archive')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    let confirmation = screen.getByRole('alertdialog', {
+      name: 'End date can archive this recurrent task',
+    })
+    expect(getMockState().recurrentTasks.find((entry) => entry.id === task.id)?.endsOn).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByLabelText('Name')).toHaveValue('Weekly review with archive')
+    expect(getMockState().recurrentTasks.find((entry) => entry.id === task.id)?.endsOn).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    confirmation = screen.getByRole('alertdialog', {
+      name: 'End date can archive this recurrent task',
+    })
+    await user.click(within(confirmation).getByRole('button', { name: 'Save and archive' }))
+
+    await waitFor(() => expect(onArchived).toHaveBeenCalledWith(task))
+    expect(getMockState().recurrentTasks.find((entry) => entry.id === task.id)).toMatchObject({
+      title: 'Weekly review with archive',
+      endsOn: fixtureTask.startsOn,
+      lifecycleStatus: 'archived',
+    })
+  })
+
+  it('confirms a habit past end date on save before updating and archiving', async () => {
+    const user = userEvent.setup()
+    const fixtureHabit = getMockState().habits.find((entry) => entry.id === 'habit-water')
+    const onArchived = vi.fn()
+
+    if (!fixtureHabit) {
+      throw new Error('Expected habit-water fixture')
+    }
+
+    const habit = { ...fixtureHabit, endsOn: fixtureHabit.startsOn }
+    renderWithAppProviders(
+      <HabitDetail
+        habit={habit}
+        categories={getMockState().categories}
+        initialTab="edit"
+        today={mockData.today}
+        onClose={vi.fn()}
+        onArchived={onArchived}
+        onDeleted={vi.fn()}
+      />,
+    )
+
+    const nameInput = await screen.findByLabelText('Name')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'Drink water then archive')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    let confirmation = screen.getByRole('alertdialog', {
+      name: 'End date can archive this habit',
+    })
+    expect(getMockState().habits.find((entry) => entry.id === habit.id)?.endsOn).toBeNull()
+
+    await user.click(within(confirmation).getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByLabelText('Name')).toHaveValue('Drink water then archive')
+    expect(getMockState().habits.find((entry) => entry.id === habit.id)?.endsOn).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    confirmation = screen.getByRole('alertdialog', {
+      name: 'End date can archive this habit',
+    })
+    await user.click(within(confirmation).getByRole('button', { name: 'Save and archive' }))
+
+    await waitFor(() => expect(onArchived).toHaveBeenCalledWith(habit))
+    expect(getMockState().habits.find((entry) => entry.id === habit.id)).toMatchObject({
+      title: 'Drink water then archive',
+      endsOn: fixtureHabit.startsOn,
+      lifecycleStatus: 'archived',
+    })
   })
 })

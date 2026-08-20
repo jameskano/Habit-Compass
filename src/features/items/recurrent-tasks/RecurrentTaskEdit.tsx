@@ -23,7 +23,7 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open && !taskEdit.confirmingDelete) {
+        if (!open && !taskEdit.confirmation) {
           onClose()
         }
       }}
@@ -77,7 +77,7 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
             task={task}
             pending={taskEdit.pending}
             onArchive={taskEdit.archiveTask}
-            onDelete={() => taskEdit.setConfirmingDelete(true)}
+            onDelete={taskEdit.requestDelete}
             onReactivate={taskEdit.reactivateTask}
           />
         </div>
@@ -89,10 +89,10 @@ export const RecurrentTaskEdit = (props: RecurrentTaskEditProps) => {
           />
         ) : null}
         <RecurrentTaskConfirmationDialog
-          open={taskEdit.confirmingDelete}
+          action={taskEdit.confirmation}
           pending={taskEdit.pending}
-          onCancel={() => taskEdit.setConfirmingDelete(false)}
-          onConfirm={taskEdit.deleteTask}
+          onCancel={taskEdit.cancelConfirmation}
+          onConfirm={taskEdit.confirmAction}
         />
         <CategoryFormSheet
           open={taskEdit.creatingCategory}

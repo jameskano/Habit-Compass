@@ -199,7 +199,8 @@ Account actions:
 - Spanish Settings labels.
 - Unsupported device language falls back to English when language is System default.
 - Long Spanish strings fit rows, sheets, dialogs, footer, and legal screens.
-- Dates in subscription/deletion messages and weekly ranges format by locale.
+- Complete dates in subscription/deletion messages and weekly ranges use fixed `DD/MM/YYYY` in
+  every language; partial date labels remain localized.
 - Legal document English/Spanish version IDs match.
 - Privacy Policy and Terms maintain content parity.
 

@@ -110,7 +110,8 @@ Behavior:
 - `system` resolves from the Android/device language.
 - Supported device languages are English and Spanish for MVP.
 - Unsupported device languages fall back to English.
-- React Intl owns message lookup and runtime formatting.
+- React Intl owns message lookup and localized runtime formatting. Complete calendar dates are the
+  MVP exception and use the fixed `DD/MM/YYYY` presentation defined in the product spec.
 - Changing language updates copy immediately and updates `document.documentElement.lang` on web.
 - Persist stable locale identifiers, not translated display labels.
 - The storage model must support more locale codes later without replacing the field shape.

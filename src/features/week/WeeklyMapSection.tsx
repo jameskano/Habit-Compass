@@ -6,6 +6,7 @@ import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { cn } from '@/shared/utils/cn'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 import { habitDayStateClasses } from '@/styles/itemVisualTokens'
 
 type WeeklyMapSectionProps = {
@@ -104,7 +105,7 @@ export const WeeklyMapSection = ({
                         role="img"
                         aria-label={intl.formatMessage(
                           { id: 'page.week.map.cellLabel' },
-                          { habit: habit.title, date, state: stateLabel },
+                          { habit: habit.title, date: formatFullDate(date), state: stateLabel },
                         )}
                         title={stateLabel}
                         className={cn(

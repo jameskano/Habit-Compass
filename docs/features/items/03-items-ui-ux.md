@@ -264,10 +264,17 @@ Default values:
 - Target: binary, unless the user chooses measurable amount
 
 Item create/edit date controls use the same calendar-icon presentation with a non-native calendar
-picker. Existing habit and recurrent-task edit start dates remain read-only, and their end-date
-controls retain the archive warning before opening the picker.
+picker. Calendar popovers opened inside an item dialog remain non-modal so the owning dialog is the
+only focus trap. Existing habit and recurrent-task edit start dates remain visible as plain,
+read-only information rather than interactive or disabled controls. Their end-date pickers open
+without a warning.
 Calendar navigation and other non-day interactions keep the picker open. Selecting a valid day
 closes the picker and applies the selected date.
+
+When an active habit or recurrent task has an end date before today, Save opens an archive
+confirmation before any update or archive mutation runs. Cancel returns to the unchanged edit form
+with its unsaved values preserved. Confirm saves the edits and then archives the item, preserving
+its history. An empty end date, today, or a future end date saves without that confirmation.
 
 ---
 

@@ -1130,15 +1130,16 @@ describe('app shell', () => {
       await within(detail).findByText('Minimum must not exceed the standard target (20).'),
     ).toBeInTheDocument()
     fireEvent.change(minimumInput, { target: { value: '10' } })
-    const startDateControl = within(detail).getByRole('button', { name: 'Choose date' })
-    expect(startDateControl).toBeDisabled()
-    expect(startDateControl.querySelector('svg')).not.toBeNull()
+    expect(within(detail).getByText('Start date')).toBeInTheDocument()
+    expect(within(detail).queryByRole('button', { name: 'Choose date' })).not.toBeInTheDocument()
     expect(detail.querySelector('input[type="date"]')).toBeNull()
     await user.click(within(detail).getByRole('button', { name: 'Choose end date' }))
-    const endDateWarning = screen.getByRole('dialog', {
-      name: 'End date can archive this habit',
-    })
-    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
+    expect(await screen.findByRole('grid')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('alertdialog', { name: 'End date can archive this habit' }),
+    ).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument())
     await user.clear(within(detail).getByLabelText('Name'))
     await user.type(within(detail).getByLabelText('Name'), 'Read for ten minutes')
     await user.clear(within(detail).getByLabelText('Description'))
@@ -1455,14 +1456,21 @@ describe('app shell', () => {
       name: 'Edit recurrent task Water the plants',
     })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
-    expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeDisabled()
+    expect(within(editDialog).getByText('Start date')).toBeInTheDocument()
+    expect(
+      within(editDialog).queryByRole('button', { name: 'Choose date' }),
+    ).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
     expect(editDialog.querySelector('input[type="date"]')).toBeNull()
     await user.click(within(editDialog).getByRole('button', { name: 'Choose end date' }))
-    const endDateWarning = screen.getByRole('dialog', {
-      name: 'End date can archive this recurrent task',
-    })
-    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
+    expect(await screen.findByRole('grid')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('alertdialog', {
+        name: 'End date can archive this recurrent task',
+      }),
+    ).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument())
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),

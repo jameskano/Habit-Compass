@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { parseISO } from 'date-fns'
 import { X } from 'lucide-react'
 import { useEffect, useId } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,6 +10,7 @@ import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 const HabitAmountInputSchema = z.object({
   amount: z.number().nonnegative('negative'),
@@ -41,14 +41,7 @@ export const HabitAmountInputSheet = ({
 }: HabitAmountInputSheetProps) => {
   const intl = useIntl()
   const amountInputId = useId()
-  const formattedDate = date
-    ? intl.formatDate(parseISO(date), {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'UTC',
-      })
-    : ''
+  const formattedDate = formatFullDate(date)
   const form = useForm<HabitAmountInputValues>({
     resolver: zodResolver(HabitAmountInputSchema),
     defaultValues: { amount: initialAmount ?? undefined },

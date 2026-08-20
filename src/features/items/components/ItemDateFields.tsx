@@ -1,18 +1,12 @@
 import { CalendarDays } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import { Button } from '@/shared/ui/button'
 import { LazyCalendar } from '@/shared/ui/LazyCalendar'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
-import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { cn } from '@/shared/utils/cn'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 import { calendarDateToISODate, isoDateToCalendarDate } from './datePickerUtils'
 
@@ -22,7 +16,6 @@ type DatePickerFieldProps = {
   onValueChange: (value: string) => void
   error?: string
   allowClear?: boolean
-  readOnly?: boolean
   openLabelId?: string
 }
 
@@ -31,25 +24,15 @@ type ReadOnlyStartDateFieldProps = {
   value: string
 }
 
-type GuardedEndDateFieldProps = {
+type EndDateFieldProps = {
   labelId: string
   value: string
   onValueChange: (value: string) => void
   error?: string
-  warningTitleId: string
-  warningDescriptionId: string
 }
 
-const formatDateValue = (intl: ReturnType<typeof useIntl>, value: string) => {
-  const date = isoDateToCalendarDate(value)
-  if (!date) {
-    return ''
-  }
-  return intl.formatDate(date, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
+const formatDateValue = (value: string) => {
+  return formatFullDate(value)
 }
 
 export const DatePickerField = ({
@@ -58,26 +41,58 @@ export const DatePickerField = ({
   onValueChange,
   error,
   allowClear = false,
-  readOnly = false,
   openLabelId = 'page.items.date.openPicker',
 }: DatePickerFieldProps) => {
   const intl = useIntl()
-  const inputId = useId()
+  const labelElementId = useId()
+  const errorId = useId()
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const selectedDate = isoDateToCalendarDate(value)
-  const formattedValue = formatDateValue(intl, value)
+  const formattedValue = formatDateValue(value)
+  const dialogContainer = triggerRef.current?.closest<HTMLElement>('[role="dialog"]')
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return
+      }
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      setOpen(false)
+      triggerRef.current?.focus()
+    }
+
+    window.addEventListener('keydown', closeOnEscape, true)
+    return () => window.removeEventListener('keydown', closeOnEscape, true)
+  }, [open])
 
   return (
-    <div className="block text-sm font-medium">
-      <label id={inputId}>{intl.formatMessage({ id: labelId })}</label>
-      <Popover modal open={open} onOpenChange={readOnly ? undefined : setOpen}>
+    <div
+      className="block text-sm font-medium"
+      onKeyDownCapture={(event) => {
+        if (open && event.key === 'Escape') {
+          event.stopPropagation()
+          setOpen(false)
+          triggerRef.current?.focus()
+        }
+      }}
+    >
+      <span id={labelElementId}>{intl.formatMessage({ id: labelId })}</span>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            ref={triggerRef}
             type="button"
             variant="ghost"
             aria-label={intl.formatMessage({ id: openLabelId })}
             aria-invalid={Boolean(error)}
-            disabled={readOnly}
+            aria-describedby={error ? errorId : undefined}
             className={cn(
               'mt-1.5 h-10 w-full justify-between rounded-xl border border-border/75 bg-background px-3 text-sm font-normal',
               !formattedValue && 'text-muted-foreground',
@@ -87,9 +102,29 @@ export const DatePickerField = ({
             <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="pointer-events-auto z-[60] w-auto">
+        <PopoverContent
+          ref={contentRef}
+          align="start"
+          portalContainer={dialogContainer}
+          className="pointer-events-auto z-[60] w-auto"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault()
+            contentRef.current?.focus()
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            triggerRef.current?.focus()
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation()
+              setOpen(false)
+            }
+          }}
+        >
           <LazyCalendar
             mode="single"
+            autoFocus
             selected={selectedDate}
             defaultMonth={selectedDate}
             onSelect={(date) => {
@@ -115,107 +150,39 @@ export const DatePickerField = ({
           ) : null}
         </PopoverContent>
       </Popover>
-      {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
+      {error ? (
+        <span id={errorId} className="mt-1 block text-xs text-amber-700">
+          {error}
+        </span>
+      ) : null}
     </div>
   )
 }
 
 export const ReadOnlyStartDateField = ({ labelId, value }: ReadOnlyStartDateFieldProps) => {
-  return <DatePickerField labelId={labelId} value={value} onValueChange={() => {}} readOnly />
-}
-
-export const GuardedEndDateField = ({
-  labelId,
-  value,
-  onValueChange,
-  error,
-  warningTitleId,
-  warningDescriptionId,
-}: GuardedEndDateFieldProps) => {
   const intl = useIntl()
-  const [warningOpen, setWarningOpen] = useState(false)
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const valueLabelId = useId()
 
   return (
-    <div className="block text-sm font-medium">
-      <label>{intl.formatMessage({ id: labelId })}</label>
-      <Popover modal open={pickerOpen} onOpenChange={setPickerOpen}>
-        <PopoverAnchor asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label={intl.formatMessage({ id: 'page.items.date.openEndDatePicker' })}
-            aria-invalid={Boolean(error)}
-            className={cn(
-              'mt-1.5 h-10 w-full justify-between rounded-xl border border-border/75 bg-background px-3 text-sm font-normal',
-              !value && 'text-muted-foreground',
-            )}
-            onClick={() => setWarningOpen(true)}
-          >
-            <span>
-              {formatDateValue(intl, value) || intl.formatMessage({ id: 'page.items.date.empty' })}
-            </span>
-            <CalendarDays aria-hidden="true" size={16} className="text-muted-foreground" />
-          </Button>
-        </PopoverAnchor>
-        <PopoverContent align="start" className="pointer-events-auto z-[60] w-auto">
-          <LazyCalendar
-            mode="single"
-            selected={isoDateToCalendarDate(value)}
-            defaultMonth={isoDateToCalendarDate(value)}
-            onSelect={(date) => {
-              if (!date) {
-                return
-              }
-              onValueChange(calendarDateToISODate(date))
-              setPickerOpen(false)
-            }}
-          />
-          {value ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="mt-2 w-full rounded-xl border border-border/70"
-              onClick={() => {
-                onValueChange('')
-                setPickerOpen(false)
-              }}
-            >
-              {intl.formatMessage({ id: 'page.items.date.clear' })}
-            </Button>
-          ) : null}
-        </PopoverContent>
-      </Popover>
-      {error ? <span className="mt-1 block text-xs text-amber-700">{error}</span> : null}
-
-      <Dialog open={warningOpen} onOpenChange={setWarningOpen}>
-        <DialogContent
-          aria-describedby={undefined}
-          overlayClassName="z-[60]"
-          className="z-[70] p-0"
-        >
-          <DialogHeader>
-            <DialogTitle>{intl.formatMessage({ id: warningTitleId })}</DialogTitle>
-            <DialogDescription>
-              {intl.formatMessage({ id: warningDescriptionId })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 px-4 py-4 sm:px-6">
-            <Button type="button" variant="ghost" onClick={() => setWarningOpen(false)}>
-              {intl.formatMessage({ id: 'action.cancel' })}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setWarningOpen(false)
-                setPickerOpen(true)
-              }}
-            >
-              {intl.formatMessage({ id: 'page.items.date.confirmOpenPicker' })}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+    <div className="text-sm font-medium">
+      <span id={valueLabelId}>{intl.formatMessage({ id: labelId })}</span>
+      <output
+        aria-labelledby={valueLabelId}
+        className="mt-1.5 block min-h-10 rounded-xl bg-muted/35 px-3 py-2 text-sm font-normal text-foreground"
+      >
+        {formatDateValue(value)}
+      </output>
     </div>
   )
 }
+
+export const EndDateField = ({ labelId, value, onValueChange, error }: EndDateFieldProps) => (
+  <DatePickerField
+    labelId={labelId}
+    value={value}
+    onValueChange={onValueChange}
+    error={error}
+    allowClear
+    openLabelId="page.items.date.openEndDatePicker"
+  />
+)
