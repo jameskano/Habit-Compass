@@ -4,6 +4,7 @@ import { CategoryFormSheet } from '@/features/categories/CategoryFormSheet'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent } from '@/shared/ui/dialog'
 
+import { ItemLimitDialog } from '../limits/ItemLimitDialog'
 import { NO_TASK_CATEGORY_VALUE } from './taskEdit.constants'
 import type { TaskEditProps } from './taskEdit.types'
 import { TaskConfirmationDialog } from './TaskConfirmationDialog'
@@ -65,6 +66,7 @@ export const TaskEdit = (props: TaskEditProps) => {
             pending={taskEdit.pending}
             onArchive={taskEdit.archiveTask}
             onDelete={() => taskEdit.setConfirmingDelete(true)}
+            onReactivate={taskEdit.reactivateTask}
           />
         </div>
         <TaskConfirmationDialog
@@ -80,6 +82,13 @@ export const TaskEdit = (props: TaskEditProps) => {
           onCreated={taskEdit.selectCreatedCategory}
           onOpenChange={taskEdit.handleCategorySheetOpenChange}
         />
+        {taskEdit.limitDialogState ? (
+          <ItemLimitDialog
+            action={taskEdit.limitDialogState.action}
+            kind={taskEdit.limitDialogState.kind}
+            onClose={taskEdit.onCloseLimitDialog}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   )

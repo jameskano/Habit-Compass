@@ -49,10 +49,11 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
   const setOrderForDate = useTodayOrderStore((state) => state.setOrderForDate)
   const pruneOrderForDate = useTodayOrderStore((state) => state.pruneOrderForDate)
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
-  const categoriesQuery = useCategoriesQuery()
-  const habitsQuery = useTodayHabitsQuery(undefined, selectedDate)
-  const tasksQuery = useTodayTasksQuery(undefined, selectedDate)
-  const recurrentQuery = useTodayRecurrentTasksQuery(undefined, selectedDate)
+  const pageBlocking = { pageBlocking: true }
+  const categoriesQuery = useCategoriesQuery(undefined, pageBlocking)
+  const habitsQuery = useTodayHabitsQuery(undefined, selectedDate, pageBlocking)
+  const tasksQuery = useTodayTasksQuery(undefined, selectedDate, pageBlocking)
+  const recurrentQuery = useTodayRecurrentTasksQuery(undefined, selectedDate, pageBlocking)
   const habitLogs = habitsQuery.data?.logs ?? EMPTY_HABIT_LOGS
 
   const rawItems = useMemo(
@@ -123,6 +124,8 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
     categoriesQuery.isLoading
   const isError =
     habitsQuery.isError || tasksQuery.isError || recurrentQuery.isError || categoriesQuery.isError
+  const hasCompleteItemSnapshot =
+    habitsQuery.isSuccess && tasksQuery.isSuccess && recurrentQuery.isSuccess
   const revealCards = useItemWaterfallReveal(!isLoading && !isError)
   const hasFilters =
     filters.type !== 'all' ||
@@ -131,11 +134,15 @@ export const useTodayPageData = (input: UseTodayPageDataInput) => {
     filters.searchText.trim().length > 0
 
   useEffect(() => {
+    if (!hasCompleteItemSnapshot) {
+      return
+    }
+
     pruneOrderForDate(
       selectedDate,
       rawItems.map((item) => item.id),
     )
-  }, [pruneOrderForDate, rawItems, selectedDate])
+  }, [hasCompleteItemSnapshot, pruneOrderForDate, rawItems, selectedDate])
 
   return {
     activeCategories,

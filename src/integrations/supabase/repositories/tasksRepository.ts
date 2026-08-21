@@ -1,4 +1,9 @@
-import type { Task, TasksRepository } from '@/domain/tasks'
+import {
+  reactivateTask,
+  shouldAutoArchiveCompletedTask,
+  type Task,
+  type TasksRepository,
+} from '@/domain/tasks'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 
@@ -94,21 +99,21 @@ export const supabaseTasksRepository: TasksRepository = {
   },
 
   async listForToday({ date }) {
-    const tasks = await this.listForUser({ userId: '' })
-    if (!tasks.ok) return tasks
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
 
-    return ok(
-      tasks.data.filter(
-        (task) =>
-          task.lifecycleStatus === 'active' &&
-          (task.dueDate === date ||
-            (task.dueDate !== null &&
-              task.dueDate !== undefined &&
-              task.dueDate < date &&
-              task.carryForward &&
-              task.completionStatus === 'pending')),
-      ),
-    )
+      const { data, error } = await getSupabaseClient()
+        .from('tasks')
+        .select('*')
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .or(`due_date.eq.${date},and(due_date.lt.${date},carry_forward.eq.true,status.eq.pending)`)
+        .order('sort_order', { ascending: true })
+
+      if (error) return err(toSupabaseError('Could not load tasks.', error))
+      return ok((data as TaskRow[]).map(mapTask))
+    })
   },
 
   async create(input) {
@@ -146,7 +151,7 @@ export const supabaseTasksRepository: TasksRepository = {
     })
   },
 
-  async setCompletionStatus({ taskId, status }) {
+  async setCompletionStatus({ taskId, status, today }) {
     return execute(async () => {
       const { data, error } = await getSupabaseClient()
         .from('tasks')
@@ -160,7 +165,44 @@ export const supabaseTasksRepository: TasksRepository = {
 
       if (error) return err(toSupabaseError('Could not update task completion.', error))
       if (!data) return err(createNotFoundError('Task', taskId))
-      return ok(mapTask(data as TaskRow))
+      const task = mapTask(data as TaskRow)
+      if (status !== 'completed' || !shouldAutoArchiveCompletedTask(task, today)) {
+        return ok(task)
+      }
+
+      const archivedAt = new Date().toISOString()
+      const archived = await getSupabaseClient()
+        .from('tasks')
+        .update({ archived_at: archivedAt, updated_at: archivedAt })
+        .eq('id', taskId)
+        .select('*')
+        .maybeSingle()
+
+      if (archived.error) {
+        return err(toSupabaseError('Could not archive completed past-due task.', archived.error))
+      }
+      if (!archived.data) return err(createNotFoundError('Task', taskId))
+      return ok(mapTask(archived.data as TaskRow))
+    })
+  },
+
+  async archiveCompletedPastDue({ today }) {
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
+
+      const archivedAt = new Date().toISOString()
+      const { data, error } = await getSupabaseClient()
+        .from('tasks')
+        .update({ archived_at: archivedAt, updated_at: archivedAt })
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .eq('status', 'completed')
+        .lt('due_date', today)
+        .select('*')
+
+      if (error) return err(toSupabaseError('Could not archive completed past-due tasks.', error))
+      return ok((data as TaskRow[]).map(mapTask))
     })
   },
 
@@ -189,15 +231,46 @@ export const supabaseTasksRepository: TasksRepository = {
 
   async restore({ taskId }) {
     return execute(async () => {
+      const current = await getSupabaseClient()
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .maybeSingle()
+
+      if (current.error) return err(toSupabaseError('Could not load task.', current.error))
+      if (!current.data) return err(createNotFoundError('Task', taskId))
+
+      const reactivatedTask = reactivateTask(
+        mapTask(current.data as TaskRow),
+        new Date().toISOString(),
+      )
+
+      if (!reactivatedTask) {
+        return err(
+          createAppError('validation', 'Only archived incomplete tasks can be reactivated.'),
+        )
+      }
+
       const { data, error } = await getSupabaseClient()
         .from('tasks')
-        .update({ archived_at: null })
+        .update({
+          archived_at: null,
+          completed_at: null,
+          status: 'pending',
+          updated_at: reactivatedTask.updatedAt,
+        })
         .eq('id', taskId)
+        .not('archived_at', 'is', null)
+        .neq('status', 'completed')
         .select('*')
         .maybeSingle()
 
       if (error) return err(toSupabaseError('Could not restore task.', error))
-      if (!data) return err(createNotFoundError('Task', taskId))
+      if (!data) {
+        return err(
+          createAppError('validation', 'Only archived incomplete tasks can be reactivated.'),
+        )
+      }
       return ok(mapTask(data as TaskRow))
     })
   },

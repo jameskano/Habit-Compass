@@ -10,6 +10,10 @@ describe('authErrors', () => {
     expect(mapSupabaseAuthError({ code: 'email_not_confirmed' }, 'UNKNOWN')).toBe(
       'EMAIL_NOT_CONFIRMED',
     )
+    expect(mapSupabaseAuthError({ code: 'email_exists' }, 'UNKNOWN')).toBe('EMAIL_ALREADY_IN_USE')
+    expect(mapSupabaseAuthError({ code: 'user_already_exists' }, 'UNKNOWN')).toBe(
+      'EMAIL_ALREADY_IN_USE',
+    )
   })
 
   it('stores auth code details on AppError', () => {

@@ -1,5 +1,6 @@
 export { canShowSecurityAndSignIn, classifyAccountProviders } from './providerClassification'
 export { legalStatusRequiresAcceptance } from './legalStatus'
+export { authPasswordPolicy, buildPasswordPolicySchema } from './passwordPolicy'
 export type { AuthRepository } from './repository'
 export { accountProviderClassifications, authErrorCodes } from './types'
 export type {

@@ -100,13 +100,9 @@ describe('deriveHabitDayState', () => {
 
   it('shows recorded flexible-period completions without deriving missed empty dates', () => {
     const flexibleHabit = createCompletionLevelHabit(
-      {
-        trackingType: 'timesPerPeriod',
-        period: 'week',
-        targetCount: 3,
-        minimumCount: 1,
-      },
+      { trackingType: 'binary', minimumDescription: 'Do the minimum' },
       ['minimum', 'standard'],
+      { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
     )
 
     expect(
@@ -127,19 +123,28 @@ describe('deriveHabitDayState', () => {
     ).toBe('not_scheduled')
   })
 
-  it('derives session quantity/time progress from logged values', () => {
+  it('derives session measurable progress from logged values', () => {
     const habitWithMinimum = createCompletionLevelHabit(
-      { trackingType: 'timePerSession', targetMinutes: 30, minimumMinutes: 10 },
+      {
+        trackingType: 'measurablePerSession',
+        targetAmount: 30,
+        minimumAmount: 10,
+        unitLabel: 'minutes',
+      },
       ['minimum', 'standard'],
     )
-    const standardOnlyHabit = createHabit({ trackingType: 'timePerSession', targetMinutes: 30 })
+    const standardOnlyHabit = createHabit({
+      trackingType: 'measurablePerSession',
+      targetAmount: 30,
+      unitLabel: 'minutes',
+    })
 
     expect(
       deriveHabitDayState({
         habit: habitWithMinimum,
         date: '2026-05-21',
         today: '2026-05-21',
-        logs: [createHabitLog({ durationMinutes: 5 })],
+        logs: [createHabitLog({ amount: 5 })],
       }),
     ).toBe('progress_logged')
     expect(
@@ -147,7 +152,7 @@ describe('deriveHabitDayState', () => {
         habit: habitWithMinimum,
         date: '2026-05-21',
         today: '2026-05-21',
-        logs: [createHabitLog({ durationMinutes: 10 })],
+        logs: [createHabitLog({ amount: 10 })],
       }),
     ).toBe('completed_minimum')
     expect(
@@ -155,7 +160,7 @@ describe('deriveHabitDayState', () => {
         habit: standardOnlyHabit,
         date: '2026-05-21',
         today: '2026-05-21',
-        logs: [createHabitLog({ durationMinutes: 10 })],
+        logs: [createHabitLog({ amount: 10 })],
       }),
     ).toBe('progress_logged')
     expect(
@@ -163,29 +168,30 @@ describe('deriveHabitDayState', () => {
         habit: standardOnlyHabit,
         date: '2026-05-21',
         today: '2026-05-21',
-        logs: [createHabitLog({ durationMinutes: 30 })],
+        logs: [createHabitLog({ amount: 30 })],
       }),
     ).toBe('completed_standard')
   })
 
-  it('colors only logged days for period quantity/time targets based on the period total', () => {
+  it('colors only logged days for period measurable targets based on the period total', () => {
     const habit = createCompletionLevelHabit(
       {
-        trackingType: 'repetitionsPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         period: 'week',
-        targetRepetitions: 100,
-        minimumRepetitions: 50,
+        targetAmount: 100,
+        minimumAmount: 50,
+        unitLabel: 'repetitions',
       },
       ['minimum', 'standard'],
       { startsOn: '2026-05-18' },
     )
-    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', repetitions: 30 })
+    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', amount: 30 })
     const wednesday = createHabitLog({
       id: 'wednesday',
       loggedForDate: '2026-05-20',
-      repetitions: 20,
+      amount: 20,
     })
-    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', repetitions: 50 })
+    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', amount: 50 })
 
     expect(
       deriveHabitDayState({ habit, date: '2026-05-18', today: '2026-05-22', logs: [monday] }),
@@ -224,17 +230,18 @@ describe('deriveHabitDayState', () => {
     ).toBe('not_scheduled')
   })
 
-  it('never derives minimum for period quantity/time targets without a configured minimum', () => {
+  it('never derives minimum for period measurable targets without a configured minimum', () => {
     const habit = createHabit(
       {
-        trackingType: 'repetitionsPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         period: 'week',
-        targetRepetitions: 100,
+        targetAmount: 100,
+        unitLabel: 'repetitions',
       },
       { startsOn: '2026-05-18' },
     )
-    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', repetitions: 30 })
-    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', repetitions: 70 })
+    const monday = createHabitLog({ id: 'monday', loggedForDate: '2026-05-18', amount: 30 })
+    const friday = createHabitLog({ id: 'friday', loggedForDate: '2026-05-22', amount: 70 })
 
     expect(
       deriveHabitDayState({ habit, date: '2026-05-18', today: '2026-05-22', logs: [monday] }),

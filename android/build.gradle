@@ -17,13 +17,67 @@ buildscript {
 
 apply from: "variables.gradle"
 
+def androidBuildRoot = new File(
+    System.getenv('HABIT_COMPASS_ANDROID_BUILD_DIR') ?:
+        "${System.getenv('LOCALAPPDATA') ?: gradle.gradleUserHomeDir}/HabitCompass/android-build"
+)
+
+rootProject.layout.buildDirectory.set(new File(androidBuildRoot, 'root'))
+
 allprojects {
+    layout.buildDirectory.set(new File(androidBuildRoot, path == ':' ? 'root' : path.substring(1).replace(':', '-')))
+
     repositories {
         google()
         mavenCentral()
     }
+
+    tasks.matching { it.name == 'extractDebugAnnotations' }.configureEach {
+        enabled = false
+    }
+
+    tasks.register('writeEmptyDebugTypedefs') {
+        def typedefsFile = layout.buildDirectory.file('intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt')
+
+        outputs.file(typedefsFile)
+
+        doLast {
+            def file = typedefsFile.get().asFile
+            file.parentFile.mkdirs()
+            file.text = ''
+        }
+    }
+
+    tasks.matching { it.name == 'syncDebugLibJars' }.configureEach {
+        dependsOn tasks.named('writeEmptyDebugTypedefs')
+    }
 }
 
 task clean(type: Delete) {
-    delete rootProject.buildDir
+    delete androidBuildRoot
+}
+
+project(':app') {
+    tasks.register('writeDebugIdeApkRedirect') {
+        outputs.upToDateWhen { false }
+
+        doLast {
+            def redirectDir = new File(
+                project.projectDir,
+                'build/intermediates/apk_ide_redirect_file/debug/createDebugApkListingFileRedirect'
+            )
+            def listingFile = layout.buildDirectory.file('outputs/apk/debug/output-metadata.json').get().asFile
+
+            redirectDir.mkdirs()
+            new File(redirectDir, 'redirect.txt').text = [
+                '#- File Locator -',
+                "listingFile=${redirectDir.toPath().relativize(listingFile.toPath()).toString().replace('\\', '/')}",
+                ''
+            ].join(System.lineSeparator())
+        }
+    }
+
+    tasks.matching { it.name in ['assembleDebug', 'packageDebug', 'createDebugApkListingFileRedirect'] }.configureEach {
+        finalizedBy tasks.named('writeDebugIdeApkRedirect')
+    }
 }

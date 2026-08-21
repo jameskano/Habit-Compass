@@ -1,9 +1,23 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { DayPicker, type DayPickerProps } from 'react-day-picker'
+import { DayPicker, type DayPickerProps, type Modifiers } from 'react-day-picker'
+import { useIntl } from 'react-intl'
 
 import { cn } from '@/shared/utils/cn'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
-const Calendar = ({ className, classNames, ...props }: DayPickerProps) => {
+const Calendar = ({ className, classNames, labels, ...props }: DayPickerProps) => {
+  const intl = useIntl()
+  const labelDayButton = (date: Date, modifiers: Modifiers) => {
+    let label = formatFullDate(date)
+    if (modifiers.today) {
+      label = intl.formatMessage({ id: 'shared.calendar.day.today' }, { date: label })
+    }
+    if (modifiers.selected) {
+      label = intl.formatMessage({ id: 'shared.calendar.day.selected' }, { date: label })
+    }
+    return label
+  }
+
   return (
     <DayPicker
       showOutsideDays
@@ -34,6 +48,7 @@ const Calendar = ({ className, classNames, ...props }: DayPickerProps) => {
         today: '[&_button]:border [&_button]:border-primary/65',
         ...classNames,
       }}
+      labels={{ labelDayButton, ...labels }}
       components={{
         Chevron: ({ orientation }) =>
           orientation === 'left' ? (

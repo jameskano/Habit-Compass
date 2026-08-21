@@ -11,6 +11,7 @@ import { FormattedMessage, useIntl } from 'react-intl'
 import type { LimitedItemKind } from '@/domain/subscriptions'
 import { ItemLimitDialog } from '@/features/items/limits/ItemLimitDialog'
 import { useItemLimitGate } from '@/features/items/limits/useItemLimitGate'
+import { useNativeBackHandler } from '@/shared/nativeBack/useNativeBackHandler'
 
 import { Button } from './button'
 import { OverlayPendingState } from './LazyLoadingFallbacks'
@@ -37,6 +38,16 @@ export const AddItemSheet = ({ open, onClose }: AddItemSheetProps) => {
   const intl = useIntl()
   const [createKind, setCreateKind] = useState<(typeof options)[number]['kind'] | null>(null)
   const limitGate = useItemLimitGate()
+  const launcherOpen = open && !createKind
+
+  useNativeBackHandler({
+    enabled: launcherOpen,
+    onBack: () => {
+      onClose()
+      return true
+    },
+    priority: 100,
+  })
 
   useEffect(() => {
     if (!open) {

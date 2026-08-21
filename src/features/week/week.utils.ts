@@ -2,37 +2,10 @@ import type { IntlShape } from 'react-intl'
 
 import { getHabitFrequencySummary, type Habit, type HabitDayOfWeek } from '@/domain/habits'
 import type { Category } from '@/domain/categories'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
-const getWeekDateParts = (intl: IntlShape, date: string) => {
-  const parsedDate = new Date(`${date}T00:00:00.000Z`)
-
-  return {
-    day: intl.formatDate(parsedDate, { day: 'numeric', timeZone: 'UTC' }),
-    month: intl.formatDate(parsedDate, { month: 'short', timeZone: 'UTC' }),
-  }
-}
-
-export const formatWeekRange = (intl: IntlShape, dates: string[]) => {
-  const firstDate = getWeekDateParts(intl, dates[0])
-  const lastDate = getWeekDateParts(intl, dates[dates.length - 1])
-
-  return firstDate.month === lastDate.month
-    ? intl.formatMessage(
-        { id: 'page.week.range.sameMonth' },
-        { month: firstDate.month, start: firstDate.day, end: lastDate.day },
-      )
-    : intl.formatMessage(
-        {
-          id: 'page.week.range.differentMonth',
-        },
-        {
-          startMonth: firstDate.month,
-          startDay: firstDate.day,
-          endMonth: lastDate.month,
-          endDay: lastDate.day,
-        },
-      )
-}
+export const formatWeekRange = (dates: string[]) =>
+  `${formatFullDate(dates[0])} - ${formatFullDate(dates[dates.length - 1])}`
 
 const formatWeekdays = (intl: IntlShape, days: readonly HabitDayOfWeek[]) => {
   return intl.formatList(
@@ -43,14 +16,25 @@ const formatWeekdays = (intl: IntlShape, days: readonly HabitDayOfWeek[]) => {
 export const formatHabitFrequencyForWeek = (intl: IntlShape, habit: Habit) => {
   const descriptor = getHabitFrequencySummary(habit.scheduleRule)
 
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    return intl.formatMessage(
+      { id: 'items.frequency.certainDaysPerPeriod' },
+      {
+        count: habit.scheduleRule.targetDays,
+        period: intl.formatMessage({ id: `items.period.${habit.scheduleRule.period}` }),
+      },
+    )
+  }
+
   if (
     habit.scheduleRule.kind === 'flexiblePeriod' &&
-    habit.goalConfig.trackingType === 'timesPerPeriod'
+    habit.goalConfig.trackingType === 'totalMeasurablePerPeriod'
   ) {
     return intl.formatMessage(
-      { id: 'items.frequency.timesPerPeriod' },
+      { id: 'items.frequency.measurablePerPeriod' },
       {
-        count: habit.goalConfig.targetCount,
+        amount: habit.goalConfig.targetAmount,
+        unit: habit.goalConfig.unitLabel,
         period: intl.formatMessage({ id: `items.period.${habit.goalConfig.period}` }),
       },
     )

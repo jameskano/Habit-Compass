@@ -40,7 +40,7 @@ const categoryDisplayName = (intl: ReturnType<typeof useIntl>, category: Categor
 
 export const CategoriesPage = () => {
   const intl = useIntl()
-  const categoriesQuery = useCategoriesQuery()
+  const categoriesQuery = useCategoriesQuery(undefined, { pageBlocking: true })
   const [sheetState, setSheetState] = useState<SheetState>(null)
   const [infoOpen, setInfoOpen] = useState(false)
   const [searchText, setSearchText] = useState('')

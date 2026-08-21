@@ -4,6 +4,7 @@ export const authCallbackPath = '/auth/callback'
 export const authNativeScheme = 'habitcompass'
 export const authNativeHost = 'auth'
 export const authNativePath = '/callback'
+export const authAppLinkOrigin = 'https://habit-compass.onrender.com'
 
 export const authCallbackFlows = ['signup', 'recovery', 'email-change', 'delete-account'] as const
 
@@ -109,11 +110,13 @@ export const toInternalAuthCallbackRoute = (rawUrl: string): InternalAuthCallbac
     return null
   }
 
-  if (
-    url.protocol !== `${authNativeScheme}:` ||
-    url.hostname !== authNativeHost ||
-    url.pathname !== authNativePath
-  ) {
+  const isCustomSchemeCallback =
+    url.protocol === `${authNativeScheme}:` &&
+    url.hostname === authNativeHost &&
+    url.pathname === authNativePath
+  const isAppLinkCallback = url.origin === authAppLinkOrigin && url.pathname === authCallbackPath
+
+  if (!isCustomSchemeCallback && !isAppLinkCallback) {
     return null
   }
 

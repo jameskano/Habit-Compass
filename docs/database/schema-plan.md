@@ -44,7 +44,7 @@ The first Supabase schema for Habit Compass is defined across:
   - Category links are required and must reference the same user.
 - `habit_logs`
   - Completed or skipped daily log records for habits; missed days are derived from schedule and missing logs.
-  - Stores log date, logged timestamp, completion level, optional numeric progress fields, unit label, and note.
+  - Stores log date, logged timestamp, completion level, optional generic numeric amount, user-defined unit label, and note.
   - Unique per user, habit, and log date.
 - `habit_inactivity_periods`
   - Dated half-open `[starts_on, resumes_on)` inactive intervals for habits.
@@ -93,10 +93,9 @@ are present in the current migration set; remaining items stay planned until the
 
 - `profiles.language`
   - Type: stable locale identifier such as `system`, `en`, or `es`.
-  - Current default: `en`.
-  - Future default after System default support: `system`.
+  - Current default: `system`.
   - Nullability: not null after migration/backfill.
-  - Source of truth: user profile row; React Intl resolves future `system` at runtime.
+  - Source of truth: user profile row; React Intl resolves `system` at runtime.
   - Extensibility: add locale codes without changing the storage shape.
 - `profiles.theme_preference`
   - Type: stable theme identifier such as `system`, `light`, or `dark`.
@@ -141,7 +140,8 @@ are present in the current migration set; remaining items stay planned until the
     backfill. Do not rename `week_start` unless a separate migration/spec deliberately does so.
 - `feedback_submissions`
   - User-owned feedback records with type (`suggestion`, `problem`, `other`), required message, optional
-    reply email, optional technical details, status, timestamps, and account-deletion behavior.
+    reply email, optional technical details, status, server-managed notification state, timestamps,
+    and account-deletion behavior.
   - Anonymous submission is deferred unless a separate abuse-prevention design is approved.
 - `feedback_attachments`
   - User-owned metadata for optional screenshots stored in a private Supabase Storage bucket.
@@ -193,13 +193,14 @@ records from the current `first_day_of_week` value.
 - `profiles.feature_flags`
   - Stores optional-depth toggles as a JSON object.
 - `habits.schedule_config`
-  - Stores explicit expectation rules or `flexiblePeriod`; flexible schedules calculate progress without deriving missed individual dates.
+  - Stores explicit expectation rules, habit-only `certainDaysPerPeriod` frequencies, or the
+    internal `flexiblePeriod` window used by total-measurable-per-period goals.
 - `habits.goal_config`
-  - Stores goal variants such as binary, times-per-period, repetitions, time, and quantity targets.
+  - Stores binary, measurable-per-session, and total-measurable-per-period targets.
 - `habits.minimum_config`, `standard_config`
   - Optional completion-level overrides. Null keeps the habit simple.
 - `recurrent_tasks.recurrence_config`
-  - Stores supported recurrence contracts including `customFutureRule` as a descriptive-only future placeholder.
+  - Stores supported executable recurrence contracts.
 
 ## Delete And Archive
 

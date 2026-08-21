@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
+import {
+  clearNativeBackHandlersForTest,
+  runNativeBackHandlers,
+} from '@/shared/nativeBack/nativeBackRegistry'
 
 import { AddItemSheet } from './AddItemSheet'
 
@@ -47,6 +51,7 @@ const fillActiveHabitLimit = () => {
 
 describe('AddItemSheet limits', () => {
   beforeEach(() => {
+    clearNativeBackHandlersForTest()
     queryState.habits = [
       { lifecycleStatus: 'active' },
       { lifecycleStatus: 'active' },
@@ -97,7 +102,17 @@ describe('AddItemSheet limits', () => {
 
     await user.click(habitButton!)
 
-    expect(screen.getByRole('heading', { name: 'Free plan limit reached' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Unlock Premium' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'The free plan is full' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'See Premium' })).toBeInTheDocument()
+  })
+
+  it('closes the custom launcher sheet on native back', async () => {
+    const onClose = vi.fn()
+
+    renderWithAppProviders(<AddItemSheet open onClose={onClose} />)
+
+    expect(await screen.findByRole('dialog', { name: 'Choose what to create' })).toBeInTheDocument()
+    expect(runNativeBackHandlers()).toBe(true)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap;
 
-select plan(39);
+select plan(42);
 
 select has_table('public', 'user_account_capabilities', 'capability table exists');
 select has_table('public', 'legal_document_versions', 'legal document versions table exists');
@@ -28,8 +28,8 @@ select is(
     where document_type = 'terms'
       and is_current
   ),
-  'terms-draft-2026-07-02',
-  'current draft Terms version is seeded'
+  '1.0.0',
+  'current Terms version is seeded'
 );
 
 select is(
@@ -39,8 +39,8 @@ select is(
     where document_type = 'privacy'
       and is_current
   ),
-  'privacy-draft-2026-07-02',
-  'current draft Privacy version is seeded'
+  '1.0.0',
+  'current Privacy version is seeded'
 );
 
 select throws_ok(
@@ -205,6 +205,36 @@ select is(
 
 select is(
   (
+    select language
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  'system',
+  'provisioning defaults language to system'
+);
+
+select is(
+  (
+    select theme_preference
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  'system',
+  'provisioning defaults theme to system'
+);
+
+select is(
+  (
+    select first_day_of_week
+    from public.profiles
+    where id = '00000000-0000-0000-0000-000000000101'
+  ),
+  1::smallint,
+  'provisioning defaults week start to Monday'
+);
+
+select is(
+  (
     select count(*)::integer
     from public.categories
     where is_default
@@ -342,8 +372,8 @@ select throws_ok(
     )
     values (
       '00000000-0000-0000-0000-000000000101',
-      'terms-draft-2026-07-02',
-      'privacy-draft-2026-07-02',
+      '1.0.0',
+      '1.0.0',
       'en'
     )
   $$,

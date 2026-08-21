@@ -1,7 +1,6 @@
 import type { EntityId, ISODateString, UserId } from '@/shared/types'
 import type { Result } from '@/shared/utils/result'
 
-import type { HabitAmountUnit } from './logic/habitDayInteractions'
 import type { Habit, HabitCompletionLevel, HabitLog, HabitLogStatus } from './types'
 
 export type CreateHabitInput = Omit<
@@ -29,7 +28,7 @@ export type UpsertHabitLogInput = {
   status: HabitLogStatus
   completionLevel?: HabitCompletionLevel | null
   value?: number | null
-  unit?: HabitAmountUnit | null
+  unitLabel?: string | null
   note?: string | null
 }
 
@@ -58,6 +57,7 @@ export interface HabitsRepository {
     userId: UserId
     habitId: EntityId
     confirmed: true
-  }): Promise<Result<null>>
+    resetDate: ISODateString
+  }): Promise<Result<Habit>>
   reorder(input: { userId: UserId; orderedHabitIds: EntityId[] }): Promise<Result<Habit[]>>
 }

@@ -30,6 +30,15 @@ Users need useful progress context, but the app should not turn into a heavy ana
 
 - Stats must stay contextual and simple.
 - Completion summaries must support `day`, `week`, and `month` windows.
+- A habit's completion percentage in both the Items card and habit Stats tab is its lifetime
+  percentage, calculated from the habit's start date through today or its earlier end date.
+- Lifetime explicit-schedule percentages include every elapsed scheduled opportunity. Pending today
+  is excluded until completed. Skipped and missed dates remain in the denominator; inactive dates
+  are excluded.
+- Lifetime flexible-period percentages include every scoring period intersecting the habit's active
+  lifetime, including periods without logs. A period overlapping inactivity is omitted.
+- Minimum and standard completion both count as one completed opportunity in lifetime percentage;
+  below-minimum progress counts as incomplete.
 - Stats must be representable in today, week, item-detail, or category context.
 - The domain may support lightweight label/value cards.
 - Weekly summaries, weekly charts, and flexible weekly habit scoring must respect the user's current
@@ -82,6 +91,7 @@ Users need useful progress context, but the app should not turn into a heavy ana
 - Zero totals are handled safely.
 - Weekly stats and charts use the active week-start preference.
 - Changing week start recalculates derived weekly stats without changing stored completion logs.
+- The Items card and habit Stats tab show the same lifetime completion percentage.
 
 ## Test Plan
 

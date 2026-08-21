@@ -40,10 +40,5 @@ export const getRecurrentFrequencySummary = (
       }
     case 'firstWeekdayOfMonth':
       return { messageId: 'items.frequency.firstWeekday', values: { weekday: rule.weekday } }
-    case 'customFutureRule':
-      return {
-        messageId: 'items.frequency.customFuture',
-        values: { description: rule.description },
-      }
   }
 }

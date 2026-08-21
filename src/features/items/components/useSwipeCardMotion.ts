@@ -6,9 +6,11 @@ const VERTICAL_INTENT_THRESHOLD = 12
 const VISIBLE_DRAG_THRESHOLD = 3
 
 type UseSwipeCardMotionOptions = {
-  onSwipeLeft: () => void
+  onSwipeLeft?: () => void
   onSwipeRight?: () => void
 }
+
+export type SwipeDirection = 'left' | 'right' | null
 
 const clamp = (value: number, minimum: number, maximum: number) => {
   return Math.min(Math.max(value, minimum), maximum)
@@ -28,13 +30,13 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     setIsDragging(false)
   }
 
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     suppressClick.current = false
     movedHorizontally.current = false
     pointerStart.current = { x: event.clientX, y: event.clientY }
   }
 
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     const start = pointerStart.current
     if (!start) {
       return
@@ -50,11 +52,12 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     if (Math.abs(horizontal) > VISIBLE_DRAG_THRESHOLD) {
       movedHorizontally.current = true
       setIsDragging(true)
-      setOffset(clamp(horizontal, -DEFAULT_MAX_OFFSET, DEFAULT_MAX_OFFSET))
+      const actionAvailable = horizontal < 0 ? Boolean(onSwipeLeft) : Boolean(onSwipeRight)
+      setOffset(actionAvailable ? clamp(horizontal, -DEFAULT_MAX_OFFSET, DEFAULT_MAX_OFFSET) : 0)
     }
   }
 
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+  const handlePointerUp = (event: PointerEvent<HTMLElement>) => {
     const start = pointerStart.current
     if (!start) {
       return
@@ -71,7 +74,7 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     }
 
     if (horizontal < 0) {
-      onSwipeLeft()
+      onSwipeLeft?.()
     } else {
       onSwipeRight?.()
     }
@@ -95,7 +98,11 @@ export const useSwipeCardMotion = ({ onSwipeLeft, onSwipeRight }: UseSwipeCardMo
     transform: `translate3d(${offset}px, 0, 0)`,
   }
 
+  const activeDirection: SwipeDirection = offset < 0 ? 'left' : offset > 0 ? 'right' : null
+
   return {
+    actionReady: Math.abs(offset) >= DEFAULT_ACTION_THRESHOLD,
+    activeDirection,
     consumeClickSuppression,
     handlePointerCancel,
     handlePointerDown,

@@ -9,7 +9,7 @@ import type {
   HabitCompassJsonExport,
 } from './types'
 
-export const EXPORT_SCHEMA_VERSION = '1.0.0'
+export const EXPORT_SCHEMA_VERSION = '1.1.0'
 export const EXPORT_APP_NAME = 'Habit Compass'
 
 const stripUserId = <T extends { userId: string }>(record: T): Omit<T, 'userId'> => {

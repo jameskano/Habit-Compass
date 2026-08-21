@@ -89,6 +89,9 @@ export const useTodayCompletionActions = (input: UseTodayCompletionActionsInput)
     }
 
     if (item.type === 'habit') {
+      if (item.actionDisabled) {
+        return
+      }
       if (isMeasurableHabit(item.habit)) {
         openAmountInput(item.habit.id)
         return
@@ -125,7 +128,7 @@ export const useTodayCompletionActions = (input: UseTodayCompletionActionsInput)
         logDate: selectedDate,
         status: 'completed',
         value: amount,
-        unit: metadata.unit,
+        unitLabel: metadata.unitLabel,
       },
       { onSuccess },
     )

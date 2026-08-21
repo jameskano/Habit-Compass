@@ -1,4 +1,4 @@
-import { Archive, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, Trash2 } from 'lucide-react'
 import { useIntl } from 'react-intl'
 
 import type { RecurrentTask } from '@/domain/recurrent-tasks'
@@ -9,6 +9,7 @@ type RecurrentTaskEditDangerSectionProps = {
   pending: boolean
   onArchive: () => void
   onDelete: () => void
+  onReactivate: () => void
 }
 
 export const RecurrentTaskEditDangerSection = ({
@@ -16,8 +17,10 @@ export const RecurrentTaskEditDangerSection = ({
   pending,
   onArchive,
   onDelete,
+  onReactivate,
 }: RecurrentTaskEditDangerSectionProps) => {
   const intl = useIntl()
+  const archived = task.lifecycleStatus === 'archived'
 
   return (
     <section className="mt-6 space-y-3 rounded-[1.4rem] border border-amber-200/75 bg-amber-50/55 p-4 dark:border-amber-900/70 dark:bg-amber-950/20">
@@ -27,11 +30,19 @@ export const RecurrentTaskEditDangerSection = ({
       <Button
         variant="ghost"
         className="w-full justify-start gap-3 border border-border/60 bg-card/75"
-        disabled={task.lifecycleStatus === 'archived' || pending}
-        onClick={onArchive}
+        disabled={pending}
+        onClick={archived ? onReactivate : onArchive}
       >
-        <Archive aria-hidden="true" size={17} />
-        {intl.formatMessage({ id: 'page.items.recurrent.action.archive' })}
+        {archived ? (
+          <ArchiveRestore aria-hidden="true" size={17} />
+        ) : (
+          <Archive aria-hidden="true" size={17} />
+        )}
+        {intl.formatMessage({
+          id: archived
+            ? 'page.items.recurrent.action.reactivate'
+            : 'page.items.recurrent.action.archive',
+        })}
       </Button>
       <Button
         variant="ghost"

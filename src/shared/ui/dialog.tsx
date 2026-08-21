@@ -1,10 +1,26 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { type ComponentPropsWithoutRef, type ElementRef, forwardRef, useRef } from 'react'
 
+import { useNativeBackHandler } from '@/shared/nativeBack/useNativeBackHandler'
 import { dismissOpenSelects } from '@/shared/ui/selectOpenRegistry'
 import { cn } from '@/shared/utils/cn'
 
-const Dialog = DialogPrimitive.Root
+const Dialog = ({
+  onOpenChange,
+  open,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) => {
+  useNativeBackHandler({
+    enabled: open === true && Boolean(onOpenChange),
+    onBack: () => {
+      onOpenChange?.(false)
+      return true
+    },
+    priority: 200,
+  })
+
+  return <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} {...props} />
+}
 const DialogTrigger = DialogPrimitive.Trigger
 const DialogPortal = DialogPrimitive.Portal
 const DialogClose = DialogPrimitive.Close

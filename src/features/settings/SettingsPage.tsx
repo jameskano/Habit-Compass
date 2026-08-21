@@ -16,6 +16,7 @@ import type { PreferenceSheet } from './settings.types'
 import { useAccountCapabilitiesQuery } from './useAccountCapabilitiesQuery'
 import { usePremiumSubscriptionActions } from '@/features/subscriptions/usePremiumSubscriptionActions'
 import { useSubscriptionSnapshotQuery } from './useSubscriptionSnapshotQuery'
+import { useUpdateProfilePreferences } from './useUpdateProfilePreferences'
 
 export const SettingsPage = () => {
   const intl = useIntl()
@@ -24,9 +25,7 @@ export const SettingsPage = () => {
   const theme = useAppPreferencesStore((state) => state.theme)
   const locale = useAppPreferencesStore((state) => state.locale)
   const weekStartsOn = useAppPreferencesStore((state) => state.weekStartsOn)
-  const setTheme = useAppPreferencesStore((state) => state.setTheme)
-  const setLocale = useAppPreferencesStore((state) => state.setLocale)
-  const setWeekStartsOn = useAppPreferencesStore((state) => state.setWeekStartsOn)
+  const { updateLocale, updateTheme, updateWeekStartsOn } = useUpdateProfilePreferences()
   const accountCapabilities = useAccountCapabilitiesQuery()
   const subscriptionSnapshot = useSubscriptionSnapshotQuery()
   const premiumActions = usePremiumSubscriptionActions()
@@ -123,15 +122,15 @@ export const SettingsPage = () => {
             theme={theme}
             weekStartsOn={weekStartsOn}
             onLocaleSelect={(nextLocale) => {
-              setLocale(nextLocale)
+              updateLocale(nextLocale)
               setActiveSheet(null)
             }}
             onThemeSelect={(nextTheme) => {
-              setTheme(nextTheme)
+              updateTheme(nextTheme)
               setActiveSheet(null)
             }}
             onWeekStartsOnSelect={(nextWeekStartsOn) => {
-              setWeekStartsOn(nextWeekStartsOn)
+              updateWeekStartsOn(nextWeekStartsOn)
               setActiveSheet(null)
             }}
           />

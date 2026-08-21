@@ -7,13 +7,16 @@ import {
   type HabitsRepository,
   type UpsertHabitLogInput,
 } from '@/domain/habits'
+import { getHardResetStartsOn } from '@/domain/habits/logic/resetHabitStats'
 
 import { getMockState } from './mockData'
 
 const isTodayHabitDue = (habit: Habit, date: string) => {
   return (
     habit.lifecycleStatus === 'active' &&
-    (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date))
+    (habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+      habit.scheduleRule.kind === 'flexiblePeriod' ||
+      isHabitScheduledOnDate(habit, date))
   )
 }
 
@@ -180,19 +183,8 @@ export const mockHabitsRepository: HabitsRepository = {
       loggedAt: new Date().toISOString(),
       status: input.status,
       completionLevel: input.status === 'completed' ? (input.completionLevel ?? null) : null,
-      repetitions:
-        input.status === 'completed' && input.unit === 'repetitions' ? (input.value ?? null) : null,
-      durationMinutes:
-        input.status === 'completed' && input.unit === 'minutes' ? (input.value ?? null) : null,
-      quantity:
-        input.status === 'completed' && input.unit === 'quantity' ? (input.value ?? null) : null,
-      quantityUnitLabel:
-        input.status === 'completed' &&
-        input.unit === 'quantity' &&
-        (activeHabit.data.goalConfig.trackingType === 'quantityPerSession' ||
-          activeHabit.data.goalConfig.trackingType === 'totalQuantityPerPeriod')
-          ? activeHabit.data.goalConfig.unitLabel
-          : null,
+      amount: input.status === 'completed' ? (input.value ?? null) : null,
+      unitLabel: input.status === 'completed' ? (input.unitLabel ?? null) : null,
       notes: input.note ?? null,
       createdAt:
         existingIndex >= 0 ? state.habitLogs[existingIndex].createdAt : new Date().toISOString(),
@@ -221,7 +213,7 @@ export const mockHabitsRepository: HabitsRepository = {
     return ok(null)
   },
 
-  async hardResetLogs({ userId, habitId, confirmed }) {
+  async hardResetLogs({ userId, habitId, confirmed, resetDate }) {
     if (!confirmed) {
       throw new Error('Hard reset requires explicit confirmation.')
     }
@@ -235,7 +227,13 @@ export const mockHabitsRepository: HabitsRepository = {
     state.habitLogs = state.habitLogs.filter(
       (log) => !(log.userId === userId && log.habitId === habitId),
     )
-    return ok(null)
+
+    return updateHabitInState(habitId, (habit) => ({
+      ...habit,
+      startsOn: getHardResetStartsOn(habit, resetDate),
+      resetMode: 'hard',
+      updatedAt: new Date().toISOString(),
+    }))
   },
 
   async reorder({ userId, orderedHabitIds }) {

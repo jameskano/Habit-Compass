@@ -45,7 +45,7 @@ export const WeekDateNavigator = ({
             <span className="block text-base font-semibold leading-snug">
               {intl.formatMessage(
                 { id: 'page.week.heading.range' },
-                { range: formatWeekRange(intl, weekDates) },
+                { range: formatWeekRange(weekDates) },
               )}
             </span>
             <span className="block text-xs text-muted-foreground">

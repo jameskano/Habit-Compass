@@ -34,11 +34,12 @@ export const HabitEditTab = (props: HabitEditTabProps) => {
           categoryOptions={habitEdit.categoryOptions}
           selectedCategoryId={habitEdit.selectedCategoryId}
           onCategoryChange={habitEdit.handleCategoryChange}
+          onCompletionModeChange={habitEdit.handleCompletionModeChange}
           onCreateCategory={habitEdit.openCategoryCreation}
           onEndDateChange={habitEdit.handleEndDateChange}
           onPeriodChange={habitEdit.handlePeriodChange}
           onPriorityChange={habitEdit.handlePriorityChange}
-          onTrackingTypeChange={habitEdit.handleTrackingTypeChange}
+          onScopeChange={habitEdit.handleScopeChange}
         />
 
         <Button type="submit" className="w-full rounded-xl" disabled={archived || pending}>

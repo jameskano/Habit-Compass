@@ -4,13 +4,12 @@ import { useIntl } from 'react-intl'
 import type { Category } from '@/domain/categories'
 import { CategoryCreateButton } from '@/features/categories/CategoryCreateButton'
 import { itemPriorities } from '@/shared/types'
-import { Checkbox } from '@/shared/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { cn } from '@/shared/utils/cn'
 import { priorityVisualClasses } from '@/styles/itemVisualTokens'
 
-import { GuardedEndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
+import { EndDateField, ReadOnlyStartDateField } from '../components/ItemDateFields'
 import {
   NO_RECURRENT_TASK_CATEGORY_VALUE,
   RECURRENT_TASK_EDIT_INPUT_CLASS,
@@ -110,7 +109,7 @@ export const RecurrentTaskEditOptionalSection = ({
           labelId="page.items.recurrent.edit.startsOn"
           value={selectedStartsOn}
         />
-        <GuardedEndDateField
+        <EndDateField
           labelId="page.items.recurrent.edit.endsOn"
           value={selectedEndsOn}
           onValueChange={onEndDateChange}
@@ -119,14 +118,8 @@ export const RecurrentTaskEditOptionalSection = ({
               ? intl.formatMessage({ id: 'page.items.recurrent.edit.error.endDate' })
               : undefined
           }
-          warningTitleId="page.items.recurrent.edit.endDateWarning.title"
-          warningDescriptionId="page.items.recurrent.edit.endDateWarning.description"
         />
       </div>
-      <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
-        <span>{intl.formatMessage({ id: 'page.items.recurrent.edit.carryForward' })}</span>
-        <Checkbox {...form.register('carryForward')} />
-      </label>
       <label className="block text-sm font-medium">
         {intl.formatMessage({ id: 'page.items.recurrent.edit.notes' })}
         <Textarea

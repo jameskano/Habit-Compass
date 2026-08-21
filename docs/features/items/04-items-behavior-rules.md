@@ -34,8 +34,8 @@ Defaults:
 - Start date: today
 - Target: binary
 
-Creation is a three-step flow: completion setup, frequency, then details. Flexible times-per-period
-frequency is available for binary habits only. Explicit schedules support selected weekdays,
+Creation is a three-step flow: completion setup, frequency, then details. Certain-days-per-period
+frequency is available for binary and measurable-per-session habits. Explicit schedules support selected weekdays,
 selected month days, selected yearly month/day pairs, anchored day/week/month intervals, and the
 existing first-weekday-of-month pattern.
 
@@ -81,6 +81,10 @@ Reset progress removes habit logs/history while keeping the habit itself.
 
 It requires confirmation.
 
+After confirmation, the habit restarts from the reset date by moving its start date to today. If the
+habit already has an end date before today, the start date is set to that end date instead. Reset
+does not clear or move the end date.
+
 ## Habit completion
 
 Habits support:
@@ -97,7 +101,7 @@ Binary habits use manual completion levels:
 - Standard-only binary habits allow complete and skip.
 - Binary habits with a non-empty minimum text configured allow complete as minimum, complete as standard, and skip.
 
-Quantity/time habits derive completion levels from logged values:
+Measurable habits derive completion levels from logged amounts:
 
 - Below minimum is `progress_logged` and scores `0`.
 - Minimum reached is `completed_minimum` and scores `0.5`.
@@ -107,14 +111,15 @@ Quantity/time habits derive completion levels from logged values:
   minimum displays as an empty input; negative values and values above the standard target are
   invalid.
 
-Period-based quantity/time habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
+Period-based measurable habits evaluate minimum and standard at the period level. Only days with actual logged progress receive `progress_logged`, `completed_minimum`, or `completed_standard`.
 
 ### Habit day interaction rules
 
 Habit day cells in the Items card strip and habit calendar use the same behavior:
 
 - Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are disabled.
-- Active `flexiblePeriod` dates inside the habit date window remain actionable even when empty cells render as `not_scheduled`.
+- Active `certainDaysPerPeriod` dates inside the habit date window remain actionable while the
+  period target is open, even when empty cells render as `not_scheduled`.
 - Successful day changes use the updated day state/color as feedback without a toast.
 - Failed day mutations keep the generic localized error toast.
 
@@ -129,16 +134,17 @@ Binary habit long press behavior:
 - Without minimum: Complete, Skip day, Mark as undone.
 - With minimum: Complete standard, Complete minimum, Skip day, Mark as undone.
 
-`timesPerPeriod` remains an event-count goal:
+`certainDaysPerPeriod` remains a frequency:
 
-- Tap toggles one standard completion event for the selected date.
-- Long press offers Complete, Skip day, and Clear log.
-- Period-level minimum/standard result remains derived from completion-event count.
+- A binary or measurable-per-session completion qualifies at most one distinct date.
+- Minimum and standard completion qualify; skipped and below-minimum progress do not.
+- Empty dates are not missed. Once the effective target is reached, remaining unlogged dates are
+  disabled; existing logged dates remain editable and removing a qualifying log reopens the period.
 
-Repetition, time, and quantity habit behavior:
+Measurable habit behavior:
 
 - Tap opens amount entry, including from skipped days.
-- Long press offers Input quantity/time, Skip day, and Clear log.
+- Long press offers Enter amount, Skip day, and Clear log.
 - Existing numeric values prefill the input.
 - Values above the standard target are preserved as raw progress.
 - Negative values are invalid.
@@ -164,7 +170,7 @@ Skipped days are stored as logs.
 Skipped days:
 
 - Do not count as completion.
-- Do not count against percentage denominator.
+- Remain in the percentage denominator as incomplete opportunities, like missed days.
 - Do not break streak.
 - Do not increment streak.
 
@@ -180,34 +186,46 @@ Not scheduled days are derived from frequency and should not be displayed as mis
 
 # Habit stats behavior
 
+The percentage shown on both the habit card and the habit Stats tab is calculated across the
+habit's full lifetime, from `startsOn` through today or an earlier `endsOn`. The last-seven-days
+strip and the week/month/year chart controls do not change this percentage window.
+Minimum and standard completions each count as one completed opportunity for this percentage.
+Below-minimum progress remains incomplete.
+
 ## Explicit schedule stats
 
 For daily/specific days/interval/monthly pattern:
 
 ```txt
-percentage = total completion score / expected score
+percentage = completed opportunities / expected opportunities
 ```
 
-Where expected score is scheduled days minus skipped scheduled days.
+Expected opportunities include both skipped and missed scheduled days. Inactive scheduled days and
+pending today remain excluded.
 
 Inactive scheduled days are also excluded. Ignore malformed logs recorded inside inactive dates.
 
-## Flexible times-per-period stats
+## Certain-days-per-period stats
 
-For `times_per_period`:
+For `certainDaysPerPeriod`:
 
 ```txt
-percentage = valid period completion score / expected period score
+percentage = qualifying days / effective target days
 ```
 
-A flexible times-per-period habit should not mark every non-completed day as missed.
+The lifetime percentage combines qualifying and effective target days across every eligible period,
+including the current partial period. Calendar week boundaries respect `weekStartsOn`. The effective
+target is capped by the number of active dates in lifecycle-shortened periods.
 
-If an inactive interval overlaps a flexible scoring period, omit that whole period from scoring.
+A certain-days-per-period habit does not mark individual empty dates as missed.
+
+Inactive dates reduce the available dates used to cap the effective target. Periods with no active
+dates are omitted.
 
 Example:
 
 ```txt
-Habit = 3 times/week.
+Habit = 3 days/week.
 User completes Monday and Thursday.
 Tuesday is not automatically missed because the habit is flexible inside the week.
 At the end of the week, if only 2/3 were completed, the period is incomplete.
@@ -256,13 +274,27 @@ Actions:
 
 Completing a task sets `completedAt`.
 
-It does not set `status = archived` automatically.
+If the task's due date is before the user's current local date, completing it archives it
+immediately. If the task is due today, it remains active until the day passes and the next in-app
+cleanup runs.
 
 Completed and archived are different.
+
+## Auto-archive completed tasks
+
+The app runs an in-app cleanup when task lists load. Active completed tasks with `dueDate < today`
+move to archived tasks. Pending, skipped, missed, already archived, future-due, today-due, and
+legacy undated tasks are not auto-archived.
 
 ## Archive task
 
 Archiving hides the task from active list without marking it as done.
+
+## Reactivate task
+
+Archived pending, skipped, and missed tasks can be reactivated. Reactivation clears the archive and
+completion timestamps, resets the task to pending, preserves its details, and respects the active
+incomplete task limit. Archived completed tasks remain historical and cannot be reactivated.
 
 ## Delete task
 
@@ -292,14 +324,14 @@ Required:
 - Frequency
 
 Creation is a two-step flow. Recurrent tasks are binary-only and use executable dated recurrence
-rules; they do not expose flexible times-per-period scheduling.
+rules; they do not expose certain-days-per-period scheduling.
 
 Defaults:
 
 - Priority: `medium`
 - Status: `active`
 - Start date: today
-- Carry forward: true
+- Carry forward: not exposed; recurrent task occurrences do not carry forward.
 
 ## Occurrence generation
 
@@ -314,36 +346,12 @@ At minimum, the app should be able to know:
 Avoid building a complex scheduler in the first pass if the rest of the app is not ready. Keep pure utility functions testable.
 Reading recurrent occurrences must not persist automatic missed records; missed presentation can be derived until a deliberate write action exists.
 
-## Carry forward true
-
-If a recurrent task occurrence is not completed and the scheduled date passes:
-
-- It remains `pending`.
-- UI displays it as overdue.
-- It does not automatically become missed.
-
-This is for responsibilities that still need doing.
-
-Examples:
-
-- Pay bill.
-- Clean bathroom.
-- Send invoice.
-
-## Carry forward false
+## Missed recurrent occurrence
 
 If a recurrent task occurrence is not completed and the scheduled date passes:
 
 - It becomes `missed`.
 - Next occurrence is generated or becomes active.
-
-This is for time-bound repeated actions where the moment passed.
-
-Examples:
-
-- Weekly review.
-- Call family on Sunday.
-- Take trash out on collection day.
 
 ## Skipped recurrent task
 
@@ -353,7 +361,7 @@ It means the user intentionally skipped an occurrence and does not want it treat
 
 ## Complete recurrent task in Items
 
-Swipe right may complete only if there is a due or overdue occurrence.
+Swipe right may complete only if there is a due occurrence.
 
 Do not allow ambiguous completion of a future occurrence unless there is a clear product decision later.
 

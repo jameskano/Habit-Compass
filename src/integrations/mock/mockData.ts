@@ -10,7 +10,7 @@ import type { Habit, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
 import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
-import type { OnboardingStatus } from '@/domain/settings'
+import type { ProfileSettings } from '@/domain/settings'
 import { emptySubscriptionSnapshot, type SubscriptionSnapshot } from '@/domain/subscriptions'
 import type { Task } from '@/domain/tasks'
 import type { EntityId, ISODateString } from '@/shared/types'
@@ -79,9 +79,10 @@ export type MockDataState = {
   accountLifecycle: AccountLifecycleState & {
     cancellationRequests: string[]
     deletionRequests: DeletionRequestSource[]
+    externalDeletionChallenges: string[]
     externalDeletionRequests: string[]
   }
-  appSettings: OnboardingStatus
+  appSettings: ProfileSettings
   subscription: {
     clearRequests: number
     identifiedUserIds: string[]
@@ -125,13 +126,11 @@ const createInitialMockData = (): MockDataState => {
       startsOn: toIsoDate(fourDaysAgo),
       endsOn: null,
       order: 0,
-      scheduleRule: { kind: 'flexiblePeriod' },
-      trackingType: 'timesPerPeriod',
+      scheduleRule: { kind: 'certainDaysPerPeriod', targetDays: 3, period: 'week' },
+      trackingType: 'binary',
       goalConfig: {
-        trackingType: 'timesPerPeriod',
-        period: 'week',
-        targetCount: 3,
-        minimumCount: 1,
+        trackingType: 'binary',
+        minimumDescription: 'Move gently',
       },
       usesCompletionLevels: true,
       enabledCompletionLevels: ['minimum', 'standard'],
@@ -151,10 +150,11 @@ const createInitialMockData = (): MockDataState => {
       endsOn: null,
       order: 1,
       scheduleRule: { kind: 'daily' },
-      trackingType: 'timePerSession',
+      trackingType: 'measurablePerSession',
       goalConfig: {
-        trackingType: 'timePerSession',
-        targetMinutes: 20,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        unitLabel: 'minutes',
       },
       usesCompletionLevels: false,
       enabledCompletionLevels: ['standard'],
@@ -194,10 +194,8 @@ const createInitialMockData = (): MockDataState => {
       loggedAt: toIsoDateTime(today),
       status: 'completed',
       completionLevel: 'minimum',
-      repetitions: null,
-      durationMinutes: null,
-      quantity: null,
-      quantityUnitLabel: null,
+      amount: null,
+      unitLabel: null,
       notes: 'Took the lighter version.',
     },
     {
@@ -207,10 +205,8 @@ const createInitialMockData = (): MockDataState => {
       loggedAt: toIsoDateTime(today),
       status: 'completed',
       completionLevel: null,
-      repetitions: null,
-      durationMinutes: 20,
-      quantity: null,
-      quantityUnitLabel: null,
+      amount: 20,
+      unitLabel: 'minutes',
       notes: 'Standard session complete.',
     },
     {
@@ -220,10 +216,8 @@ const createInitialMockData = (): MockDataState => {
       loggedAt: toIsoDateTime(yesterday),
       status: 'skipped',
       completionLevel: null,
-      repetitions: null,
-      durationMinutes: null,
-      quantity: null,
-      quantityUnitLabel: null,
+      amount: null,
+      unitLabel: null,
       notes: 'Intentionally skipped.',
     },
     {
@@ -233,10 +227,8 @@ const createInitialMockData = (): MockDataState => {
       loggedAt: toIsoDateTime(twoDaysAgo),
       status: 'completed',
       completionLevel: null,
-      repetitions: null,
-      durationMinutes: 20,
-      quantity: null,
-      quantityUnitLabel: null,
+      amount: 20,
+      unitLabel: 'minutes',
       notes: 'Standard session complete.',
     },
   ]
@@ -377,8 +369,8 @@ const createInitialMockData = (): MockDataState => {
   return {
     authSession: {
       acceptedLegalDocuments: true,
-      currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
-      currentTermsVersion: 'terms-draft-2026-07-02',
+      currentPrivacyPolicyVersion: '1.0.0',
+      currentTermsVersion: '1.0.0',
       currentEmail: 'person@example.com',
       currentPassword: 'current-password',
       emailChangeRequests: [],
@@ -402,9 +394,13 @@ const createInitialMockData = (): MockDataState => {
       deletionRequestSource: null,
       cancellationRequests: [],
       deletionRequests: [],
+      externalDeletionChallenges: [],
       externalDeletionRequests: [],
     },
     appSettings: {
+      locale: 'system',
+      theme: 'system',
+      weekStartsOn: 1,
       onboardingCompletedAt: toIsoDateTime(fourDaysAgo),
     },
     subscription: {

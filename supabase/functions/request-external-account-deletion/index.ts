@@ -1,5 +1,10 @@
 /* global Deno */
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import {
+  externalAccountDeletionHashSecretEnvKey,
+  hashExternalDeletionLookupValue,
+  normalizeExternalDeletionEmail,
+} from '../_shared/externalDeletionRequestHashing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,10 +26,9 @@ const getRequiredEnv = (key: string) => {
   return value
 }
 
-const hashText = async (value: string) => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-}
+const getPublicSiteUrl = () => getRequiredEnv('PUBLIC_SITE_URL').replace(/\/+$/, '')
+
+const createDeletionChallenge = () => `${crypto.randomUUID()}.${crypto.randomUUID()}`
 
 const getClientIp = (request: Request) =>
   request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -45,7 +49,7 @@ Deno.serve(async (request) => {
       email?: unknown
       locale?: unknown
     }
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
+    const email = typeof body.email === 'string' ? normalizeExternalDeletionEmail(body.email) : ''
     const locale = body.locale === 'es' ? 'es' : 'en'
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -55,12 +59,16 @@ Deno.serve(async (request) => {
     const supabaseUrl = getRequiredEnv('SUPABASE_URL')
     const supabaseAnonKey = getRequiredEnv('SUPABASE_ANON_KEY')
     const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
-    const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') ?? request.headers.get('Origin') ?? ''
+    const publicSiteUrl = getPublicSiteUrl()
+    const lookupHashSecret = getRequiredEnv(externalAccountDeletionHashSecretEnvKey)
     const anonClient = createClient(supabaseUrl, supabaseAnonKey)
     const serviceClient = createClient(supabaseUrl, serviceRoleKey)
-    const emailHash = await hashText(email)
-    const ipHash = await hashText(getClientIp(request))
+    const emailHash = await hashExternalDeletionLookupValue(email, lookupHashSecret)
+    const ipHash = await hashExternalDeletionLookupValue(getClientIp(request), lookupHashSecret)
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const challenge = createDeletionChallenge()
+    const challengeHash = await hashExternalDeletionLookupValue(challenge, lookupHashSecret)
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
     const { count } = await serviceClient
       .from('external_account_deletion_requests')
       .select('id', { count: 'exact', head: true })
@@ -69,17 +77,22 @@ Deno.serve(async (request) => {
     const rateLimited = (count ?? 0) >= 3
 
     await serviceClient.from('external_account_deletion_requests').insert({
+      challenge_hash: rateLimited ? null : challengeHash,
       email_hash: emailHash,
+      expires_at: rateLimited ? null : expiresAt,
       ip_hash: ipHash,
       locale,
       status: rateLimited ? 'rate_limited' : 'requested',
     })
 
-    if (!rateLimited && publicSiteUrl) {
+    if (!rateLimited) {
       await anonClient.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${publicSiteUrl.replace(/\/$/, '')}/account/delete`,
+          emailRedirectTo: `${publicSiteUrl}/account/delete?challenge=${encodeURIComponent(
+            challenge,
+          )}`,
+          shouldCreateUser: false,
         },
       })
     }

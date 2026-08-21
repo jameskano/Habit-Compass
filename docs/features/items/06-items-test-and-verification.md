@@ -29,10 +29,10 @@ Test that frequency rules produce readable labels:
 
 - Daily → `Every day`
 - Specific days → `Mon, Wed, Fri`
-- Times per period → `3 times/week`
+- Certain days per period → `3 days/week`
 - Interval → `Every 2 days`
 - Monthly pattern → `First Monday/month`
-- Time target → `30 min, 3 times/week`
+- Measurable-per-session target with a certain-days frequency → `30 min, 3 days/week`
 
 ## Habit day state
 
@@ -40,7 +40,7 @@ Test:
 
 - Completed standard log → `completed_standard`
 - Completed minimum log → `completed_minimum`
-- Quantity/time progress below valid completion → `progress_logged`
+- Measurable progress below valid completion → `progress_logged`
 - Skipped log → `skipped`
 - Scheduled past date without log → `missed`
 - Scheduled today without log → `today_pending`
@@ -49,6 +49,9 @@ Test:
 
 ## Habit percentage
 
+Verify that the habit card and Stats tab use the same lifetime window rather than the last seven
+days or only the current flexible scoring period.
+
 Test explicit schedule:
 
 ```txt
@@ -56,7 +59,7 @@ Test explicit schedule:
 2 standard completions
 1 minimum completion
 1 missed
-percentage = 2.5 / 4 = 62.5%
+percentage = 3 / 4 = 75%
 ```
 
 Test skipped:
@@ -66,12 +69,20 @@ Test skipped:
 2 standard completions
 1 skipped
 1 missed
-expected = 3
-score = 2
-percentage = 66.6%
+expected = 4
+completed = 2
+percentage = 50%
 ```
 
-Test time/quantity:
+Test all minimum:
+
+```txt
+4 scheduled days
+4 minimum completions
+percentage = 4 / 4 = 100%
+```
+
+Test measurable amount:
 
 ```txt
 minimum target = 10 minutes
@@ -108,17 +119,19 @@ Test:
 - Future sorted ascending.
 - Archived/completed excluded from active list unless archive view is active.
 
+## Archive sorting
+
+Test that habit, task, and recurrent-task archive views:
+
+- Show newer `archivedAt` timestamps before older timestamps.
+- Preserve newest-first order after search or category filtering.
+- Put legacy archived records without `archivedAt` last.
+- Do not expose manual reorder controls.
+- Leave active-list ordering unchanged.
+
 ## Recurrent task occurrence behavior
 
-Test carry-forward true:
-
-```txt
-scheduled date passed
-not completed
-status remains pending/overdue
-```
-
-Test carry-forward false:
+Test missed recurrent occurrence:
 
 ```txt
 scheduled date passed
@@ -192,6 +205,8 @@ manual skip sets status skipped
 - Re-clicking an open dropdown trigger closes only the dropdown and keeps its parent create/edit
   screen open.
 - Item create/edit date controls use the shared calendar-icon presentation.
+- Item date pickers remain open when navigating months or tapping non-day calendar content, and
+  close after selecting a valid day.
 - Habit edit restores binary standard/minimum text and measurable standard/minimum amounts. An
   omitted measurable minimum renders blank and clearing it disables minimum completion.
 
@@ -205,6 +220,11 @@ manual skip sets status skipped
 - Completing a task shows a success toast.
 - Completed task gets completedAt.
 - Completed and archived are not treated as the same internally.
+- Archived pending, skipped, and missed tasks offer Reactivate and return to active pending state.
+- Archived completed tasks show Completed and do not offer Reactivate.
+- Reactivation preserves task details, clears archivedAt/completedAt, and remains blocked at the
+  active task limit.
+- Direct repository reactivation rejects archived completed tasks without changing them.
 - Delete requires confirmation.
 
 ## Recurrent tasks
@@ -213,16 +233,20 @@ manual skip sets status skipped
 - Priority is rendered as an accessible colored dot.
 - Tap opens edit.
 - Swipe left edits.
-- Swipe right only completes due/overdue occurrence.
+- Swipe right only completes the current due occurrence.
 - Completing an occurrence shows a success toast.
-- Carry-forward true keeps overdue pending.
-- Carry-forward false can mark missed after date passes.
+- Past incomplete occurrences derive missed instead of carrying forward.
 - Skipped is manual.
 
 ## Mobile usability
 
 - Touch targets are large enough.
 - Swipe gestures do not conflict with vertical scroll.
+- Enabled swipes progressively reveal the correct icon and localized action label on the exposed
+  side of each card.
+- Swipe previews strengthen at the action threshold and reset without acting below it.
+- Directions without an available action neither move the card nor reveal a misleading preview.
+- Swipe previews remain contained within the card bounds in light and dark themes.
 - Drag reorder does not accidentally trigger swipe.
 - Bottom menus/sheets are reachable with one hand.
 - Forms are not visually overwhelming.
@@ -232,4 +256,8 @@ manual skip sets status skipped
 - Icon buttons have accessible labels.
 - Color is not the only way to identify priority/state if practical.
 - Destructive buttons are clearly labeled.
+- Swipe previews communicate actions through text and icon as well as semantic color, and
+  decorative preview content does not duplicate accessible control names.
+- Reduced-motion preferences remove decorative swipe-preview transitions while preserving clear
+  ready/not-ready feedback.
 - Confirmation dialogs are keyboard/screen-reader friendly if web support matters.

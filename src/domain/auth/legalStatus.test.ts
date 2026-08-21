@@ -8,8 +8,8 @@ describe('legalStatusRequiresAcceptance', () => {
       legalStatusRequiresAcceptance({
         accepted: false,
         acceptedAt: null,
-        currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
-        currentTermsVersion: 'terms-draft-2026-07-02',
+        currentPrivacyPolicyVersion: '1.0.0',
+        currentTermsVersion: '1.0.0',
       }),
     ).toBe(true)
   })
@@ -19,8 +19,8 @@ describe('legalStatusRequiresAcceptance', () => {
       legalStatusRequiresAcceptance({
         accepted: true,
         acceptedAt: '2026-07-02T00:00:00.000Z',
-        currentPrivacyPolicyVersion: 'privacy-draft-2026-07-02',
-        currentTermsVersion: 'terms-draft-2026-07-02',
+        currentPrivacyPolicyVersion: '1.0.0',
+        currentTermsVersion: '1.0.0',
       }),
     ).toBe(false)
   })

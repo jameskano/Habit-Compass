@@ -6,16 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:android:local": "tsc -b && vite build --mode mobile && cap sync android",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "tsc -b",
     "test": "vitest run",
+    "test:supabase:functions": "pnpm exec supabase start && pnpm exec supabase migration up --include-all && vitest run --config vitest.supabase.config.ts",
     "test:watch": "vitest",
     "test:a11y": "playwright test src/test/e2e/accessibility.spec.ts",
     "test:e2e": "playwright test",
-    "verify": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "verify": "pnpm format:check && pnpm typecheck && pnpm lint && pnpm test && pnpm build"
   },
   "dependencies": {
     "@capacitor/android": "7.4.3",
@@ -55,6 +57,7 @@
     "@capacitor/cli": "7.4.3",
     "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.55.1",
+    "@sentry/vite-plugin": "^5.4.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

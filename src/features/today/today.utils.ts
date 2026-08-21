@@ -1,4 +1,4 @@
-import { formatISO, parseISO } from 'date-fns'
+import { formatISO } from 'date-fns'
 
 import {
   evaluateHabitCompletionForLogs,
@@ -22,6 +22,7 @@ import {
   isoDateToCalendarDate,
 } from '@/features/items/components/datePickerUtils'
 import type { ISODateString } from '@/shared/types'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 import type { TodayIntl } from './today.types'
 
@@ -90,14 +91,25 @@ const formatWeekdays = (
 export const formatHabitFrequency = (intl: TodayIntl, habit: Habit) => {
   const descriptor = getHabitFrequencySummary(habit.scheduleRule)
 
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    return intl.formatMessage(
+      { id: 'items.frequency.certainDaysPerPeriod' },
+      {
+        count: habit.scheduleRule.targetDays,
+        period: intl.formatMessage({ id: `items.period.${habit.scheduleRule.period}` }),
+      },
+    )
+  }
+
   if (
     habit.scheduleRule.kind === 'flexiblePeriod' &&
-    habit.goalConfig.trackingType === 'timesPerPeriod'
+    habit.goalConfig.trackingType === 'totalMeasurablePerPeriod'
   ) {
     return intl.formatMessage(
-      { id: 'items.frequency.timesPerPeriod' },
+      { id: 'items.frequency.measurablePerPeriod' },
       {
-        count: habit.goalConfig.targetCount,
+        amount: habit.goalConfig.targetAmount,
+        unit: habit.goalConfig.unitLabel,
         period: intl.formatMessage({ id: `items.period.${habit.goalConfig.period}` }),
       },
     )
@@ -162,36 +174,26 @@ export const formatRecurrentFrequency = (intl: TodayIntl, task: RecurrentTask) =
 
 export const formatTaskMeta = (intl: TodayIntl, task: Task, selectedDate: ISODateString) => {
   if (task.dueDate && task.dueDate < selectedDate && task.completionStatus === 'pending') {
-    const formattedDate = intl.formatDate(parseISO(task.dueDate), {
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC',
-    })
+    const formattedDate = formatFullDate(task.dueDate)
     return intl.formatMessage({ id: 'page.today.item.task.overdue' }, { date: formattedDate })
   }
 
   return intl.formatMessage({ id: 'page.today.item.task.today' })
 }
 
-export const shortUnitLabel = (intl: TodayIntl, habit: Habit) => {
+export const shortUnitLabel = (habit: Habit) => {
   const metadata = getHabitAmountInputMetadata(habit)
   if (!metadata) {
     return ''
   }
-  if (metadata.unit === 'minutes') {
-    return intl.formatMessage({ id: 'page.today.amount.unit.minutes.short' })
-  }
-  if (metadata.unit === 'repetitions') {
-    return intl.formatMessage({ id: 'page.today.amount.unit.repetitions.short' })
-  }
-  return metadata.quantityUnitLabel ?? ''
+  return metadata.unitLabel
 }
 
-export const amountText = (intl: TodayIntl, item: TodayItem) => {
+export const amountText = (item: TodayItem) => {
   if (item.type !== 'habit' || !item.amount || item.amount <= 0) {
     return null
   }
-  const unit = shortUnitLabel(intl, item.habit)
+  const unit = shortUnitLabel(item.habit)
   return unit ? `${item.amount} ${unit}` : `${item.amount}`
 }
 
@@ -212,7 +214,7 @@ export const amountHelperLines = (
     'period' in habit.goalConfig && habit.goalConfig.period !== 'day'
       ? `page.today.amount.period.${habit.goalConfig.period}`
       : 'page.today.amount.period.day'
-  const unit = shortUnitLabel(intl, habit)
+  const unit = shortUnitLabel(habit)
   const value = unit
     ? `${completion.rawProgressValue} / ${completion.standardTargetValue} ${unit}`
     : `${completion.rawProgressValue} / ${completion.standardTargetValue}`
@@ -237,13 +239,8 @@ export const amountHelperLines = (
   return lines
 }
 
-export const selectedDateLabel = (intl: TodayIntl, date: ISODateString) => {
-  return intl.formatDate(parseISO(date), {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  })
+export const selectedDateLabel = (date: ISODateString) => {
+  return formatFullDate(date)
 }
 
 export const getTodayDateModeForDates = (selectedDate: ISODateString, today: ISODateString) => {

@@ -4,6 +4,10 @@ import type { DayOfWeek } from '@/domain/recurrent-tasks'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/utils/cn'
 
+import {
+  WEEKDAY_TOGGLE_CLASS,
+  WEEKDAY_TOGGLE_SELECTED_CLASS,
+} from '../components/weekdayToggle.constants'
 import { WEEKDAY_VALUES } from './createItem.constants'
 
 type WeekdayPickerProps = {
@@ -27,8 +31,8 @@ export const WeekdayPicker = ({ value, onChange }: WeekdayPickerProps) => {
             variant="ghost"
             aria-pressed={value.includes(day)}
             className={cn(
-              'rounded-full border border-border/75 px-3 py-2 text-xs',
-              value.includes(day) && 'border-primary bg-primary text-primary-foreground',
+              WEEKDAY_TOGGLE_CLASS,
+              value.includes(day) && WEEKDAY_TOGGLE_SELECTED_CLASS,
             )}
             onClick={() =>
               onChange(

@@ -101,7 +101,7 @@ Options:
 
 - System default
 - English
-- Espanol
+- Spanish
 
 Default: System default.
 
@@ -110,7 +110,8 @@ Behavior:
 - `system` resolves from the Android/device language.
 - Supported device languages are English and Spanish for MVP.
 - Unsupported device languages fall back to English.
-- React Intl owns message lookup and runtime formatting.
+- React Intl owns message lookup and localized runtime formatting. Complete calendar dates are the
+  MVP exception and use the fixed `DD/MM/YYYY` presentation defined in the product spec.
 - Changing language updates copy immediately and updates `document.documentElement.lang` on web.
 - Persist stable locale identifiers, not translated display labels.
 - The storage model must support more locale codes later without replacing the field shape.
@@ -119,10 +120,8 @@ Model requirement:
 
 - Current database field: `profiles.language`.
 - Current TypeScript field: `locale`.
-- Current implementation stores only `en | es`; future implementation must migrate the existing
-  field/model to allow `system` before exposing System default.
-- Future accepted values should be equivalent to `system | en | es`, with future language codes
-  accepted by schema migration when added.
+- Current implementation stores `system | en | es`; new profile rows default to `system`.
+- Future language codes may be accepted by schema migration when added.
 
 ### Theme
 
@@ -140,6 +139,9 @@ Behavior:
 - `system` follows Android/device appearance. Web fallback uses `prefers-color-scheme`.
 - Theme changes must not require app restart.
 - Status bar and Android system UI should follow the resolved theme once native integration exists.
+- RevenueCat Paywall and Customer Center presentation must follow the app theme preference:
+  `system` follows Android/device appearance, while explicit `light` or `dark` applies that native
+  appearance before RevenueCat UI opens.
 - Persist stable theme identifiers, not display labels.
 - Current database field: `profiles.theme_preference`.
 - Current TypeScript field: `theme`.
@@ -254,6 +256,9 @@ Future behavior:
 
 - The row may open a RevenueCat-backed paywall.
 - Active subscribers should see plan or management status instead of acquisition-only UI.
+- RevenueCat Paywall and Customer Center language must follow the app language preference:
+  `system` follows the Android/device language, while explicit supported languages use the matching
+  RevenueCat UI locale.
 - Subscription management must lead to Google Play subscription management where required.
 - Account deletion must follow `/specs/auth/06-revenuecat-and-account-deletion.md`.
 - Free users may be limited to 5 active habits, 10 active incomplete one-time tasks, and 5 active
@@ -324,9 +329,20 @@ Requirements:
 
 - Settings entry point remains the app shell Settings control.
 - Screen headers follow current route conventions.
-- Android back returns to the previous Settings or app screen.
-- Bottom sheets dismiss through explicit close, system back, or scrim tap unless a form has entered
-  meaningful unsaved content.
+- Android hardware back uses native app semantics instead of raw browser history replay.
+- On Android, hardware back from `/today`, `/week`, or `/items` minimizes the app.
+- On Android, hardware back from `/settings` returns to the last visited main section (`/today`,
+  `/week`, or `/items`) for the current app session, falling back to `/today` after cold start or
+  reload.
+- On Android, hardware back from Settings subpages such as Categories, Security, Data and privacy,
+  Support, and Settings legal-document routes returns to `/settings`.
+- On Android, switching between `/today`, `/week`, and `/items` from bottom navigation does not add
+  browser-history entries. Web/browser navigation keeps normal browser history behavior.
+- Bottom sheets and dialogs dismiss through explicit close, system back, or scrim tap unless a form
+  has entered meaningful unsaved content.
+- Open sheets, dialogs, selects, and menu-like transient layers consume Android hardware back before
+  route navigation. Dirty forms must block or show the existing discard confirmation instead of
+  silently losing edits.
 - Preference sheets have no unsaved state because selections apply immediately.
 - Destructive dialogs return focus to the invoking control after dismissal.
 - Loading, empty, error, and offline states must be localized.

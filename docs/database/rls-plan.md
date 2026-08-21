@@ -89,6 +89,9 @@ Settings-related tables that are specified but not yet implemented must follow t
 - Feedback attachments must be stored in a private bucket. Upload, download, and delete rules must prove
   ownership through the matching `feedback_attachments` or `feedback_submissions` row, and file size/type
   validation must happen before privileged notification or processing work.
+- Feedback admin notifications are sent through the `notify-feedback` Edge Function. Authenticated
+  clients may request notification only for their own stored submission; service-role access reads
+  and updates notification state without adding client read policies for feedback rows.
 - Account deletion must be server-controlled. `/specs/auth` requires immediate deletion after
   verified reauthentication, subscription cancellation, RevenueCat customer deletion, app-data and
   Storage cleanup, and Auth user deletion. Do not add new user-facing pending-deletion behavior.

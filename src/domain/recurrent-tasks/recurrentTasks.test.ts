@@ -40,7 +40,7 @@ describe('recurrent tasks domain', () => {
     expect(RecurrentTaskSchema.safeParse(task({ endsOn: '2026-04-30' })).success).toBe(false)
   })
 
-  it('evaluates every executable recurrence rule but not custom placeholders', () => {
+  it('evaluates every supported recurrence rule', () => {
     const executableCases: Array<{ rule: RecurrentTask['recurrenceRule']; date: ISODateString }> = [
       { rule: { kind: 'daily' }, date: '2026-05-03' },
       { rule: { kind: 'specificDaysOfWeek', daysOfWeek: [1] }, date: '2026-05-04' },
@@ -60,13 +60,6 @@ describe('recurrent tasks domain', () => {
         true,
       )
     }
-
-    expect(
-      isRecurrentTaskScheduledOnDate(
-        task({ recurrenceRule: { kind: 'customFutureRule', description: 'Later' } }),
-        '2026-05-03',
-      ),
-    ).toBe(false)
   })
 
   it('rejects invalid weekday and month-day recurrence payloads', () => {
@@ -96,28 +89,49 @@ describe('recurrent tasks domain', () => {
     expect(isRecurrentTaskScheduledOnDate(monthly, '2027-02-28')).toBe(false)
   })
 
-  it('derives overdue pending or missed states without storing them', () => {
-    const carried = deriveRecurrentOccurrences({
+  it('derives missed past occurrences without storing them or carrying them forward', () => {
+    const missed = deriveRecurrentOccurrences({
       task: task({ carryForward: true }),
       storedOccurrences: [],
       from: '2026-05-20',
       to: '2026-05-20',
       today: '2026-05-21',
     })[0]
-    const expired = deriveRecurrentOccurrences({
-      task: task({ carryForward: false }),
-      storedOccurrences: [],
+
+    expect(missed).toMatchObject({
+      status: 'missed',
+      isOverdue: false,
+      isStored: false,
+      actionable: false,
+    })
+  })
+
+  it('treats stored pending past occurrences as missed instead of carrying them forward', () => {
+    const missed = deriveRecurrentOccurrences({
+      task: task({ carryForward: true }),
+      storedOccurrences: [
+        {
+          id: 'occ-a',
+          userId: 'user-1',
+          recurrentTaskId: 'rec-a',
+          scheduledForDate: '2026-05-20',
+          status: 'pending',
+          completedAt: null,
+          createdAt: '2026-05-20T00:00:00.000Z',
+          updatedAt: '2026-05-20T00:00:00.000Z',
+          archivedAt: null,
+        },
+      ],
       from: '2026-05-20',
       to: '2026-05-20',
       today: '2026-05-21',
     })[0]
 
-    expect(carried).toMatchObject({
-      status: 'pending',
-      isOverdue: true,
-      isStored: false,
-      actionable: true,
+    expect(missed).toMatchObject({
+      status: 'missed',
+      isOverdue: false,
+      isStored: true,
+      actionable: false,
     })
-    expect(expired).toMatchObject({ status: 'missed', isStored: false, actionable: false })
   })
 })

@@ -111,11 +111,11 @@ export const TodayItemCard = ({
       }}
       onKeyDown={handleKeyDown}
       className={cn(
-        'rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md',
+        'min-w-0 w-full max-w-full rounded-[1.35rem] border-border/80 bg-card/95 p-4 shadow-sm transition-[transform,box-shadow] duration-200 ease-out hover:shadow-md',
         disabled && 'cursor-default',
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span
           aria-label={categoryLabel}
           title={categoryLabel}
@@ -129,9 +129,17 @@ export const TodayItemCard = ({
 
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-baseline gap-2">
-            <h3 className="truncate text-base font-semibold tracking-tight">{title}</h3>
+            <h3
+              className="min-w-0 flex-1 truncate text-base font-semibold tracking-tight"
+              title={title}
+            >
+              {title}
+            </h3>
             {amountText ? (
-              <span className="shrink-0 text-xs font-medium text-muted-foreground">
+              <span
+                className="max-w-[35%] shrink-0 truncate text-xs font-medium text-muted-foreground"
+                title={amountText}
+              >
                 {amountText}
               </span>
             ) : null}
@@ -146,7 +154,9 @@ export const TodayItemCard = ({
                 priorityVisualClasses[priority],
               )}
             />
-            <p className="truncate text-xs text-muted-foreground">{meta}</p>
+            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={meta}>
+              {meta}
+            </p>
             {type === 'habit' ? (
               <span className="shrink-0 rounded-full border border-border/70 bg-muted/45 px-2 py-0.5 text-[0.65rem] font-medium text-muted-foreground">
                 {intl.formatMessage({ id: 'page.today.item.chip.habit' })}

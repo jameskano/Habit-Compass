@@ -15,6 +15,21 @@ const getSignedInMockState = () => {
 }
 
 export const mockSettingsRepository: SettingsRepository = {
+  async getProfileSettings() {
+    const state = getSignedInMockState()
+
+    if (!state.ok) {
+      return state
+    }
+
+    return ok({
+      locale: state.data.appSettings.locale,
+      theme: state.data.appSettings.theme,
+      weekStartsOn: state.data.appSettings.weekStartsOn,
+      onboardingCompletedAt: state.data.appSettings.onboardingCompletedAt,
+    })
+  },
+
   async getOnboardingStatus() {
     const state = getSignedInMockState()
 
@@ -24,6 +39,25 @@ export const mockSettingsRepository: SettingsRepository = {
 
     return ok({
       onboardingCompletedAt: state.data.appSettings.onboardingCompletedAt,
+    })
+  },
+
+  async updateProfilePreferences(preferences) {
+    const state = getSignedInMockState()
+
+    if (!state.ok) {
+      return state
+    }
+
+    state.data.appSettings = {
+      ...state.data.appSettings,
+      ...preferences,
+    }
+
+    return ok({
+      locale: state.data.appSettings.locale,
+      theme: state.data.appSettings.theme,
+      weekStartsOn: state.data.appSettings.weekStartsOn,
     })
   },
 

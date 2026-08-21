@@ -20,12 +20,23 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Users can archive or delete items.
 - Soft reset is the default reset behavior.
 - Simple contextual stats are shown where useful.
-- Rule-based suggestions can appear when simple patterns are detected.
+- Rule-based suggestion infrastructure is retained for future use; no suggestion card is currently shown.
 - Today summary item cards show category, priority, schedule/due metadata, and completion state
   while keeping item management behavior in Items.
 - Settings includes Categories, Preferences, Data and privacy, Support and feedback, account actions,
   and a Premium Coming Soon placeholder. Security and sign-in appears only for eligible
   email/password accounts.
+
+## MVP Date Presentation
+
+- Every complete calendar date identifying a specific day is displayed as zero-padded
+  `DD/MM/YYYY`, regardless of app language or device locale.
+- The fixed format applies to visible text and accessible labels. Translated surrounding copy and
+  accessibility state such as today or selected remain localized.
+- Partial date context such as month headings, weekday names or initials, calendar day numbers, and
+  compact chart labels remains localized.
+- Dates remain stored and exported in their existing ISO formats. MVP does not include a date-format
+  preference.
 
 ## Items Navigation
 
@@ -39,6 +50,10 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Item management cards reveal in a short staggered sequence when their section is displayed.
 - Filtering, completion, archive updates, and reordering must not restart the reveal sequence.
 - Swipe-enabled item cards follow horizontal pointer movement and return smoothly after release.
+- A valid swipe direction progressively reveals a translated icon-and-label preview beneath the
+  exposed side of the card. The preview uses semantic action color and becomes visually stronger
+  when the action threshold is reached.
+- A direction without an available action does not move the card or reveal an action preview.
 - Reduced-motion preferences disable decorative reveal and title animations and remove animated swipe return.
 
 ## Transient Notifications
@@ -53,6 +68,13 @@ Habit Compass MVP is a simple daily tracker with optional depth.
 - Route, page, and standalone pending states use a spinner-first loading treatment.
 - Empty-state cards remain reserved for true empty, disabled-feature, and error surfaces.
 - Submit buttons keep disabled and progress-label loading behavior.
+
+## Error Recovery
+
+- Route errors, page-blocking query failures, and app-level crash fallbacks use the global error
+  treatment with localized copy and clear recovery actions.
+- App-level crash fallbacks do not expose raw error messages, component stacks, or technical
+  traces to users.
 
 ## Later
 

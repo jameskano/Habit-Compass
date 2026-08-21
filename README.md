@@ -10,7 +10,7 @@ Habit Compass is a habit, task, and recurrent-task tracker built around the prin
 - React Hook Form, Zod, `@hookform/resolvers`, react-intl, date-fns, Recharts
 - Vitest, React Testing Library, Playwright
 - ESLint, Prettier, pnpm
-- Supabase JS client, Sentry-ready integration, Capacitor-ready documentation and folders
+- Supabase JS client, Sentry-ready integration, Capacitor Android project
 
 ## Setup
 
@@ -62,6 +62,8 @@ pnpm verify
 
 Future capabilities such as AI suggestions, Google Calendar integration, subscriptions, native platforms, and advanced recurrence must start with a spec update and review gate. Do not add them opportunistically while implementing MVP behavior.
 
-## Capacitor Readiness
+## Android Readiness
 
-The project includes Capacitor dependencies and integration folders, but Android and iOS native platforms are intentionally not initialized. See `docs/architecture/capacitor-readiness.md` before adding native platforms.
+The project includes a checked-in Capacitor Android project. Use `pnpm build:android:local`, then
+open `android/` in Android Studio for emulator testing. See
+`docs/architecture/capacitor-readiness.md` before adding or changing native scope.

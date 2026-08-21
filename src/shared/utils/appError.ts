@@ -5,6 +5,7 @@ export const appErrorCodes = [
   'validation',
   'configuration',
   'unauthorized',
+  'network',
 ] as const
 
 export type AppErrorCode = (typeof appErrorCodes)[number]

@@ -99,8 +99,19 @@ describe('SortableItemsList', () => {
     expect(itemShell).toHaveAttribute('data-sortable-ref', 'alpha')
     expect(itemShell).toHaveAttribute('data-item-waterfall-index', '0')
     expect(itemShell).toHaveClass('item-waterfall-enter')
+    expect(itemShell).toHaveClass('min-w-0', 'w-full', 'max-w-full')
     expect(itemShell?.parentElement).toHaveClass('grid')
+    expect(itemShell?.parentElement).toHaveClass('min-w-0')
     expect(itemShell?.parentElement).toHaveClass('gap-4')
+  })
+
+  it('keeps the reorder handle inside horizontal card bounds', () => {
+    renderList()
+
+    const handle = screen.getByRole('button', { name: 'Drag to reorder Alpha' })
+
+    expect(handle).toHaveClass('right-2')
+    expect(handle.className).not.toContain('-right-')
   })
 
   it('uses sortable source indices to commit order when target id is reset to source id', () => {

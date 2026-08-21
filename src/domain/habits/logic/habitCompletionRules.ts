@@ -83,13 +83,9 @@ export const getHabitTargetScope = (habit: Habit): HabitTargetScope => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 'binary'
-    case 'timePerSession':
-    case 'quantityPerSession':
+    case 'measurablePerSession':
       return 'session'
-    case 'timesPerPeriod':
-    case 'repetitionsPerPeriod':
-    case 'totalTimePerPeriod':
-    case 'totalQuantityPerPeriod':
+    case 'totalMeasurablePerPeriod':
       return 'period'
   }
 }
@@ -98,16 +94,9 @@ export const getHabitStandardTargetValue = (habit: Habit) => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 1
-    case 'timesPerPeriod':
-      return habit.goalConfig.targetCount
-    case 'repetitionsPerPeriod':
-      return habit.goalConfig.targetRepetitions
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return habit.goalConfig.targetMinutes
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return habit.goalConfig.targetQuantity
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return habit.goalConfig.targetAmount
   }
 }
 
@@ -119,16 +108,9 @@ export const getHabitMinimumTargetValue = (habit: Habit): number | null => {
   switch (habit.goalConfig.trackingType) {
     case 'binary':
       return 1
-    case 'timesPerPeriod':
-      return habit.goalConfig.minimumCount ?? null
-    case 'repetitionsPerPeriod':
-      return habit.goalConfig.minimumRepetitions ?? null
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return habit.goalConfig.minimumMinutes ?? null
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return habit.goalConfig.minimumQuantity ?? null
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return habit.goalConfig.minimumAmount ?? null
   }
 }
 
@@ -137,30 +119,38 @@ export const getHabitPeriodBounds = (
   date: ISODateString,
   weekStartsOn: WeekStartsOn = 1,
 ) => {
-  if (!('period' in habit.goalConfig)) {
+  const period =
+    habit.scheduleRule.kind === 'certainDaysPerPeriod'
+      ? habit.scheduleRule.period
+      : 'period' in habit.goalConfig
+        ? habit.goalConfig.period
+        : null
+
+  if (!period) {
     return { periodStart: date, periodEnd: date }
   }
 
-  if (habit.goalConfig.period === 'day') {
+  if (period === 'day') {
     return { periodStart: date, periodEnd: date }
   }
 
-  if (habit.goalConfig.period === 'week') {
+  if (period === 'week') {
     return {
       periodStart: startOfWeek(date, weekStartsOn),
       periodEnd: endOfWeek(date, weekStartsOn),
     }
   }
 
-  if (habit.goalConfig.period === 'month') {
+  if (period === 'month') {
     return { periodStart: startOfMonth(date), periodEnd: endOfMonth(date) }
   }
 
-  if (habit.goalConfig.period === 'year') {
+  if (period === 'year') {
     return { periodStart: startOfYear(date), periodEnd: endOfYear(date) }
   }
 
-  const periodLength = habit.goalConfig.customPeriodDays ?? 1
+  const periodLength =
+    'customPeriodDays' in habit.goalConfig ? (habit.goalConfig.customPeriodDays ?? 1) : 1
   const elapsed = Math.max(0, differenceInDays(date, habit.startsOn))
   const offset = elapsed % periodLength
   const periodStart = addDays(date, -offset)
@@ -174,16 +164,10 @@ export const getHabitLogProgressValue = (habit: Habit, log: HabitLog) => {
 
   switch (habit.goalConfig.trackingType) {
     case 'binary':
-    case 'timesPerPeriod':
       return 1
-    case 'repetitionsPerPeriod':
-      return log.repetitions ?? 0
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return log.durationMinutes ?? 0
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return log.quantity ?? 0
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return log.amount ?? 0
   }
 }
 
@@ -239,6 +223,7 @@ export const evaluateHabitCompletionForLogs = (input: {
       : { periodStart: date, periodEnd: date }
   const relevantLogs = input.logs.filter(
     (log) =>
+      log.habitId === habit.id &&
       log.status === 'completed' &&
       log.loggedForDate >= periodStart &&
       log.loggedForDate <= periodEnd,
@@ -289,6 +274,7 @@ export const evaluateHabitCompletionForLogs = (input: {
 export const hasHabitProgressOnDate = (habit: Habit, logs: HabitLog[], date: ISODateString) => {
   return logs.some(
     (log) =>
+      log.habitId === habit.id &&
       log.status === 'completed' &&
       log.loggedForDate === date &&
       getHabitLogProgressValue(habit, log) > 0,

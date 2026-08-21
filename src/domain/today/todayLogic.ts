@@ -1,6 +1,7 @@
 import {
   evaluateHabitCompletionForLogs,
   getHabitLogAmount,
+  isHabitDayActionable,
   isHabitScheduledOnDate,
   type Habit,
   type HabitLog,
@@ -61,9 +62,7 @@ export const getSourceItemId = (item: TodayItem) => {
 }
 
 export const isMeasurableHabit = (habit: Habit) => {
-  return (
-    habit.goalConfig.trackingType !== 'binary' && habit.goalConfig.trackingType !== 'timesPerPeriod'
-  )
+  return habit.goalConfig.trackingType !== 'binary'
 }
 
 export const deriveHabitTodayState = (input: {
@@ -145,7 +144,9 @@ export const shouldShowTaskOnToday = (task: Task, selectedDate: ISODateString) =
 export const shouldShowHabitOnToday = (habit: Habit, selectedDate: ISODateString) => {
   return (
     habit.lifecycleStatus === 'active' &&
-    (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, selectedDate))
+    (habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+      habit.scheduleRule.kind === 'flexiblePeriod' ||
+      isHabitScheduledOnDate(habit, selectedDate))
   )
 }
 
@@ -197,6 +198,13 @@ export const buildTodayItems = (input: BuildTodayItemsInput): TodayItem[] => {
             weekStartsOn,
           }),
           amount: log ? getHabitLogAmount(habit, log) : null,
+          actionDisabled: !isHabitDayActionable({
+            habit,
+            logs: habitLogs,
+            date: selectedDate,
+            today,
+            weekStartsOn,
+          }),
         }
       }),
     ...tasks

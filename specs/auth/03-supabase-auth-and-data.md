@@ -14,7 +14,9 @@ Configure:
 - Correct Site URL.
 - Allow-listed web and mobile redirect URLs.
 - Custom SMTP before production launch.
-- Password policy documented and mirrored by the client.
+- Password policy documented and mirrored by the client: 12-64 characters, with no lowercase,
+  uppercase, number, or symbol composition requirement.
+- Common-password or compromised-password rejection remains out of scope for this release.
 - CAPTCHA/rate-limit hardening evaluated before public launch.
 
 Do not enable anonymous sign-ins for Habit Compass.

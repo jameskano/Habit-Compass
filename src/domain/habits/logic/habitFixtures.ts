@@ -30,7 +30,10 @@ export const createHabit = (
     startsOn: '2026-01-01',
     endsOn: null,
     order: 0,
-    scheduleRule: 'period' in goalConfig ? { kind: 'flexiblePeriod' } : { kind: 'daily' },
+    scheduleRule:
+      goalConfig.trackingType === 'totalMeasurablePerPeriod'
+        ? { kind: 'flexiblePeriod' }
+        : { kind: 'daily' },
     trackingType: goalConfig.trackingType,
     goalConfig,
     usesCompletionLevels: false,
@@ -71,10 +74,8 @@ export const createHabitLog = (overrides: HabitLogFixtureOverrides = {}): HabitL
     loggedAt: '2026-05-21T08:00:00.000Z',
     status: 'completed',
     completionLevel: null,
-    repetitions: null,
-    durationMinutes: null,
-    quantity: null,
-    quantityUnitLabel: null,
+    amount: null,
+    unitLabel: null,
     notes: null,
     ...overrides,
   }

@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { parseISO } from 'date-fns'
 import { X } from 'lucide-react'
 import { useEffect, useId } from 'react'
 import { useForm } from 'react-hook-form'
@@ -11,6 +10,7 @@ import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui/sheet'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 const HabitAmountInputSchema = z.object({
   amount: z.number().nonnegative('negative'),
@@ -41,14 +41,7 @@ export const HabitAmountInputSheet = ({
 }: HabitAmountInputSheetProps) => {
   const intl = useIntl()
   const amountInputId = useId()
-  const formattedDate = date
-    ? intl.formatDate(parseISO(date), {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'UTC',
-      })
-    : ''
+  const formattedDate = formatFullDate(date)
   const form = useForm<HabitAmountInputValues>({
     resolver: zodResolver(HabitAmountInputSchema),
     defaultValues: { amount: initialAmount ?? undefined },
@@ -58,10 +51,7 @@ export const HabitAmountInputSheet = ({
     form.reset({ amount: initialAmount ?? undefined })
   }, [form, initialAmount, date])
 
-  const unitLabel =
-    metadata.unit === 'quantity'
-      ? metadata.quantityUnitLabel
-      : intl.formatMessage({ id: `page.items.habit.amount.unit.${metadata.unit}` })
+  const unitLabel = metadata.unitLabel
   const amountError = form.formState.errors.amount
 
   return (
@@ -82,14 +72,16 @@ export const HabitAmountInputSheet = ({
         className="animate-[habit-sheet-in_300ms_ease-out] motion-reduce:animate-none"
       >
         <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <SheetTitle className="text-xl font-semibold">{habit.title}</SheetTitle>
+          <div className="min-w-0 flex-1">
+            <SheetTitle className="truncate text-xl font-semibold" title={habit.title}>
+              {habit.title}
+            </SheetTitle>
             <p className="mt-1 text-sm text-muted-foreground">{formattedDate}</p>
           </div>
           <Button
             variant="ghost"
             type="button"
-            className="h-10 w-10 rounded-full border border-border/70 p-0"
+            className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
             aria-label={intl.formatMessage({ id: 'action.close' })}
             onClick={onClose}
           >

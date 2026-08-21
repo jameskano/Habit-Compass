@@ -1,9 +1,6 @@
 import type {
-  AccountDeletionRequestResult,
   AccountLifecycleRepository,
   AccountLifecycleState,
-  CancelAccountDeletionResult,
-  RequestAccountDeletionInput,
   RequestExternalAccountDeletionResult,
   RequestExternalAccountDeletionInput,
 } from '@/domain/accountLifecycle'
@@ -57,34 +54,6 @@ export const supabaseAccountLifecycleRepository: AccountLifecycleRepository = {
     }
 
     return ok(mapProfileLifecycle(data as ProfileLifecycleRow))
-  },
-
-  async requestAccountDeletion(input: RequestAccountDeletionInput) {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase.functions.invoke('request-account-deletion', {
-      body: input,
-    })
-
-    if (error) {
-      return err(
-        createAppError('unauthorized', 'Account deletion could not be scheduled.', {
-          cause: error,
-        }),
-      )
-    }
-
-    return ok(data as AccountDeletionRequestResult)
-  },
-
-  async cancelAccountDeletion() {
-    const supabase = getSupabaseClient()
-    const { data, error } = await supabase.functions.invoke('cancel-account-deletion')
-
-    if (error) {
-      return err(toUnknownError('Account deletion could not be cancelled.', error))
-    }
-
-    return ok(data as CancelAccountDeletionResult)
   },
 
   async deleteAccount(input) {

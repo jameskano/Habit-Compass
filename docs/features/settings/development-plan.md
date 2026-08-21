@@ -133,7 +133,8 @@ Goal: implement language behavior fully.
 
 Work:
 
-- Migrate current `locale` / `profiles.language` handling to support `system | en | es`.
+- Keep `locale` / `profiles.language` support for `system | en | es`; new profile rows default to
+  `system`.
 - Resolve `system` from device/browser language.
 - Fall back to English for unsupported languages.
 - Update React Intl runtime behavior immediately after changes.
@@ -220,7 +221,7 @@ Goal: make derived weekly analytics follow the current week-start preference.
 
 Work:
 
-- Audit weekly habit stats, charts, and `X times per week` calculations.
+- Audit weekly habit stats, charts, and `X days per week` calculations.
 - Pass `weekStartsOn` into every weekly boundary calculation.
 - Keep completion logs stored by explicit local date.
 - Add tests for month and year boundary switches.

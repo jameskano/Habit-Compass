@@ -71,7 +71,10 @@ describe('habit scheduling', () => {
     ])
     expect(
       enumerateHabitScheduledDates(
-        createHabit({ trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 }),
+        createHabit(
+          { trackingType: 'binary' },
+          { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
+        ),
         '2026-05-18',
         '2026-05-21',
       ),
@@ -96,9 +99,10 @@ describe('habit scheduling', () => {
 
   it('returns calendar-year period bounds', () => {
     const habit = createHabit({
-      trackingType: 'totalTimePerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'year',
-      targetMinutes: 1200,
+      targetAmount: 1200,
+      unitLabel: 'minutes',
     })
 
     expect(getHabitPeriodBounds(habit, '2026-06-02')).toEqual({
@@ -108,11 +112,10 @@ describe('habit scheduling', () => {
   })
 
   it('uses the configured week-start preference for weekly period bounds', () => {
-    const habit = createHabit({
-      trackingType: 'timesPerPeriod',
-      period: 'week',
-      targetCount: 3,
-    })
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      { scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 } },
+    )
 
     expect(getHabitPeriodBounds(habit, '2027-01-01', 1)).toEqual({
       periodStart: '2026-12-28',

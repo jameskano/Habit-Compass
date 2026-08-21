@@ -74,6 +74,10 @@ export const useTodayMenuActions = (input: UseTodayMenuActionsInput) => {
         return nonCompletionActions
       }
 
+      if (item.actionDisabled && !item.log) {
+        return nonCompletionActions
+      }
+
       const state = item.state as HabitTodayState
       if (isMeasurableHabit(habit)) {
         const measurableActions =

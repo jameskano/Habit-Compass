@@ -1,6 +1,11 @@
 import { err, ok, type Result } from '@/shared/utils/result'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
-import type { Task, TasksRepository } from '@/domain/tasks'
+import {
+  reactivateTask,
+  shouldAutoArchiveCompletedTask,
+  type Task,
+  type TasksRepository,
+} from '@/domain/tasks'
 
 import { getMockState } from './mockData'
 
@@ -72,13 +77,45 @@ export const mockTasksRepository: TasksRepository = {
     }))
   },
 
-  async setCompletionStatus({ taskId, status }) {
-    return updateTaskInState(taskId, (task) => ({
-      ...task,
-      completionStatus: status,
-      completedAt: status === 'completed' ? new Date().toISOString() : null,
-      updatedAt: new Date().toISOString(),
-    }))
+  async setCompletionStatus({ taskId, status, today }) {
+    return updateTaskInState(taskId, (task) => {
+      const updatedAt = new Date().toISOString()
+      const nextTask: Task = {
+        ...task,
+        completionStatus: status,
+        completedAt: status === 'completed' ? updatedAt : null,
+        updatedAt,
+      }
+
+      if (status === 'completed' && shouldAutoArchiveCompletedTask(nextTask, today)) {
+        return {
+          ...nextTask,
+          lifecycleStatus: 'archived',
+          archivedAt: updatedAt,
+        }
+      }
+
+      return nextTask
+    })
+  },
+
+  async archiveCompletedPastDue({ userId, today }) {
+    const state = getMockState()
+    const archivedAt = new Date().toISOString()
+    const archivedTasks = state.tasks
+      .filter((task) => task.userId === userId && shouldAutoArchiveCompletedTask(task, today))
+      .map((task) => {
+        const nextTask: Task = {
+          ...task,
+          lifecycleStatus: 'archived',
+          archivedAt,
+          updatedAt: archivedAt,
+        }
+        state.tasks[state.tasks.findIndex((entry) => entry.id === task.id)] = nextTask
+        return nextTask
+      })
+
+    return ok(archivedTasks)
   },
 
   async archive({ taskId }) {
@@ -103,12 +140,19 @@ export const mockTasksRepository: TasksRepository = {
   },
 
   async restore({ taskId }) {
-    return updateTaskInState(taskId, (task) => ({
-      ...task,
-      lifecycleStatus: 'active',
-      archivedAt: null,
-      updatedAt: new Date().toISOString(),
-    }))
+    const task = getMockState().tasks.find((entry) => entry.id === taskId)
+
+    if (!task) {
+      return err(createNotFoundError('Task', taskId))
+    }
+
+    const reactivatedTask = reactivateTask(task, new Date().toISOString())
+
+    if (!reactivatedTask) {
+      return err(createAppError('validation', 'Only archived incomplete tasks can be reactivated.'))
+    }
+
+    return updateTaskInState(taskId, () => reactivatedTask)
   },
 
   async reorder({ userId, orderedTaskIds }) {

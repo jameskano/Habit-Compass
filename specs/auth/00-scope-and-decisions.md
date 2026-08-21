@@ -116,6 +116,13 @@ Registration contains:
 
 Client validation must mirror the configured Supabase password policy. Do not invent a client rule that differs from the backend.
 
+Habit Compass uses a soft password creation policy:
+
+- Minimum length: 12 characters.
+- Maximum length: 64 characters.
+- No required lowercase, uppercase, number, or symbol mix.
+- Common-password or compromised-password rejection is out of scope unless a later approved Supabase setting/spec adds it.
+
 ### Settings password change
 
 A password-enabled account changes its password using:

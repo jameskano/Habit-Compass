@@ -68,110 +68,38 @@ export const BinaryHabitGoalConfigSchema = z.object({
   minimumDescription: z.string().trim().min(1).optional(),
 })
 
-export const TimesPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
-  trackingType: z.literal('timesPerPeriod'),
-  targetCount: z.number().positive(),
-  minimumCount: z.number().positive().optional(),
-}).superRefine((value, context) => {
-  const maximum =
-    value.period === 'week'
-      ? 7
-      : value.period === 'month'
-        ? 28
-        : value.period === 'year'
-          ? 365
-          : null
-  if (maximum !== null && value.targetCount > maximum) {
-    context.addIssue({
-      code: 'custom',
-      path: ['targetCount'],
-      message: `Target count must be at most ${maximum}.`,
-    })
-  }
-  if (value.minimumCount !== undefined && value.minimumCount > value.targetCount) {
-    context.addIssue({
-      code: 'custom',
-      path: ['minimumCount'],
-      message: 'Minimum must not exceed standard target.',
-    })
-  }
-})
-
-export const RepetitionsPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
-  trackingType: z.literal('repetitionsPerPeriod'),
-  targetRepetitions: z.number().positive(),
-  minimumRepetitions: z.number().positive().optional(),
-}).refine(
-  (value) =>
-    value.minimumRepetitions === undefined || value.minimumRepetitions <= value.targetRepetitions,
-  {
-    path: ['minimumRepetitions'],
-    message: 'Minimum must not exceed standard target.',
-  },
-)
-
-export const TimePerSessionGoalConfigSchema = z
+export const MeasurablePerSessionGoalConfigSchema = z
   .object({
-    trackingType: z.literal('timePerSession'),
-    targetMinutes: z.number().positive(),
-    minimumMinutes: z.number().positive().optional(),
+    trackingType: z.literal('measurablePerSession'),
+    targetAmount: z.number().positive(),
+    minimumAmount: z.number().positive().optional(),
+    unitLabel: z.string().trim().min(1),
   })
   .refine(
-    (value) => value.minimumMinutes === undefined || value.minimumMinutes <= value.targetMinutes,
+    (value) => value.minimumAmount === undefined || value.minimumAmount <= value.targetAmount,
     {
-      path: ['minimumMinutes'],
+      path: ['minimumAmount'],
       message: 'Minimum must not exceed standard target.',
     },
   )
 
-export const TotalTimePerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
-  trackingType: z.literal('totalTimePerPeriod'),
-  targetMinutes: z.number().positive(),
-  minimumMinutes: z.number().positive().optional(),
+export const TotalMeasurablePerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
+  trackingType: z.literal('totalMeasurablePerPeriod'),
+  targetAmount: z.number().positive(),
+  minimumAmount: z.number().positive().optional(),
+  unitLabel: z.string().trim().min(1),
 }).refine(
-  (value) => value.minimumMinutes === undefined || value.minimumMinutes <= value.targetMinutes,
+  (value) => value.minimumAmount === undefined || value.minimumAmount <= value.targetAmount,
   {
-    path: ['minimumMinutes'],
-    message: 'Minimum must not exceed standard target.',
-  },
-)
-
-export const QuantityPerSessionGoalConfigSchema = z
-  .object({
-    trackingType: z.literal('quantityPerSession'),
-    targetQuantity: z.number().positive(),
-    minimumQuantity: z.number().positive().optional(),
-    unitLabel: z.string().min(1),
-  })
-  .refine(
-    (value) => value.minimumQuantity === undefined || value.minimumQuantity <= value.targetQuantity,
-    {
-      path: ['minimumQuantity'],
-      message: 'Minimum must not exceed standard target.',
-    },
-  )
-
-export const TotalQuantityPerPeriodGoalConfigSchema = HabitFrequencyConfigSchema.extend({
-  trackingType: z.literal('totalQuantityPerPeriod'),
-  targetQuantity: z.number().positive(),
-  minimumQuantity: z.number().positive().optional(),
-  unitLabel: z.string().min(1),
-}).refine(
-  (value) => value.minimumQuantity === undefined || value.minimumQuantity <= value.targetQuantity,
-  {
-    path: ['minimumQuantity'],
+    path: ['minimumAmount'],
     message: 'Minimum must not exceed standard target.',
   },
 )
 
 export const HabitGoalConfigSchema = z.discriminatedUnion('trackingType', [
   BinaryHabitGoalConfigSchema,
-  TimesPerPeriodGoalConfigSchema,
-  RepetitionsPerPeriodGoalConfigSchema,
-  TimePerSessionGoalConfigSchema,
-  TotalTimePerPeriodGoalConfigSchema,
-  QuantityPerSessionGoalConfigSchema,
-  TotalQuantityPerPeriodGoalConfigSchema,
+  MeasurablePerSessionGoalConfigSchema,
+  TotalMeasurablePerPeriodGoalConfigSchema,
 ])
 
 export const HabitScheduleRuleSchema = z.discriminatedUnion('kind', [
@@ -206,14 +134,23 @@ export const HabitScheduleRuleSchema = z.discriminatedUnion('kind', [
     kind: z.literal('firstWeekdayOfMonth'),
     weekday: HabitDayOfWeekSchema,
   }),
+  z
+    .object({
+      kind: z.literal('certainDaysPerPeriod'),
+      targetDays: z.number().int().positive(),
+      period: z.enum(['week', 'month', 'year']),
+    })
+    .superRefine((value, context) => {
+      const maximum = value.period === 'week' ? 7 : value.period === 'month' ? 28 : 365
+      if (value.targetDays > maximum) {
+        context.addIssue({
+          code: 'custom',
+          path: ['targetDays'],
+          message: `Target days must be at most ${maximum}.`,
+        })
+      }
+    }),
   z.object({ kind: z.literal('flexiblePeriod') }),
-])
-
-const PeriodBasedHabitTypes = new Set([
-  'timesPerPeriod',
-  'repetitionsPerPeriod',
-  'totalTimePerPeriod',
-  'totalQuantityPerPeriod',
 ])
 
 export const HabitSchema = ItemEntityFieldsSchema.extend({
@@ -235,6 +172,14 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
   resetMode: HabitResetModeSchema,
   inactivityPeriods: z.array(HabitInactivityPeriodSchema),
 }).superRefine((habit, context) => {
+  if (habit.trackingType !== habit.goalConfig.trackingType) {
+    context.addIssue({
+      code: 'custom',
+      path: ['trackingType'],
+      message: 'Tracking type must match the goal configuration.',
+    })
+  }
+
   if (habit.endsOn && habit.endsOn < habit.startsOn) {
     context.addIssue({
       code: 'custom',
@@ -245,12 +190,35 @@ export const HabitSchema = ItemEntityFieldsSchema.extend({
 
   if (
     habit.scheduleRule.kind === 'flexiblePeriod' &&
-    !PeriodBasedHabitTypes.has(habit.goalConfig.trackingType)
+    habit.goalConfig.trackingType !== 'totalMeasurablePerPeriod'
   ) {
     context.addIssue({
       code: 'custom',
       path: ['scheduleRule'],
-      message: 'Flexible-period schedules require a period-based goal.',
+      message: 'Flexible-period schedules require a total measurable period goal.',
+    })
+  }
+
+  if (
+    habit.goalConfig.trackingType === 'totalMeasurablePerPeriod' &&
+    habit.scheduleRule.kind !== 'flexiblePeriod'
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['scheduleRule'],
+      message: 'Total measurable period goals require an internal flexible-period schedule.',
+    })
+  }
+
+  if (
+    habit.scheduleRule.kind === 'certainDaysPerPeriod' &&
+    habit.goalConfig.trackingType !== 'binary' &&
+    habit.goalConfig.trackingType !== 'measurablePerSession'
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['scheduleRule'],
+      message: 'Certain-days schedules require a binary or measurable-per-session goal.',
     })
   }
 
@@ -300,9 +268,7 @@ export const HabitLogSchema = ItemEntityFieldsSchema.extend({
   loggedAt: IsoDateTimeStringSchema,
   status: HabitLogStatusSchema,
   completionLevel: HabitCompletionLevelSchema.optional().nullable(),
-  repetitions: z.number().nonnegative().optional().nullable(),
-  durationMinutes: z.number().nonnegative().optional().nullable(),
-  quantity: z.number().nonnegative().optional().nullable(),
-  quantityUnitLabel: z.string().optional().nullable(),
+  amount: z.number().nonnegative().optional().nullable(),
+  unitLabel: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 })

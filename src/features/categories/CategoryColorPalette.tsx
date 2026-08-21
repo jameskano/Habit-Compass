@@ -16,18 +16,35 @@ export const CategoryColorPalette = ({
   const intl = useIntl()
   const internalSelectedColorRef = useRef<HTMLButtonElement | null>(null)
   const activeSelectedColorRef = selectedColorRef ?? internalSelectedColorRef
+  const paletteRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (open) {
-      activeSelectedColorRef.current?.scrollIntoView({ block: 'nearest', inline: 'center' })
+    const palette = paletteRef.current
+    const selectedColor = activeSelectedColorRef.current
+
+    if (!open || !palette || !selectedColor) {
+      return
     }
+
+    const paletteBounds = palette.getBoundingClientRect()
+    const selectedBounds = selectedColor.getBoundingClientRect()
+    const centeredLeft =
+      selectedBounds.left -
+      paletteBounds.left +
+      palette.scrollLeft -
+      (palette.clientWidth - selectedBounds.width) / 2
+    const maxScrollLeft = Math.max(0, palette.scrollWidth - palette.clientWidth)
+
+    palette.scrollLeft = Math.max(0, Math.min(centeredLeft, maxScrollLeft))
   }, [activeSelectedColorRef, colorToken, open])
 
   return (
     <div>
       <p className="text-sm font-medium">{intl.formatMessage({ id: 'category.form.color' })}</p>
       <div
-        className="mt-2 flex snap-x gap-3 overflow-x-auto pb-2"
+        data-category-color-palette
+        ref={paletteRef}
+        className="mt-2 flex touch-pan-x snap-x gap-3 overflow-x-auto overscroll-x-contain overscroll-y-none pb-2"
         aria-label={intl.formatMessage({ id: 'category.form.colorPalette' })}
       >
         {CATEGORY_COLOR_PALETTE.map((color) => {

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { formatISO } from 'date-fns'
 
 import { CATEGORY_DEFAULTS } from '@/domain/categories'
 import { getHabitMinimumTargetValue } from '@/domain/habits'
+import type { ISODateString } from '@/shared/types'
 
 import { mockCategoriesRepository } from './mockCategoriesRepository'
 import { mockHabitsRepository } from './mockHabitsRepository'
@@ -16,6 +18,12 @@ const omitFields = <T extends object, K extends keyof T>(value: T, ...keys: K[])
     delete result[key]
   }
   return result
+}
+
+const addDaysAsIsoDate = (date: string, days: number) => {
+  const nextDate = new Date(`${date}T00:00:00`)
+  nextDate.setDate(nextDate.getDate() + days)
+  return formatISO(nextDate, { representation: 'date' }) as ISODateString
 }
 
 describe('mock repositories', () => {
@@ -117,11 +125,12 @@ describe('mock repositories', () => {
     ).toBe(false)
   })
 
-  it('updates task completion state in memory', async () => {
+  it('archives an overdue task immediately when completing it in memory', async () => {
     const result = await mockTasksRepository.setCompletionStatus({
       userId: mockData.currentUserId,
       taskId: 'task-clinic',
       status: 'completed',
+      today: mockData.today,
     })
 
     expect(result.ok).toBe(true)
@@ -129,7 +138,70 @@ describe('mock repositories', () => {
     if (result.ok) {
       expect(result.data.completionStatus).toBe('completed')
       expect(result.data.completedAt).not.toBeNull()
+      expect(result.data.lifecycleStatus).toBe('archived')
+      expect(result.data.archivedAt).not.toBeNull()
     }
+  })
+
+  it('auto-archives completed tasks after their due day passes but leaves today-due tasks active today', async () => {
+    const todayCleanup = await mockTasksRepository.archiveCompletedPastDue({
+      userId: mockData.currentUserId,
+      today: mockData.today,
+    })
+
+    expect(todayCleanup.ok && todayCleanup.data).toHaveLength(0)
+    expect(getMockState().tasks.find((task) => task.id === 'task-rent')?.lifecycleStatus).toBe(
+      'active',
+    )
+
+    const tomorrowCleanup = await mockTasksRepository.archiveCompletedPastDue({
+      userId: mockData.currentUserId,
+      today: addDaysAsIsoDate(mockData.today, 1),
+    })
+
+    expect(tomorrowCleanup.ok && tomorrowCleanup.data.map((task) => task.id).sort()).toEqual([
+      'task-groceries',
+      'task-rent',
+    ])
+    expect(getMockState().tasks.find((task) => task.id === 'task-clinic')?.lifecycleStatus).toBe(
+      'active',
+    )
+  })
+
+  it('reactivates archived incomplete tasks as pending and rejects archived completed tasks', async () => {
+    const incompleteTask = getMockState().tasks.find((task) => task.id === 'task-clinic')
+    const completedTask = getMockState().tasks.find((task) => task.id === 'task-rent')
+
+    if (!incompleteTask || !completedTask) {
+      throw new Error('Expected task fixtures')
+    }
+
+    incompleteTask.lifecycleStatus = 'archived'
+    incompleteTask.completionStatus = 'skipped'
+    incompleteTask.archivedAt = new Date().toISOString()
+    completedTask.lifecycleStatus = 'archived'
+    completedTask.archivedAt = new Date().toISOString()
+
+    const reactivated = await mockTasksRepository.restore({
+      userId: mockData.currentUserId,
+      taskId: incompleteTask.id,
+    })
+    const rejected = await mockTasksRepository.restore({
+      userId: mockData.currentUserId,
+      taskId: completedTask.id,
+    })
+
+    expect(reactivated.ok && reactivated.data).toMatchObject({
+      lifecycleStatus: 'active',
+      completionStatus: 'pending',
+      completedAt: null,
+      archivedAt: null,
+    })
+    expect(rejected.ok).toBe(false)
+    expect(completedTask).toMatchObject({
+      lifecycleStatus: 'archived',
+      completionStatus: 'completed',
+    })
   })
 
   it('physically deletes a habit and its completion logs', async () => {
@@ -222,14 +294,54 @@ describe('mock repositories', () => {
       userId: mockData.currentUserId,
       habitId: 'habit-read',
       confirmed: true,
+      resetDate: '2026-05-21',
     })
     expect(getMockState().habitLogs.some((log) => log.habitId === 'habit-read')).toBe(false)
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-read')?.startsOn).toBe(
+      '2026-05-21',
+    )
+    expect(getMockState().habits.find((habit) => habit.id === 'habit-read')?.resetMode).toBe('hard')
+  })
+
+  it('hard reset clamps an ended habit start date and only removes that user habit logs', async () => {
+    const state = getMockState()
+    const habit = state.habits.find((entry) => entry.id === 'habit-read')
+    const otherUserLog = {
+      ...state.habitLogs.find((log) => log.habitId === 'habit-read')!,
+      id: 'other-user-log',
+      userId: 'other-user',
+    }
+
+    if (!habit) {
+      throw new Error('Expected read habit fixture')
+    }
+
+    habit.endsOn = '2026-05-20'
+    state.habitLogs.push(otherUserLog)
+
+    const reset = await mockHabitsRepository.hardResetLogs({
+      userId: mockData.currentUserId,
+      habitId: 'habit-read',
+      confirmed: true,
+      resetDate: '2026-05-21',
+    })
+
+    expect(reset.ok && reset.data.startsOn).toBe('2026-05-20')
+    expect(reset.ok && reset.data.endsOn).toBe('2026-05-20')
+    expect(
+      getMockState().habitLogs.some(
+        (log) => log.userId === mockData.currentUserId && log.habitId === 'habit-read',
+      ),
+    ).toBe(false)
+    expect(getMockState().habitLogs).toContainEqual(otherUserLog)
   })
 
   it('removes future minimum support without deleting historical minimum logs', async () => {
     const updated = await mockHabitsRepository.update({
       id: 'habit-move',
-      goalConfig: { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
+      trackingType: 'binary',
+      goalConfig: { trackingType: 'binary' },
+      scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
       usesCompletionLevels: false,
       enabledCompletionLevels: ['standard'],
       defaultCompletionLevel: null,
@@ -245,53 +357,38 @@ describe('mock repositories', () => {
     expect(logs.ok && logs.data[0]?.completionLevel).toBe('minimum')
   })
 
-  it('preserves raw habit amounts and configured quantity labels while rejecting negatives', async () => {
+  it('preserves raw habit amounts and configured unit labels while rejecting negatives', async () => {
     const habit = getMockState().habits.find((entry) => entry.id === 'habit-read')
     if (!habit) {
       throw new Error('Expected read habit fixture')
     }
 
-    habit.trackingType = 'repetitionsPerPeriod'
+    habit.trackingType = 'totalMeasurablePerPeriod'
     habit.goalConfig = {
-      trackingType: 'repetitionsPerPeriod',
+      trackingType: 'totalMeasurablePerPeriod',
       period: 'week',
-      targetRepetitions: 100,
+      targetAmount: 100,
+      unitLabel: 'repetitions',
     }
     habit.scheduleRule = { kind: 'flexiblePeriod' }
 
-    const repetitions = await mockHabitsRepository.upsertLog({
+    const amount = await mockHabitsRepository.upsertLog({
       userId: mockData.currentUserId,
       habitId: habit.id,
       logDate: mockData.today,
       status: 'completed',
-      unit: 'repetitions',
+      unitLabel: 'repetitions',
       value: 140,
     })
-    expect(repetitions.ok && repetitions.data.repetitions).toBe(140)
-
-    habit.trackingType = 'quantityPerSession'
-    habit.goalConfig = {
-      trackingType: 'quantityPerSession',
-      targetQuantity: 10,
-      unitLabel: 'pages',
-    }
-    const quantity = await mockHabitsRepository.upsertLog({
-      userId: mockData.currentUserId,
-      habitId: habit.id,
-      logDate: mockData.today,
-      status: 'completed',
-      unit: 'quantity',
-      value: 18,
-    })
-    expect(quantity.ok && quantity.data.quantity).toBe(18)
-    expect(quantity.ok && quantity.data.quantityUnitLabel).toBe('pages')
+    expect(amount.ok && amount.data.amount).toBe(140)
+    expect(amount.ok && amount.data.unitLabel).toBe('repetitions')
 
     const negative = await mockHabitsRepository.upsertLog({
       userId: mockData.currentUserId,
       habitId: habit.id,
       logDate: mockData.today,
       status: 'completed',
-      unit: 'quantity',
+      unitLabel: 'repetitions',
       value: -1,
     })
     expect(negative.ok).toBe(false)
@@ -340,6 +437,7 @@ describe('mock repositories', () => {
           userId: mockData.currentUserId,
           habitId: 'habit-water',
           confirmed: true,
+          resetDate: '2026-05-21',
         })
       ).ok,
     ).toBe(false)

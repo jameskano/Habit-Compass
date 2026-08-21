@@ -77,8 +77,6 @@ export const isRecurrentTaskScheduledOnDate = (task: RecurrentTask, date: ISODat
     }
     case 'firstWeekdayOfMonth':
       return weekday === task.recurrenceRule.weekday && toUtcDate(date).getUTCDate() <= 7
-    case 'customFutureRule':
-      return false
   }
 }
 
@@ -115,7 +113,9 @@ export const deriveRecurrentOccurrences = (input: {
     )
     const overdue = scheduledForDate < input.today
     const status =
-      storedOccurrence?.status ?? (overdue && !input.task.carryForward ? 'missed' : 'pending')
+      overdue && storedOccurrence?.status === 'pending'
+        ? 'missed'
+        : (storedOccurrence?.status ?? (overdue ? 'missed' : 'pending'))
 
     return {
       recurrentTaskId: input.task.id,

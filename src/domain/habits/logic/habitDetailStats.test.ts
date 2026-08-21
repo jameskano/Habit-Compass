@@ -18,29 +18,34 @@ describe('habit detail stats', () => {
       ],
     })
 
-    expect(result.completionPercentage).toBe(50)
+    expect(result.completionPercentage).toBe(67)
     expect(result.completionsThisWeek).toBe(2)
     expect(result.completionsThisMonth).toBe(2)
     expect(result.completionsThisYear).toBe(2)
     expect(result.totalCompletions).toBe(2)
   })
 
-  it('uses the current flexible goal period instead of deriving empty-day failure', () => {
+  it('calculates proportional certain-days percentage across every lifetime period', () => {
     const result = calculateHabitDetailStats({
       habit: createHabit(
-        { trackingType: 'timesPerPeriod', period: 'week', targetCount: 3 },
-        { startsOn: '2026-01-01' },
+        { trackingType: 'binary' },
+        {
+          startsOn: '2026-05-11',
+          scheduleRule: { kind: 'certainDaysPerPeriod', period: 'week', targetDays: 3 },
+        },
       ),
       today: '2026-05-21',
       logs: [
+        createHabitLog({ id: 'old-one', loggedForDate: '2026-05-11' }),
+        createHabitLog({ id: 'old-two', loggedForDate: '2026-05-13' }),
+        createHabitLog({ id: 'old-three', loggedForDate: '2026-05-15' }),
         createHabitLog({ id: 'current', loggedForDate: '2026-05-20' }),
-        createHabitLog({ id: 'old', loggedForDate: '2026-04-03' }),
       ],
     })
 
-    expect(result.completionPercentage).toBe(0)
-    expect(result.totalCompletions).toBe(2)
-    expect(result.currentStreak).toBeNull()
+    expect(result.completionPercentage).toBe(67)
+    expect(result.totalCompletions).toBe(4)
+    expect(result.currentStreak).toBe(4)
   })
 
   it('groups completion events into chart bars without storing derived state', () => {
@@ -152,5 +157,64 @@ describe('habit detail stats', () => {
         startsOn: habit.startsOn,
       }).reduce((total, bar) => total + bar.completionEvents, 0),
     ).toBe(1)
+  })
+
+  it('ignores logs from other habits in summary counts, percentage, and chart bars', () => {
+    const habit = createHabit(
+      { trackingType: 'binary' },
+      {
+        id: 'habit-focus',
+        startsOn: '2026-05-18',
+        scheduleRule: { kind: 'daily' },
+      },
+    )
+    const logs = [
+      createHabitLog({ id: 'own', habitId: 'habit-focus', loggedForDate: '2026-05-18' }),
+      createHabitLog({ id: 'foreign-week', habitId: 'habit-other', loggedForDate: '2026-05-19' }),
+      createHabitLog({
+        id: 'foreign-month',
+        habitId: 'habit-other',
+        loggedForDate: '2026-05-01',
+      }),
+      createHabitLog({
+        id: 'foreign-year',
+        habitId: 'habit-other',
+        loggedForDate: '2026-01-01',
+      }),
+    ]
+
+    const summary = calculateHabitDetailStats({ habit, logs, today: '2026-05-21' })
+
+    expect(summary.completionPercentage).toBe(33)
+    expect(summary.completionsThisWeek).toBe(1)
+    expect(summary.completionsThisMonth).toBe(1)
+    expect(summary.completionsThisYear).toBe(1)
+    expect(summary.totalCompletions).toBe(1)
+
+    const weeklyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'week',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+    const monthlyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'month',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+    const yearlyBars = createHabitCompletionBars({
+      habit,
+      logs,
+      period: 'year',
+      today: '2026-05-21',
+      startsOn: habit.startsOn,
+    })
+
+    expect(weeklyBars.reduce((total, bar) => total + bar.completionEvents, 0)).toBe(1)
+    expect(monthlyBars[4].completionEvents).toBe(1)
+    expect(yearlyBars[0].completionEvents).toBe(1)
   })
 })

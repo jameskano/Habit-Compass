@@ -4,6 +4,7 @@ import { useIntl } from 'react-intl'
 import { deriveHabitDayState, type Habit, type HabitLog, type WeekStartsOn } from '@/domain/habits'
 import type { ISODateString } from '@/shared/types'
 import { cn } from '@/shared/utils/cn'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 import { habitDayStateClasses } from '@/styles/itemVisualTokens'
 
 import { HabitDayCell } from './HabitDayCell'
@@ -26,14 +27,13 @@ export const HabitDayStrip = ({
 }: HabitDayStripProps) => {
   const intl = useIntl()
   const weekdayFormatter = new Intl.DateTimeFormat(intl.locale, { weekday: 'narrow' })
-  const dateFormatter = new Intl.DateTimeFormat(intl.locale, { month: 'short', day: 'numeric' })
 
   return (
     <HabitDayInteractions habit={habit} logs={logs} today={today}>
       {({ isDayDisabled, onLongPressDay, onTapDay }) => (
         <ol
           data-no-card-action
-          className="mx-auto mb-3 mt-3 flex w-full max-w-[19.75rem] justify-center gap-1.5"
+          className="pointer-events-auto mx-auto mb-3 mt-3 flex w-full max-w-[19.75rem] justify-center gap-1.5"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
@@ -58,7 +58,7 @@ export const HabitDayStrip = ({
                     habitDayStateClasses[state],
                   )}
                   disabled={isDayDisabled(date)}
-                  label={`${dateFormatter.format(parsedDate)}: ${stateLabel}`}
+                  label={`${formatFullDate(date)}: ${stateLabel}`}
                   title={stateLabel}
                   onTap={() => onTapDay(date)}
                   onLongPress={() => onLongPressDay(date)}

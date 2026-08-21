@@ -4,10 +4,11 @@ import type { Habit } from '@/domain/habits'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog'
 
-export type HabitDangerAction = 'reset' | 'delete'
+export type HabitConfirmationAction = 'reset' | 'delete' | 'pastEndDate'
+export type HabitDangerAction = Exclude<HabitConfirmationAction, 'pastEndDate'>
 
 type HabitConfirmationDialogProps = {
-  action: HabitDangerAction | null
+  action: HabitConfirmationAction | null
   habit: Habit
   nestedInDialog?: boolean
   pending: boolean
@@ -29,6 +30,19 @@ export const HabitConfirmationDialog = ({
     return null
   }
 
+  const titleId =
+    action === 'pastEndDate'
+      ? 'page.items.habit.edit.endDateWarning.title'
+      : `page.items.habit.confirm.${action}.title`
+  const descriptionId =
+    action === 'pastEndDate'
+      ? 'page.items.habit.edit.endDateWarning.description'
+      : `page.items.habit.confirm.${action}.description`
+  const actionId =
+    action === 'pastEndDate'
+      ? 'page.items.habit.edit.endDateWarning.action'
+      : `page.items.habit.confirm.${action}.action`
+
   return (
     <Dialog open={Boolean(action)} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent
@@ -37,14 +51,9 @@ export const HabitConfirmationDialog = ({
         overlayClassName={nestedInDialog ? 'z-[60]' : undefined}
         className={`w-[calc(100%-2rem)] max-w-sm rounded-2xl p-5 ${nestedInDialog ? 'z-[70]' : ''}`}
       >
-        <DialogTitle className="text-lg">
-          {intl.formatMessage({ id: `page.items.habit.confirm.${action}.title` })}
-        </DialogTitle>
+        <DialogTitle className="text-lg">{intl.formatMessage({ id: titleId })}</DialogTitle>
         <DialogDescription className="mt-2">
-          {intl.formatMessage(
-            { id: `page.items.habit.confirm.${action}.description` },
-            { habit: habit.title },
-          )}
+          {intl.formatMessage({ id: descriptionId }, { habit: habit.title })}
         </DialogDescription>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="secondary" disabled={pending} onClick={onCancel}>
@@ -56,7 +65,7 @@ export const HabitConfirmationDialog = ({
             onClick={onConfirm}
             className="bg-amber-100 text-amber-900 hover:bg-amber-200 dark:bg-amber-950 dark:text-amber-100 dark:hover:bg-amber-900"
           >
-            {intl.formatMessage({ id: `page.items.habit.confirm.${action}.action` })}
+            {intl.formatMessage({ id: actionId })}
           </Button>
         </div>
       </DialogContent>

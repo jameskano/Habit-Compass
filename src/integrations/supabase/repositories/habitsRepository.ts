@@ -4,7 +4,7 @@ import {
   type HabitLog,
   type HabitsRepository,
 } from '@/domain/habits'
-import type { HabitAmountUnit } from '@/domain/habits/logic/habitDayInteractions'
+import { getHardResetStartsOn } from '@/domain/habits/logic/resetHabitStats'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import { err, ok } from '@/shared/utils/result'
 
@@ -47,10 +47,8 @@ type HabitLogRow = {
   logged_at: string
   status: HabitLog['status']
   completion_level: HabitLog['completionLevel']
-  repetitions: number | null
-  duration_minutes: number | null
-  quantity: number | null
-  quantity_unit_label: string | null
+  amount: number | null
+  unit_label: string | null
   note: string | null
   created_at: string
   updated_at: string
@@ -95,10 +93,8 @@ const mapHabitLog = (row: HabitLogRow): HabitLog => ({
   loggedAt: row.logged_at,
   status: row.status,
   completionLevel: row.completion_level,
-  repetitions: row.repetitions,
-  durationMinutes: row.duration_minutes,
-  quantity: row.quantity,
-  quantityUnitLabel: row.quantity_unit_label,
+  amount: row.amount,
+  unitLabel: row.unit_label,
   notes: row.note,
   archivedAt: null,
   createdAt: row.created_at,
@@ -150,12 +146,12 @@ const toHabitPatch = (input: Parameters<HabitsRepository['update']>[0]) => ({
     : {}),
 })
 
-const valueColumnsByUnit: Record<HabitAmountUnit, 'repetitions' | 'duration_minutes' | 'quantity'> =
-  {
-    minutes: 'duration_minutes',
-    quantity: 'quantity',
-    repetitions: 'repetitions',
-  }
+const toHardResetMinimumConfig = (habit: HabitRow) => ({
+  ...(habit.minimum_config ?? {}),
+  defaultCompletionLevel: habit.minimum_config?.defaultCompletionLevel ?? null,
+  enabledCompletionLevels: habit.minimum_config?.enabledCompletionLevels ?? [],
+  resetMode: 'hard' as const,
+})
 
 const execute = <T>(operation: () => Promise<ReturnType<typeof ok<T>> | ReturnType<typeof err>>) =>
   executeSupabaseOperation(operation, 'Supabase habit operation failed.')
@@ -178,16 +174,31 @@ export const supabaseHabitsRepository: HabitsRepository = {
   },
 
   async listForToday({ date }) {
-    const habits = await this.listForUser({ userId: '' })
-    if (!habits.ok) return habits
+    return execute(async () => {
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
 
-    return ok(
-      habits.data.filter(
-        (habit) =>
-          habit.lifecycleStatus === 'active' &&
-          (habit.scheduleRule.kind === 'flexiblePeriod' || isHabitScheduledOnDate(habit, date)),
-      ),
-    )
+      const { data, error } = await getSupabaseClient()
+        .from('habits')
+        .select('*')
+        .eq('user_id', signedInUserId.data)
+        .is('archived_at', null)
+        .lte('starts_on', date)
+        .or(`ends_on.is.null,ends_on.gte.${date}`)
+        .order('sort_order', { ascending: true })
+
+      if (error) return err(toSupabaseError('Could not load habits.', error))
+
+      return ok(
+        (data as HabitRow[]).map(mapHabit).filter((habit) => {
+          return (
+            habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+            habit.scheduleRule.kind === 'flexiblePeriod' ||
+            isHabitScheduledOnDate(habit, date)
+          )
+        }),
+      )
+    })
   },
 
   async listLogsForDate({ date }) {
@@ -299,9 +310,6 @@ export const supabaseHabitsRepository: HabitsRepository = {
       const signedInUserId = await getSignedInUserId()
       if (!signedInUserId.ok) return signedInUserId
 
-      const valueColumn = input.unit ? valueColumnsByUnit[input.unit] : null
-      const valuePatch =
-        valueColumn && input.status === 'completed' ? { [valueColumn]: input.value } : {}
       const { data, error } = await getSupabaseClient()
         .from('habit_logs')
         .upsert(
@@ -311,13 +319,9 @@ export const supabaseHabitsRepository: HabitsRepository = {
             log_date: input.logDate,
             status: input.status,
             completion_level: input.status === 'completed' ? (input.completionLevel ?? null) : null,
-            repetitions: null,
-            duration_minutes: null,
-            quantity: null,
-            quantity_unit_label:
-              input.status === 'completed' && input.unit === 'quantity' ? input.unit : null,
+            amount: input.status === 'completed' ? (input.value ?? null) : null,
+            unit_label: input.status === 'completed' ? (input.unitLabel ?? null) : null,
             note: input.note ?? null,
-            ...valuePatch,
           },
           { onConflict: 'user_id,habit_id,log_date' },
         )
@@ -342,18 +346,54 @@ export const supabaseHabitsRepository: HabitsRepository = {
     })
   },
 
-  async hardResetLogs({ habitId, confirmed }) {
+  async hardResetLogs({ habitId, confirmed, resetDate }) {
     return execute(async () => {
       if (!confirmed) {
         throw new Error('Hard reset requires explicit confirmation.')
       }
 
+      const signedInUserId = await getSignedInUserId()
+      if (!signedInUserId.ok) return signedInUserId
+
+      const { data: habitData, error: habitError } = await getSupabaseClient()
+        .from('habits')
+        .select('*')
+        .eq('id', habitId)
+        .eq('user_id', signedInUserId.data)
+        .maybeSingle()
+
+      if (habitError) return err(toSupabaseError('Could not load habit.', habitError))
+      if (!habitData) return err(createNotFoundError('Habit', habitId))
+
+      const habit = habitData as HabitRow
+      if (habit.archived_at) {
+        return err(createAppError('validation', 'Archived habits cannot be modified.'))
+      }
+
+      const startsOn = getHardResetStartsOn(mapHabit(habit), resetDate)
+
       const { error } = await getSupabaseClient()
         .from('habit_logs')
         .delete()
+        .eq('user_id', signedInUserId.data)
         .eq('habit_id', habitId)
       if (error) return err(toSupabaseError('Could not reset habit logs.', error))
-      return ok(null)
+
+      const { data: updatedHabit, error: updateError } = await getSupabaseClient()
+        .from('habits')
+        .update({
+          starts_on: startsOn,
+          minimum_config: toHardResetMinimumConfig(habit),
+        })
+        .eq('id', habitId)
+        .eq('user_id', signedInUserId.data)
+        .select('*')
+        .maybeSingle()
+
+      if (updateError)
+        return err(toSupabaseError('Could not update habit reset date.', updateError))
+      if (!updatedHabit) return err(createNotFoundError('Habit', habitId))
+      return ok(mapHabit(updatedHabit as HabitRow))
     })
   },
 

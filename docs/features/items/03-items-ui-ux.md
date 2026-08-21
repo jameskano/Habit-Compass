@@ -38,6 +38,10 @@ Creation flows:
 - Recurrent task: executable frequency, details.
 - Category: create/edit bottom sheet with name, icon picker, and horizontal color palette.
 
+Weekday toggle buttons in create and edit forms preserve their selected treatment after touch.
+Their hover treatment is limited to devices with hover support and a fine pointer, matching the
+bottom navigation interaction pattern.
+
 Habit, task, and recurrent-task create/edit forms show `Create category` below their category
 selector. Opening it must not unmount or reset the interrupted item form, and successful creation
 selects the new category.
@@ -56,20 +60,25 @@ Each habit card should show:
 
 [Last 7 days, ending today]
 
-[Compact percentage] [Compact streak number] [Calendar icon] [Options icon]
+[Compact lifetime percentage] [Compact streak number] [Calendar icon] [Options icon]
 ```
 
 The last day in the 7-day strip is today.
 Day cells are capped at 40px and centered when wider cards provide extra room.
+Cards and their reorder handles must stay inside the available viewport width on mobile and desktop.
 
 The frequency summary should be short and human-readable:
 
 - Every day.
-- 3 times/week.
+- 3 days/week.
 - Mon, Wed, Fri.
 - Every 2 days.
 - First Monday/month.
-- 30 min, 3 times/week.
+- 30 min, 3 days/week.
+
+Habit names on cards use single-line truncation with an ellipsis when they are too long for the
+available width. The full name remains available through the control's accessible name and the
+visible title's browser tooltip.
 
 ## Category and priority visual
 
@@ -111,6 +120,13 @@ Actions:
 - Calendar icon: open habit detail calendar tab.
 - Options icon: open bottom options menu.
 
+For every enabled card swipe, the newly exposed side shows the pending action with both an icon
+and a localized label. The preview is progressively uncovered as the card follows the pointer and
+becomes visually stronger once the 56px action threshold is crossed. Edit uses a primary/blue
+treatment, Complete uses green, and Archive uses an amber-neutral treatment. A direction with no
+available action does not move or reveal a preview. Reduced-motion mode removes decorative preview
+transitions without removing the threshold distinction.
+
 Bottom options menu order:
 
 1. Calendar
@@ -137,7 +153,7 @@ Reset progress should preserve the habit but clear logs/history after confirmati
 
 ### Habit day interactions
 
-Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are muted and disabled. Active `flexiblePeriod` days remain actionable even when their empty display state is `not_scheduled`.
+Future, explicitly not-scheduled, inactive archived-period, and archived-habit days are muted and disabled. Active `certainDaysPerPeriod` dates remain actionable until the period target is reached, even when their empty display state is `not_scheduled`.
 
 Binary habits:
 
@@ -146,17 +162,17 @@ Binary habits:
 - Long press opens Complete, Skip day, and Mark as undone actions.
 - When minimum is configured, the long-press sheet replaces Complete with Complete standard and adds Complete minimum.
 
-`timesPerPeriod` habits:
+`certainDaysPerPeriod` habits:
 
 - Tap toggles one completion event for the selected day.
 - Long press opens Complete, Skip day, and Clear log actions.
 
-Repetition, time, and quantity habits:
+Measurable habits:
 
 - Tap opens an amount-entry sheet, prefilled with the selected day's existing value when present.
-- Long press opens Input quantity/time, Skip day, and Clear log actions.
+- Long press opens Enter amount, Skip day, and Clear log actions.
 - Amount entry accepts raw values above the standard target, rejects negative values inline, and treats `0` as clear log.
-- The amount-entry sheet displays repetitions, minutes, or the configured quantity unit. Domain logic derives progress, minimum, and standard day states.
+- The amount-entry sheet displays the habit's custom unit label. Domain logic derives progress, minimum, and standard day states from the logged amount.
 
 ## Habit detail screen
 
@@ -167,6 +183,10 @@ Calendar | Stats | Edit
 ```
 
 Its header displays only the habit name, without an additional detail eyebrow.
+
+Long habit names in the detail header, options menu, day-action sheet, and amount-entry sheet use
+single-line truncation with an ellipsis. The full habit name remains available through the dialog or
+sheet accessible name and the visible title's browser tooltip.
 
 ### Calendar tab
 
@@ -190,7 +210,8 @@ Calendar cells use the same 40px maximum as the card strip. The visible legend i
 
 Stats should be simple:
 
-1. Circular percentage chart with percentage in the middle.
+1. Circular lifetime percentage chart with percentage in the middle. This is the same lifetime
+   percentage shown on the habit card.
 2. Basic stats:
    - Completions this week.
    - Completions this month.
@@ -201,6 +222,7 @@ Stats should be simple:
    - Month: twelve monthly bars for the current year.
    - Year: yearly bars from the habit start year through the current year, including empty years.
    - Each bar represents number of completions.
+   - Bars keep a consistent standard width across week, month, and year views, regardless of how many bars are shown.
    - Tiny number above each bar.
 
 Do not create a separate global stats page for this MVP.
@@ -239,11 +261,20 @@ Default values:
 - Priority: medium
 - Start date: today
 - Status: active
-- Target: binary, unless the user chooses quantity/time
+- Target: binary, unless the user chooses measurable amount
 
 Item create/edit date controls use the same calendar-icon presentation with a non-native calendar
-picker. Existing habit and recurrent-task edit start dates remain read-only, and their end-date
-controls retain the archive warning before opening the picker.
+picker. Calendar popovers opened inside an item dialog remain non-modal so the owning dialog is the
+only focus trap. Existing habit and recurrent-task edit start dates remain visible as plain,
+read-only information rather than interactive or disabled controls. Their end-date pickers open
+without a warning.
+Calendar navigation and other non-day interactions keep the picker open. Selecting a valid day
+closes the picker and applies the selected date.
+
+When an active habit or recurrent task has an end date before today, Save opens an archive
+confirmation before any update or archive mutation runs. Cancel returns to the unchanged edit form
+with its unsaved values preserved. Confirm saves the edits and then archives the item, preserving
+its history. An empty end date, today, or a future end date saves without that confirmation.
 
 ---
 
@@ -269,6 +300,9 @@ Task row/card:
 
 No checkbox in the Items list.
 
+Long task titles on cards and edit overlay headers use single-line truncation with an ellipsis. The
+full title remains available through accessible names and the visible title's browser tooltip.
+
 ## Task actions
 
 - Tap task: edit.
@@ -289,6 +323,9 @@ The archive icon can show:
 
 But internally, completed and archived are different.
 
+Archived incomplete tasks show an `Archived` status and offer Reactivate. Archived completed tasks
+show `Completed` and do not offer Reactivate.
+
 ## Task edit form
 
 Required:
@@ -306,8 +343,13 @@ Optional:
 
 Danger/archive section:
 
-- Archive
+- Archive for active tasks.
+- Reactivate for archived incomplete tasks.
+- No Archive or Reactivate action for archived completed tasks.
 - Delete
+
+Reactivating returns the task to the active list as pending and is subject to the same active task
+limit as creation.
 
 Recommended field label:
 
@@ -351,12 +393,16 @@ Optionally show next due date if it helps:
 Next: Saturday
 ```
 
+Long recurrent-task titles on cards and edit overlay headers use single-line truncation with an
+ellipsis. The full title remains available through accessible names and the visible title's browser
+tooltip.
+
 ## Recurrent task actions
 
 - Tap: edit.
 - Swipe left: edit.
 - Drag: reorder.
-- Swipe right: complete only if the current occurrence is due/overdue; otherwise avoid ambiguous completion.
+- Swipe right: complete only if the current occurrence is due; otherwise avoid ambiguous completion.
 - Archive/delete from edit/options.
 
 ## Recurrent task edit form
@@ -370,7 +416,6 @@ Optional:
 
 - Category
 - Priority
-- Carry forward if not completed
 - Notes
 - Description
 - Start date
@@ -380,6 +425,10 @@ Danger/archive section:
 
 - Archive
 - Delete
+
+When the recurrent task is archived, replace Archive with Reactivate instead of disabling the
+archive action. Reactivating unarchives the recurrent task and returns it to the active recurrent
+task list, subject to the same active recurrent-task limits as creation.
 
 Task and recurrent-task edit overlays display only the item title in their visible header.
 

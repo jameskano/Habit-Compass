@@ -49,6 +49,9 @@ export const ResetPasswordPage = () => {
             {...form.register('newPassword')}
           />
         </FormField>
+        <p className="text-sm text-muted-foreground">
+          <FormattedMessage id="auth.password.policyHint" />
+        </p>
         <FormField
           errorId="reset-password-confirm-error"
           errorMessageId={getAuthFieldErrorMessageId(

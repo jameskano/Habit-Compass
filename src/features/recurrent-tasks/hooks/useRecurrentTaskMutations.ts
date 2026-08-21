@@ -3,14 +3,22 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   CreateRecurrentTaskInput,
   RecurrentTask,
-  RecurrentTaskOccurrenceStatus,
   UpdateRecurrentTaskInput,
 } from '@/domain/recurrent-tasks'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { recurrentTasksRepository } from '@/integrations/repositories'
 import { useAppToast } from '@/shared/hooks/useAppToast'
-import type { EntityId, ISODateString } from '@/shared/types'
+import type { EntityId } from '@/shared/types'
 import { unwrapResult } from '@/shared/utils/result'
+
+import {
+  applyOccurrenceToCaches,
+  createOptimisticOccurrence,
+  restoreRecurrentSnapshots,
+  snapshotRecurrentOccurrenceQueries,
+  type CompleteRecurrentOccurrenceInput,
+  type RecurrentCompletionMutationContext,
+} from './recurrentTaskCompletionCache'
 
 const applyOptimisticRecurrentTaskOrder = (
   tasks: RecurrentTask[] | undefined,
@@ -68,15 +76,12 @@ export const useCreateRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
 }
 
 export const useCompleteRecurrentOccurrenceMutation = (userId = MOCK_USER_ID) => {
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateRecurrentTasks(userId)
   const { mutationError } = useAppToast()
 
   return useMutation({
-    mutationFn: async (input: {
-      recurrentTaskId: EntityId
-      occurrenceDate: ISODateString
-      status?: RecurrentTaskOccurrenceStatus
-    }) =>
+    mutationFn: async (input: CompleteRecurrentOccurrenceInput) =>
       unwrapResult(
         await recurrentTasksRepository.logCompletion({
           userId,
@@ -85,8 +90,27 @@ export const useCompleteRecurrentOccurrenceMutation = (userId = MOCK_USER_ID) =>
           status: input.status ?? 'completed',
         }),
       ),
-    onSuccess: invalidate,
-    onError: mutationError,
+    onMutate: async (input): Promise<RecurrentCompletionMutationContext> => {
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ['recurrent-tasks', 'today', userId] }),
+        queryClient.cancelQueries({ queryKey: ['recurrent-task-occurrences', userId] }),
+      ])
+
+      const snapshots = snapshotRecurrentOccurrenceQueries(queryClient, userId)
+      applyOccurrenceToCaches(queryClient, userId, input, createOptimisticOccurrence(input, userId))
+      return { snapshots }
+    },
+    onSuccess: (occurrence, input) => {
+      applyOccurrenceToCaches(queryClient, userId, input, occurrence)
+      void invalidate()
+    },
+    onError: (_error, _input, context) => {
+      if (context) {
+        restoreRecurrentSnapshots(queryClient, context.snapshots)
+      }
+
+      mutationError()
+    },
   })
 }
 
@@ -97,6 +121,18 @@ export const useArchiveRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
   return useMutation({
     mutationFn: async (recurrentTaskId: EntityId) =>
       unwrapResult(await recurrentTasksRepository.archive({ userId, recurrentTaskId })),
+    onSuccess: invalidate,
+    onError: mutationError,
+  })
+}
+
+export const useRestoreRecurrentTaskMutation = (userId = MOCK_USER_ID) => {
+  const invalidate = useInvalidateRecurrentTasks(userId)
+  const { mutationError } = useAppToast()
+
+  return useMutation({
+    mutationFn: async (recurrentTaskId: EntityId) =>
+      unwrapResult(await recurrentTasksRepository.restore({ userId, recurrentTaskId })),
     onSuccess: invalidate,
     onError: mutationError,
   })

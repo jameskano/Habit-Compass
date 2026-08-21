@@ -160,6 +160,10 @@ Do not add a magic-link-only flow.
 
 There is no confirm-password field during registration.
 
+Password requirements copy:
+
+> Use 12-64 characters. Longer passphrases are welcome.
+
 ### Behavior
 
 - Legal acknowledgement must be selected before starting registration.
@@ -203,12 +207,24 @@ Show:
 
 - `Check your email`.
 - The destination email.
-- Explanation that verification is required.
+- Neutral explanation that a verification link is sent only when the email can be registered.
+- Guidance that an existing user can sign in with their usual method.
 - `Resend email`.
 - Cooldown/loading behavior.
+- `Continue with Google`, while preserving the pending legal-acceptance intent.
 - `Use a different email` or return to registration.
 - Link to sign-in.
 - Help text for spam/junk folders.
+
+The initial and resend success messages must not confirm whether the email already belongs to a
+Google-only or password-enabled account. Use behavior equivalent to:
+
+> If this email can be registered, we sent a verification link to {email}. If you already have an
+> account, sign in using your usual method.
+
+If Google OAuth is cancelled from this screen, return to the verify-email waiting screen without
+losing the pending legal-acceptance intent. If that intent is missing or stale, return to
+registration before starting Google account creation.
 
 Use `supabase.auth.resend({ type: 'signup', ... })` for resend.
 
@@ -249,6 +265,10 @@ The deep link/callback creates a recovery session.
 - Password visibility controls.
 - Password requirements.
 - Primary `Update password`.
+
+Password requirements copy:
+
+> Use 12-64 characters. Longer passphrases are welcome.
 
 ### Behavior
 

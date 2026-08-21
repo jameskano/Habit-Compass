@@ -34,7 +34,9 @@ export const getAuthFieldErrorMessageId = (message?: string) => {
     case 'invalid_email':
       return 'auth.validation.email'
     case 'password_too_short':
-      return 'auth.validation.passwordLength'
+      return 'auth.validation.passwordTooShort'
+    case 'password_too_long':
+      return 'auth.validation.passwordTooLong'
     case 'mismatch':
       return 'auth.validation.passwordMismatch'
     case 'otp_length':

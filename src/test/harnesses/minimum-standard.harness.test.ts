@@ -35,12 +35,18 @@ describe('minimum standard harness', () => {
 
   it('supports enabled levels for a time habit', () => {
     const habit = createCompletionLevelHabit(
-      { trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 90, minimumMinutes: 30 },
+      {
+        trackingType: 'totalMeasurablePerPeriod',
+        period: 'week',
+        targetAmount: 90,
+        minimumAmount: 30,
+        unitLabel: 'minutes',
+      },
       ['minimum', 'standard'],
     )
     const result = evaluateHabitCompletion({
       habit,
-      logs: [createHabitLog({ durationMinutes: 35 })],
+      logs: [createHabitLog({ amount: 35 })],
       periodStart: '2026-05-18',
       periodEnd: '2026-05-24',
     })
@@ -51,16 +57,16 @@ describe('minimum standard harness', () => {
   it('supports enabled levels for a quantity habit', () => {
     const habit = createCompletionLevelHabit(
       {
-        trackingType: 'totalQuantityPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         period: 'month',
-        targetQuantity: 10,
+        targetAmount: 10,
         unitLabel: 'glasses',
       },
       ['minimum', 'standard'],
     )
     const result = evaluateHabitCompletion({
       habit,
-      logs: [createHabitLog({ quantity: 10, quantityUnitLabel: 'glasses' })],
+      logs: [createHabitLog({ amount: 10, unitLabel: 'glasses' })],
       periodStart: '2026-05-01',
       periodEnd: '2026-05-31',
     })

@@ -40,12 +40,7 @@ test.describe('accessibility smoke checks', () => {
     const routes: Array<{ path: string; heading: string; excludedSelectors?: string[] }> = [
       { path: '/today', heading: 'Today' },
       { path: '/week', heading: 'Week' },
-      {
-        path: '/items',
-        heading: 'Habits',
-        // Existing item cards need a focused a11y refactor for nested controls and inactive day contrast.
-        excludedSelectors: ['[data-item-waterfall-index]'],
-      },
+      { path: '/items', heading: 'Habits' },
       { path: '/settings', heading: 'Settings' },
       { path: '/legal/privacy-policy', heading: 'Privacy Policy' },
     ]

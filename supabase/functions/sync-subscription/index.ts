@@ -1,33 +1,15 @@
 /* global Deno */
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-
-const premiumEntitlementId = 'Habit Compass Premium'
+import {
+  buildEntitlementRow,
+  getRevenueCatApiBaseUrl,
+  loadRevenueCatCustomer,
+} from '../_shared/revenuecat.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-type RevenueCatEntitlement = {
-  expires_date?: string | null
-  product_identifier?: string | null
-}
-
-type RevenueCatSubscription = {
-  expires_date?: string | null
-  management_url?: string | null
-  product_identifier?: string | null
-  store?: string | null
-  unsubscribe_detected_at?: string | null
-}
-
-type RevenueCatSubscriberResponse = {
-  subscriber?: {
-    entitlements?: Record<string, RevenueCatEntitlement>
-    management_url?: string | null
-    subscriptions?: Record<string, RevenueCatSubscription>
-  }
 }
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -44,75 +26,19 @@ const getRequiredEnv = (key: string) => {
   return value
 }
 
-const encodePath = (value: string) => encodeURIComponent(value)
-
-const loadRevenueCatCustomer = async (apiKey: string, userId: string) => {
-  const response = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodePath(userId)}`, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (response.status === 404) {
-    return {
-      subscriber: { entitlements: {}, subscriptions: {} },
-    } satisfies RevenueCatSubscriberResponse
-  }
-
-  if (!response.ok) {
-    throw new Error('revenuecat_customer_lookup_failed')
-  }
-
-  return (await response.json()) as RevenueCatSubscriberResponse
-}
-
-const isActiveExpiration = (expiresDate: string | null | undefined) =>
-  !expiresDate || Date.parse(expiresDate) > Date.now()
-
-const findSubscriptionForEntitlement = (
-  customer: RevenueCatSubscriberResponse,
-  entitlement: RevenueCatEntitlement | undefined,
-) => {
-  const productId = entitlement?.product_identifier ?? null
-  const subscriptions = Object.values(customer.subscriber?.subscriptions ?? {})
-
-  return (
-    subscriptions.find((subscription) => subscription.product_identifier === productId) ??
-    subscriptions.find((subscription) => isActiveExpiration(subscription.expires_date)) ??
-    null
-  )
-}
-
-const buildEntitlementRow = (userId: string, customer: RevenueCatSubscriberResponse) => {
-  const entitlement = customer.subscriber?.entitlements?.[premiumEntitlementId]
-  const subscription = findSubscriptionForEntitlement(customer, entitlement)
-  const expirationAt = entitlement?.expires_date ?? subscription?.expires_date ?? null
-  const hasActiveEntitlement = Boolean(entitlement) && isActiveExpiration(expirationAt)
-  const now = new Date().toISOString()
-
-  return {
-    entitlement_id: premiumEntitlementId,
-    environment: null,
-    expiration_at: expirationAt,
-    has_active_entitlement: hasActiveEntitlement,
-    management_url: subscription?.management_url ?? customer.subscriber?.management_url ?? null,
-    product_id: entitlement?.product_identifier ?? subscription?.product_identifier ?? null,
-    store: subscription?.store ?? null,
-    synced_at: now,
-    updated_at: now,
-    user_id: userId,
-    will_renew: subscription ? !subscription.unsubscribe_detected_at : null,
-  }
-}
-
 export const syncSubscriptionEntitlement = async (
   serviceClient: ReturnType<typeof createClient>,
   revenueCatSecretKey: string,
   userId: string,
+  revenueCatApiBaseUrl = getRevenueCatApiBaseUrl((key) => Deno.env.get(key) ?? undefined),
 ) => {
-  const customer = await loadRevenueCatCustomer(revenueCatSecretKey, userId)
-  const row = buildEntitlementRow(userId, customer)
+  const customer = await loadRevenueCatCustomer(
+    fetch,
+    revenueCatApiBaseUrl,
+    revenueCatSecretKey,
+    userId,
+  )
+  const row = buildEntitlementRow(userId, customer, null)
   const { error } = await serviceClient.from('subscription_entitlements').upsert(row, {
     onConflict: 'user_id,entitlement_id',
   })

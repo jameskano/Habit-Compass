@@ -27,10 +27,8 @@ export const valuesForRecurrentTask = (task: RecurrentTask): RecurrentTaskEditVa
     intervalMonths: rule.kind === 'everyXMonths' ? rule.intervalMonths : 1,
     dayOfMonth: rule.kind === 'everyXMonths' ? rule.dayOfMonth : 1,
     weekday: rule.kind === 'firstWeekdayOfMonth' ? rule.weekday : 1,
-    customDescription: rule.kind === 'customFutureRule' ? rule.description : '',
     categoryId: task.categoryId ?? '',
     priority: task.priority,
-    carryForward: task.carryForward,
     description: task.description ?? '',
     notes: task.notes ?? '',
     startsOn: task.startsOn,
@@ -70,8 +68,6 @@ export const buildRecurrentTaskRule = (values: RecurrentTaskEditValues): Recurre
       }
     case 'firstWeekdayOfMonth':
       return { kind: 'firstWeekdayOfMonth', weekday: values.weekday as DayOfWeek }
-    case 'customFutureRule':
-      return { kind: 'customFutureRule', description: values.customDescription.trim() }
   }
 }
 
@@ -86,7 +82,7 @@ export const buildRecurrentTaskUpdateInput = (
     recurrenceRule: buildRecurrentTaskRule(values),
     categoryId: selectedCategoryId || null,
     priority: values.priority,
-    carryForward: values.carryForward,
+    carryForward: false,
     description: values.description.trim() || null,
     notes: values.notes.trim() || null,
     startsOn: values.startsOn,

@@ -1,4 +1,5 @@
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { Capacitor } from '@capacitor/core'
 import { type ReactNode, useEffect, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
@@ -12,6 +13,9 @@ import { useAuth } from './authContext'
 import { consumeIntendedRoute, saveIntendedRoute } from './intendedRoute'
 
 const toRouteTarget = (target: string) => target as never
+
+const isBrowserAppAccessDisabled = () =>
+  import.meta.env.VITE_DISABLE_WEB_APP_ACCESS === 'true' && !Capacitor.isNativePlatform()
 
 const RouteRedirect = ({ intendedRoute, to }: { intendedRoute?: string; to: string }) => {
   const navigate = useNavigate()
@@ -64,6 +68,33 @@ const AuthErrorPage = () => {
   )
 }
 
+const WebAppUnavailablePage = () => (
+  <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8">
+    <Card className="w-full max-w-md space-y-4 p-5 text-center">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Habit Compass
+        </p>
+        <h1 className="text-xl font-semibold">
+          <FormattedMessage id="auth.webUnavailable.title" />
+        </h1>
+        <p className="text-sm leading-6 text-muted-foreground">
+          <FormattedMessage id="auth.webUnavailable.description" />
+        </p>
+      </div>
+      <div className="space-y-2 text-sm">
+        <AuthTextLink to="/legal/privacy-policy">
+          <FormattedMessage id="settings.legal.privacy.title" />
+        </AuthTextLink>
+        <span className="mx-2 text-muted-foreground">/</span>
+        <AuthTextLink to="/legal/terms">
+          <FormattedMessage id="settings.legal.terms.title" />
+        </AuthTextLink>
+      </div>
+    </Card>
+  </main>
+)
+
 const getCurrentHref = (location: ReturnType<typeof useLocation>) =>
   `${location.pathname}${location.searchStr}${location.hash}`
 
@@ -102,6 +133,14 @@ export const ProtectedAppRoute = () => {
       <Outlet />
     </AppLayout>
   )
+}
+
+export const NativeAppOnlyRoute = ({ children }: { children: ReactNode }) => {
+  if (isBrowserAppAccessDisabled()) {
+    return <WebAppUnavailablePage />
+  }
+
+  return children
 }
 
 export const GuestRoute = ({ children }: { children: ReactNode }) => {

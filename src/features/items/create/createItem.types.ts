@@ -19,7 +19,7 @@ export type CreateDialogProps = {
 
 export type FrequencyKind =
   | 'daily'
-  | 'timesPerPeriod'
+  | 'certainDaysPerPeriod'
   | 'specificDaysOfWeek'
   | 'specificDaysOfMonth'
   | 'specificDaysOfYear'
@@ -36,11 +36,10 @@ export type FrequencyValues = {
   interval: number
   dayOfMonth: number
   weekday: DayOfWeek
-  period: Exclude<HabitPeriod, 'custom'>
+  period: Exclude<HabitPeriod, 'custom' | 'day'>
   targetCount: number
 }
 
 export type HabitCompletionMode = 'binary' | 'measurable'
-export type HabitMeasurableKind = 'quantity' | 'time'
 export type HabitMeasurementScope = 'session' | 'period'
 export type StateSetter<T> = Dispatch<SetStateAction<T>>

@@ -12,7 +12,7 @@ select has_function(
 select results_eq(
   $$ select current_terms_version, current_privacy_policy_version
      from public.get_current_legal_versions() $$,
-  $$ values ('terms-draft-2026-07-02'::text, 'privacy-draft-2026-07-02'::text) $$,
+  $$ values ('1.0.0'::text, '1.0.0'::text) $$,
   'current legal versions are returned without user context'
 );
 

@@ -28,6 +28,12 @@ where is_default = true
   and default_key is null;
 
 alter table public.categories
+drop constraint if exists categories_default_key_check,
+drop constraint if exists categories_icon_check,
+drop constraint if exists categories_color_check,
+drop constraint if exists categories_default_consistency_check;
+
+alter table public.categories
 add constraint categories_default_key_check check (
   default_key is null or default_key in ('health', 'learning', 'uncategorized')
 ),

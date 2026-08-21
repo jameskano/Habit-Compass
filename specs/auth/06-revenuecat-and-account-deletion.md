@@ -1,6 +1,11 @@
 # 06 — RevenueCat and Immediate Account Deletion
 
-This specification replaces the legacy seven-day scheduled deletion model currently represented by `profiles.account_status = 'pending_deletion'`, the pending-deletion UI, cancellation flow, `request-account-deletion`, `cancel-account-deletion`, and `finalize-account-deletion` Edge Functions. Those modules are implementation context only and must be replaced, retired, or made unreachable when the immediate deletion feature ships.
+This specification replaces the legacy seven-day scheduled deletion model that used
+`profiles.account_status = 'pending_deletion'`, pending-deletion UI, cancellation flow,
+`request-account-deletion`, `cancel-account-deletion`, and `finalize-account-deletion` Edge
+Functions. The user-facing route and scheduled Edge Function source files have been removed from
+the repository; any remaining legacy database fields are migration compatibility only and must not
+drive product behavior.
 
 ## 1. RevenueCat identity
 
@@ -81,6 +86,11 @@ If the user already has the required entitlement, the paywall should not be show
 may be exposed for active subscribers when it is configured and supported by the active RevenueCat
 plan.
 
+Before presenting the hosted Paywall or Customer Center, the app must apply the current Settings
+language and theme preferences to native Android display state. If the app preference is `system`,
+RevenueCat UI follows the Android/device language or appearance. If the user selected an explicit
+supported language or explicit light/dark theme, RevenueCat UI must follow that app preference.
+
 Premium product behavior, free active-item limits, and future AI-insights positioning are specified
 in `/specs/mvp/premium-spec.md`. Paywall copy must stay aligned with that spec and must not promise
 unimplemented AI behavior as currently available.
@@ -109,6 +119,17 @@ The endpoint is privileged and uses:
 - Server-side structured logging.
 
 Existing scheduled-deletion Edge Functions are not the target endpoint. The new endpoint must perform the immediate workflow in this spec and must not create a pending-deletion state or expose a cancellation period.
+
+The public web account-deletion route uses the same endpoint after additional verification. The
+`request-external-account-deletion` function stores only keyed hashes of the normalized email, IP,
+and one-time challenge using a server-only external account-deletion hash secret, sends a Supabase
+email OTP link to `/account/delete?challenge=<token>`, and expires the challenge after 15 minutes.
+The public page exchanges the OTP code, shows the final warning, and then calls `delete-account`
+with `reauthProvider: "external_email_otp"` and the raw challenge token. The `delete-account`
+function must require a fresh authenticated Supabase JWT, match the challenge against the
+authenticated user's keyed email hash, consume it once, and only then continue the normal
+subscription-aware immediate deletion workflow. The email link alone must never delete the account,
+and failed public deletion attempts must not disclose whether an email address has an account.
 
 ## 5. Preconditions
 

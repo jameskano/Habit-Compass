@@ -57,6 +57,8 @@ on public.feedback_attachments (feedback_submission_id);
 create or replace function public.enforce_feedback_submission_rate_limit()
 returns trigger
 language plpgsql
+security definer
+set search_path = public, pg_temp
 as $$
 declare
   recent_feedback_count integer;
@@ -74,6 +76,8 @@ begin
   return new;
 end;
 $$;
+
+revoke all on function public.enforce_feedback_submission_rate_limit() from public;
 
 create trigger enforce_feedback_submission_rate_limit
 before insert on public.feedback_submissions
@@ -116,6 +120,25 @@ revoke all on table public.feedback_attachments from anon;
 grant insert on table public.feedback_submissions to authenticated;
 grant insert on table public.feedback_attachments to authenticated;
 
+create or replace function public.feedback_submission_belongs_to_current_user(submission_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+    from public.feedback_submissions
+    where feedback_submissions.id = submission_id
+      and feedback_submissions.user_id = auth.uid()
+      and feedback_submissions.deleted_at is null
+  );
+$$;
+
+revoke all on function public.feedback_submission_belongs_to_current_user(uuid) from public;
+grant execute on function public.feedback_submission_belongs_to_current_user(uuid) to authenticated;
+
 create policy "feedback_submissions_insert_own"
 on public.feedback_submissions
 for insert
@@ -136,13 +159,7 @@ with check (
   and deleted_at is null
   and bucket = 'feedback-attachments'
   and storage_path like ((select auth.uid())::text || '/%')
-  and exists (
-    select 1
-    from public.feedback_submissions
-    where feedback_submissions.id = feedback_submission_id
-      and feedback_submissions.user_id = (select auth.uid())
-      and feedback_submissions.deleted_at is null
-  )
+  and public.feedback_submission_belongs_to_current_user(feedback_submission_id)
 );
 
 create policy "feedback_storage_insert_own"

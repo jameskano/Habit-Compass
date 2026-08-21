@@ -35,15 +35,18 @@ describe('app shell', () => {
 
   afterEach(() => {
     cleanupAppTestDom()
+    vi.unstubAllEnvs()
   })
 
   beforeEach(async () => {
     resetMockState()
+    window.localStorage.clear()
     window.sessionStorage.clear()
     useTodayOrderStore.getState().resetOrderStore()
     useAppPreferencesStore.setState({
       theme: 'system',
       locale: 'en',
+      weekStartsOn: 1,
       featureToggles: {
         mood: true,
         weeklyPlanning: true,
@@ -72,6 +75,30 @@ describe('app shell', () => {
     expect(screen.queryByText('Simple by default, deep by choice')).not.toBeInTheDocument()
   })
 
+  it('renders a standalone not-found page for unknown routes and returns home', async () => {
+    const user = userEvent.setup()
+    await act(async () => {
+      await router.navigate({ to: '/missing-route' as never })
+    })
+
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Page not found', level: 1 }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('That route does not exist. Return home to keep going.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    const homeLink = screen.getByRole('link', { name: 'Go home' })
+    expect(homeLink).toHaveAttribute('href', '/today')
+
+    await user.click(homeLink)
+
+    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
+  })
+
   it('redirects unauthenticated protected routes to sign in outside the app shell', async () => {
     getMockState().authSession.signedIn = false
     await act(async () => {
@@ -86,6 +113,47 @@ describe('app shell', () => {
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('blocks browser app and auth access when web access is disabled', async () => {
+    vi.stubEnv('VITE_DISABLE_WEB_APP_ACCESS', 'true')
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/today' })
+    })
+
+    let view = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Sign in', level: 1 })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+
+    view.unmount()
+    cleanupAppTestDom()
+    await act(async () => {
+      await router.navigate({ to: '/auth/sign-in' })
+    })
+    view = render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
+    ).toBeInTheDocument()
+
+    view.unmount()
+    cleanupAppTestDom()
+    await act(async () => {
+      await router.navigate({ to: '/legal/privacy-policy' })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Use Habit Compass on mobile', level: 1 }),
     ).not.toBeInTheDocument()
   })
 
@@ -136,6 +204,9 @@ describe('app shell', () => {
     render(<App />)
 
     await screen.findByRole('heading', { name: 'Create account', level: 1 }, { timeout: 5000 })
+    expect(
+      screen.getByText('Use 12-64 characters. Longer passphrases are welcome.'),
+    ).toBeInTheDocument()
     await user.type(screen.getByLabelText('Email'), 'new@example.com')
     await user.type(screen.getByLabelText('Password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Create account' }))
@@ -179,8 +250,8 @@ describe('app shell', () => {
     expect(
       await screen.findByRole('heading', { name: 'Review legal terms', level: 1 }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Terms version: terms-draft-2026-07-02')).toBeInTheDocument()
-    expect(screen.getByText('Privacy version: privacy-draft-2026-07-02')).toBeInTheDocument()
+    expect(screen.getByText('Terms version: 1.0.0')).toBeInTheDocument()
+    expect(screen.getByText('Privacy version: 1.0.0')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Agree and continue' }))
     expect(
@@ -263,6 +334,9 @@ describe('app shell', () => {
 
     expect(
       await screen.findByRole('heading', { name: 'Reset password', level: 1 }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Use 12-64 characters. Longer passphrases are welcome.'),
     ).toBeInTheDocument()
 
     unmount()
@@ -357,7 +431,7 @@ describe('app shell', () => {
     expect(waterfallItems.length).toBeGreaterThan(0)
     expect(waterfallItems[0]).toHaveClass('item-waterfall-enter')
     expect(within(habitCard).getByText('Move for 20 minutes')).toBeInTheDocument()
-    expect(within(habitCard).getByText('3 times per week')).toBeInTheDocument()
+    expect(within(habitCard).getByText('3 days per week')).toBeInTheDocument()
     expect(within(habitCard).getByText('Habit')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
@@ -445,17 +519,19 @@ describe('app shell', () => {
     render(<App />)
 
     const habitCard = await screen.findByRole('button', {
-      name: 'Complete or edit Move for 20 minutes',
+      name: 'Complete or edit Drink water after lunch',
     })
+    await user.click(habitCard)
+    expect(await within(habitCard).findByLabelText('Completed')).toBeInTheDocument()
     fireEvent.contextMenu(habitCard)
 
     expect(
-      screen.getByRole('dialog', { name: 'Actions for Move for 20 minutes' }),
+      screen.getByRole('dialog', { name: 'Actions for Drink water after lunch' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('menuitem', { name: 'Reset progress' }))
     const resetDialog = await screen.findByRole('alertdialog', { name: 'Reset progress?' })
     expect(
-      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+      screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
     ).not.toBeInTheDocument()
 
     await user.click(within(resetDialog).getByRole('button', { name: 'Cancel' }))
@@ -472,8 +548,10 @@ describe('app shell', () => {
     expect(
       await screen.findByText('Progress reset. The habit remains available.'),
     ).toBeInTheDocument()
+    expect(await within(habitCard).findByLabelText('Not completed')).toBeInTheDocument()
+    expect(within(habitCard).queryByLabelText('Completed')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('dialog', { name: 'Habit detail for Move for 20 minutes' }),
+      screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
     ).not.toBeInTheDocument()
   })
 
@@ -735,8 +813,14 @@ describe('app shell', () => {
     render(<App />)
 
     expect(await screen.findByText('Move for 20 minutes')).toBeInTheDocument()
-    expect(screen.getByText('3 times per week')).toBeInTheDocument()
-    const habitCard = screen.getByRole('button', { name: 'Open options for Move for 20 minutes' })
+    expect(screen.getByText('3 days per week')).toBeInTheDocument()
+    const habitCardButton = screen.getByRole('button', {
+      name: 'Open options for Move for 20 minutes',
+    })
+    const habitCard = habitCardButton.closest('[data-habit-card]') as HTMLElement | null
+    if (!habitCard) {
+      throw new Error('Expected habit card container.')
+    }
     expect(within(habitCard).getByLabelText('Wellbeing')).toBeInTheDocument()
     expect(within(habitCard).getByLabelText('Priority: Medium')).toBeInTheDocument()
     expect(within(habitCard).queryByText('Medium')).not.toBeInTheDocument()
@@ -988,11 +1072,15 @@ describe('app shell', () => {
     const habitCard = await screen.findByRole('button', {
       name: 'Open options for Read before bed',
     })
+    const habitCardContainer = habitCard.closest('[data-habit-card]') as HTMLElement | null
+    if (!habitCardContainer) {
+      throw new Error('Expected habit card container.')
+    }
     fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
     fireEvent.pointerMove(habitCard, { clientX: 60, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(-40px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(-40px, 0, 0)' })
     fireEvent.pointerUp(habitCard, { clientX: 60, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
     fireEvent.click(habitCard)
     expect(
       screen.queryByRole('dialog', { name: /Options for Read before bed/ }),
@@ -1000,9 +1088,9 @@ describe('app shell', () => {
 
     fireEvent.pointerDown(habitCard, { clientX: 100, clientY: 20 })
     fireEvent.pointerMove(habitCard, { clientX: 80, clientY: 20 })
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(-20px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(-20px, 0, 0)' })
     fireEvent.pointerCancel(habitCard)
-    expect(habitCard).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
+    expect(habitCardContainer).toHaveStyle({ transform: 'translate3d(0px, 0, 0)' })
   })
 
   it('updates a habit through the simple edit form', async () => {
@@ -1014,13 +1102,10 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Options for Read before bed' }))
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
-    const detail = screen.getByRole('dialog', { name: 'Habit detail for Read before bed' })
+    let detail = await screen.findByRole('dialog', { name: 'Habit detail for Read before bed' })
+    const prioritySelect = await within(detail).findByRole('combobox', { name: 'Priority' })
 
-    await chooseSelectOption(
-      user,
-      within(detail).getByRole('combobox', { name: 'Priority' }),
-      'High',
-    )
+    await chooseSelectOption(user, prioritySelect, 'High')
     expect(within(detail).getByRole('combobox', { name: 'Priority' })).toHaveClass('bg-orange-400')
     expect(
       within(detail).queryByLabelText('Use minimum and standard completion'),
@@ -1045,15 +1130,16 @@ describe('app shell', () => {
       await within(detail).findByText('Minimum must not exceed the standard target (20).'),
     ).toBeInTheDocument()
     fireEvent.change(minimumInput, { target: { value: '10' } })
-    const startDateControl = within(detail).getByRole('button', { name: 'Choose date' })
-    expect(startDateControl).toBeDisabled()
-    expect(startDateControl.querySelector('svg')).not.toBeNull()
+    expect(within(detail).getByText('Start date')).toBeInTheDocument()
+    expect(within(detail).queryByRole('button', { name: 'Choose date' })).not.toBeInTheDocument()
     expect(detail.querySelector('input[type="date"]')).toBeNull()
     await user.click(within(detail).getByRole('button', { name: 'Choose end date' }))
-    const endDateWarning = screen.getByRole('dialog', {
-      name: 'End date can archive this habit',
-    })
-    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
+    expect(await screen.findByRole('grid')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('alertdialog', { name: 'End date can archive this habit' }),
+    ).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument())
     await user.clear(within(detail).getByLabelText('Name'))
     await user.type(within(detail).getByLabelText('Name'), 'Read for ten minutes')
     await user.clear(within(detail).getByLabelText('Description'))
@@ -1063,7 +1149,12 @@ describe('app shell', () => {
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
 
     expect(await screen.findByText('Habit changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Read for ten minutes')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Habit detail for Read before bed' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Read for ten minutes')).toBeInTheDocument()
     const updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-read')
     expect(updatedHabit?.description).toBe('Ten minutes before sleep.')
     expect(updatedHabit?.notes).toBe('Keep it light.')
@@ -1071,19 +1162,26 @@ describe('app shell', () => {
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['minimum', 'standard'])
     expect(updatedHabit?.defaultCompletionLevel).toBe('standard')
     expect(updatedHabit?.goalConfig).toMatchObject({
-      trackingType: 'timePerSession',
-      minimumMinutes: 10,
+      trackingType: 'measurablePerSession',
+      minimumAmount: 10,
     })
 
-    fireEvent.change(minimumInput, { target: { value: '' } })
+    await user.click(
+      await screen.findByRole('button', { name: 'Options for Read for ten minutes' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
+    detail = await screen.findByRole('dialog', { name: 'Habit detail for Read for ten minutes' })
+    const updatedMinimumInput = within(detail).getByLabelText('Minimum') as HTMLInputElement
+    fireEvent.change(updatedMinimumInput, { target: { value: '' } })
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     await waitFor(() => {
       const habitWithoutMinimum = cloneMockState().habits.find((habit) => habit.id === 'habit-read')
       expect(habitWithoutMinimum?.usesCompletionLevels).toBe(false)
       expect(habitWithoutMinimum?.enabledCompletionLevels).toEqual(['standard'])
       expect(habitWithoutMinimum?.goalConfig).toEqual({
-        trackingType: 'timePerSession',
-        targetMinutes: 20,
+        trackingType: 'measurablePerSession',
+        targetAmount: 20,
+        unitLabel: 'minutes',
       })
     })
   })
@@ -1099,7 +1197,9 @@ describe('app shell', () => {
       await screen.findByRole('button', { name: 'Options for Drink water after lunch' }),
     )
     await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
-    const detail = screen.getByRole('dialog', { name: 'Habit detail for Drink water after lunch' })
+    const detail = await screen.findByRole('dialog', {
+      name: 'Habit detail for Drink water after lunch',
+    })
     const standardInput = within(detail).getByLabelText(
       'Standard completion - optional',
     ) as HTMLInputElement
@@ -1115,6 +1215,11 @@ describe('app shell', () => {
     await user.type(minimumInput, 'Drink one glass')
     await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Habit changes saved.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Habit detail for Drink water after lunch' }),
+      ).not.toBeInTheDocument()
+    })
     let updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-water')
     expect(updatedHabit?.usesCompletionLevels).toBe(true)
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['minimum', 'standard'])
@@ -1124,8 +1229,18 @@ describe('app shell', () => {
       minimumDescription: 'Drink one glass',
     })
 
-    await user.clear(minimumInput)
-    await user.click(within(detail).getByRole('button', { name: 'Save changes' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Options for Drink water after lunch' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }))
+    const reopenedDetail = screen.getByRole('dialog', {
+      name: 'Habit detail for Drink water after lunch',
+    })
+    const reopenedMinimumInput = within(reopenedDetail).getByLabelText(
+      'Minimum',
+    ) as HTMLInputElement
+    await user.clear(reopenedMinimumInput)
+    await user.click(within(reopenedDetail).getByRole('button', { name: 'Save changes' }))
     updatedHabit = cloneMockState().habits.find((habit) => habit.id === 'habit-water')
     expect(updatedHabit?.usesCompletionLevels).toBe(false)
     expect(updatedHabit?.enabledCompletionLevels).toEqual(['standard'])
@@ -1212,13 +1327,14 @@ describe('app shell', () => {
     fireEvent.click(overdueTask)
 
     await waitFor(() => {
-      expect(
-        within(screen.getByRole('button', { name: 'Edit Call the clinic' })).getByText('Completed'),
-      ).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Edit Call the clinic' })).not.toBeInTheDocument()
     })
     expect(await screen.findByText('Call the clinic was completed.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Show archived Tasks' }))
     expect(
-      within(screen.getByRole('button', { name: 'Edit Call the clinic' })).getByText('Completed'),
+      within(await screen.findByRole('button', { name: 'Edit Call the clinic' })).getByText(
+        'Completed',
+      ),
     ).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: /Edit task Call/ })).not.toBeInTheDocument()
   })
@@ -1252,10 +1368,17 @@ describe('app shell', () => {
     await user.type(within(editDialog).getByLabelText('Notes'), 'Use the drying rack.')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Task changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Fold laundry')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Edit task Start laundry' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Fold laundry')).toBeInTheDocument()
     const updatedTask = cloneMockState().tasks.find((task) => task.id === 'task-laundry')
     expect(updatedTask?.description).toBe('Clothes from the washer.')
     expect(updatedTask?.notes).toBe('Use the drying rack.')
+    await user.click(await screen.findByRole('button', { name: 'Edit Fold laundry' }))
+    editDialog = await screen.findByRole('dialog', { name: 'Edit task Fold laundry' })
     await user.click(within(editDialog).getByRole('button', { name: 'Archive' }))
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Edit Fold laundry' })).not.toBeInTheDocument()
@@ -1333,14 +1456,21 @@ describe('app shell', () => {
       name: 'Edit recurrent task Water the plants',
     })
     expect(within(editDialog).queryByText('Recurrent task details')).not.toBeInTheDocument()
-    expect(within(editDialog).getByRole('button', { name: 'Choose date' })).toBeDisabled()
+    expect(within(editDialog).getByText('Start date')).toBeInTheDocument()
+    expect(
+      within(editDialog).queryByRole('button', { name: 'Choose date' }),
+    ).not.toBeInTheDocument()
     expect(within(editDialog).getByRole('button', { name: 'Choose end date' })).toBeInTheDocument()
     expect(editDialog.querySelector('input[type="date"]')).toBeNull()
     await user.click(within(editDialog).getByRole('button', { name: 'Choose end date' }))
-    const endDateWarning = screen.getByRole('dialog', {
-      name: 'End date can archive this recurrent task',
-    })
-    await user.click(within(endDateWarning).getByRole('button', { name: 'Cancel' }))
+    expect(await screen.findByRole('grid')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('alertdialog', {
+        name: 'End date can archive this recurrent task',
+      }),
+    ).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('grid')).not.toBeInTheDocument())
     await chooseSelectOption(
       user,
       within(editDialog).getByRole('combobox', { name: 'Priority' }),
@@ -1357,13 +1487,24 @@ describe('app shell', () => {
     await user.type(within(editDialog).getByLabelText('Notes'), 'Use the blue watering can.')
     await user.click(within(editDialog).getByRole('button', { name: 'Save changes' }))
     expect(await screen.findByText('Recurrent task changes saved.')).toBeInTheDocument()
-    expect(await screen.findAllByText('Water balcony plants')).toHaveLength(2)
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('dialog', { name: 'Edit recurrent task Water the plants' }),
+      ).not.toBeInTheDocument()
+    })
+    expect(await screen.findByText('Water balcony plants')).toBeInTheDocument()
     const updatedRecurrentTask = cloneMockState().recurrentTasks.find(
       (task) => task.id === 'recurrent-plants',
     )
     expect(updatedRecurrentTask?.description).toBe('Small balcony pots.')
     expect(updatedRecurrentTask?.notes).toBe('Use the blue watering can.')
-    await user.click(within(editDialog).getByRole('button', { name: 'Archive' }))
+    await user.click(
+      await screen.findByRole('button', { name: 'Edit recurrent task Water balcony plants' }),
+    )
+    const updatedEditDialog = await screen.findByRole('dialog', {
+      name: 'Edit recurrent task Water balcony plants',
+    })
+    await user.click(within(updatedEditDialog).getByRole('button', { name: 'Archive' }))
     await waitFor(() => {
       expect(
         screen.queryByRole('button', { name: 'Edit recurrent task Water balcony plants' }),
@@ -1430,8 +1571,8 @@ describe('app shell', () => {
       'href',
       '/settings/support',
     )
-    expect(screen.getByText('Unlock Habit Compass Premium.')).toBeInTheDocument()
-    expect(screen.getByText('Habit Compass · Version dev')).toBeInTheDocument()
+    expect(screen.getByText('More room for the routine you are building.')).toBeInTheDocument()
+    expect(screen.getByText(/Habit Compass . Version /)).toBeInTheDocument()
     expect(screen.getByText('Small actions, meaningful direction.')).toBeInTheDocument()
     expect(screen.queryByText('Notifications')).not.toBeInTheDocument()
     expect(screen.queryByText('Optional depth')).not.toBeInTheDocument()
@@ -1479,6 +1620,9 @@ describe('app shell', () => {
     })
     expect(useAppPreferencesStore.getState().theme).toBe('dark')
     expect(document.documentElement).toHaveClass('dark')
+    await waitFor(() => {
+      expect(getMockState().appSettings.theme).toBe('dark')
+    })
 
     await user.click(screen.getByRole('button', { name: /Week starts on/ }))
     const weekStartsOnDialog = screen.getByRole('dialog', { name: 'Week starts on' })
@@ -1489,16 +1633,22 @@ describe('app shell', () => {
     })
     expect(useAppPreferencesStore.getState().weekStartsOn).toBe(0)
     expect(screen.getByRole('button', { name: /Week starts on/ })).toHaveTextContent('Sunday')
+    await waitFor(() => {
+      expect(getMockState().appSettings.weekStartsOn).toBe(0)
+    })
 
     await user.click(screen.getByRole('button', { name: /Language/ }))
     const languageDialog = screen.getByRole('dialog', { name: 'Language' })
     expect(languageDialog).toHaveClass('animate-[habit-sheet-in_300ms_ease-out]')
-    await user.click(screen.getByRole('button', { name: 'Espanol' }))
+    await user.click(screen.getByRole('button', { name: 'Spanish' }))
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Language' })).not.toBeInTheDocument()
     })
     expect(useAppPreferencesStore.getState().locale).toBe('es')
     expect(document.documentElement).toHaveAttribute('lang', 'es')
+    await waitFor(() => {
+      expect(getMockState().appSettings.locale).toBe('es')
+    })
     expect(await screen.findByRole('heading', { name: 'Preferencias' })).toBeInTheDocument()
   })
 
@@ -1589,6 +1739,9 @@ describe('app shell', () => {
 
     await user.click(await screen.findByRole('button', { name: /Change password/ }))
     const dialog = screen.getByRole('dialog', { name: 'Change password' })
+    expect(
+      within(dialog).getByText('Use 12-64 characters. Longer passphrases are welcome.'),
+    ).toBeInTheDocument()
 
     await user.type(within(dialog).getByLabelText('Current password'), 'wrong-password')
     await user.type(within(dialog).getByLabelText('New password'), 'new-password')
@@ -1722,7 +1875,7 @@ describe('app shell', () => {
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
   })
 
-  it('routes pending-deletion accounts away from normal app screens', async () => {
+  it('does not expose the legacy pending-deletion route', async () => {
     const state = getMockState()
     const requestedAt = new Date()
     state.accountLifecycle.accountStatus = 'pending_deletion'
@@ -1733,46 +1886,14 @@ describe('app shell', () => {
     state.accountLifecycle.deletionRequestSource = 'in_app'
 
     await act(async () => {
-      await router.navigate({ to: '/today' })
+      await router.navigate({ to: '/account/pending-deletion' as never })
     })
     render(<App />)
 
     expect(
-      await screen.findByRole('button', { name: 'Cancel account deletion' }),
+      await screen.findByRole('heading', { name: 'Page not found', level: 1 }),
     ).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('heading', { name: 'Account deletion scheduled' }).length,
-    ).toBeGreaterThan(0)
-    expect(
-      screen.queryByRole('button', { name: 'Complete or edit Move for 20 minutes' }),
-    ).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
-  })
-
-  it('cancels account deletion and restores normal app access', async () => {
-    const user = userEvent.setup()
-    const state = getMockState()
-    const requestedAt = new Date()
-    state.accountLifecycle.accountStatus = 'pending_deletion'
-    state.accountLifecycle.deletionRequestedAt = requestedAt.toISOString()
-    state.accountLifecycle.deletionScheduledFor = new Date(
-      requestedAt.getTime() + 7 * 24 * 60 * 60 * 1000,
-    ).toISOString()
-    state.accountLifecycle.deletionRequestSource = 'in_app'
-
-    await act(async () => {
-      await router.navigate({ to: '/account/pending-deletion' })
-    })
-    render(<App />)
-
-    await user.click(await screen.findByRole('button', { name: 'Cancel account deletion' }))
-
-    expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
-    expect(state.accountLifecycle.accountStatus).toBe('active')
-    expect(state.accountLifecycle.deletionRequestedAt).toBeNull()
-    expect(state.accountLifecycle.deletionScheduledFor).toBeNull()
-    expect(state.accountLifecycle.cancellationRequests).toHaveLength(1)
-    expect(await screen.findByRole('link', { name: 'Today' })).toBeInTheDocument()
   })
 
   it('supports the public external account deletion request path', async () => {
@@ -1794,12 +1915,75 @@ describe('app shell', () => {
       ),
     ).toBeInTheDocument()
     expect(getMockState().accountLifecycle.externalDeletionRequests).toEqual(['person@example.com'])
-
-    await user.click(screen.getByRole('button', { name: 'Schedule after verification' }))
+    expect(getMockState().accountLifecycle.externalDeletionChallenges).toEqual([
+      'valid-external-deletion-challenge',
+    ])
     expect(
-      await screen.findAllByRole('heading', { name: 'Account deletion scheduled' }),
-    ).toHaveLength(2)
-    expect(getMockState().accountLifecycle.deletionRequestSource).toBe('external_web')
+      screen.queryByRole('button', { name: /Schedule after verification/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('completes verified public external account deletion after explicit confirmation', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.signedIn = false
+    state.accountLifecycle.externalDeletionChallenges.push('valid-external-deletion-challenge')
+    useTodayOrderStore.getState().setOrderForDate('2026-07-03', ['habit-move'])
+
+    await act(async () => {
+      await router.navigate({
+        search: {
+          challenge: 'valid-external-deletion-challenge',
+          code: 'external-delete-code',
+        } as never,
+        to: '/account/delete',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete this account permanently?', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/This deletes the Habit Compass account/)).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+
+    await user.click(screen.getByRole('button', { name: 'Delete account permanently' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Account deleted', level: 2 }),
+    ).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual(['external_web'])
+    expect(state.accountLifecycle.externalDeletionChallenges).toEqual([])
+    expect(state.authSession.signedIn).toBe(false)
+    expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
+    expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('does not delete through the public route with a missing or invalid challenge', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.signedIn = false
+
+    await act(async () => {
+      await router.navigate({
+        search: { challenge: 'missing-challenge', code: 'external-delete-code' } as never,
+        to: '/account/delete',
+      })
+    })
+    render(<App />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Delete this account permanently?', level: 2 }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Delete account permanently' }))
+
+    expect(
+      await screen.findByText(
+        'The deletion link is invalid, expired, or already used. Request a new link to continue.',
+      ),
+    ).toBeInTheDocument()
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+    expect(state.authSession.signedIn).toBe(true)
   })
 
   it('opens Data and privacy, exports CSV and JSON, and links to legal documents', async () => {
@@ -1837,7 +2021,7 @@ describe('app shell', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /Export as CSV/ }))
-    expect(await screen.findByText(/Export ready/)).toBeInTheDocument()
+    expect(await screen.findByText(/Export saved/)).toBeInTheDocument()
     expect(getMockState().dataExportRequests).toEqual(['csv'])
     expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
 
@@ -1857,7 +2041,7 @@ describe('app shell', () => {
     clickSpy.mockRestore()
   })
 
-  it('renders Privacy Policy and Terms from local legal drafts', async () => {
+  it('renders Privacy Policy and Terms from local legal documents', async () => {
     const user = userEvent.setup()
     await act(async () => {
       await router.navigate({ to: '/settings/data-privacy' })
@@ -1869,11 +2053,13 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Privacy Policy', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Privacy Policy')).toBeInTheDocument()
-    expect(await screen.findByText('[PRIVACY POLICY VERSION]')).toBeInTheDocument()
-    expect(await screen.findByText('[EFFECTIVE DATE]')).toBeInTheDocument()
+    expect(await screen.findByText('July 15, 2026')).toBeInTheDocument()
+    expect(screen.getAllByTestId('legal-document-card')).toHaveLength(1)
+    expect(screen.queryByText('1.0.0')).not.toBeInTheDocument()
+    expect(screen.queryByText(/legal document included with the app/)).not.toBeInTheDocument()
     expect(
-      screen.getByText(/Public hosted URLs are still release placeholders/),
-    ).toBeInTheDocument()
+      screen.queryByText('https://habit-compass.onrender.com/legal/privacy-policy'),
+    ).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /I accept/i })).not.toBeInTheDocument()
 
     await act(async () => {
@@ -1883,10 +2069,12 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Terms of Service', level: 1 }),
     ).toBeInTheDocument()
     expect(await screen.findByText('Habit Compass Terms of Service')).toBeInTheDocument()
-    expect(screen.getByText('[TERMS VERSION]')).toBeInTheDocument()
+    expect(screen.getAllByTestId('legal-document-card')).toHaveLength(1)
+    expect(screen.queryByText('1.0.0')).not.toBeInTheDocument()
     expect(
-      screen.getByText(/Before purchasable Premium subscriptions are released/i),
-    ).toBeInTheDocument()
+      screen.queryByText('https://habit-compass.onrender.com/legal/terms'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(/Paid Premium subscription details are shown/i)).toBeInTheDocument()
   })
 
   it('opens the rating fallback from Settings and validates required feedback on Support', async () => {
@@ -2009,7 +2197,7 @@ describe('app shell', () => {
     render(<App />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+      await screen.findByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Onboarding', level: 1 })).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
@@ -2027,7 +2215,7 @@ describe('app shell', () => {
     render(<App />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Start with Today', level: 2 }),
+      await screen.findByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Go to slide/i })).toHaveLength(3)
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument()
@@ -2086,7 +2274,7 @@ describe('app shell', () => {
 
     expect(await screen.findByRole('heading', { name: 'Today', level: 1 })).toBeInTheDocument()
     expect(
-      screen.queryByRole('heading', { name: 'Start with Today', level: 2 }),
+      screen.queryByRole('heading', { name: 'Start with one clear action', level: 2 }),
     ).not.toBeInTheDocument()
   })
 })

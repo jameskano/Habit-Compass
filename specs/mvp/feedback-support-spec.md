@@ -2,8 +2,9 @@
 
 ## Status
 
-Future Settings dependency. This spec documents Rate Habit Compass and Feedback and support behavior.
-No UI, backend table, Storage bucket, or Edge Function is implemented in this phase.
+Settings dependency. Rate Habit Compass and Feedback and support behavior are implemented
+incrementally. The feedback backend uses Supabase tables, private Storage, and a generic
+server-side admin notification webhook.
 
 ## Related Documents
 
@@ -107,6 +108,10 @@ Suggested tables:
 - `technical_details jsonb null`
 - `screen_id text null`
 - `status text not null default 'new'`
+- `notification_status text not null default 'pending' check in ('pending', 'sent', 'failed')`
+- `notification_attempted_at timestamptz null`
+- `notification_sent_at timestamptz null`
+- `notification_failure_code text null`
 - `created_at timestamptz not null`
 - `updated_at timestamptz not null`
 - `deleted_at timestamptz null`
@@ -130,12 +135,16 @@ Storage:
 - Short-lived signed URLs for admin review.
 - No public bucket access.
 
-Edge Function or secure server-side notification:
+Edge Function notification path:
 
-- Creates admin notifications without exposing privileged credentials.
-- Applies spam protection and rate limiting.
-- Can strip unsafe technical details before notification.
-- Stores service credentials only in server-side secrets.
+- `notify-feedback` creates best-effort admin notifications without exposing privileged credentials.
+- The notification destination is a generic server-side webhook configured by
+  `FEEDBACK_NOTIFICATION_WEBHOOK_URL`.
+- `FEEDBACK_NOTIFICATION_WEBHOOK_SECRET` is optional and is sent only from the Edge Function as a
+  bearer token.
+- The function strips unsafe technical details before notification and never includes Storage file
+  contents, public URLs, signed URLs, or service keys.
+- Missing webhook configuration disables delivery but does not block stored feedback submissions.
 
 ## RLS Requirements
 
@@ -212,8 +221,8 @@ Edge Function or secure server-side notification:
 ## Test Plan
 
 - Unit tests for form validation, technical-details schema, and screenshot validation.
-- Integration tests for feedback insert RLS, attachment upload policies, rate limiting, and server
-  notification path.
+- Integration tests for feedback insert RLS, attachment upload policies, rate limiting, and the
+  generic webhook server notification path.
 - E2E tests for Rate Habit Compass fallback, feedback success, required message, optional reply
   email, optional screenshot, automatic technical details, offline state, and error state.
 - Accessibility tests for form labels, focus order, TalkBack output, validation announcements, and

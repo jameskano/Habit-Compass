@@ -4,4 +4,5 @@
     <string name="title_activity_main">Habit Compass</string>
     <string name="package_name">com.habitcompass.app</string>
     <string name="custom_url_scheme">habitcompass</string>
+    <string name="app_links_host">habit-compass.onrender.com</string>
 </resources>

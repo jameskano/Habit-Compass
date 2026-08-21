@@ -1,4 +1,4 @@
-import { formatISO, parseISO } from 'date-fns'
+import { formatISO } from 'date-fns'
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -10,10 +10,12 @@ import type { ISODateString } from '@/shared/types'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { OverlayPendingState } from '@/shared/ui/LazyLoadingFallbacks'
 import { PendingState } from '@/shared/ui/PendingState'
+import { formatFullDate } from '@/shared/utils/dateFormat'
 
 import { ItemsFilterRow } from '../components/ItemsFilterRow'
 import { ItemWaterfallReveal } from '../components/ItemWaterfallReveal'
 import { useItemWaterfallReveal } from '../components/useItemWaterfallReveal'
+import { sortArchivedItems } from '../archiveOrdering.utils'
 import { TaskCard } from './TaskCard'
 
 const TaskEdit = lazy(() => import('./TaskEdit').then((module) => ({ default: module.TaskEdit })))
@@ -26,7 +28,7 @@ type TasksTabProps = {
 
 type TaskDateGroup = {
   key: string
-  label: string
+  label: string | null
   tasks: Task[]
 }
 
@@ -48,12 +50,7 @@ const formatDateHeader = (
   const tomorrow = formatISO(addDays(new Date(`${today}T00:00:00`), 1), {
     representation: 'date',
   })
-  const formattedDate = intl.formatDate(parseISO(date), {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'UTC',
-  })
+  const formattedDate = formatFullDate(date)
 
   if (date < today) {
     return intl.formatMessage({ id: 'page.items.task.group.overdue' }, { date: formattedDate })
@@ -114,7 +111,10 @@ export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabPr
     (categoriesQuery.data ?? []).map((category) => [category.id, category]),
   )
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) ?? null
-  const orderedTasks = useMemo(() => sortTasks(tasks), [tasks])
+  const orderedTasks = useMemo(
+    () => (showingArchived ? sortArchivedItems(tasks) : sortTasks(tasks)),
+    [showingArchived, tasks],
+  )
   const visibleTasks = useMemo(
     () =>
       orderedTasks.filter(
@@ -125,8 +125,11 @@ export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabPr
     [categoryId, orderedTasks, searchText],
   )
   const taskGroups = useMemo(
-    () => groupTasksByDate(visibleTasks, intl, today),
-    [intl, today, visibleTasks],
+    () =>
+      showingArchived
+        ? [{ key: 'archived', label: null, tasks: visibleTasks }]
+        : groupTasksByDate(visibleTasks, intl, today),
+    [intl, showingArchived, today, visibleTasks],
   )
 
   if (categoriesQuery.isLoading) {
@@ -184,10 +187,12 @@ export const TasksTab = ({ tasks, showingArchived, onToggleArchive }: TasksTabPr
       ) : (
         <div className="space-y-5">
           {taskGroups.map((group) => (
-            <section key={group.key} className="space-y-3" aria-label={group.label}>
-              <h3 className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                {group.label}
-              </h3>
+            <section key={group.key} className="space-y-3" aria-label={group.label ?? undefined}>
+              {group.label ? (
+                <h3 className="px-1 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {group.label}
+                </h3>
+              ) : null}
               <div className="grid gap-4 lg:grid-cols-2">
                 {group.tasks.map((task) => (
                   <ItemWaterfallReveal

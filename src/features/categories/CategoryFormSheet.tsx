@@ -1,4 +1,5 @@
 import { Trash2 } from 'lucide-react'
+import { useRef } from 'react'
 import { useIntl } from 'react-intl'
 
 import { Button } from '@/shared/ui/button'
@@ -15,13 +16,93 @@ import { useCategoryFormSheet } from './useCategoryFormSheet'
 export const CategoryFormSheet = (props: CategoryFormSheetProps) => {
   const intl = useIntl()
   const form = useCategoryFormSheet(props)
+  const sheetPointerStateRef = useRef<{
+    horizontal: boolean
+    palette: boolean
+    pointerId: number
+    x: number
+    y: number
+  } | null>(null)
+  const suppressNextSheetClickRef = useRef(false)
+
+  const resetSheetHorizontalScroll = (sheet: HTMLElement) => {
+    if (sheet.scrollLeft !== 0) {
+      sheet.scrollLeft = 0
+    }
+
+    window.requestAnimationFrame(() => {
+      if (sheet.scrollLeft !== 0) {
+        sheet.scrollLeft = 0
+      }
+    })
+  }
 
   return (
     <>
       <Sheet open={props.open} onOpenChange={form.handleSheetOpenChange}>
         <SheetContent
-          className="max-h-[92vh] animate-[habit-sheet-in_300ms_ease-out] overflow-y-auto motion-reduce:animate-none"
+          className="max-h-[92vh] touch-pan-y animate-[habit-sheet-in_300ms_ease-out] overflow-x-clip overflow-y-auto overscroll-x-none motion-reduce:animate-none"
           onInteractOutside={form.handleSheetInteractOutside}
+          onPointerDown={(event) => {
+            const palette =
+              event.target instanceof Element
+                ? Boolean(event.target.closest('[data-category-color-palette]'))
+                : false
+            sheetPointerStateRef.current = {
+              horizontal: false,
+              palette,
+              pointerId: event.pointerId,
+              x: event.clientX,
+              y: event.clientY,
+            }
+            if (!palette) {
+              event.currentTarget.setPointerCapture(event.pointerId)
+            }
+            resetSheetHorizontalScroll(event.currentTarget)
+          }}
+          onPointerMove={(event) => {
+            const pointerState = sheetPointerStateRef.current
+            if (pointerState && !pointerState.palette) {
+              const deltaX = Math.abs(event.clientX - pointerState.x)
+              const deltaY = Math.abs(event.clientY - pointerState.y)
+
+              if (deltaX > 6 && deltaX > deltaY) {
+                pointerState.horizontal = true
+                event.preventDefault()
+                event.stopPropagation()
+              }
+            }
+            resetSheetHorizontalScroll(event.currentTarget)
+          }}
+          onPointerUp={(event) => {
+            const pointerState = sheetPointerStateRef.current
+            if (pointerState?.horizontal) {
+              suppressNextSheetClickRef.current = true
+              event.preventDefault()
+              event.stopPropagation()
+              window.setTimeout(() => {
+                suppressNextSheetClickRef.current = false
+              }, 0)
+            }
+            if (event.currentTarget.hasPointerCapture(pointerState?.pointerId ?? event.pointerId)) {
+              event.currentTarget.releasePointerCapture(pointerState?.pointerId ?? event.pointerId)
+            }
+            resetSheetHorizontalScroll(event.currentTarget)
+            sheetPointerStateRef.current = null
+          }}
+          onPointerCancel={() => {
+            sheetPointerStateRef.current = null
+          }}
+          onClickCapture={(event) => {
+            if (suppressNextSheetClickRef.current) {
+              event.preventDefault()
+              event.stopPropagation()
+              suppressNextSheetClickRef.current = false
+            }
+          }}
+          onScroll={(event) => {
+            resetSheetHorizontalScroll(event.currentTarget)
+          }}
         >
           <SheetTitle className="text-xl font-semibold tracking-tight">
             {intl.formatMessage({ id: form.titleId })}

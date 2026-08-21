@@ -40,7 +40,6 @@ export const AppShell = ({ children }: AppShellProps) => {
       '/settings/data-privacy/terms': 'settings.legal.terms.title',
       '/settings/support': 'settings.support.title',
       '/onboarding': 'page.onboarding.title',
-      '/account/pending-deletion': 'account.pendingDeletion.title',
       '/account/delete': 'account.externalDeletion.title',
     }[pathname] ?? 'app.name'
 

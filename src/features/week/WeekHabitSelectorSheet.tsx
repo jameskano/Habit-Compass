@@ -71,6 +71,10 @@ export const WeekHabitSelectorSheet = ({
               const categoryName =
                 category?.name ?? intl.formatMessage({ id: 'page.items.habit.category.none' })
               const frequency = formatHabitFrequencyForWeek(intl, habit)
+              const meta = intl.formatMessage(
+                { id: 'page.week.bigRocks.selectorMeta' },
+                { category: categoryName, frequency },
+              )
 
               return (
                 <button
@@ -80,12 +84,17 @@ export const WeekHabitSelectorSheet = ({
                   className="w-full rounded-2xl border border-border/70 bg-card/80 p-4 text-left transition-colors hover:border-primary/50 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => onSelectHabit(habit)}
                 >
-                  <span className="block text-sm font-semibold text-foreground">{habit.title}</span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {intl.formatMessage(
-                      { id: 'page.week.bigRocks.selectorMeta' },
-                      { category: categoryName, frequency },
-                    )}
+                  <span
+                    className="block min-w-0 truncate text-sm font-semibold text-foreground"
+                    title={habit.title}
+                  >
+                    {habit.title}
+                  </span>
+                  <span
+                    className="mt-1 line-clamp-2 min-w-0 break-words text-xs text-muted-foreground [overflow-wrap:anywhere]"
+                    title={meta}
+                  >
+                    {meta}
                   </span>
                 </button>
               )

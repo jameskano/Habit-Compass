@@ -17,10 +17,8 @@ export const RecurrentTaskEditValuesSchema = z
     intervalMonths: z.number().int().positive(),
     dayOfMonth: z.number().int().min(1).max(31),
     weekday: z.number().int().min(0).max(6),
-    customDescription: z.string(),
     categoryId: z.string(),
     priority: z.enum(itemPriorities),
-    carryForward: z.boolean(),
     description: z.string(),
     notes: z.string(),
     startsOn: z.string().min(1),
@@ -47,13 +45,6 @@ export const RecurrentTaskEditValuesSchema = z
       !isValidDaysOfYearInput(values.daysOfYear)
     ) {
       context.addIssue({ code: 'custom', path: ['daysOfYear'], message: 'chooseDay' })
-    }
-    if (values.recurrenceKind === 'customFutureRule' && !values.customDescription.trim()) {
-      context.addIssue({
-        code: 'custom',
-        path: ['customDescription'],
-        message: 'descriptionRequired',
-      })
     }
   })
 

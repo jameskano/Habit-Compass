@@ -8,9 +8,12 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { cn } from '@/shared/utils/cn'
 
+import {
+  WEEKDAY_TOGGLE_CLASS,
+  WEEKDAY_TOGGLE_SELECTED_CLASS,
+} from '../components/weekdayToggle.constants'
 import { HABIT_EDIT_INPUT_CLASS } from './habitEdit.constants'
 import type { HabitEditValues } from './habitEdit.schema'
-import { supportsFlexibleSchedule } from './habitEdit.utils'
 
 type HabitEditScheduleSectionProps = {
   form: UseFormReturn<HabitEditValues>
@@ -25,13 +28,15 @@ export const HabitEditScheduleSection = memo(
     const nameInputId = useId()
     const { errors } = useFormState({
       control: form.control,
-      name: ['title', 'daysOfWeek', 'daysOfMonth', 'daysOfYear'],
+      name: ['title', 'daysOfWeek', 'daysOfMonth', 'daysOfYear', 'targetDays'],
     })
     const scheduleKind = useWatch({ control: form.control, name: 'scheduleKind' })
     const selectedDays = useWatch({ control: form.control, name: 'daysOfWeek' })
     const selectedTrackingType = useWatch({ control: form.control, name: 'trackingType' })
+    const frequencyPeriod = useWatch({ control: form.control, name: 'frequencyPeriod' })
+    const selectedGoalPeriod = useWatch({ control: form.control, name: 'period' })
     const selectedWeekday = useWatch({ control: form.control, name: 'weekday' })
-    const supportsFlexible = supportsFlexibleSchedule(selectedTrackingType)
+    const visibleScheduleKinds = habitScheduleKinds.filter((kind) => kind !== 'flexiblePeriod')
 
     return (
       <section className="space-y-4 rounded-[1.4rem] border border-border/70 bg-card/90 p-4">
@@ -49,28 +54,79 @@ export const HabitEditScheduleSection = memo(
             </span>
           ) : null}
         </div>
-        <label className="block text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
-          <Select value={scheduleKind} onValueChange={onScheduleKindChange}>
-            <SelectTrigger
-              aria-label={intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
-              className={HABIT_EDIT_INPUT_CLASS}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {habitScheduleKinds.map((kind) => (
-                <SelectItem
-                  key={kind}
-                  value={kind}
-                  disabled={kind === 'flexiblePeriod' && !supportsFlexible}
-                >
-                  {intl.formatMessage({ id: `page.items.habit.edit.schedule.${kind}` })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </label>
+        {selectedTrackingType === 'totalMeasurablePerPeriod' ? (
+          <p className="text-sm text-muted-foreground">
+            {intl.formatMessage(
+              { id: 'page.items.create.habit.flexiblePeriodHelp' },
+              {
+                period: intl.formatMessage({ id: `items.period.${selectedGoalPeriod}` }),
+              },
+            )}
+          </p>
+        ) : (
+          <label className="block text-sm font-medium">
+            {intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
+            <Select value={scheduleKind} onValueChange={onScheduleKindChange}>
+              <SelectTrigger
+                aria-label={intl.formatMessage({ id: 'page.items.habit.edit.frequency' })}
+                className={HABIT_EDIT_INPUT_CLASS}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {visibleScheduleKinds.map((kind) => (
+                  <SelectItem key={kind} value={kind}>
+                    {intl.formatMessage({ id: `page.items.create.frequency.${kind}` })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
+        )}
+
+        {scheduleKind === 'certainDaysPerPeriod' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.frequency.days' })}
+              <Input
+                type="number"
+                min={1}
+                max={frequencyPeriod === 'week' ? 7 : frequencyPeriod === 'month' ? 28 : 365}
+                aria-invalid={Boolean(errors.targetDays)}
+                {...form.register('targetDays', { valueAsNumber: true })}
+                className={HABIT_EDIT_INPUT_CLASS}
+              />
+              {errors.targetDays ? (
+                <span className="mt-1 block text-xs text-amber-700">
+                  {intl.formatMessage({ id: 'page.items.create.error.frequency' })}
+                </span>
+              ) : null}
+            </label>
+            <label className="block text-sm font-medium">
+              {intl.formatMessage({ id: 'page.items.create.frequency.period' })}
+              <Select
+                value={frequencyPeriod}
+                onValueChange={(value) =>
+                  form.setValue('frequencyPeriod', value as HabitEditValues['frequencyPeriod'], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger className={HABIT_EDIT_INPUT_CLASS}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(['week', 'month', 'year'] as const).map((period) => (
+                    <SelectItem key={period} value={period}>
+                      {intl.formatMessage({ id: `items.period.${period}` })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+          </div>
+        ) : null}
 
         {scheduleKind === 'specificDaysOfWeek' || scheduleKind === 'everyXWeeks' ? (
           <fieldset className="space-y-2">
@@ -86,9 +142,8 @@ export const HabitEditScheduleSection = memo(
                   aria-pressed={selectedDays.includes(day)}
                   onClick={() => onToggleDay(day)}
                   className={cn(
-                    'rounded-full border border-border/75 px-3 py-2 text-xs font-medium',
-                    selectedDays.includes(day) &&
-                      'border-primary bg-primary text-primary-foreground',
+                    WEEKDAY_TOGGLE_CLASS,
+                    selectedDays.includes(day) && WEEKDAY_TOGGLE_SELECTED_CLASS,
                   )}
                 >
                   {intl.formatMessage({ id: `page.items.weekday.short.${day}` })}

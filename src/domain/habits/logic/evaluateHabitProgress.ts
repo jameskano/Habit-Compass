@@ -5,8 +5,11 @@ import {
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import { getCertainDaysPeriodState } from './habitCertainDays'
 import {
   evaluateHabitCompletionForLogs,
+  getHabitLogProgressValue,
+  getHabitMinimumTargetValue,
   getHabitStandardTargetValue,
   getHabitTargetScope,
   type WeekStartsOn,
@@ -24,7 +27,7 @@ export type HabitProgressInput = {
 
 export type HabitProgressEvaluation = PeriodProgress & {
   trackingType: Habit['trackingType']
-  unit: 'count' | 'repetitions' | 'minutes' | 'quantity'
+  unit: 'count' | 'custom'
   completedLogCount: number
   relevantLogCount: number
   scheduledOccurrenceCount: number | null
@@ -56,11 +59,49 @@ const getRelevantLogs = (
     isDateWithinRange(log.loggedForDate, periodStart, periodEnd),
   )
 
-  if (habit.scheduleRule.kind === 'flexiblePeriod') {
+  if (
+    habit.scheduleRule.kind === 'certainDaysPerPeriod' ||
+    habit.scheduleRule.kind === 'flexiblePeriod'
+  ) {
     return logsInRange
   }
 
   return logsInRange.filter((log) => isHabitScheduledOnDate(habit, log.loggedForDate))
+}
+
+const buildCompletionFields = (input: {
+  rawProgressValue: number
+  standardTargetValue: number
+  minimumTargetValue: number | null
+  targetScope: 'binary' | 'session' | 'period'
+  periodStart: ISODateString
+  periodEnd: ISODateString
+}) => {
+  const isStandardReached =
+    input.standardTargetValue > 0 && input.rawProgressValue >= input.standardTargetValue
+  const isMinimumReached =
+    input.minimumTargetValue !== null &&
+    input.minimumTargetValue > 0 &&
+    input.rawProgressValue >= input.minimumTargetValue
+  const derivedCompletionLevel = isStandardReached
+    ? ('standard' as const)
+    : isMinimumReached
+      ? ('minimum' as const)
+      : null
+
+  return {
+    rawProgressValue: input.rawProgressValue,
+    standardTargetValue: input.standardTargetValue,
+    minimumTargetValue: input.minimumTargetValue,
+    validCompletionScore: isStandardReached ? 1 : isMinimumReached ? 0.5 : 0,
+    derivedCompletionLevel,
+    isBelowMinimum: input.rawProgressValue > 0 && derivedCompletionLevel === null,
+    isMinimumReached,
+    isStandardReached,
+    targetScope: input.targetScope,
+    periodStart: input.periodStart,
+    periodEnd: input.periodEnd,
+  }
 }
 
 export const evaluateHabitProgress = ({
@@ -72,6 +113,38 @@ export const evaluateHabitProgress = ({
 }: HabitProgressInput): HabitProgressEvaluation => {
   const relevantLogs = getRelevantLogs(habit, logs, periodStart, periodEnd)
   const completedLogs = relevantLogs.filter((log) => log.status === 'completed')
+
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    const period = getCertainDaysPeriodState({
+      habit,
+      logs: relevantLogs,
+      date: periodStart,
+      weekStartsOn,
+    })
+    const qualifyingDays = period?.qualifyingDates.length ?? 0
+    const targetDays = period?.effectiveTargetDays ?? 0
+    return {
+      ...calculatePeriodProgress(qualifyingDays, targetDays),
+      trackingType: habit.trackingType,
+      unit: 'count',
+      completedLogCount: completedLogs.length,
+      relevantLogCount: relevantLogs.length,
+      scheduledOccurrenceCount: null,
+      recurrenceSupport: 'supported',
+      rawProgressValue: qualifyingDays,
+      standardTargetValue: targetDays,
+      minimumTargetValue: null,
+      validCompletionScore: targetDays > 0 && qualifyingDays >= targetDays ? 1 : 0,
+      derivedCompletionLevel: targetDays > 0 && qualifyingDays >= targetDays ? 'standard' : null,
+      isBelowMinimum: qualifyingDays > 0 && qualifyingDays < targetDays,
+      isMinimumReached: false,
+      isStandardReached: targetDays > 0 && qualifyingDays >= targetDays,
+      targetScope: 'period',
+      periodStart: period?.periodStart ?? periodStart,
+      periodEnd: period?.periodEnd ?? periodEnd,
+    }
+  }
+
   const targetScope = getHabitTargetScope(habit)
   const completion = evaluateHabitCompletionForLogs({
     habit,
@@ -111,93 +184,41 @@ export const evaluateHabitProgress = ({
         ...completionFields,
       }
     }
-    case 'timesPerPeriod': {
-      return {
-        ...calculatePeriodProgress(completion.rawProgressValue, getHabitStandardTargetValue(habit)),
-        trackingType: 'timesPerPeriod',
-        unit: 'count',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
-    case 'repetitionsPerPeriod': {
-      const repetitions = completedLogs.reduce((total, log) => total + (log.repetitions ?? 0), 0)
-
-      return {
-        ...calculatePeriodProgress(repetitions, habit.goalConfig.targetRepetitions),
-        trackingType: 'repetitionsPerPeriod',
-        unit: 'repetitions',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
-    case 'timePerSession': {
-      const bestMinutes = completedLogs.reduce(
-        (best, log) => Math.max(best, log.durationMinutes ?? 0),
+    case 'measurablePerSession': {
+      const rawProgressValue = completedLogs.reduce(
+        (best, log) => Math.max(best, getHabitLogProgressValue(habit, log)),
         0,
       )
+      const sessionCompletionFields = buildCompletionFields({
+        rawProgressValue,
+        standardTargetValue: getHabitStandardTargetValue(habit),
+        minimumTargetValue: getHabitMinimumTargetValue(habit),
+        targetScope,
+        periodStart,
+        periodEnd,
+      })
 
       return {
-        ...calculatePeriodProgress(bestMinutes, habit.goalConfig.targetMinutes),
-        trackingType: 'timePerSession',
-        unit: 'minutes',
+        ...calculatePeriodProgress(rawProgressValue, habit.goalConfig.targetAmount),
+        trackingType: habit.goalConfig.trackingType,
+        unit: 'custom',
+        completedLogCount: completedLogs.length,
+        relevantLogCount: relevantLogs.length,
+        scheduledOccurrenceCount,
+        recurrenceSupport: 'supported',
+        ...sessionCompletionFields,
+      }
+    }
+    case 'totalMeasurablePerPeriod':
+      return {
+        ...calculatePeriodProgress(completion.rawProgressValue, habit.goalConfig.targetAmount),
+        trackingType: habit.goalConfig.trackingType,
+        unit: 'custom',
         completedLogCount: completedLogs.length,
         relevantLogCount: relevantLogs.length,
         scheduledOccurrenceCount,
         recurrenceSupport: 'supported',
         ...completionFields,
       }
-    }
-    case 'totalTimePerPeriod': {
-      const totalMinutes = completedLogs.reduce(
-        (total, log) => total + (log.durationMinutes ?? 0),
-        0,
-      )
-
-      return {
-        ...calculatePeriodProgress(totalMinutes, habit.goalConfig.targetMinutes),
-        trackingType: 'totalTimePerPeriod',
-        unit: 'minutes',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
-    case 'quantityPerSession': {
-      const bestQuantity = completedLogs.reduce((best, log) => Math.max(best, log.quantity ?? 0), 0)
-
-      return {
-        ...calculatePeriodProgress(bestQuantity, habit.goalConfig.targetQuantity),
-        trackingType: 'quantityPerSession',
-        unit: 'quantity',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
-    case 'totalQuantityPerPeriod': {
-      const totalQuantity = completedLogs.reduce((total, log) => total + (log.quantity ?? 0), 0)
-
-      return {
-        ...calculatePeriodProgress(totalQuantity, habit.goalConfig.targetQuantity),
-        trackingType: 'totalQuantityPerPeriod',
-        unit: 'quantity',
-        completedLogCount: completedLogs.length,
-        relevantLogCount: relevantLogs.length,
-        scheduledOccurrenceCount,
-        recurrenceSupport: 'supported',
-        ...completionFields,
-      }
-    }
   }
 }

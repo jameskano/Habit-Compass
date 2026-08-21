@@ -7,7 +7,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## User Value
 
 - A simple user can create a binary habit and mark it done quickly.
-- A more advanced user can track frequency, repetitions, time, quantity, and optional minimum/standard levels without changing the core product.
+- A more advanced user can track frequency, any numeric amount with a user-defined unit, and optional minimum/standard levels without changing the core product.
 
 ## Scope
 
@@ -27,7 +27,7 @@ Users need a habit model that works for the simplest possible case, while still 
 ## User Stories
 
 - As a user, I can create a simple binary habit and complete it quickly.
-- As a user, I can track a habit by times per period, repetitions, time, or quantity.
+- As a user, I can schedule a binary or per-session measurable habit on a flexible number of days per period.
 - As a user, I can optionally use minimum and standard completion levels.
 - As a user, I can archive or soft reset a habit instead of deleting it immediately.
 
@@ -35,12 +35,8 @@ Users need a habit model that works for the simplest possible case, while still 
 
 - A habit must support these goal types:
   - `binary`
-  - `timesPerPeriod`
-  - `repetitionsPerPeriod`
-  - `timePerSession`
-  - `totalTimePerPeriod`
-  - `quantityPerSession`
-  - `totalQuantityPerPeriod`
+  - `measurablePerSession`
+  - `totalMeasurablePerPeriod`
 - Period-based goals must support `day`, `week`, `month`, `year`, and `custom`.
 - Habit creation uses a three-step flow: completion setup, frequency, then details.
 - New and edited habits require a category selection. Production storage backfills and preserves a
@@ -49,14 +45,21 @@ Users need a habit model that works for the simplest possible case, while still 
 - A habit always supports standard completion; minimum completion exists only when configured for that habit.
 - Binary habits use manual minimum/standard completion. Standard and minimum descriptions are
   optional text; minimum is offered only when a non-empty minimum description is configured.
-- Quantity/time habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
-- New measurable habits expose quantity or time tracking with session or period scope. Legacy
-  repetition and custom-period configurations remain editable when encountered.
-- Flexible `X times per period` creation is available only for binary habits, with limits of
-  `7` per week, `28` per month, and `365` per year.
+- Measurable habits derive minimum or standard completion from logged values instead of asking the user to choose a level.
+- New measurable habits expose a single amount plus user-defined unit label with session or period scope.
+- `certainDaysPerPeriod` is a habit schedule, not a goal. It is available for binary and
+  measurable-per-session habits with limits of `7` per week, `28` per month, and `365` per year.
+- Each qualifying date contributes at most one day toward a certain-days period. Minimum and
+  standard completions qualify; skipped and below-minimum progress do not.
+- Empty dates in a certain-days period are never individually missed. Once the effective target is
+  reached, remaining unlogged dates in the period are disabled until a qualifying log is removed.
 - Persisted habit logs record completed or skipped dates and any relevant numeric value.
-- Below-minimum quantity/time logs are visible as progress but score `0` for completion stats.
-- Period-based quantity/time habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
+- Below-minimum measurable logs are visible as progress but score `0` for completion stats.
+- Minimum and standard completions count equally as completed opportunities in the habit's lifetime
+  completion percentage.
+- Skipped and missed scheduled opportunities both remain in the lifetime completion-percentage
+  denominator. They remain visually distinct and retain different streak behavior.
+- Period-based measurable habits evaluate minimum and standard at the period level; only days with logged progress receive progress/completion states.
 - Missed habit days are derived when a scheduled past date has no completed, skipped, or progress log.
 - Habits have a priority of `low`, `medium`, `high`, or `essential`.
 - Habits persist an order value and a schedule rule bounded by a start date and optional end date.
@@ -64,9 +67,14 @@ Users need a habit model that works for the simplest possible case, while still 
   pairs, anchored day/week/month intervals, and the existing first-weekday-of-month pattern.
 - Habits may include a description for item clarification and separate notes for extra user information.
 - Saving an end date before today archives the habit after confirmation in the edit flow.
-- Explicit schedules derive day states; flexible-period schedules calculate period progress without deriving missed days per date.
+- Explicit schedules derive day states. Certain-days schedules calculate proportional period
+  progress without deriving missed days per date. Internal `flexiblePeriod` scheduling remains only
+  for total-measurable-per-period goals.
 - Reset is soft by default.
-- Hard reset requires explicit confirmation.
+- Hard reset requires explicit confirmation, removes habit logs/history, and restarts the
+  habit's date window by setting `startsOn` to the reset date. If the habit already has an
+  `endsOn` before the reset date, `startsOn` is clamped to `endsOn`; hard reset does not clear or
+  move `endsOn`.
 - Habits can be archived or physically deleted after explicit confirmation in MVP.
 - Habit lifecycle status is limited to `active` and `archived`.
 - Archiving opens a dated inactivity period and reactivating closes it. Inactivity periods use half-open `[startsOn, resumesOn)` bounds so the archive day is excluded and the reactivation day is active again.
@@ -107,10 +115,8 @@ Users need a habit model that works for the simplest possible case, while still 
   - `loggedAt`
   - `status`
   - `completionLevel`
-  - `repetitions`
-  - `durationMinutes`
-  - `quantity`
-  - `quantityUnitLabel`
+  - `amount`
+  - `unitLabel`
   - `notes`
 - `HabitInactivityPeriod`
   - `reason`: `archived` or future-compatible `paused`
@@ -129,6 +135,8 @@ Users need a habit model that works for the simplest possible case, while still 
 ## Edge Cases
 
 - A custom period must not be accepted without a valid period length.
+- Certain-days schedules accept only week, month, and year periods and positive whole-day targets
+  within their period limits.
 - Numeric goals must reject zero and negative targets.
 - Completion levels must remain optional for binary habits.
 - Delete must not be the default reset path.
@@ -136,12 +144,15 @@ Users need a habit model that works for the simplest possible case, while still 
 ## Acceptance Criteria
 
 - A binary habit can be created without advanced settings.
-- A period-based habit can express target plus period.
+- A binary or measurable-per-session habit can use a certain-days-per-period frequency independently
+  from its daily completion goal.
 - Minimum can be enabled or ignored; if minimum is not configured, `completed_minimum` is never derived.
 - Habit logs represent only completed and skipped outcomes; missed state is derived.
 - Soft reset is modeled separately from hard reset.
 - Archive and delete are both available in the domain contract.
 - Archived dates remain excluded from derived stats across any number of archive/reactivation cycles.
+- A habit with minimum completion on every eligible opportunity has a `100%` lifetime completion
+  percentage, the same as a habit with standard completion on every opportunity.
 
 ## Test Plan
 
@@ -150,5 +161,5 @@ Users need a habit model that works for the simplest possible case, while still 
 - Unit tests for invalid zero or negative targets.
 - Unit tests ensuring custom period rules require a valid custom day count.
 - Unit tests for deriving a missed day from schedule, date, and absent logs.
-- Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped exclusions, and explicit-schedule streaks.
+- Unit tests for schedule evaluation, optional minimum behavior, below-minimum progress, period-level scoring, skipped percentage inclusion, and explicit-schedule streaks.
 - Unit tests for archive/reactivation boundaries, repeated inactivity periods, archived mutation guards, and future-compatible paused periods.

@@ -97,8 +97,8 @@ Recurrent tasks care about:
 
 - Frequency.
 - Next due date.
-- Whether an occurrence is pending, overdue, completed, skipped, or missed.
-- Carry-forward behavior.
+- Whether an occurrence is pending, completed, skipped, or missed.
+- Missed occurrence behavior.
 
 Recurrent tasks do not need stats or full calendar views in the MVP. Their data model should allow history later.
 
@@ -187,6 +187,11 @@ If users want to keep an item and its history, they should archive it. If they d
 
 Archived habits can be reactivated from the archive view. Their archived dates stay excluded from stats.
 
+Across habits, tasks, and recurrent tasks, archive views order items by `archivedAt` descending so
+the most recently archived item appears first. Search and category filters preserve that order.
+Archive views do not allow manual reordering. Archived records without an archive timestamp appear
+after timestamped records, while equal timestamps preserve their existing relative order.
+
 ## MVP decisions locked
 
 - Items section has three tabs.
@@ -199,6 +204,14 @@ Archived habits can be reactivated from the archive view. Their archived dates s
 - Tasks have no checkbox in the Items list.
 - Swipe right on a task means complete.
 - Swipe left or tap on a task means edit.
+- Valid card swipes reveal the pending action behind the exposed side using a localized icon and
+  label. Edit uses a primary/blue treatment, Complete uses green, and Archive uses an
+  amber-neutral treatment.
+- Swipe previews strengthen when the existing 56px action threshold is reached. Releasing below
+  the threshold resets the card without acting.
+- Directions without an available action do not translate the card or reveal a preview.
+- Reduced-motion preferences remove decorative swipe-preview transitions while preserving the
+  threshold state change.
 - Delete is never a swipe action.
 - Archive and complete are different.
 - Missed habit color should be amber/yellow, not red.
@@ -206,4 +219,5 @@ Archived habits can be reactivated from the archive view. Their archived dates s
 - Minimum completion should be light green.
 - Standard completion should be stronger green.
 - The archive filter uses the primary active treatment while archived content is shown.
+- All archive views show the most recently archived items first and do not allow manual reordering.
 - Habit calendar legends omit future, not-scheduled, and pending-today entries while cells still display those states.

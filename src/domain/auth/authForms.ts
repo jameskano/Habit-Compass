@@ -1,12 +1,14 @@
 import { z } from 'zod'
 
+import { buildPasswordPolicySchema } from './passwordPolicy'
+
 const trimString = (value: unknown) => (typeof value === 'string' ? value.trim() : value)
 
 const emailSchema = z.preprocess(
   trimString,
   z.string().min(1, 'required').pipe(z.email('invalid_email')),
 )
-const passwordSchema = z.string().min(1, 'required').min(8, 'password_too_short')
+const passwordSchema = buildPasswordPolicySchema()
 
 export const SignInPasswordSchema = z.object({
   email: emailSchema,

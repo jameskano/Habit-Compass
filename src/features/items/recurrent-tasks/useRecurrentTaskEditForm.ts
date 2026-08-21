@@ -3,15 +3,19 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import type { Category } from '@/domain/categories'
-import type { DayOfWeek } from '@/domain/recurrent-tasks'
+import type { DayOfWeek, UpdateRecurrentTaskInput } from '@/domain/recurrent-tasks'
 import {
   useArchiveRecurrentTaskMutation,
   useDeleteRecurrentTaskMutation,
+  useRestoreRecurrentTaskMutation,
   useUpdateRecurrentTaskMutation,
 } from '@/features/recurrent-tasks/hooks/useRecurrentTaskMutations'
 import { useAppToast } from '@/shared/hooks/useAppToast'
 
+import { getItemLimitKindFromError } from '../limits/itemLimitErrors'
+import { useItemLimitGate } from '../limits/useItemLimitGate'
 import { NO_RECURRENT_TASK_CATEGORY_VALUE } from './recurrentTaskEdit.constants'
+import type { RecurrentTaskConfirmationAction } from './RecurrentTaskConfirmationDialog'
 import {
   RecurrentTaskEditValuesSchema,
   type RecurrentTaskEditValues,
@@ -27,18 +31,27 @@ export const useRecurrentTaskEditForm = ({
   task,
   categories,
   today,
+  onClose,
   onArchived,
   onDeleted,
 }: RecurrentTaskEditProps) => {
   const appToast = useAppToast()
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [confirmation, setConfirmation] = useState<RecurrentTaskConfirmationAction | null>(null)
+  const [pendingPastEndDateSave, setPendingPastEndDateSave] =
+    useState<UpdateRecurrentTaskInput | null>(null)
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categorySelection, setCategorySelection] = useState<string | null>(null)
   const [createdCategorySelection, setCreatedCategorySelection] = useState<Category | null>(null)
   const updateMutation = useUpdateRecurrentTaskMutation()
   const archiveMutation = useArchiveRecurrentTaskMutation()
+  const restoreMutation = useRestoreRecurrentTaskMutation()
   const deleteMutation = useDeleteRecurrentTaskMutation()
-  const pending = updateMutation.isPending || archiveMutation.isPending || deleteMutation.isPending
+  const limitGate = useItemLimitGate()
+  const pending =
+    updateMutation.isPending ||
+    archiveMutation.isPending ||
+    restoreMutation.isPending ||
+    deleteMutation.isPending
   const form = useForm<RecurrentTaskEditValues>({
     resolver: zodResolver(RecurrentTaskEditValuesSchema),
     defaultValues: valuesForRecurrentTask(task),
@@ -104,19 +117,36 @@ export const useRecurrentTaskEditForm = ({
     previousCategoryIdsRef.current = new Set(categories.map((category) => category.id))
   }, [categories, creatingCategory, selectCategoryForForm])
 
+  const saveTask = (input: UpdateRecurrentTaskInput, archiveAfterSave = false) => {
+    updateMutation.mutate(input, {
+      onSuccess: () => {
+        if (archiveAfterSave) {
+          archiveMutation.mutate(task.id, {
+            onSuccess: () => {
+              setConfirmation(null)
+              setPendingPastEndDateSave(null)
+              onArchived(task)
+            },
+          })
+          return
+        }
+        appToast.success({ id: 'page.items.recurrent.edit.saved' })
+        onClose()
+      },
+    })
+  }
+
   const submit = form.handleSubmit((values) => {
     const categoryId = createdCategorySelection?.id ?? categorySelection ?? values.categoryId
     const input = buildRecurrentTaskUpdateInput(task.id, values, categoryId)
 
-    updateMutation.mutate(input, {
-      onSuccess: () => {
-        if (values.endsOn && values.endsOn < today) {
-          archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
-          return
-        }
-        appToast.success({ id: 'page.items.recurrent.edit.saved' })
-      },
-    })
+    if (values.endsOn && values.endsOn < today) {
+      setPendingPastEndDateSave(input)
+      setConfirmation('pastEndDate')
+      return
+    }
+
+    saveTask(input)
   })
 
   const selectCreatedCategory = (createdCategory: Category) => {
@@ -198,16 +228,54 @@ export const useRecurrentTaskEditForm = ({
     archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
   }
 
+  const reactivateTask = () => {
+    if (!limitGate.canUse('recurrentTask')) {
+      limitGate.openLimitDialog('recurrentTask', 'restore')
+      return
+    }
+
+    onClose()
+    restoreMutation.mutate(task.id, {
+      onError: (error) => {
+        const limitKind = getItemLimitKindFromError(error)
+
+        if (limitKind) {
+          limitGate.openLimitDialog(limitKind, 'restore')
+        }
+      },
+      onSuccess: () => {
+        appToast.success({
+          id: 'page.items.recurrent.reactivated',
+          values: { task: task.title },
+        })
+      },
+    })
+  }
+
   const deleteTask = () => {
     deleteMutation.mutate(task.id, { onSuccess: () => onDeleted(task) })
   }
 
+  const confirmAction = () => {
+    if (confirmation === 'delete') {
+      deleteTask()
+    } else if (confirmation === 'pastEndDate' && pendingPastEndDateSave) {
+      saveTask(pendingPastEndDateSave, true)
+    }
+  }
+
+  const cancelConfirmation = () => {
+    setConfirmation(null)
+    setPendingPastEndDateSave(null)
+  }
+
   return {
     archiveTask,
+    cancelConfirmation,
     categoryOptions,
-    confirmingDelete,
+    confirmation,
+    confirmAction,
     creatingCategory,
-    deleteTask,
     form,
     handleCategoryChange,
     handleCategorySheetOpenChange,
@@ -215,8 +283,11 @@ export const useRecurrentTaskEditForm = ({
     handlePriorityChange,
     handleRecurrenceKindChange,
     handleWeekdayChange,
+    limitDialogState: limitGate.dialogState,
+    onCloseLimitDialog: limitGate.closeLimitDialog,
     openCategoryCreation,
     pending,
+    reactivateTask,
     recurrenceKind,
     selectCreatedCategory,
     selectedCategoryId,
@@ -225,7 +296,7 @@ export const useRecurrentTaskEditForm = ({
     selectedPriority,
     selectedStartsOn,
     selectedWeekday,
-    setConfirmingDelete,
+    requestDelete: () => setConfirmation('delete'),
     submit,
     toggleDay,
   }

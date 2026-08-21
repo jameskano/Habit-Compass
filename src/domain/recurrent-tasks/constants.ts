@@ -8,7 +8,6 @@ export const recurrenceKinds = [
   'everyXWeeks',
   'everyXMonths',
   'firstWeekdayOfMonth',
-  'customFutureRule',
 ] as const
 export const recurrentTaskOccurrenceStatuses = [
   'pending',

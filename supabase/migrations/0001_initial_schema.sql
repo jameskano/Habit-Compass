@@ -52,11 +52,8 @@ create table public.habits (
     tracking_type in (
       'binary',
       'timesPerPeriod',
-      'repetitionsPerPeriod',
-      'timePerSession',
-      'totalTimePerPeriod',
-      'quantityPerSession',
-      'totalQuantityPerPeriod'
+      'measurablePerSession',
+      'totalMeasurablePerPeriod'
     )
   ),
   schedule_config jsonb not null default '{"kind":"daily"}'::jsonb check (jsonb_typeof(schedule_config) = 'object'),
@@ -78,10 +75,8 @@ create table public.habit_logs (
   logged_at timestamptz not null default timezone('utc', now()),
   status text not null check (status in ('completed', 'skipped')),
   completion_level text check (completion_level in ('minimum', 'standard')),
-  repetitions numeric check (repetitions is null or repetitions >= 0),
-  duration_minutes numeric check (duration_minutes is null or duration_minutes >= 0),
-  quantity numeric check (quantity is null or quantity >= 0),
-  quantity_unit_label text,
+  amount numeric check (amount is null or amount >= 0),
+  unit_label text,
   note text,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
@@ -243,7 +238,7 @@ comment on column public.habits.schedule_config is
 'JSONB contract for persisted expectation rules. MVP supports daily, selected weekdays, bounded interval/month rules, first weekday of month, and flexiblePeriod.';
 
 comment on column public.habits.goal_config is
-'JSONB contract for habit target rules. MVP supports binary, timesPerPeriod, repetitionsPerPeriod, timePerSession, totalTimePerPeriod, quantityPerSession, and totalQuantityPerPeriod.';
+'JSONB contract for habit target rules. MVP supports binary, timesPerPeriod, measurablePerSession, and totalMeasurablePerPeriod.';
 
 comment on column public.habits.minimum_config is
 'Optional JSONB override describing the smallest useful version of a habit. This is only used when minimum/standard completion is enabled.';
@@ -252,7 +247,7 @@ comment on column public.habits.standard_config is
 'Optional JSONB override describing the default expected version of a habit when layered completion levels are enabled.';
 
 comment on column public.recurrent_tasks.recurrence_config is
-'JSONB contract for supported recurrence rules: daily, specificDaysOfWeek, everyXDays, everyXWeeks, everyXMonths, firstWeekdayOfMonth, and customFutureRule as descriptive-only future placeholder.';
+'JSONB contract for supported executable recurrence rules: daily, specificDaysOfWeek, specificDaysOfMonth, specificDaysOfYear, everyXDays, everyXWeeks, everyXMonths, and firstWeekdayOfMonth.';
 
 comment on table public.suggestion_events is
 'Rule-based MVP suggestion records. AI-generated suggestions require a future migration and separate review gate.';

@@ -17,7 +17,9 @@ export interface TasksRepository {
     userId: UserId
     taskId: EntityId
     status: TaskCompletionStatus
+    today: ISODateString
   }): Promise<Result<Task>>
+  archiveCompletedPastDue(input: { userId: UserId; today: ISODateString }): Promise<Result<Task[]>>
   archive(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>
   delete(input: { userId: UserId; taskId: EntityId }): Promise<Result<null>>
   restore(input: { userId: UserId; taskId: EntityId }): Promise<Result<Task>>

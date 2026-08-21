@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
-import type { Habit } from '@/domain/habits'
+import type { Habit, UpdateHabitInput } from '@/domain/habits'
 import { useArchiveHabitMutation } from '@/features/habits/hooks/useArchiveHabitMutation'
 import {
   useDeleteHabitMutation,
@@ -20,7 +20,7 @@ import { PendingState } from '@/shared/ui/PendingState'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { HabitCalendarTab } from './HabitCalendarTab'
-import { HabitConfirmationDialog, type HabitDangerAction } from './HabitConfirmationDialog'
+import { HabitConfirmationDialog, type HabitConfirmationAction } from './HabitConfirmationDialog'
 import { HabitEditTab } from './HabitEditTab'
 import { HabitStatsTab } from './HabitStatsTab'
 
@@ -50,8 +50,11 @@ export const HabitDetail = ({
   const intl = useIntl()
   const appToast = useAppToast()
   const [activeTab, setActiveTab] = useState(initialTab)
-  const [confirmation, setConfirmation] = useState<HabitDangerAction | null>(null)
-  const logsQuery = useHabitLogsRangeQuery({ from: habit.startsOn, to: today })
+  const [confirmation, setConfirmation] = useState<HabitConfirmationAction | null>(null)
+  const [pendingPastEndDateSave, setPendingPastEndDateSave] = useState<UpdateHabitInput | null>(
+    null,
+  )
+  const logsQuery = useHabitLogsRangeQuery({ habitId: habit.id, from: habit.startsOn, to: today })
   const updateMutation = useUpdateHabitMutation()
   const archiveMutation = useArchiveHabitMutation()
   const resetMutation = useResetHabitProgressMutation()
@@ -66,6 +69,28 @@ export const HabitDetail = ({
       ? activeDetailTabs.filter((tab) => tab !== 'edit')
       : activeDetailTabs
 
+  const saveHabit = (input: UpdateHabitInput, archiveAfterSave = false) => {
+    updateMutation.mutate(input, {
+      onSuccess: () => {
+        if (archiveAfterSave) {
+          archiveMutation.mutate(
+            { habitId: habit.id, date: today },
+            {
+              onSuccess: () => {
+                setConfirmation(null)
+                setPendingPastEndDateSave(null)
+                onArchived(habit)
+              },
+            },
+          )
+          return
+        }
+        appToast.success({ id: 'page.items.habit.detail.saved' })
+        onClose()
+      },
+    })
+  }
+
   const confirmAction = () => {
     if (confirmation === 'reset') {
       resetMutation.mutate(habit.id, {
@@ -78,7 +103,14 @@ export const HabitDetail = ({
       deleteMutation.mutate(habit.id, {
         onSuccess: () => onDeleted(habit),
       })
+    } else if (confirmation === 'pastEndDate' && pendingPastEndDateSave) {
+      saveHabit(pendingPastEndDateSave, true)
     }
+  }
+
+  const cancelConfirmation = () => {
+    setConfirmation(null)
+    setPendingPastEndDateSave(null)
   }
 
   return (
@@ -104,10 +136,15 @@ export const HabitDetail = ({
             {intl.formatMessage({ id: 'page.items.habit.detail.title' }, { habit: habit.title })}
           </DialogTitle>
           <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-semibold tracking-tight">{habit.title}</h2>
+            <h2
+              className="min-w-0 flex-1 truncate text-xl font-semibold tracking-tight"
+              title={habit.title}
+            >
+              {habit.title}
+            </h2>
             <Button
               variant="ghost"
-              className="h-10 w-10 rounded-full border border-border/70 p-0"
+              className="h-10 w-10 shrink-0 rounded-full border border-border/70 p-0"
               aria-label={intl.formatMessage({ id: 'action.close' })}
               onClick={onClose}
             >
@@ -154,22 +191,14 @@ export const HabitDetail = ({
                     today={today}
                     archived={habit.lifecycleStatus === 'archived'}
                     pending={pending}
-                    onSave={(input, options) =>
-                      updateMutation.mutate(input, {
-                        onSuccess: () => {
-                          if (options?.archiveAfterSave) {
-                            archiveMutation.mutate(
-                              { habitId: habit.id, date: today },
-                              {
-                                onSuccess: () => onArchived(habit),
-                              },
-                            )
-                            return
-                          }
-                          appToast.success({ id: 'page.items.habit.detail.saved' })
-                        },
-                      })
-                    }
+                    onSave={(input, options) => {
+                      if (options?.archiveAfterSave) {
+                        setPendingPastEndDateSave(input)
+                        setConfirmation('pastEndDate')
+                        return
+                      }
+                      saveHabit(input)
+                    }}
                     onArchive={() =>
                       archiveMutation.mutate(
                         { habitId: habit.id, date: today },
@@ -191,7 +220,7 @@ export const HabitDetail = ({
           action={confirmation}
           nestedInDialog
           pending={pending}
-          onCancel={() => setConfirmation(null)}
+          onCancel={cancelConfirmation}
           onConfirm={confirmAction}
         />
       </DialogContent>

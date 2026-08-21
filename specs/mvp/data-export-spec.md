@@ -137,8 +137,8 @@ entities into one oversized CSV.
 - Booleans: `true` or `false`.
 - Dates: `YYYY-MM-DD` local date strings.
 - Timestamps: ISO 8601 UTC strings.
-- Durations: integer minutes.
-- Decimal quantities: plain decimal string with `.` separator.
+- Numeric habit amounts: plain decimal string with `.` separator.
+- Unit labels: user-defined strings.
 - JSON config fields: compact JSON string inside the cell.
 
 ### CSV Field Plan
@@ -177,8 +177,7 @@ entities into one oversized CSV.
 `completion_logs.csv`:
 
 - `id`, `habit_id`, `log_date`, `logged_at`, `status`, `completion_level`,
-  `duration_minutes`, `repetitions`, `quantity`, `quantity_unit_label`, `note`, `created_at`,
-  `updated_at`
+  `amount`, `unit_label`, `note`, `created_at`, `updated_at`
 
 `mood_logs.csv`:
 
@@ -243,6 +242,9 @@ Requirements:
 - Include Big Rocks nested under weekly records or as a clearly related array.
 - Include mood and reflections when stored or referenced by weekly records.
 - Exclude Settings preferences and authentication/account data.
+- Export habit completion goals and frequency rules as separate contracts. A flexible habit
+  frequency is represented by `scheduleRule.kind: "certainDaysPerPeriod"` with `targetDays` and a
+  `week | month | year` period; it is never exported as a `timesPerPeriod` goal.
 
 ## Weekly Records In Exports
 

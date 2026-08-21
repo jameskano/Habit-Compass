@@ -7,6 +7,10 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { cn } from '@/shared/utils/cn'
 
+import {
+  WEEKDAY_TOGGLE_CLASS,
+  WEEKDAY_TOGGLE_SELECTED_CLASS,
+} from '../components/weekdayToggle.constants'
 import { RECURRENT_TASK_EDIT_INPUT_CLASS } from './recurrentTaskEdit.constants'
 import type { RecurrentTaskEditValues } from './recurrentTaskEdit.schema'
 
@@ -57,7 +61,7 @@ export const RecurrentTaskEditScheduleSection = ({
           <SelectContent>
             {recurrenceKinds.map((kind) => (
               <SelectItem key={kind} value={kind}>
-                {intl.formatMessage({ id: `page.items.recurrent.edit.schedule.${kind}` })}
+                {intl.formatMessage({ id: `page.items.create.frequency.${kind}` })}
               </SelectItem>
             ))}
           </SelectContent>
@@ -77,8 +81,8 @@ export const RecurrentTaskEditScheduleSection = ({
                 aria-pressed={selectedDays.includes(day)}
                 onClick={() => onToggleDay(day)}
                 className={cn(
-                  'rounded-full border border-border/75 px-3 py-2 text-xs font-medium',
-                  selectedDays.includes(day) && 'border-primary bg-primary text-primary-foreground',
+                  WEEKDAY_TOGGLE_CLASS,
+                  selectedDays.includes(day) && WEEKDAY_TOGGLE_SELECTED_CLASS,
                 )}
               >
                 {intl.formatMessage({ id: `page.items.weekday.short.${day}` })}
@@ -177,15 +181,6 @@ export const RecurrentTaskEditScheduleSection = ({
               ))}
             </SelectContent>
           </Select>
-        </label>
-      ) : null}
-      {recurrenceKind === 'customFutureRule' ? (
-        <label className="block text-sm font-medium">
-          {intl.formatMessage({ id: 'page.items.recurrent.edit.customDescription' })}
-          <Input
-            {...form.register('customDescription')}
-            className={RECURRENT_TASK_EDIT_INPUT_CLASS}
-          />
         </label>
       ) : null}
     </section>

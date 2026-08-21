@@ -107,10 +107,13 @@ export type HabitScheduleRule =
   | { kind: 'everyXWeeks'; intervalWeeks: number; daysOfWeek: number[] }
   | { kind: 'everyXMonths'; intervalMonths: number; dayOfMonth: number }
   | { kind: 'firstWeekdayOfMonth'; weekday: number }
+  | { kind: 'certainDaysPerPeriod'; targetDays: number; period: 'week' | 'month' | 'year' }
   | { kind: 'flexiblePeriod' }
 ```
 
-`flexiblePeriod` is only valid with an existing period-based `goalConfig`. It does not assign missed state to individual empty dates.
+`certainDaysPerPeriod` is valid only with binary and measurable-per-session goals. It stores a
+frequency target independently from the per-date goal and does not assign missed state to empty
+dates. `flexiblePeriod` remains an internal schedule for total-measurable-per-period goals.
 
 Habits require a category. Deleting a custom category reassigns linked habits to the protected
 Uncategorized category. Tasks and recurrent tasks keep category optional. New and edited tasks
@@ -193,8 +196,7 @@ export interface HabitCompletionLog {
   level?: HabitCompletionLevel
 
   amount?: number
-  unit?: HabitTargetUnit
-  customUnit?: string
+  unitLabel?: string
 
   createdAt: string
   updatedAt: string
@@ -224,7 +226,7 @@ Meanings:
 
 - `completed_minimum`: user did enough to keep the habit alive.
 - `completed_standard`: user reached the normal target.
-- `progress_logged`: user logged quantity/time progress, but not enough to count as a valid completion.
+- `progress_logged`: user logged measurable progress, but not enough to count as a valid completion.
 - `today_pending`: scheduled for today and not completed yet.
 - `missed`: scheduled in the past and not completed.
 - `skipped`: manually skipped and should not punish stats.
@@ -244,10 +246,10 @@ For binary habits:
 standard completion = 1.0
 minimum completion = 0.5
 missed = 0
-skipped = excluded from denominator
+skipped = 0 for percentage
 ```
 
-For session-based time/quantity habits:
+For session-based measurable habits:
 
 ```txt
 if minimum exists:
@@ -260,7 +262,7 @@ if minimum does not exist:
   amount >= standard = completed_standard, score 1
 ```
 
-For period-based time/quantity habits:
+For period-based measurable habits:
 
 ```txt
 score once per period using the period total.
@@ -275,20 +277,21 @@ If no minimum target exists, never produce `completed_minimum`.
 For explicit schedules such as daily, specific days, interval, or monthly pattern:
 
 ```txt
-completion percentage = total completion score / total expected score
+completion percentage = completed opportunities / total expected opportunities
 ```
 
 Where:
 
 - Expected scheduled day = 1 expected point.
-- Skipped scheduled day = excluded from denominator.
-- Missed scheduled day = 0 points.
+- Skipped scheduled day = an incomplete opportunity, like missed, for percentage purposes.
+- Minimum and standard completion each count as one completed opportunity.
+- Missed or below-minimum scheduled day = an incomplete opportunity.
 - Inactive scheduled day = excluded from the denominator and streak evaluation.
 
 For flexible period schedules:
 
 ```txt
-completion percentage for period = valid period score / 1
+completion percentage for period = completed periods / expected periods
 ```
 
 If any inactive date overlaps a flexible weekly, monthly, or custom period, omit that period from scoring rather than prorating its target.
@@ -311,7 +314,7 @@ Use two separate ideas:
 export interface HabitStats {
   completionEvents: number // number of valid completions
   completionScore: number // sum of valid completion scores
-  expectedScore: number // denominator after skipped exclusions
+  expectedScore: number // eligible scheduled opportunities, including skipped and missed
   completionPercentage: number
   currentStreak: number
   bestStreak: number
@@ -320,7 +323,8 @@ export interface HabitStats {
 
 For the UI text “completions this week/month/year/total”, use `completionEvents`.
 
-For percentages, use `completionScore / expectedScore`.
+For percentages, use `completionEvents / expectedScore`. Minimum and standard completions are equal
+for this percentage even though `completionScore` preserves their weighted distinction.
 
 ### Streak
 
@@ -370,8 +374,12 @@ export interface Task {
 Completed tasks are not the same as archived tasks:
 
 - Completed means the user did the task.
-- Archived means the user wants to hide/keep the task without marking it as done.
+- Archived means the task is hidden from active use, either by user choice or by completed-task
+  cleanup.
 - Deleted means real deletion after confirmation.
+
+Archived incomplete tasks can be reactivated and return as pending. Archived completed tasks are
+historical and cannot be reactivated.
 
 ---
 
@@ -396,7 +404,7 @@ export interface RecurrentTask {
   startsOn: string // YYYY-MM-DD
   endsOn?: string // YYYY-MM-DD
 
-  carryForward: boolean
+  carryForward: boolean // stored for compatibility; recurrent-task execution ignores it
 
   order: number
 
@@ -431,18 +439,10 @@ export interface RecurrentTaskOccurrence {
 }
 ```
 
-### Carry-forward behavior for recurrent tasks
+### Missed behavior for recurrent tasks
 
-If `carryForward = true`:
-
-- An undone occurrence remains `pending` after its scheduled date.
-- The UI can display it as overdue.
-- It does not automatically become missed.
-
-If `carryForward = false`:
-
-- An undone occurrence becomes `missed` after its scheduled date passes.
-- The next occurrence can be generated normally.
+Recurrent task occurrences do not carry forward. An undone occurrence becomes `missed` after its
+scheduled date passes, and the next occurrence can be generated normally.
 
 Skipped is always manual.
 

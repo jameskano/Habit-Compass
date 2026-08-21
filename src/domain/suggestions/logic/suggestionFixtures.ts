@@ -6,7 +6,12 @@ import type { SuggestionRecommendationContext } from './suggestionEngine'
 
 export const createSuggestionHabit = (overrides: Partial<Habit> = {}) => {
   return createCompletionLevelHabit(
-    { trackingType: 'totalTimePerPeriod', period: 'week', targetMinutes: 90 },
+    {
+      trackingType: 'totalMeasurablePerPeriod',
+      period: 'week',
+      targetAmount: 90,
+      unitLabel: 'minutes',
+    },
     ['minimum', 'standard'],
     overrides,
   )

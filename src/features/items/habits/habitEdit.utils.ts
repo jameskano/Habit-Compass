@@ -8,38 +8,22 @@ import type {
 } from '@/domain/habits'
 
 import { parseDaysOfMonthInput, parseDaysOfYearInput } from '../components/scheduleInputParsers'
-import { PERIOD_BASED_TRACKING_TYPES } from './habitEdit.constants'
 import type { HabitEditValues } from './habitEdit.schema'
 
 const getStandardTarget = (goalConfig: Exclude<HabitGoalConfig, { trackingType: 'binary' }>) => {
   switch (goalConfig.trackingType) {
-    case 'timesPerPeriod':
-      return goalConfig.targetCount
-    case 'repetitionsPerPeriod':
-      return goalConfig.targetRepetitions
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return goalConfig.targetMinutes
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return goalConfig.targetQuantity
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return goalConfig.targetAmount
   }
 }
-
 const getMinimumAmount = (goalConfig: HabitGoalConfig) => {
   switch (goalConfig.trackingType) {
     case 'binary':
       return 0
-    case 'timesPerPeriod':
-      return goalConfig.minimumCount ?? 0
-    case 'repetitionsPerPeriod':
-      return goalConfig.minimumRepetitions ?? 0
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return goalConfig.minimumMinutes ?? 0
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
-      return goalConfig.minimumQuantity ?? 0
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
+      return goalConfig.minimumAmount ?? 0
   }
 }
 
@@ -59,11 +43,8 @@ export const getMinimumUnitLabel = (
   unitLabel: string,
 ) => {
   switch (trackingType) {
-    case 'timePerSession':
-    case 'totalTimePerPeriod':
-      return 'min'
-    case 'quantityPerSession':
-    case 'totalQuantityPerPeriod':
+    case 'measurablePerSession':
+    case 'totalMeasurablePerPeriod':
       return unitLabel
     default:
       return ''
@@ -84,47 +65,20 @@ export const buildHabitGoalConfig = (values: HabitEditValues): HabitGoalConfig =
   const minimum = values.minimumAmount > 0 ? values.minimumAmount : undefined
 
   switch (values.trackingType) {
-    case 'timesPerPeriod':
+    case 'measurablePerSession':
       return {
-        trackingType: 'timesPerPeriod',
-        ...periodConfig(values),
-        targetCount: values.standardAmount,
-        ...(minimum ? { minimumCount: minimum } : {}),
-      }
-    case 'repetitionsPerPeriod':
-      return {
-        trackingType: 'repetitionsPerPeriod',
-        ...periodConfig(values),
-        targetRepetitions: values.standardAmount,
-        ...(minimum ? { minimumRepetitions: minimum } : {}),
-      }
-    case 'timePerSession':
-      return {
-        trackingType: 'timePerSession',
-        targetMinutes: values.standardAmount,
-        ...(minimum ? { minimumMinutes: minimum } : {}),
-      }
-    case 'totalTimePerPeriod':
-      return {
-        trackingType: 'totalTimePerPeriod',
-        ...periodConfig(values),
-        targetMinutes: values.standardAmount,
-        ...(minimum ? { minimumMinutes: minimum } : {}),
-      }
-    case 'quantityPerSession':
-      return {
-        trackingType: 'quantityPerSession',
-        targetQuantity: values.standardAmount,
+        trackingType: 'measurablePerSession',
+        targetAmount: values.standardAmount,
         unitLabel: values.unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
-    case 'totalQuantityPerPeriod':
+    case 'totalMeasurablePerPeriod':
       return {
-        trackingType: 'totalQuantityPerPeriod',
+        trackingType: 'totalMeasurablePerPeriod',
         ...periodConfig(values),
-        targetQuantity: values.standardAmount,
+        targetAmount: values.standardAmount,
         unitLabel: values.unitLabel.trim(),
-        ...(minimum ? { minimumQuantity: minimum } : {}),
+        ...(minimum ? { minimumAmount: minimum } : {}),
       }
   }
 }
@@ -158,6 +112,8 @@ export const valuesForHabit = (habit: Habit): HabitEditValues => {
     intervalMonths: schedule.kind === 'everyXMonths' ? schedule.intervalMonths : 1,
     dayOfMonth: schedule.kind === 'everyXMonths' ? schedule.dayOfMonth : 1,
     weekday: schedule.kind === 'firstWeekdayOfMonth' ? schedule.weekday : 1,
+    targetDays: schedule.kind === 'certainDaysPerPeriod' ? schedule.targetDays : 3,
+    frequencyPeriod: schedule.kind === 'certainDaysPerPeriod' ? schedule.period : 'week',
     startsOn: habit.startsOn,
     endsOn: habit.endsOn ?? '',
     description: habit.description ?? '',
@@ -172,8 +128,8 @@ export const valuesForHabit = (habit: Habit): HabitEditValues => {
       habit.goalConfig.trackingType === 'binary' ? (habit.goalConfig.minimumDescription ?? '') : '',
     minimumAmount: minimumAmount > 0 ? minimumAmount : (undefined as unknown as number),
     unitLabel:
-      habit.goalConfig.trackingType === 'quantityPerSession' ||
-      habit.goalConfig.trackingType === 'totalQuantityPerPeriod'
+      habit.goalConfig.trackingType === 'measurablePerSession' ||
+      habit.goalConfig.trackingType === 'totalMeasurablePerPeriod'
         ? habit.goalConfig.unitLabel
         : '',
     period: 'period' in habit.goalConfig ? habit.goalConfig.period : 'week',
@@ -214,6 +170,12 @@ export const buildHabitSchedule = (values: HabitEditValues): HabitScheduleRule =
       }
     case 'firstWeekdayOfMonth':
       return { kind: 'firstWeekdayOfMonth', weekday: values.weekday as HabitDayOfWeek }
+    case 'certainDaysPerPeriod':
+      return {
+        kind: 'certainDaysPerPeriod',
+        targetDays: values.targetDays,
+        period: values.frequencyPeriod,
+      }
     case 'flexiblePeriod':
       return { kind: 'flexiblePeriod' }
   }
@@ -225,6 +187,7 @@ export const buildHabitUpdateInput = (
   selectedCategoryId: string,
 ): UpdateHabitInput => {
   const minimumConfigured = hasConfiguredMinimum(values)
+  const goalConfig = buildHabitGoalConfig(values)
 
   return {
     id: habitId,
@@ -233,7 +196,8 @@ export const buildHabitUpdateInput = (
     notes: values.notes.trim() || null,
     categoryId: selectedCategoryId || null,
     priority: values.priority,
-    goalConfig: buildHabitGoalConfig(values),
+    trackingType: goalConfig.trackingType,
+    goalConfig,
     scheduleRule: buildHabitSchedule(values),
     startsOn: values.startsOn,
     endsOn: values.endsOn || null,
@@ -251,8 +215,4 @@ export const getHabitCategoryOptions = (
     !categories.some((category) => category.id === createdCategorySelection.id)
     ? [...categories, createdCategorySelection]
     : categories
-}
-
-export const supportsFlexibleSchedule = (trackingType: HabitEditValues['trackingType']) => {
-  return PERIOD_BASED_TRACKING_TYPES.has(trackingType)
 }

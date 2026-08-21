@@ -96,8 +96,8 @@ using ((select auth.uid()) = user_id);
 
 insert into public.legal_document_versions (document_type, version, effective_at, is_current)
 values
-  ('terms', 'terms-draft-2026-07-02', '2026-07-02 00:00:00+00', true),
-  ('privacy', 'privacy-draft-2026-07-02', '2026-07-02 00:00:00+00', true)
+  ('terms', '1.0.0', '2026-07-15 00:00:00+00', true),
+  ('privacy', '1.0.0', '2026-07-15 00:00:00+00', true)
 on conflict (document_type, version) do update
 set effective_at = excluded.effective_at,
   is_current = excluded.is_current,

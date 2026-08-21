@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildVisibleTodayOrder, getTodayEmptyStateMessageIds, shiftISODate } from './today.utils'
+import {
+  buildVisibleTodayOrder,
+  getTodayEmptyStateMessageIds,
+  selectedDateLabel,
+  shiftISODate,
+} from './today.utils'
 
 describe('today feature utils', () => {
+  it('uses DD/MM/YYYY for the selected day', () => {
+    expect(selectedDateLabel('2026-08-03')).toBe('03/08/2026')
+  })
+
   it('shifts ISO dates by whole days', () => {
     expect(shiftISODate('2026-06-10', -1)).toBe('2026-06-09')
     expect(shiftISODate('2026-06-10', 1)).toBe('2026-06-11')

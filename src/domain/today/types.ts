@@ -39,6 +39,7 @@ export type TodayHabitItem = {
   log: HabitLog | null
   state: HabitTodayState
   amount: number | null
+  actionDisabled: boolean
 }
 
 export type TodayTaskItem = {

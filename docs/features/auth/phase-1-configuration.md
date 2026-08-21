@@ -16,6 +16,10 @@ match the hosted Supabase dashboard before auth is released.
 - Email change double-confirm is disabled so only the new email confirms the change.
 - Secure password change is enabled locally; the client still needs the compatible Settings flow in
   a later phase.
+- Password policy is 12-64 characters, with no lowercase, uppercase, number, or symbol composition
+  requirement.
+- Common-password or compromised-password rejection is out of scope unless a later approved
+  Supabase setting/spec adds it.
 - OTP length is six digits.
 - Local email uses Inbucket SMTP.
 - Google OAuth is enabled in local config with `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and
@@ -26,6 +30,8 @@ match the hosted Supabase dashboard before auth is released.
 - Enable Email/password.
 - Require email confirmation.
 - Configure the Magic Link/OTP template to send a six-digit token.
+- Configure the password policy to 12-64 characters, with no lowercase, uppercase, number, or
+  symbol composition requirement.
 - Enable Google as the only OAuth provider for this auth package.
 - Disable Secure Email Change / double-confirm changes.
 - Enable security notifications for changed email and changed password.
@@ -36,13 +42,13 @@ match the hosted Supabase dashboard before auth is released.
 
 ## Legal Seed Metadata
 
-Phase 1 seeds draft current rows:
+Phase 1 seeds the current production-facing legal rows:
 
-- Terms: `terms-draft-2026-07-02`
-- Privacy: `privacy-draft-2026-07-02`
+- Terms: `1.0.0`
+- Privacy: `1.0.0`
 
-These are development placeholders. Replacing them with reviewed version IDs and effective dates is
-a release blocker before production auth launch.
+Both use an effective date of July 15, 2026. Any future material legal update must insert a new
+current version and require re-acceptance where appropriate.
 
 ## Notes
 

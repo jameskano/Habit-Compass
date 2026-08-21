@@ -49,6 +49,10 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 - Today list cards use the same initial waterfall reveal as Items lists.
 - Habits show a small `Habit` chip. Tasks and recurrent tasks do not show type chips.
 - Tapping the card body and tapping the completion control run the same primary action.
+- Long item titles on Today cards and Today action sheets use single-line truncation with an ellipsis.
+  The full item title remains available through accessible names and the visible title's browser
+  tooltip.
+- Today cards and their reorder handles must stay inside the available viewport width.
 
 ## Completion Rules
 
@@ -73,4 +77,5 @@ Users need a fast dated execution screen that shows only what is scheduled for t
 - Measurable amount entry includes period progress, target, and minimum when configured.
 - Empty states distinguish today, another date, and no search results.
 - Drag ordering is available from the handle and does not conflict with long press.
+- Manual order for a selected date survives closing and reopening the app; loading or error states do not discard it.
 - User-facing strings are localized.

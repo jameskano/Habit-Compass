@@ -154,6 +154,7 @@ describe('WeekPage', () => {
 
   it('uses the stored week-start preference for weekday label order', async () => {
     const user = userEvent.setup()
+    getMockState().appSettings.weekStartsOn = 0
     useAppPreferencesStore.setState({ weekStartsOn: 0 })
     render(<App />)
 

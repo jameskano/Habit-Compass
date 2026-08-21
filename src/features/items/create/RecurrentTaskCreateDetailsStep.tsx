@@ -2,7 +2,6 @@ import { useIntl } from 'react-intl'
 
 import type { CreateRecurrentTaskInput } from '@/domain/recurrent-tasks'
 import { itemPriorities } from '@/shared/types'
-import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
@@ -18,23 +17,19 @@ type RecurrentTaskCreateDetailsStepProps = {
   description: string
   startsOn: string
   endsOn: string
-  carryForward: boolean
   onTitleChange: (value: string) => void
   onCategoryIdChange: (value: string) => void
   onPriorityChange: (value: CreateRecurrentTaskInput['priority']) => void
   onDescriptionChange: (value: string) => void
   onStartsOnChange: (value: string) => void
   onEndsOnChange: (value: string) => void
-  onCarryForwardChange: (value: boolean) => void
   onCreateCategory: () => void
 }
 
 export const RecurrentTaskCreateDetailsStep = ({
-  carryForward,
   categoryId,
   description,
   endsOn,
-  onCarryForwardChange,
   onCategoryIdChange,
   onCreateCategory,
   onDescriptionChange,
@@ -100,13 +95,6 @@ export const RecurrentTaskCreateDetailsStep = ({
         onValueChange={onEndsOnChange}
         allowClear
       />
-      <label className="flex items-center justify-between gap-3 rounded-xl border border-border/65 bg-muted/35 p-3 text-sm">
-        <span>{intl.formatMessage({ id: 'page.items.create.task.carryForward' })}</span>
-        <Checkbox
-          checked={carryForward}
-          onChange={(event) => onCarryForwardChange(event.target.checked)}
-        />
-      </label>
     </section>
   )
 }

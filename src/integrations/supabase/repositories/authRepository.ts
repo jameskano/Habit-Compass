@@ -260,9 +260,11 @@ export const supabaseAuthRepository: AuthRepository = {
 
   async signInWithGoogle(input) {
     const supabase = getSupabaseClient()
+    const isDeleteAccountReauth = input.redirectTo.includes('flow=delete-account')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
+        queryParams: isDeleteAccountReauth ? { prompt: 'select_account' } : undefined,
         redirectTo: input.redirectTo,
       },
     })

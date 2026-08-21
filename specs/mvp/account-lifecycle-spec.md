@@ -39,7 +39,8 @@ Auth user deletion.
 
 ## Compatibility Notes
 
-Existing scheduled-deletion code may remain in the repository until the auth feature replaces it,
-but new work must not expand it as the active product model. Migration and cleanup decisions are
-specified in `/specs/auth/03-supabase-auth-and-data.md` and
-`/specs/auth/06-revenuecat-and-account-deletion.md`.
+The user-facing pending-deletion route and scheduled-deletion Edge Function source files have been
+removed from the repository. Legacy database columns may remain only as migration compatibility
+until a later database cleanup removes or repurposes them. New work must not reintroduce a
+scheduled-deletion product model. Migration and cleanup decisions are specified in
+`/specs/auth/03-supabase-auth-and-data.md` and `/specs/auth/06-revenuecat-and-account-deletion.md`.

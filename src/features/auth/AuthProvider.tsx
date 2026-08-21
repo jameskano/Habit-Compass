@@ -1,6 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import type { AuthLifecycleState } from './authState.types'
 import {
   authRepository,
@@ -17,6 +18,25 @@ type AuthProviderProps = {
   children: ReactNode
 }
 
+const subscriptionIdentityStartupTimeoutMs = 3_000
+
+const waitForBestEffort = async (operation: Promise<unknown>, timeoutMs: number) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+  try {
+    await Promise.race([
+      operation.catch(() => undefined),
+      new Promise<void>((resolve) => {
+        timeoutId = setTimeout(resolve, timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+  }
+}
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient()
   const [state, setState] = useState<AuthLifecycleState>({ status: 'initializing' })
@@ -29,7 +49,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [])
 
   const identifySubscriptionUser = useCallback(async (userId: string) => {
-    await subscriptionRepository.identifyUser(userId).catch(() => undefined)
+    await waitForBestEffort(
+      subscriptionRepository.identifyUser(userId),
+      subscriptionIdentityStartupTimeoutMs,
+    )
   }, [])
 
   const refreshAccountContext = useCallback(async () => {
@@ -87,16 +110,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const capabilities = unwrapResult(await authRepository.ensureUserProvisioned())
       const legalStatus = unwrapResult(await authRepository.getCurrentLegalStatus())
-      const onboardingStatus = unwrapResult(await settingsRepository.getOnboardingStatus())
+      const profileSettings = unwrapResult(await settingsRepository.getProfileSettings())
 
       if (refreshVersion !== stateVersionRef.current) {
         return
       }
 
+      useAppPreferencesStore.getState().hydrateProfilePreferences({
+        locale: profileSettings.locale,
+        theme: profileSettings.theme,
+        weekStartsOn: profileSettings.weekStartsOn,
+      })
+
       setState({
         capabilities,
         legalStatus,
-        onboardingCompletedAt: onboardingStatus.onboardingCompletedAt,
+        onboardingCompletedAt: profileSettings.onboardingCompletedAt,
         status: 'authenticated',
         user,
       })

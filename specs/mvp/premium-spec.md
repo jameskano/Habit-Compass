@@ -82,6 +82,8 @@ scarcity, shame, or punitive streak language.
   the user's history and must not be deleted to satisfy limits.
 - Reactivating an archived item or reopening a completed task must respect the same active-item
   limits as creating a new active item.
+- Reopening a completed one-time task means undoing completion while the task is still active.
+  Archived completed tasks are historical and cannot be reactivated or reopened.
 - Item-limit checks must run before opening creation UI, again before client-side save, and at the
   database layer for inserts or updates that would increase the active/open item count.
 - Existing active/open items may still be edited when the user is already at the limit, provided the
@@ -110,6 +112,19 @@ Avoid:
 - Fake countdowns or fake scarcity.
 - Unverified savings claims.
 - Promises of AI behavior before the AI feature spec and implementation exist.
+
+## Ethical Cognitive Support
+
+Premium and upgrade-adjacent copy may use cognitive ease, clear defaults, small commitments, real
+limits, and context preservation to help users choose calmly.
+
+- Frame Premium as more room for the routine the user is already building.
+- Keep the free plan useful and describe limits as product boundaries, not personal failure.
+- Offer reversible alternatives such as archiving or completing an item before asking for Premium.
+- Mention future guidance only as optional future value until it is specified and shipped.
+
+Do not use fake urgency, fake scarcity, shame, punitive streak framing, hidden costs, or repeated
+conversion prompts.
 
 ## Acceptance Criteria
 

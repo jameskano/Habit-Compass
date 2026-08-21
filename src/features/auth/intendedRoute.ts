@@ -8,15 +8,7 @@ const rejectedExactPaths = new Set([
   '/legal/acceptance',
 ])
 
-const allowedProtectedPrefixes = [
-  '/account/pending-deletion',
-  '/items',
-  '/mood',
-  '/onboarding',
-  '/settings',
-  '/today',
-  '/week',
-]
+const allowedProtectedPrefixes = ['/items', '/mood', '/onboarding', '/settings', '/today', '/week']
 
 const isAllowedProtectedPath = (pathname: string) =>
   allowedProtectedPrefixes.some(

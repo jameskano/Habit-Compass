@@ -127,6 +127,7 @@ $$;
 create or replace function app_private.enforce_free_item_limits()
 returns trigger
 language plpgsql
+security definer
 set search_path = public, pg_temp
 as $$
 declare

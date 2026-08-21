@@ -36,13 +36,15 @@ The startup screen must be rendered until the first branch resolves.
 
 A protected route checks:
 
-1. Is auth initialization complete?
-2. Is there an authenticated user?
-3. Has the user accepted current legal versions?
-4. Is required account provisioning available?
+1. Is normal web-browser access disabled for this deployment?
+2. Is auth initialization complete?
+3. Is there an authenticated user?
+4. Has the user accepted current legal versions?
+5. Is required account provisioning available?
 
 Results:
 
+- Browser access disabled: show the mobile-app-only availability page.
 - Initializing: startup loading UI.
 - No user: redirect to sign-in with safe intended path.
 - Missing legal acceptance: redirect to legal acceptance.
@@ -52,6 +54,31 @@ Results:
 This applies to Today, Items, Week, Settings, entity details, and any route that reads user data.
 
 The main `AppLayout` and bottom navigation must not render beneath guest auth screens, callback screens, or the legal acceptance gate. If the existing root route always wraps `AppLayout`, split the route tree into public/auth/legal/app layout branches during implementation.
+
+## 3.1 Mobile-App-Only Web Deployment Gate
+
+Habit Compass may deploy the same Vite build to a public web host for legal documents and external
+account-deletion requirements while keeping normal product access mobile-only.
+
+When `VITE_DISABLE_WEB_APP_ACCESS=true` and the runtime is a normal browser, the app must block:
+
+- Protected application routes such as Today, Week, Items, Settings, and Onboarding.
+- Guest authentication routes such as sign-in, sign-up, email-code sign-in, verification, forgot
+  password, reset password, auth callback, and legal acceptance.
+
+The gate must not block:
+
+- Public Privacy Policy route.
+- Public Terms route.
+- Public external account-deletion route.
+
+The gate must use runtime platform detection, not viewport width or user-agent guessing. Capacitor
+native builds must still be able to use the same production bundle.
+
+The public external account-deletion route may receive a Supabase email OTP callback with
+`code` plus a server-issued `challenge` query parameter. This route must exchange the code, verify a
+temporary Supabase session, show a final destructive confirmation, and then call the immediate
+deletion endpoint. Opening the link alone must not delete the account.
 
 ## 4. Guest-only behavior
 

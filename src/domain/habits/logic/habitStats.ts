@@ -1,6 +1,7 @@
 import type { ISODateString } from '@/shared/types'
 
 import type { Habit, HabitLog } from '../types'
+import { getCertainDaysPeriodState } from './habitCertainDays'
 import {
   evaluateHabitCompletionForLogs,
   getHabitPeriodBounds,
@@ -26,6 +27,32 @@ export type HabitStats = {
 
 const isWithinRange = (date: ISODateString, from: ISODateString, to: ISODateString) => {
   return date >= from && date <= to
+}
+
+const addDays = (date: ISODateString, amount: number) => {
+  const current = new Date(`${date}T00:00:00.000Z`)
+  current.setUTCDate(current.getUTCDate() + amount)
+  return current.toISOString().slice(0, 10) as ISODateString
+}
+
+const enumerateHabitPeriodStarts = (
+  habit: Habit,
+  from: ISODateString,
+  to: ISODateString,
+  weekStartsOn: WeekStartsOn,
+) => {
+  const firstDate = from > habit.startsOn ? from : habit.startsOn
+  const lastDate = habit.endsOn && habit.endsOn < to ? habit.endsOn : to
+  const periodStarts: ISODateString[] = []
+  let cursor = firstDate
+
+  while (cursor <= lastDate) {
+    const { periodStart, periodEnd } = getHabitPeriodBounds(habit, cursor, weekStartsOn)
+    periodStarts.push(periodStart)
+    cursor = addDays(periodEnd, 1)
+  }
+
+  return periodStarts
 }
 
 export const scoreHabitLog = (log: HabitLog) => {
@@ -61,6 +88,74 @@ const calculateStreaks = (states: HabitDayState[]) => {
   return { current, best }
 }
 
+const calculateCertainDaysStats = (input: {
+  habit: Habit
+  logs: HabitLog[]
+  from: ISODateString
+  to: ISODateString
+  today: ISODateString
+  weekStartsOn: WeekStartsOn
+}): HabitStats => {
+  const { habit, logs, from, to, today, weekStartsOn } = input
+  const periodStarts = enumerateHabitPeriodStarts(
+    habit,
+    from,
+    to < today ? to : today,
+    weekStartsOn,
+  )
+  let expectedScore = 0
+  let creditedCompletionDays = 0
+  let currentStreak = 0
+  let bestStreak = 0
+
+  for (const periodStart of periodStarts) {
+    const period = getCertainDaysPeriodState({ habit, logs, date: periodStart, weekStartsOn })
+    if (!period || period.effectiveTargetDays === 0) {
+      continue
+    }
+
+    const qualifyingDays = period.qualifyingDates.filter(
+      (date) => date >= from && date <= to && date <= today,
+    ).length
+    const creditedDays = Math.min(qualifyingDays, period.effectiveTargetDays)
+    expectedScore += period.effectiveTargetDays
+    creditedCompletionDays += creditedDays
+    currentStreak += creditedDays
+    bestStreak = Math.max(bestStreak, currentStreak)
+
+    const scoringEnd =
+      habit.endsOn && habit.endsOn < period.periodEnd ? habit.endsOn : period.periodEnd
+    const isClosed = scoringEnd < today
+    if (isClosed && qualifyingDays < period.effectiveTargetDays) {
+      currentStreak = 0
+    }
+  }
+
+  const completedDates = [...new Set(logs.map((log) => log.loggedForDate))].filter(
+    (date) =>
+      date >= from &&
+      date <= to &&
+      date <= today &&
+      evaluateHabitCompletionForLogs({ habit, logs, date, weekStartsOn }).validCompletionScore > 0,
+  )
+  const completionScore = completedDates.reduce(
+    (total, date) =>
+      total +
+      evaluateHabitCompletionForLogs({ habit, logs, date, weekStartsOn }).validCompletionScore,
+    0,
+  )
+
+  return {
+    completionEvents: completedDates.length,
+    completionScore,
+    expectedScore,
+    completionPercentage:
+      expectedScore > 0 ? Math.round((creditedCompletionDays / expectedScore) * 100) : 0,
+    currentStreak,
+    bestStreak,
+  }
+}
+
 export const calculateHabitStats = (input: {
   habit: Habit
   logs: HabitLog[]
@@ -70,19 +165,24 @@ export const calculateHabitStats = (input: {
   weekStartsOn?: WeekStartsOn
 }): HabitStats => {
   const { habit, from, to, today, weekStartsOn = 1 } = input
-  const logs = filterEligibleHabitLogs(habit, input.logs).filter((log) =>
-    isWithinRange(log.loggedForDate, from, to),
-  )
-  if (getHabitTargetScope(habit) === 'period') {
-    const periodStarts = new Set<ISODateString>()
-    for (const log of logs) {
-      periodStarts.add(getHabitPeriodBounds(habit, log.loggedForDate, weekStartsOn).periodStart)
-    }
-    if (periodStarts.size === 0) {
-      periodStarts.add(getHabitPeriodBounds(habit, today, weekStartsOn).periodStart)
-    }
+  const logs = filterEligibleHabitLogs(
+    habit,
+    input.logs.filter((log) => log.habitId === habit.id),
+  ).filter((log) => isWithinRange(log.loggedForDate, from, to))
 
-    const periodScores = [...periodStarts].flatMap((periodStart) => {
+  if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
+    return calculateCertainDaysStats({ habit, logs, from, to, today, weekStartsOn })
+  }
+
+  if (getHabitTargetScope(habit) === 'period') {
+    const periodStarts = enumerateHabitPeriodStarts(
+      habit,
+      from,
+      to < today ? to : today,
+      weekStartsOn,
+    )
+
+    const periodScores = periodStarts.flatMap((periodStart) => {
       const { periodEnd } = getHabitPeriodBounds(habit, periodStart, weekStartsOn)
       if (doesHabitInactivityOverlapRange(habit, periodStart, periodEnd)) {
         return []
@@ -99,13 +199,14 @@ export const calculateHabitStats = (input: {
     })
     const completionScore = periodScores.reduce((total, score) => total + score, 0)
     const expectedScore = periodScores.length
+    const completionEvents = periodScores.filter((score) => score > 0).length
     return {
-      completionEvents: periodScores.filter((score) => score > 0).length,
+      completionEvents,
       completionScore,
       expectedScore,
       completionPercentage:
         expectedScore > 0
-          ? Math.round((Math.min(completionScore, expectedScore) / expectedScore) * 100)
+          ? Math.round((Math.min(completionEvents, expectedScore) / expectedScore) * 100)
           : 0,
       currentStreak: null,
       bestStreak: null,
@@ -126,7 +227,7 @@ export const calculateHabitStats = (input: {
     }),
   )
   const accountableStates = states.filter((state) => state !== 'today_pending')
-  const expectedScore = accountableStates.filter((state) => state !== 'skipped').length
+  const expectedScore = accountableStates.length
   const completionScore = scheduledDates.reduce((total, date) => {
     const score = evaluateHabitCompletionForLogs({
       habit,
@@ -136,22 +237,23 @@ export const calculateHabitStats = (input: {
     }).validCompletionScore
     return total + score
   }, 0)
+  const completionEvents = scheduledDates.filter(
+    (date) =>
+      evaluateHabitCompletionForLogs({
+        habit,
+        logs: scheduledLogs,
+        date,
+        weekStartsOn,
+      }).validCompletionScore > 0,
+  ).length
   const streaks = calculateStreaks(accountableStates)
 
   return {
-    completionEvents: scheduledDates.filter(
-      (date) =>
-        evaluateHabitCompletionForLogs({
-          habit,
-          logs: scheduledLogs,
-          date,
-          weekStartsOn,
-        }).validCompletionScore > 0,
-    ).length,
+    completionEvents,
     completionScore,
     expectedScore,
     completionPercentage:
-      expectedScore > 0 ? Math.round((completionScore / expectedScore) * 100) : 0,
+      expectedScore > 0 ? Math.round((completionEvents / expectedScore) * 100) : 0,
     currentStreak: streaks.current,
     bestStreak: streaks.best,
   }

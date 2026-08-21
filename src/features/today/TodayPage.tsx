@@ -129,7 +129,6 @@ export const TodayPage = () => {
       buildVisibleTodayOrder(todayData.orderedItems, visibleOrderedIds),
     )
   }
-
   if (todayData.isLoading) {
     return (
       <section className="space-y-6">
