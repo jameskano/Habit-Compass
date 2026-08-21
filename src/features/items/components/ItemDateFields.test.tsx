@@ -42,6 +42,7 @@ describe('item date fields', () => {
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await user.click(trigger)
+      expect(await screen.findByRole('dialog', { name: 'Choose end date' })).toBeInTheDocument()
       expect(await screen.findByRole('grid')).toBeInTheDocument()
 
       const nextMonth = screen.getByRole('button', { name: /next month/i })

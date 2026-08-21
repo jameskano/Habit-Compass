@@ -105,6 +105,7 @@ export const DatePickerField = ({
         <PopoverContent
           ref={contentRef}
           align="start"
+          aria-label={intl.formatMessage({ id: openLabelId })}
           portalContainer={dialogContainer}
           className="pointer-events-auto z-[60] w-auto"
           onOpenAutoFocus={(event) => {

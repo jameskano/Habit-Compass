@@ -71,7 +71,7 @@ test('item date picker remains interactive inside its creation dialog', async ({
 
   await dateTrigger.click()
 
-  const calendarDialog = page.getByRole('dialog').filter({ has: page.getByRole('grid') })
+  const calendarDialog = page.getByRole('dialog', { name: 'Choose date' })
   await expect(calendarDialog).toBeVisible()
   const initialMonth = await calendarDialog.getByRole('status').textContent()
 
@@ -82,7 +82,7 @@ test('item date picker remains interactive inside its creation dialog', async ({
   await calendarDialog.getByRole('status').click()
   await expect(calendarDialog).toBeVisible()
 
-  await calendarDialog.getByRole('button', { name: /15th/ }).click()
+  await calendarDialog.getByRole('button', { name: /^15\/\d{2}\/\d{4}$/ }).click()
 
   await expect(calendarDialog).toHaveCount(0)
   await expect(dateTrigger).not.toHaveText(initialDate ?? '')
