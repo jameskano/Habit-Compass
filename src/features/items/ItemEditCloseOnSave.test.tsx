@@ -1,17 +1,33 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getMockState, mockData, resetMockState } from '@/integrations/mock/mockData'
+import { recurrentTasksRepository } from '@/integrations/repositories'
+import { createAppError } from '@/shared/utils/appError'
+import { err, ok } from '@/shared/utils/result'
 import { renderWithAppProviders } from '@/test/utils/renderWithAppProviders'
 
 import { HabitDetail } from './habits/HabitDetail'
 import { RecurrentTaskEdit } from './recurrent-tasks/RecurrentTaskEdit'
 import { TaskEdit } from './tasks/TaskEdit'
 
+const createDeferred = <T,>() => {
+  let resolvePromise!: (value: T) => void
+  const promise = new Promise<T>((resolve) => {
+    resolvePromise = resolve
+  })
+
+  return { promise, resolve: resolvePromise }
+}
+
 describe('item edit close on save', () => {
   beforeEach(() => {
     resetMockState()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('closes task edit after a successful save', async () => {
@@ -71,6 +87,84 @@ describe('item edit close on save', () => {
     expect(getMockState().recurrentTasks.find((entry) => entry.id === task.id)?.title).toBe(
       'Weekly review and reset',
     )
+  })
+
+  it('keeps recurrent task edit mounted until archive succeeds', async () => {
+    const user = userEvent.setup()
+    const task = getMockState().recurrentTasks.find((entry) => entry.id === 'recurrent-review')
+    const onArchived = vi.fn()
+    const archiveResult =
+      createDeferred<Awaited<ReturnType<typeof recurrentTasksRepository.archive>>>()
+
+    if (!task) {
+      throw new Error('Expected recurrent-review fixture')
+    }
+
+    vi.spyOn(recurrentTasksRepository, 'archive').mockReturnValueOnce(archiveResult.promise)
+
+    renderWithAppProviders(
+      <RecurrentTaskEdit
+        task={task}
+        categories={getMockState().categories}
+        today={mockData.today}
+        onClose={vi.fn()}
+        onArchived={onArchived}
+        onDeleted={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Archive' }))
+
+    expect(
+      screen.getByRole('dialog', { name: `Edit recurrent task ${task.title}` }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Archive' })).toBeDisabled()
+    expect(onArchived).not.toHaveBeenCalled()
+
+    await act(async () => {
+      archiveResult.resolve(
+        ok({ ...task, lifecycleStatus: 'archived', archivedAt: new Date().toISOString() }),
+      )
+    })
+
+    await waitFor(() => expect(onArchived).toHaveBeenCalledWith(task))
+  })
+
+  it('keeps recurrent task edit open when archive fails', async () => {
+    const user = userEvent.setup()
+    const task = getMockState().recurrentTasks.find((entry) => entry.id === 'recurrent-review')
+    const onArchived = vi.fn()
+    const archiveResult =
+      createDeferred<Awaited<ReturnType<typeof recurrentTasksRepository.archive>>>()
+
+    if (!task) {
+      throw new Error('Expected recurrent-review fixture')
+    }
+
+    vi.spyOn(recurrentTasksRepository, 'archive').mockReturnValueOnce(archiveResult.promise)
+
+    renderWithAppProviders(
+      <RecurrentTaskEdit
+        task={task}
+        categories={getMockState().categories}
+        today={mockData.today}
+        onClose={vi.fn()}
+        onArchived={onArchived}
+        onDeleted={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Archive' }))
+
+    await act(async () => {
+      archiveResult.resolve(err(createAppError('network', 'Archive failed.')))
+    })
+
+    expect(
+      screen.getByRole('dialog', { name: `Edit recurrent task ${task.title}` }),
+    ).toBeInTheDocument()
+    expect(onArchived).not.toHaveBeenCalled()
+    expect(await screen.findByText('Something went wrong. Please try again.')).toBeInTheDocument()
   })
 
   it('closes habit detail after a successful edit save', async () => {

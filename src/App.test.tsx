@@ -2021,7 +2021,7 @@ describe('app shell', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /Export as CSV/ }))
-    expect(await screen.findByText(/Export ready/)).toBeInTheDocument()
+    expect(await screen.findByText(/Export saved/)).toBeInTheDocument()
     expect(getMockState().dataExportRequests).toEqual(['csv'])
     expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
 

@@ -24,7 +24,7 @@ describe('SuggestionCard', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Make today easier to finish' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Use a minimum version' }))
+    await user.click(screen.getByRole('button', { name: 'Use the lighter version' }))
     await user.click(screen.getByRole('button', { name: 'Dismiss suggestion' }))
 
     expect(onAction).toHaveBeenCalledTimes(1)

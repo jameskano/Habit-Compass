@@ -116,6 +116,7 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       env: {
         VITE_APP_DATA_SOURCE: 'mock',
+        VITE_APP_VERSION: '1.0.0',
       },
       exclude: ['**/node_modules/**', '**/dist/**', '**/src/test/e2e/**', '**/*.live.test.ts'],
       globals: true,

@@ -225,7 +225,6 @@ export const useRecurrentTaskEditForm = ({
   }
 
   const archiveTask = () => {
-    onClose()
     archiveMutation.mutate(task.id, { onSuccess: () => onArchived(task) })
   }
 
