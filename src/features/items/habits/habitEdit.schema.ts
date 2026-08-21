@@ -57,7 +57,10 @@ export const HabitEditValuesSchema = BaseHabitEditValuesSchema.superRefine((valu
     context.addIssue({ code: 'custom', path: ['daysOfYear'], message: 'chooseDay' })
   }
 
-  if (value.scheduleKind === 'flexiblePeriod' && value.trackingType !== 'totalMeasurablePerPeriod') {
+  if (
+    value.scheduleKind === 'flexiblePeriod' &&
+    value.trackingType !== 'totalMeasurablePerPeriod'
+  ) {
     context.addIssue({ code: 'custom', path: ['scheduleKind'], message: 'invalidSchedule' })
   }
 

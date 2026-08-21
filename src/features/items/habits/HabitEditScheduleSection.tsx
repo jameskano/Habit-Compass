@@ -56,9 +56,12 @@ export const HabitEditScheduleSection = memo(
         </div>
         {selectedTrackingType === 'totalMeasurablePerPeriod' ? (
           <p className="text-sm text-muted-foreground">
-            {intl.formatMessage({ id: 'page.items.create.habit.flexiblePeriodHelp' }, {
-              period: intl.formatMessage({ id: `items.period.${selectedGoalPeriod}` }),
-            })}
+            {intl.formatMessage(
+              { id: 'page.items.create.habit.flexiblePeriodHelp' },
+              {
+                period: intl.formatMessage({ id: `items.period.${selectedGoalPeriod}` }),
+              },
+            )}
           </p>
         ) : (
           <label className="block text-sm font-medium">

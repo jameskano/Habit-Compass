@@ -46,6 +46,7 @@ Output exactly:
 # Verification Report
 
 ## Verdict
+
 PASS | PASS WITH FIXES | FAIL
 
 ## Critical Issues
@@ -63,8 +64,9 @@ PASS | PASS WITH FIXES | FAIL
 ## Open Questions
 
 ## Requirement Coverage
+
 | Requirement | Evidence | Status |
-| --- | --- | --- |
+| ----------- | -------- | ------ |
 
 ## Commands Reviewed
 
@@ -78,4 +80,3 @@ Severity rules:
 - Minor: low-risk mismatch, copy issue, naming, or maintainability note.
 
 Use `PASS` only when the implementation genuinely satisfies the spec.
-

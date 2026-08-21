@@ -62,8 +62,7 @@ const removeLog = (logs: HabitLog[] | undefined, input: RemoveHabitLogInput) =>
 const countCompletedTodayHabits = (habits: Habit[], logs: HabitLog[], date: ISODateString) =>
   habits.filter((habit) =>
     logs.some(
-      (log) =>
-        log.habitId === habit.id && log.loggedForDate === date && log.status === 'completed',
+      (log) => log.habitId === habit.id && log.loggedForDate === date && log.status === 'completed',
     ),
   ).length
 
@@ -132,7 +131,10 @@ const applyOptimisticUpsert = (
         isHabitLogsQueryKey(queryKey, userId) || isTodayHabitsQueryKey(queryKey, userId),
     })
     .forEach(({ queryKey }) => {
-      if (isTodayHabitsQueryKey(queryKey, userId) && getTodayQueryDate(queryKey) === input.logDate) {
+      if (
+        isTodayHabitsQueryKey(queryKey, userId) &&
+        getTodayQueryDate(queryKey) === input.logDate
+      ) {
         queryClient.setQueryData<TodayHabitsCacheData>(queryKey, (data) => {
           const logs = upsertLog(data?.logs, log)
           if (!data || !logs) {
@@ -166,7 +168,10 @@ const applyOptimisticRemove = (
         isHabitLogsQueryKey(queryKey, userId) || isTodayHabitsQueryKey(queryKey, userId),
     })
     .forEach(({ queryKey }) => {
-      if (isTodayHabitsQueryKey(queryKey, userId) && getTodayQueryDate(queryKey) === input.logDate) {
+      if (
+        isTodayHabitsQueryKey(queryKey, userId) &&
+        getTodayQueryDate(queryKey) === input.logDate
+      ) {
         queryClient.setQueryData<TodayHabitsCacheData>(queryKey, (data) => {
           const logs = removeLog(data?.logs, input)
           if (!data || !logs) {

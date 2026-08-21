@@ -19,7 +19,12 @@ type HabitEditTrackingFieldsProps = {
 }
 
 export const HabitEditTrackingFields = memo(
-  ({ form, onCompletionModeChange, onPeriodChange, onScopeChange }: HabitEditTrackingFieldsProps) => {
+  ({
+    form,
+    onCompletionModeChange,
+    onPeriodChange,
+    onScopeChange,
+  }: HabitEditTrackingFieldsProps) => {
     const intl = useIntl()
     const { errors } = useFormState({
       control: form.control,

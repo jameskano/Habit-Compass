@@ -23,7 +23,8 @@ import { supabaseSettingsRepository } from './supabase/repositories/settingsRepo
 import { supabaseTasksRepository } from './supabase/repositories/tasksRepository'
 import { revenueCatRepository } from './revenuecat/revenueCatRepository'
 
-const isConfiguredEnvValue = (value: string | undefined) => Boolean(value && !value.startsWith('${'))
+const isConfiguredEnvValue = (value: string | undefined) =>
+  Boolean(value && !value.startsWith('${'))
 
 const requestedRepositorySource = import.meta.env.VITE_APP_DATA_SOURCE
 const hasSupabaseConfig =

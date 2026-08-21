@@ -68,6 +68,7 @@ Use:
 # Verification Report
 
 ## Verdict
+
 PASS | PASS WITH FIXES | FAIL
 
 ## Critical Issues
@@ -85,8 +86,9 @@ PASS | PASS WITH FIXES | FAIL
 ## Open Questions
 
 ## Requirement Coverage
+
 | Requirement | Evidence | Status |
-| --- | --- | --- |
+| ----------- | -------- | ------ |
 
 ## Commands Reviewed
 
@@ -94,4 +96,3 @@ PASS | PASS WITH FIXES | FAIL
 ```
 
 Be specific. Reference files and code locations when possible. Prefer false negatives over false confidence.
-

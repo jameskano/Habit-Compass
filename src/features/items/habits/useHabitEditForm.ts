@@ -186,8 +186,7 @@ export const useHabitEditForm = ({ habit, categories, today, onSave }: HabitEdit
 
   const handleScopeChange = useCallback(
     (value: string) => {
-      const trackingType =
-        value === 'period' ? 'totalMeasurablePerPeriod' : 'measurablePerSession'
+      const trackingType = value === 'period' ? 'totalMeasurablePerPeriod' : 'measurablePerSession'
       form.setValue('trackingType', trackingType, {
         shouldDirty: true,
         shouldValidate: true,

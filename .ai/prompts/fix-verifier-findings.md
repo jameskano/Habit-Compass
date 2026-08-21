@@ -36,7 +36,7 @@ Final output:
 ## Fix Summary
 
 | Finding | Resolution | Files | Test Evidence |
-| --- | --- | --- | --- |
+| ------- | ---------- | ----- | ------------- |
 
 ## Commands Run
 
@@ -44,4 +44,3 @@ Final output:
 
 ## Follow-up Verification Needed
 ```
-

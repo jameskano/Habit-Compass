@@ -10,11 +10,7 @@ import { CategoryColorPalette } from './CategoryColorPalette'
 const renderCategoryColorPalette = (onColorTokenChange = vi.fn()) =>
   render(
     <IntlProvider locale="en" messages={getMessages('en')}>
-      <CategoryColorPalette
-        open
-        colorToken="emerald"
-        onColorTokenChange={onColorTokenChange}
-      />
+      <CategoryColorPalette open colorToken="emerald" onColorTokenChange={onColorTokenChange} />
     </IntlProvider>,
   )
 

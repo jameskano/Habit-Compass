@@ -32,17 +32,15 @@ describe('useHabitLogsRangeQuery', () => {
     const wrapper = createWrapper(queryClient)
     const range = { from: '2000-01-01' as const, to: mockData.today }
 
-    const moveLogs = renderHook(
-      () => useHabitLogsRangeQuery({ ...range, habitId: 'habit-move' }),
-      { wrapper },
-    )
+    const moveLogs = renderHook(() => useHabitLogsRangeQuery({ ...range, habitId: 'habit-move' }), {
+      wrapper,
+    })
 
     await waitFor(() => expect(moveLogs.result.current.isSuccess).toBe(true))
 
-    const readLogs = renderHook(
-      () => useHabitLogsRangeQuery({ ...range, habitId: 'habit-read' }),
-      { wrapper },
-    )
+    const readLogs = renderHook(() => useHabitLogsRangeQuery({ ...range, habitId: 'habit-read' }), {
+      wrapper,
+    })
 
     await waitFor(() => expect(readLogs.result.current.isSuccess).toBe(true))
 

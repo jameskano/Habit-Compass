@@ -31,13 +31,7 @@ describe('reset archive delete harness', () => {
     const habit = createResettableHabit('hard')
     const logs = [createHabitLog()]
 
-    const result = hardResetHabitStats(
-      habit,
-      logs,
-      '2026-05-21T09:00:00.000Z',
-      true,
-      '2026-05-21',
-    )
+    const result = hardResetHabitStats(habit, logs, '2026-05-21T09:00:00.000Z', true, '2026-05-21')
 
     expect(result.historyPreserved).toBe(false)
     expect(result.logs).toHaveLength(0)

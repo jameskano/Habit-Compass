@@ -134,9 +134,7 @@ export const supabaseFeedbackRepository: FeedbackRepository = {
         })
 
         if (attachmentError) {
-          return err(
-            toSupabaseError('Feedback screenshot could not be attached.', attachmentError),
-          )
+          return err(toSupabaseError('Feedback screenshot could not be attached.', attachmentError))
         }
 
         attachments.push({

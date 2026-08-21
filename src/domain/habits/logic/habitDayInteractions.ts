@@ -33,9 +33,7 @@ export const isHabitDayActionable = (input: {
   }
 
   if (habit.scheduleRule.kind === 'certainDaysPerPeriod') {
-    const existingLog = logs.some(
-      (log) => log.habitId === habit.id && log.loggedForDate === date,
-    )
+    const existingLog = logs.some((log) => log.habitId === habit.id && log.loggedForDate === date)
     const period = getCertainDaysPeriodState({ habit, logs, date, weekStartsOn })
     return existingLog || !period?.isTargetReached
   }

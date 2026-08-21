@@ -1,7 +1,11 @@
 import type { ExportFile } from '@/domain/export'
 
 type ExportDownloadsPlugin = {
-  saveToDownloads(input: { data: string; filename: string; mimeType: string }): Promise<{ uri: string }>
+  saveToDownloads(input: {
+    data: string
+    filename: string
+    mimeType: string
+  }): Promise<{ uri: string }>
 }
 
 const blobToBase64 = (blob: Blob) =>

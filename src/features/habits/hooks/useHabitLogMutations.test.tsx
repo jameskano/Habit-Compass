@@ -6,7 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HabitLog } from '@/domain/habits'
 import messages from '@/i18n/en.json'
-import { cloneMockState, mockData, MOCK_USER_ID, resetMockState } from '@/integrations/mock/mockData'
+import {
+  cloneMockState,
+  mockData,
+  MOCK_USER_ID,
+  resetMockState,
+} from '@/integrations/mock/mockData'
 import { habitsRepository } from '@/integrations/repositories'
 import { createAppError } from '@/shared/utils/appError'
 import { err, type Result } from '@/shared/utils/result'
@@ -184,8 +189,9 @@ describe('habit log mutations', () => {
       expect(
         queryClient
           .getQueryData<{ logs: HabitLog[] }>(todayQueryKey)
-          ?.logs.find((log) => log.habitId === 'habit-water' && log.loggedForDate === mockData.today)
-          ?.status,
+          ?.logs.find(
+            (log) => log.habitId === 'habit-water' && log.loggedForDate === mockData.today,
+          )?.status,
       ).toBe('skipped')
     })
 

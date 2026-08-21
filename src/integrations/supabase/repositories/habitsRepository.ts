@@ -390,7 +390,8 @@ export const supabaseHabitsRepository: HabitsRepository = {
         .select('*')
         .maybeSingle()
 
-      if (updateError) return err(toSupabaseError('Could not update habit reset date.', updateError))
+      if (updateError)
+        return err(toSupabaseError('Could not update habit reset date.', updateError))
       if (!updatedHabit) return err(createNotFoundError('Habit', habitId))
       return ok(mapHabit(updatedHabit as HabitRow))
     })
