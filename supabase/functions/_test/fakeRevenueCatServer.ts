@@ -11,7 +11,9 @@ export type RevenueCatCall = {
 
 type RevenueCatScenario = {
   cancellationStatus?: number
+  customerErrorBody?: unknown
   customerResponses: RevenueCatSubscriberResponse[]
+  customerStatus?: number
   deletionStatus?: number
 }
 
@@ -70,6 +72,15 @@ export const startFakeRevenueCatServer = async (): Promise<FakeRevenueCatServer>
     })
 
     if (request.method === 'GET' && userId && !storeTransactionId) {
+      if (scenario.customerStatus && scenario.customerStatus >= 400) {
+        writeJson(
+          response,
+          scenario.customerStatus,
+          scenario.customerErrorBody ?? { error: 'customer_lookup_failed' },
+        )
+        return
+      }
+
       const customer =
         scenario.customerResponses[
           Math.min(customerReadIndex, scenario.customerResponses.length - 1)

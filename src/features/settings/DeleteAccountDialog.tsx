@@ -12,6 +12,7 @@ import {
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
+import { PendingState } from '@/shared/ui/PendingState'
 
 import { SettingsStatusMessage } from './components/SettingsStatusMessage'
 import type { DeleteAccountReauthMethod, DeleteAccountStep } from './settings.types'
@@ -20,6 +21,7 @@ type DeleteAccountDialogProps = {
   deleteError: boolean
   deletePassword: string
   deleteReauthMethod: DeleteAccountReauthMethod
+  googleReauthVerified: boolean
   isPending: boolean
   open: boolean
   step: DeleteAccountStep
@@ -27,6 +29,7 @@ type DeleteAccountDialogProps = {
   subscriptionSnapshotLoading: boolean
   onDeletePasswordChange: (password: string) => void
   onOpenChange: (open: boolean) => void
+  onRestartGoogleReauthentication: () => void
   onStepChange: (step: DeleteAccountStep) => void
   onSubmit: () => void
 }
@@ -35,9 +38,11 @@ export const DeleteAccountDialog = ({
   deleteError,
   deletePassword,
   deleteReauthMethod,
+  googleReauthVerified,
   isPending,
   onDeletePasswordChange,
   onOpenChange,
+  onRestartGoogleReauthentication,
   onStepChange,
   onSubmit,
   open,
@@ -45,22 +50,30 @@ export const DeleteAccountDialog = ({
   subscriptionSnapshot,
   subscriptionSnapshotLoading,
 }: DeleteAccountDialogProps) => {
-  const deleteButtonMessageId =
-    deleteReauthMethod === 'google'
-      ? 'settings.account.delete.continueWithGoogle'
-      : 'settings.account.delete'
-  const confirmBackStep = deleteReauthMethod === 'password' ? 'reauth' : 'intent'
+  const googleReauthStep = step === 'reauth' && deleteReauthMethod === 'google'
+  const cancelVerifiedGoogleDeletion =
+    step === 'confirm' && deleteReauthMethod === 'google' && googleReauthVerified
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && isPending) {
+      return
+    }
+
+    onOpenChange(nextOpen)
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby={`settings-delete-account-${step}-description`}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        onEscapeKeyDown={(event) => isPending && event.preventDefault()}
+        onPointerDownOutside={(event) => isPending && event.preventDefault()}
+      >
         {step === 'intent' ? (
           <>
             <DialogHeader>
               <DialogTitle>
                 <FormattedMessage id="settings.account.delete.intentTitle" />
               </DialogTitle>
-              <DialogDescription id="settings-delete-account-intent-description">
+              <DialogDescription>
                 <FormattedMessage id="settings.account.delete.intentDescription" />
               </DialogDescription>
             </DialogHeader>
@@ -103,9 +116,7 @@ export const DeleteAccountDialog = ({
                 </Button>
               </DialogClose>
               <Button
-                onClick={() =>
-                  onStepChange(deleteReauthMethod === 'password' ? 'reauth' : 'confirm')
-                }
+                onClick={() => onStepChange(deleteReauthMethod === 'none' ? 'confirm' : 'reauth')}
               >
                 <FormattedMessage id="action.continue" />
               </Button>
@@ -119,32 +130,53 @@ export const DeleteAccountDialog = ({
               <DialogTitle>
                 <FormattedMessage id="settings.account.delete.reauthTitle" />
               </DialogTitle>
-              <DialogDescription id="settings-delete-account-reauth-description">
-                <FormattedMessage id="settings.account.delete.reauthDescription" />
+              <DialogDescription>
+                <FormattedMessage
+                  id={
+                    googleReauthStep
+                      ? 'settings.account.delete.googleReauthDescription'
+                      : 'settings.account.delete.reauthDescription'
+                  }
+                />
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 p-4 sm:px-6">
-              <div className="space-y-2">
-                <Label htmlFor="delete-account-current-password">
-                  <FormattedMessage id="settings.account.delete.currentPassword" />
-                </Label>
-                <Input
-                  id="delete-account-current-password"
-                  autoComplete="current-password"
-                  type="password"
-                  value={deletePassword}
-                  onChange={(event) => onDeletePasswordChange(event.currentTarget.value)}
-                />
-              </div>
+              {!googleReauthStep ? (
+                <div className="space-y-2">
+                  <Label htmlFor="delete-account-current-password">
+                    <FormattedMessage id="settings.account.delete.currentPassword" />
+                  </Label>
+                  <Input
+                    id="delete-account-current-password"
+                    autoComplete="current-password"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(event) => onDeletePasswordChange(event.currentTarget.value)}
+                  />
+                </div>
+              ) : null}
+              {deleteError ? (
+                <SettingsStatusMessage messageId="settings.account.delete.error" tone="error" />
+              ) : null}
               <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => onStepChange('intent')}>
+                <Button
+                  disabled={isPending}
+                  variant="secondary"
+                  onClick={() => onStepChange('intent')}
+                >
                   <FormattedMessage id="action.back" />
                 </Button>
                 <Button
-                  disabled={deletePassword.trim().length === 0}
-                  onClick={() => onStepChange('confirm')}
+                  disabled={isPending || (!googleReauthStep && deletePassword.trim().length === 0)}
+                  onClick={() => (googleReauthStep ? onSubmit() : onStepChange('confirm'))}
                 >
-                  <FormattedMessage id="action.continue" />
+                  <FormattedMessage
+                    id={
+                      googleReauthStep
+                        ? 'settings.account.delete.continueWithGoogle'
+                        : 'action.continue'
+                    }
+                  />
                 </Button>
               </div>
             </div>
@@ -155,33 +187,63 @@ export const DeleteAccountDialog = ({
           <>
             <DialogHeader>
               <DialogTitle>
-                <FormattedMessage id="settings.account.delete.confirmTitle" />
+                <FormattedMessage
+                  id={
+                    isPending
+                      ? 'settings.account.delete.deletingTitle'
+                      : 'settings.account.delete.confirmTitle'
+                  }
+                />
               </DialogTitle>
-              <DialogDescription id="settings-delete-account-confirm-description">
-                <FormattedMessage id="settings.account.delete.confirmDescription" />
+              <DialogDescription>
+                <FormattedMessage
+                  id={
+                    isPending
+                      ? 'settings.account.delete.deletingDescription'
+                      : 'settings.account.delete.confirmDescription'
+                  }
+                />
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 p-4 sm:px-6">
-              {deleteError ? (
-                <SettingsStatusMessage messageId="settings.account.delete.error" tone="error" />
-              ) : null}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="secondary"
-                  disabled={isPending}
-                  onClick={() => onStepChange(confirmBackStep)}
-                >
-                  <FormattedMessage id="action.back" />
-                </Button>
-                <Button
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  disabled={isPending}
-                  onClick={onSubmit}
-                >
-                  <FormattedMessage id={deleteButtonMessageId} />
-                </Button>
+            {isPending ? (
+              <PendingState
+                className="min-h-28 px-4 py-6"
+                messageId="settings.account.delete.deleting"
+              />
+            ) : (
+              <div className="space-y-4 p-4 sm:px-6">
+                {deleteError ? (
+                  <SettingsStatusMessage messageId="settings.account.delete.error" tone="error" />
+                ) : null}
+                {deleteError && googleReauthVerified ? (
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={onRestartGoogleReauthentication}
+                  >
+                    <FormattedMessage id="settings.account.delete.verifyWithGoogleAgain" />
+                  </Button>
+                ) : null}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      cancelVerifiedGoogleDeletion ? onOpenChange(false) : onStepChange('reauth')
+                    }
+                  >
+                    <FormattedMessage
+                      id={cancelVerifiedGoogleDeletion ? 'action.cancel' : 'action.back'}
+                    />
+                  </Button>
+                  <Button
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={onSubmit}
+                  >
+                    <FormattedMessage id="settings.account.delete.confirmAction" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : null}
       </DialogContent>

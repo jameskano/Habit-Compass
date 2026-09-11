@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   clearPendingAccountDeletionState,
+  markPendingAccountDeletionGoogleVerified,
   readPendingAccountDeletionState,
   savePendingAccountDeletionState,
 } from './pendingAccountDeletionState'
@@ -21,6 +22,7 @@ describe('pendingAccountDeletionState', () => {
     expect(readPendingAccountDeletionState()).toMatchObject({
       idempotencyKey: 'delete-1',
       originalUserId: 'user-1',
+      phase: 'awaiting_google',
     })
 
     clearPendingAccountDeletionState()
@@ -35,6 +37,25 @@ describe('pendingAccountDeletionState', () => {
     })
     vi.advanceTimersByTime(6 * 60 * 1000)
 
+    expect(readPendingAccountDeletionState()).toBeNull()
+  })
+
+  it('marks Google reauthentication complete and expires it from verification time', () => {
+    vi.useFakeTimers()
+    savePendingAccountDeletionState({
+      idempotencyKey: 'delete-1',
+      originalUserId: 'user-1',
+    })
+    vi.advanceTimersByTime(4 * 60 * 1000)
+
+    expect(markPendingAccountDeletionGoogleVerified()).toMatchObject({
+      phase: 'google_verified',
+      verifiedAt: Date.now(),
+    })
+
+    vi.advanceTimersByTime(4 * 60 * 1000)
+    expect(readPendingAccountDeletionState()?.phase).toBe('google_verified')
+    vi.advanceTimersByTime(2 * 60 * 1000)
     expect(readPendingAccountDeletionState()).toBeNull()
   })
 })

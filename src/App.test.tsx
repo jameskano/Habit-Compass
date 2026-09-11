@@ -306,7 +306,7 @@ describe('app shell', () => {
     const { unmount } = render(<App />)
 
     expect(
-      await screen.findByRole('heading', { name: 'Finishing sign-in', level: 1 }),
+      await screen.findByRole('heading', { name: 'Authenticating', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
 
@@ -390,7 +390,35 @@ describe('app shell', () => {
     expect(readPendingAuthState()).toBeNull()
   })
 
-  it('completes a Google-only deletion intent from the auth callback', async () => {
+  it('requires Google-only accounts to reauthenticate before final deletion confirmation', async () => {
+    const user = userEvent.setup()
+    const state = getMockState()
+    state.authSession.providerClassification = 'oauth_only'
+    await act(async () => {
+      await router.navigate({ to: '/settings' })
+    })
+
+    render(<App />)
+
+    await user.click(await screen.findByRole('button', { name: 'Delete account' }))
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Delete your account?' })).getByRole('button', {
+        name: 'Continue',
+      }),
+    )
+
+    const reauthDialog = screen.getByRole('dialog', { name: 'Confirm it is you' })
+    expect(reauthDialog).toHaveTextContent('Continue with Google to verify your identity')
+    expect(within(reauthDialog).queryByLabelText('Current password')).not.toBeInTheDocument()
+    await user.click(within(reauthDialog).getByRole('button', { name: 'Continue with Google' }))
+
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+    expect(state.authSession.googleSignInRequests.at(-1)).toContain('flow=delete-account')
+    expect(readPendingAccountDeletionState()).toMatchObject({ phase: 'awaiting_google' })
+  })
+
+  it('returns a verified Google-only deletion intent to final confirmation before deleting', async () => {
+    const user = userEvent.setup()
     const state = getMockState()
     state.authSession.providerClassification = 'oauth_only'
     savePendingAccountDeletionState({
@@ -406,15 +434,28 @@ describe('app shell', () => {
 
     render(<App />)
 
-    await waitFor(() => {
-      expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
-      expect(state.authSession.signedIn).toBe(false)
-      expect(state.authSession.signOutScopes).toEqual(['local'])
+    const confirmDialog = await screen.findByRole('dialog', { name: 'Delete permanently?' })
+    expect(state.accountLifecycle.deletionRequests).toEqual([])
+    expect(state.authSession.signedIn).toBe(true)
+    expect(readPendingAccountDeletionState()).toMatchObject({
+      idempotencyKey: 'delete-google-1',
+      phase: 'google_verified',
     })
+
+    await user.click(
+      within(confirmDialog).getByRole('button', { name: 'Delete account permanently' }),
+    )
+    expect(
+      await screen.findByRole('heading', { name: 'Account deleted', level: 1 }),
+    ).toBeInTheDocument()
+    expect(readPendingAccountDeletionState()).toBeNull()
+    expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
+    expect(state.authSession.signedIn).toBe(false)
+
+    await user.click(screen.getByRole('button', { name: 'Continue to sign in' }))
     expect(
       await screen.findByRole('heading', { name: 'Sign in', level: 1 }, { timeout: 5000 }),
     ).toBeInTheDocument()
-    expect(readPendingAccountDeletionState()).toBeNull()
   })
 
   it('renders Today item cards with category, priority, schedule metadata, and completion state', async () => {
@@ -1864,15 +1905,22 @@ describe('app shell', () => {
 
     const confirmDialog = screen.getByRole('dialog', { name: 'Delete permanently?' })
     expect(confirmDialog).toHaveTextContent('Deletion starts now')
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete account' }))
+    await user.click(
+      within(confirmDialog).getByRole('button', { name: 'Delete account permanently' }),
+    )
 
-    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Account deleted', level: 1 }),
+    ).toBeInTheDocument()
     const state = getMockState()
     expect(state.accountLifecycle.deletionRequests).toEqual(['in_app'])
     expect(state.authSession.signedIn).toBe(false)
     expect(useTodayOrderStore.getState().getOrderForDate('2026-07-03')).toEqual([])
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Add item' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Continue to sign in' }))
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
   })
 
   it('does not expose the legacy pending-deletion route', async () => {
@@ -1894,6 +1942,18 @@ describe('app shell', () => {
       await screen.findByRole('heading', { name: 'Page not found', level: 1 }),
     ).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Today' })).not.toBeInTheDocument()
+  })
+
+  it('does not claim deletion success when the success route lacks its one-time marker', async () => {
+    getMockState().authSession.signedIn = false
+    await act(async () => {
+      await router.navigate({ to: '/auth/account-deleted' as never })
+    })
+
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Sign in', level: 1 })).toBeInTheDocument()
+    expect(screen.queryByText('Account deleted')).not.toBeInTheDocument()
   })
 
   it('supports the public external account deletion request path', async () => {

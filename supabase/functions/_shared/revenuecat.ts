@@ -48,9 +48,77 @@ export type RevenueCatEntitlementRow = {
 
 export type RevenueCatFetch = typeof fetch
 
+export class RevenueCatRequestError extends Error {
+  readonly responseCode: string | null
+  readonly responseMessage: string | null
+  readonly status: number
+
+  constructor(
+    code: string,
+    status: number,
+    responseCode: string | null,
+    responseMessage: string | null,
+  ) {
+    super(code)
+    this.name = 'RevenueCatRequestError'
+    this.status = status
+    this.responseCode = responseCode
+    this.responseMessage = responseMessage
+  }
+}
+
 const encodePath = (value: string) => encodeURIComponent(value)
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '')
+
+const redactRevenueCatErrorText = (value: string, maxLength: number) =>
+  value
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[redacted-email]')
+    .replace(
+      /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi,
+      '[redacted-uuid]',
+    )
+    .replace(/\b(?:sk|rc|goog|appl)_[A-Za-z0-9_-]+\b/g, '[redacted-token]')
+    .replace(/\bGPA\.[A-Za-z0-9.-]+\b/g, '[redacted-transaction]')
+    .replace(/\bBearer\s+\S+/gi, 'Bearer [redacted-token]')
+    .slice(0, maxLength)
+
+const toSafeRevenueCatErrorDetails = async (response: Response) => {
+  const rawBody = await response.text().catch(() => '')
+  if (!rawBody) {
+    return { responseCode: null, responseMessage: null }
+  }
+
+  try {
+    const parsed = JSON.parse(rawBody) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { responseCode: null, responseMessage: null }
+    }
+
+    const errorBody = parsed as Record<string, unknown>
+    const rawCode = errorBody.code
+    const rawMessage = errorBody.message ?? errorBody.error
+
+    return {
+      responseCode:
+        typeof rawCode === 'string' || typeof rawCode === 'number'
+          ? redactRevenueCatErrorText(String(rawCode), 80)
+          : null,
+      responseMessage:
+        typeof rawMessage === 'string' ? redactRevenueCatErrorText(rawMessage, 240) : null,
+    }
+  } catch {
+    return { responseCode: null, responseMessage: null }
+  }
+}
+
+const createRevenueCatRequestError = async (
+  code: string,
+  response: Response,
+): Promise<RevenueCatRequestError> => {
+  const { responseCode, responseMessage } = await toSafeRevenueCatErrorDetails(response)
+  return new RevenueCatRequestError(code, response.status, responseCode, responseMessage)
+}
 
 export const getRevenueCatApiBaseUrl = (getEnv: (key: string) => string | undefined) =>
   normalizeBaseUrl(getEnv('REVENUECAT_API_BASE_URL') ?? 'https://api.revenuecat.com')
@@ -87,7 +155,7 @@ export const loadRevenueCatCustomer = async (
   }
 
   if (!response.ok) {
-    throw new Error('revenuecat_customer_lookup_failed')
+    throw await createRevenueCatRequestError('revenuecat_customer_lookup_failed', response)
   }
 
   return (await response.json()) as RevenueCatSubscriberResponse
@@ -112,7 +180,7 @@ export const cancelGooglePlayRenewal = async (
   )
 
   if (!response.ok) {
-    throw new Error('subscription_cancellation_failed')
+    throw await createRevenueCatRequestError('subscription_cancellation_failed', response)
   }
 }
 
@@ -131,7 +199,7 @@ export const deleteRevenueCatCustomer = async (
   })
 
   if (!response.ok && response.status !== 404) {
-    throw new Error('revenuecat_deletion_failed')
+    throw await createRevenueCatRequestError('revenuecat_deletion_failed', response)
   }
 }
 

@@ -288,12 +288,18 @@ Ask for current password.
 
 Use fresh Google sign-in.
 
+The OAuth callback verifies that the returned Supabase user ID matches the account that initiated
+deletion, records only a short-lived client UX phase, and returns to the final confirmation. It must
+not call `delete-account`. The later destructive submission uses the fresh Supabase JWT, and the
+server remains authoritative for freshness; a client phase or timestamp is never authorization.
+
 ### During deletion
 
 - Block navigation.
 - Prevent app background/resume from duplicating request.
 - Use one idempotency key/operation ID if supported.
 - Do not call RevenueCat cancellation directly from the client.
+- Prevent dialog dismissal through escape, backdrop, native back, or repeated submission.
 
 ### Success
 
@@ -303,6 +309,8 @@ Use fresh Google sign-in.
 - Clear pending auth/deletion state.
 - Route to sign-in.
 - Show a concise account-deleted confirmation.
+- Keep the confirmation outside the app shell, provide an immediate sign-in action, and
+  automatically replace it with sign-in after three seconds.
 
 ### Failure
 

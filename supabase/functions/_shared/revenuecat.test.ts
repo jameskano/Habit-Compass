@@ -10,6 +10,7 @@ import {
   getRevenueCatApiBaseUrl,
   loadRevenueCatCustomer,
   premiumEntitlementId,
+  RevenueCatRequestError,
 } from './revenuecat'
 
 const userId = '00000000-0000-4000-8000-000000000701'
@@ -89,6 +90,39 @@ describe('RevenueCat server contract helpers', () => {
         subscriptions: {},
       },
     })
+  })
+
+  it('exposes safe diagnostics without retaining sensitive RevenueCat response values', async () => {
+    const fetcher = vi.fn(async () =>
+      jsonResponse(
+        {
+          code: 'invalid_api_key',
+          message:
+            'Rejected sk_live_secret for person@example.com and 00000000-0000-4000-8000-000000000701',
+          subscriber: { private: 'must-not-be-retained' },
+        },
+        401,
+      ),
+    )
+
+    const error = await loadRevenueCatCustomer(
+      fetcher,
+      'http://revenuecat.test',
+      'secret-key',
+      userId,
+    ).catch((cause: unknown) => cause)
+
+    expect(error).toBeInstanceOf(RevenueCatRequestError)
+    expect(error).toMatchObject({
+      message: 'revenuecat_customer_lookup_failed',
+      responseCode: 'invalid_api_key',
+      responseMessage: 'Rejected [redacted-token] for [redacted-email] and [redacted-uuid]',
+      status: 401,
+    })
+    expect(JSON.stringify(error)).not.toContain('must-not-be-retained')
+    expect(JSON.stringify(error)).not.toContain('sk_live_secret')
+    expect(JSON.stringify(error)).not.toContain('person@example.com')
+    expect(JSON.stringify(error)).not.toContain(userId)
   })
 
   it('maps the premium entitlement mirror from the current RevenueCat customer state', () => {

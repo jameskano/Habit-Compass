@@ -301,6 +301,21 @@ Order:
 
 Never duplicate this branching separately in each form.
 
+### Callback progress and recovery copy
+
+The shared callback route must describe the active intent instead of presenting every callback as
+sign-in:
+
+- Normal authentication: `Authenticating`.
+- Registration: `Confirming your account`.
+- Password recovery: `Verifying reset link`.
+- Email change: `Confirming email change`.
+- Account-deletion reauthentication: `Confirming it's you`.
+
+Progress text and recovery actions must match the same intent. Password-reset recovery is shown only
+for recovery callbacks; account-deletion failures return to Account settings when the current
+session remains usable and otherwise return to sign-in.
+
 ## 12. Sign-out flow
 
 From Settings:
@@ -375,6 +390,8 @@ Google-only account:
 - `Continue with Google`.
 - Force a fresh Google authentication.
 - Verify that the returned Supabase user ID equals the account being deleted.
+- Return to the account-deletion final confirmation without starting deletion from the OAuth
+  callback.
 
 ### Final confirmation
 
@@ -387,6 +404,16 @@ No delayed deletion, undo, or cancellation state is provided after completion.
 ### Progress state
 
 Deletion may require several server operations. Show a blocking progress state and prevent duplicate requests. Do not claim success until the server confirms completion.
+
+While deletion is running, escape, backdrop dismissal, native back, and repeated submission must
+not close or restart the operation.
+
+### Success
+
+After server-confirmed deletion, clear local user state and show a concise `Account deleted`
+confirmation outside the application shell. Provide `Continue to sign in` immediately and replace
+the route with sign-in automatically after three seconds. Direct navigation without a short-lived,
+one-time success marker must go to sign-in without claiming deletion succeeded.
 
 ### Failure
 

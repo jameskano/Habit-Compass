@@ -2,6 +2,7 @@ const intendedRouteKey = 'habit-compass-auth-intended-route-v1'
 
 const rejectedExactPaths = new Set([
   '/account/delete',
+  '/auth/account-deleted',
   '/auth/callback',
   '/auth/reset-password',
   '/auth/sign-in',

@@ -155,6 +155,31 @@ The client returns to sign-in with empty user state.
 
 Given an active auto-renewing Google Play subscription, deletion cancels future renewal before deleting the RevenueCat customer or Supabase user.
 
+### AC-18a Google account-deletion reauthentication and confirmation
+
+Given a Google-only account has reviewed the deletion consequences, when the user continues, a
+fresh Google authentication is required before the final destructive confirmation is shown.
+
+Given the Google callback returns the same Supabase user ID, the app returns to Settings and shows
+`Delete account permanently`; the deletion endpoint has not yet been called.
+
+Given Google authentication is cancelled, invalid, stale, or returns a different user ID, the
+account is not deleted. Cancellation returns to Settings, while a mismatched account is signed out
+locally and receives a safe sign-in recovery action.
+
+Given deletion is running after final confirmation, the progress state prevents duplicate submit,
+escape, backdrop, and native-back dismissal.
+
+Given deletion succeeds, user-owned local state is cleared, `Account deleted` is shown outside the
+app shell with an immediate sign-in action, and sign-in replaces it after three seconds. Opening the
+success route without its one-time marker does not claim deletion succeeded.
+
+### AC-18b Intent-aware callback presentation
+
+Given an authentication, signup, recovery, email-change, or account-deletion callback, its title,
+progress text, and recovery action describe that specific intent. Password-reset recovery is not
+shown for unrelated callback failures.
+
 The confirmation warns of immediate access loss and no automatic refund.
 
 ### AC-19 Cancellation failure
@@ -170,6 +195,19 @@ The user receives a retryable failure.
 ### AC-20 Idempotent deletion retry
 
 Given a deletion operation partially completed after subscription cancellation, retrying does not create an error from the already-cancelled subscription and completes remaining safe steps.
+
+Given a retry reuses an existing idempotency key, the server reuses the existing operation record
+without resetting its status or operation ID before the retry continues.
+
+### AC-21 RevenueCat lookup failure
+
+Given RevenueCat customer or subscription state cannot be loaded, account deletion stops before
+subscription cancellation, RevenueCat customer deletion, app-data deletion, or Auth-user deletion.
+
+The operation is recorded as failed with `revenuecat_customer_lookup_failed`, and server logs include
+the operation ID, workflow step, HTTP status when available, and only redacted RevenueCat error
+details. Logs never include API keys, authorization headers, email addresses, store transaction IDs,
+or raw customer data.
 
 ## 3. Unit-test matrix
 

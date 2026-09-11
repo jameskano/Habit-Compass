@@ -77,6 +77,16 @@ Avoid indefinite spinners. Provide retry for startup, callback, provisioning, le
 
 Auth error screens must provide at least one clear sign-in recovery path and must not strand users on a passive error-only view.
 
+Callback screens must use intent-aware titles, progress text, and recovery actions. Recovery-link
+actions appear only for password recovery. A cancelled account-deletion OAuth flow returns to
+Account settings without deletion. A mismatched Google account is signed out locally, receives
+neutral mismatch guidance, and can return to sign-in.
+
+The blocking account-deletion progress state uses a live status announcement and cannot be
+dismissed through keyboard, pointer, or native-back interaction. The account-deleted success screen
+announces completion, offers an immediate sign-in action, and cancels its three-second redirect
+timer when unmounted.
+
 ## 5. Password accessibility
 
 - Show/hide button has an accessible label that changes with state.

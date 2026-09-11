@@ -285,6 +285,46 @@ describe('delete-account live Edge Function integration', () => {
     await expectStorageObjectDeleted(fixture.storagePath)
   })
 
+  it('records a safe retryable failure when RevenueCat customer lookup fails', async () => {
+    const fixture = await createFixture('revenuecat-lookup-failure')
+    const userId = fixture.session.user.id
+
+    revenueCatServer.setScenario({
+      customerErrorBody: {
+        code: 'invalid_api_key',
+        message: `Rejected sk_live_secret for person@example.com and ${userId}`,
+      },
+      customerResponses: [],
+      customerStatus: 401,
+    })
+
+    const { body, response } = await invokeDeleteAccount(fixture.session, fixture.idempotencyKey)
+
+    expect(response.status, failureContext(body)).toBe(500)
+    expect(body).toMatchObject({
+      error: 'Subscription status could not be verified.',
+      operationId: expect.any(String),
+    })
+    expect(getRevenueCatCallSequence()).toEqual([`GET:${userId}`])
+
+    const operation = await getDeletionOperation(userId, fixture.idempotencyKey)
+    expect(operation.status).toBe('failed')
+    expect(operation.failure_code).toBe('revenuecat_customer_lookup_failed')
+    expect(operation.id).toBe(body.operationId)
+    await expectAuthUserExists(userId)
+    await expectStorageObjectExists(fixture.storagePath)
+
+    const output = servedFunction.getOutput()
+    expect(output).toContain('revenuecat_customer_lookup_failed')
+    expect(output).toContain('status: 401')
+    expect(output).toContain('[redacted-token]')
+    expect(output).toContain('[redacted-email]')
+    expect(output).toContain('[redacted-uuid]')
+    expect(output).not.toContain('sk_live_secret')
+    expect(output).not.toContain('person@example.com')
+    expect(output).not.toContain(userId)
+  })
+
   it('stops before app data cleanup and Auth deletion when RevenueCat customer deletion fails', async () => {
     const fixture = await createFixture('revenuecat-deletion-failure')
     const userId = fixture.session.user.id

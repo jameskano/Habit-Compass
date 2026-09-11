@@ -86,6 +86,10 @@ const AuthCallbackPage = lazyRouteComponent(
   () => import('../../features/auth/AuthCallbackPage'),
   'AuthCallbackPage',
 )
+const AccountDeletedPage = lazyRouteComponent(
+  () => import('../../features/auth/AccountDeletedPage'),
+  'AccountDeletedPage',
+)
 const ResetPasswordPage = lazyRouteComponent(
   () => import('../../features/auth/ResetPasswordPage'),
   'ResetPasswordPage',
@@ -277,6 +281,16 @@ const authCallbackRoute = createRoute({
   ),
 })
 
+const accountDeletedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/account-deleted',
+  component: () => (
+    <NativeAppOnlyRoute>
+      <AccountDeletedPage />
+    </NativeAppOnlyRoute>
+  ),
+})
+
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/forgot-password',
@@ -338,6 +352,7 @@ const routeTree = rootRoute.addChildren([
   verifyEmailRoute,
   forgotPasswordRoute,
   authCallbackRoute,
+  accountDeletedRoute,
   resetPasswordRoute,
   legalAcceptanceRoute,
   publicPrivacyPolicyRoute,

@@ -36,7 +36,17 @@ export const runAccountDeletionWorkflow = async ({
   removeFeedbackAttachments,
   updateOperation,
 }: AccountDeletionWorkflowDeps): Promise<AccountDeletionWorkflowResponse> => {
-  const customer = await loadRevenueCatCustomer()
+  let customer: RevenueCatSubscriberResponse
+  try {
+    customer = await loadRevenueCatCustomer()
+  } catch {
+    await updateOperation('failed', 'revenuecat_customer_lookup_failed')
+    return {
+      deleted: false,
+      error: 'Subscription status could not be verified.',
+      status: 500,
+    }
+  }
   const renewals = getRequiredGooglePlayRenewals(customer)
 
   try {
@@ -54,7 +64,17 @@ export const runAccountDeletionWorkflow = async ({
 
   await updateOperation('subscriptions_cancelled')
 
-  const verifiedCustomer = await loadRevenueCatCustomer()
+  let verifiedCustomer: RevenueCatSubscriberResponse
+  try {
+    verifiedCustomer = await loadRevenueCatCustomer()
+  } catch {
+    await updateOperation('failed', 'revenuecat_customer_lookup_failed')
+    return {
+      deleted: false,
+      error: 'Subscription status could not be verified.',
+      status: 500,
+    }
+  }
   if (getRequiredGooglePlayRenewals(verifiedCustomer).length > 0) {
     await updateOperation('failed', 'subscription_cancellation_unconfirmed')
     return {

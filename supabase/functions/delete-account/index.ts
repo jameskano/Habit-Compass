@@ -5,6 +5,7 @@ import {
   deleteRevenueCatCustomer,
   getRevenueCatApiBaseUrl,
   loadRevenueCatCustomer,
+  RevenueCatRequestError,
 } from '../_shared/revenuecat.ts'
 import {
   runAccountDeletionWorkflow,
@@ -139,7 +140,7 @@ const updateOperation = async (
   status: AccountDeletionStatus,
   failureCode: string | null = null,
 ) => {
-  await serviceClient
+  const { error } = await serviceClient
     .from('account_deletion_operations')
     .update({
       completed_at: status === 'auth_user_deleted' ? new Date().toISOString() : null,
@@ -147,6 +148,34 @@ const updateOperation = async (
       status,
     })
     .eq('id', operationId)
+
+  if (error) {
+    throw error
+  }
+}
+
+const logRevenueCatRequestError = (
+  error: unknown,
+  operationId: string,
+  step: 'customer_lookup' | 'customer_delete' | 'subscription_cancel',
+) => {
+  if (error instanceof RevenueCatRequestError) {
+    console.error({
+      code: error.message,
+      operationId,
+      responseCode: error.responseCode,
+      responseMessage: error.responseMessage,
+      status: error.status,
+      step,
+    })
+    return
+  }
+
+  console.error({
+    code: error instanceof Error ? error.message : 'revenuecat_request_failed',
+    operationId,
+    step,
+  })
 }
 
 const removeFeedbackAttachments = async (
@@ -252,7 +281,7 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Authentication required.' }, 401)
     }
 
-    const { data: operation, error: operationError } = await serviceClient
+    const { error: operationInsertError } = await serviceClient
       .from('account_deletion_operations')
       .upsert(
         {
@@ -261,9 +290,18 @@ Deno.serve(async (request) => {
           status: 'started',
           user_id: user.id,
         },
-        { onConflict: 'user_id,idempotency_key' },
+        { ignoreDuplicates: true, onConflict: 'user_id,idempotency_key' },
       )
+
+    if (operationInsertError) {
+      return jsonResponse({ error: 'Deletion operation could not be started.' }, 500)
+    }
+
+    const { data: operation, error: operationError } = await serviceClient
+      .from('account_deletion_operations')
       .select('id, status')
+      .eq('user_id', user.id)
+      .eq('idempotency_key', idempotencyKey)
       .single()
 
     if (operationError || !operation) {
@@ -329,14 +367,20 @@ Deno.serve(async (request) => {
     }
 
     const deletionResult = await runAccountDeletionWorkflow({
-      cancelGooglePlayRenewal: (storeTransactionId) =>
-        cancelGooglePlayRenewal(
-          fetch,
-          revenueCatApiBaseUrl,
-          revenueCatSecretKey,
-          user.id,
-          storeTransactionId,
-        ),
+      cancelGooglePlayRenewal: async (storeTransactionId) => {
+        try {
+          await cancelGooglePlayRenewal(
+            fetch,
+            revenueCatApiBaseUrl,
+            revenueCatSecretKey,
+            user.id,
+            storeTransactionId,
+          )
+        } catch (error) {
+          logRevenueCatRequestError(error, operationId, 'subscription_cancel')
+          throw error
+        }
+      },
       deleteAuthUser: async () => {
         const result = await deleteAuthUser(supabaseUrl, serviceRoleKey, user.id)
         if (result.error) {
@@ -348,10 +392,27 @@ Deno.serve(async (request) => {
         }
         return result
       },
-      deleteRevenueCatCustomer: () =>
-        deleteRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
-      loadRevenueCatCustomer: () =>
-        loadRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id),
+      deleteRevenueCatCustomer: async () => {
+        try {
+          await deleteRevenueCatCustomer(fetch, revenueCatApiBaseUrl, revenueCatSecretKey, user.id)
+        } catch (error) {
+          logRevenueCatRequestError(error, operationId, 'customer_delete')
+          throw error
+        }
+      },
+      loadRevenueCatCustomer: async () => {
+        try {
+          return await loadRevenueCatCustomer(
+            fetch,
+            revenueCatApiBaseUrl,
+            revenueCatSecretKey,
+            user.id,
+          )
+        } catch (error) {
+          logRevenueCatRequestError(error, operationId, 'customer_lookup')
+          throw error
+        }
+      },
       removeFeedbackAttachments: async () => {
         await removeFeedbackAttachments(serviceClient, user.id)
         await deleteUserAppData(serviceClient, user.id)

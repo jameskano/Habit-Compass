@@ -69,6 +69,28 @@ const buildDeps = (
 }
 
 describe('runAccountDeletionWorkflow', () => {
+  it('records a failed operation and stops when the initial customer lookup fails', async () => {
+    const events: string[] = []
+    const result = await runAccountDeletionWorkflow(
+      buildDeps([customerWithoutRenewal()], events, {
+        loadRevenueCatCustomer: async () => {
+          events.push('load-revenuecat-customer')
+          throw new Error('revenuecat_customer_lookup_failed')
+        },
+      }),
+    )
+
+    expect(result).toEqual({
+      deleted: false,
+      error: 'Subscription status could not be verified.',
+      status: 500,
+    })
+    expect(events).toEqual([
+      'load-revenuecat-customer',
+      'status:failed:revenuecat_customer_lookup_failed',
+    ])
+  })
+
   it('cancels Play renewals before deleting RevenueCat, app data, and the Auth user', async () => {
     const events: string[] = []
     const result = await runAccountDeletionWorkflow(
@@ -130,6 +152,36 @@ describe('runAccountDeletionWorkflow', () => {
       'status:subscriptions_cancelled',
       'load-revenuecat-customer',
       'status:failed:subscription_cancellation_unconfirmed',
+    ])
+  })
+
+  it('records a failed operation when the cancellation verification lookup fails', async () => {
+    const events: string[] = []
+    let lookupCount = 0
+    const result = await runAccountDeletionWorkflow(
+      buildDeps([customerWithRenewal()], events, {
+        loadRevenueCatCustomer: async () => {
+          events.push('load-revenuecat-customer')
+          lookupCount += 1
+          if (lookupCount === 2) {
+            throw new Error('revenuecat_customer_lookup_failed')
+          }
+          return customerWithRenewal()
+        },
+      }),
+    )
+
+    expect(result).toEqual({
+      deleted: false,
+      error: 'Subscription status could not be verified.',
+      status: 500,
+    })
+    expect(events).toEqual([
+      'load-revenuecat-customer',
+      'cancel:play-token-1',
+      'status:subscriptions_cancelled',
+      'load-revenuecat-customer',
+      'status:failed:revenuecat_customer_lookup_failed',
     ])
   })
 

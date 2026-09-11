@@ -24,6 +24,7 @@ describe('intendedRoute', () => {
 
   it('rejects auth callbacks and destructive account routes', () => {
     expect(normalizeIntendedRoute('/auth/callback?code=secret')).toBeNull()
+    expect(normalizeIntendedRoute('/auth/account-deleted')).toBeNull()
     expect(normalizeIntendedRoute('/auth/sign-in')).toBeNull()
     expect(normalizeIntendedRoute('/auth/reset-password')).toBeNull()
     expect(normalizeIntendedRoute('/legal/acceptance')).toBeNull()
