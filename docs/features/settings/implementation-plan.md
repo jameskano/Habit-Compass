@@ -93,7 +93,7 @@ Likely files:
 - `src/app/state/appPreferencesStore.ts`
 - `src/app/providers/AppProviders.tsx`
 - `src/app/providers/ThemeProvider.tsx`
-- `src/domain/planning/weekPlanning.utils.ts`
+- `src/domain/weekly-planning/weekPlanning.utils.ts`
 - `src/domain/habits/logic/habitCompletionRules.ts`
 - `src/domain/habits/logic/habitDetailStats.ts`
 - `src/features/items/habits/HabitCalendarTab.tsx`

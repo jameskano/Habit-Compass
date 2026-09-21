@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useIntl } from 'react-intl'
 
-import { getWeekDates, shiftWeek, type WeekStartsOn } from '@/domain/planning'
+import { getWeekDates, shiftWeek, type WeekStartsOn } from '@/domain/weekly-planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 

@@ -1,4 +1,4 @@
-import type { PlanningRepository, WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
+import type { PlanningRepository, WeeklyBigRock, WeeklyPlan } from '@/domain/weekly-planning'
 import { createNotFoundError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 

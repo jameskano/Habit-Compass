@@ -1,7 +1,7 @@
 import type { Category } from '@/domain/categories'
 import type { Habit, HabitInactivityReason, HabitLog } from '@/domain/habits'
 import type { MoodLog } from '@/domain/mood'
-import type { WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
+import type { WeeklyBigRock, WeeklyPlan } from '@/domain/weekly-planning'
 import type { RecurrentTask, RecurrentTaskOccurrence } from '@/domain/recurrent-tasks'
 import type { Reflection } from '@/domain/reflections'
 import type { Task } from '@/domain/tasks'

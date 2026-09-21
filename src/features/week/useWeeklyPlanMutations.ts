@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import type { WeeklyPlan, WeeklyReviewFeeling } from '@/domain/planning'
+import type { WeeklyPlan, WeeklyReviewFeeling } from '@/domain/weekly-planning'
 import { MOCK_USER_ID } from '@/integrations/mock/mockData'
 import { planningRepository } from '@/integrations/repositories'
 import { useAppToast } from '@/shared/hooks/useAppToast'

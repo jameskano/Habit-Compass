@@ -2,7 +2,7 @@ import { CalendarCheck, CalendarDays } from 'lucide-react'
 import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 
-import { getWeekStart, type WeekStartsOn } from '@/domain/planning'
+import { getWeekStart, type WeekStartsOn } from '@/domain/weekly-planning'
 import {
   calendarDateToISODate,
   isoDateToCalendarDate,

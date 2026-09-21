@@ -1,7 +1,7 @@
 import { useIntl } from 'react-intl'
 
 import { deriveHabitDayState, type Habit, type HabitLog } from '@/domain/habits'
-import { getWeekDates, type WeekStartsOn } from '@/domain/planning'
+import { getWeekDates, type WeekStartsOn } from '@/domain/weekly-planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'

@@ -3,7 +3,7 @@ import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
 import type { Habit } from '@/domain/habits'
-import { groupBigRockHabitsByLifeArea } from '@/domain/planning'
+import { groupBigRockHabitsByLifeArea } from '@/domain/weekly-planning'
 import { Card } from '@/shared/ui/card'
 
 type WeekLifeAreasSectionProps = {

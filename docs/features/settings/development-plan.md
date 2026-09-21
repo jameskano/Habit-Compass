@@ -202,7 +202,7 @@ Work:
 Likely files:
 
 - `src/domain/settings/*`
-- `src/domain/planning/weekPlanning.utils.ts`
+- `src/domain/weekly-planning/weekPlanning.utils.ts`
 - `src/features/week/*`
 - Calendar or date navigation components.
 
@@ -258,7 +258,7 @@ Work:
 
 Likely files:
 
-- `src/domain/planning/*`
+- `src/domain/weekly-planning/*`
 - `src/features/week/*`
 - `src/integrations/mock/*`
 - `src/integrations/supabase/repositories/*`

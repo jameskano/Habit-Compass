@@ -1,5 +1,9 @@
-import type { PlanningRepository, WeeklyBigRock, WeeklyPlan } from '@/domain/planning'
-import { MAX_WEEKLY_BIG_ROCKS } from '@/domain/planning'
+import type {
+  PlanningRepository,
+  WeeklyBigRock,
+  WeeklyPlan,
+} from '@/domain/weekly-planning'
+import { MAX_WEEKLY_BIG_ROCKS } from '@/domain/weekly-planning'
 import { createAppError, createNotFoundError } from '@/shared/utils/appError'
 import { err, ok, type Result } from '@/shared/utils/result'
 

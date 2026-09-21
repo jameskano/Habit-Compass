@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
-import { getWeekDates, getWeekStart, toISODate } from '@/domain/planning'
+import { getWeekDates, getWeekStart, toISODate } from '@/domain/weekly-planning'
 import { useCategoriesQuery } from '@/features/categories/hooks/useCategoriesQuery'
 import { useHabitLogsRangeQuery } from '@/features/habits/hooks/useHabitLogsRangeQuery'
 import { useHabitsQuery } from '@/features/habits/hooks/useHabitsQuery'

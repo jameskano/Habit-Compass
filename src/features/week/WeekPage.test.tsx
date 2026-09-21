@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { router } from '@/app/router/router'
 import { useAppPreferencesStore } from '@/app/state/appPreferencesStore'
 import App from '@/App'
-import { getWeekStart, shiftWeek, toISODate } from '@/domain/planning'
+import { getWeekStart, shiftWeek, toISODate } from '@/domain/weekly-planning'
 import {
   cloneMockState,
   getMockState,

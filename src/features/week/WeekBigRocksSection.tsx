@@ -3,7 +3,11 @@ import { useIntl } from 'react-intl'
 
 import type { Category } from '@/domain/categories'
 import type { Habit } from '@/domain/habits'
-import { canAddWeeklyBigRock, MAX_WEEKLY_BIG_ROCKS, type WeeklyPlan } from '@/domain/planning'
+import {
+  canAddWeeklyBigRock,
+  MAX_WEEKLY_BIG_ROCKS,
+  type WeeklyPlan,
+} from '@/domain/weekly-planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'

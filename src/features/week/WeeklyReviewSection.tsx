@@ -11,7 +11,7 @@ import {
   WEEKLY_REVIEW_REFLECTIONS_MAX_LENGTH,
   type WeeklyPlan,
   type WeeklyReviewFeeling,
-} from '@/domain/planning'
+} from '@/domain/weekly-planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'

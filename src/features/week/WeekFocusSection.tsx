@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useIntl } from 'react-intl'
 import { z } from 'zod'
 
-import { WEEKLY_FOCUS_MAX_LENGTH, type WeeklyPlan } from '@/domain/planning'
+import { WEEKLY_FOCUS_MAX_LENGTH, type WeeklyPlan } from '@/domain/weekly-planning'
 import type { ISODateString } from '@/shared/types'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
